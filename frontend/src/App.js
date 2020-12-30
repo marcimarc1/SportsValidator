@@ -1,7 +1,10 @@
+import Start from "./components/pages/Start";
+import './App.css';
+
 function App() {
   return (
-    <div>
-      Hello world
+    <div className="App">
+      <Start/>
     </div>
   );
 }

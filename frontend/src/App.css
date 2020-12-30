@@ -1,0 +1,60 @@
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    /*font-family: 'Oswald', sans-serif;*/
+    background-color: gainsboro;
+    height: 100%;
+}
+
+.App {
+    height: 100%;
+}
+
+.full-page {
+    height: 100%;
+}
+
+.turn-white-on-hover:hover {
+    color: white;
+    border-color: white;
+}
+/*START PAGE*/
+
+.Start {
+    background-image: url("./pictures/dark_football_field.jpg");
+    background-size: cover;
+}
+
+.StartBody {
+    position: absolute;
+    width: 100%;
+    top: 60%;
+    margin: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.StartButtonContainer {
+
+}
+
+.StartButton {
+    height: 2em;
+    font-size: 3em;
+    color: #727272;
+    background-color: transparent;
+    margin: 30px;
+    padding: 0 2rem 0 1.5rem;
+    border: 7px solid #727272;
+    border-radius: 30%;
+    border-bottom-right-radius: 10%;
+    border-top-left-radius: 10%;
+}
+
+/*.StartButton:hover {*/
+/*    background-color: white;*/
+/*}*/
+
