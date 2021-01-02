@@ -9,7 +9,7 @@ class Start extends Component {
             <div className="Start full-page">
                 <Header />
                 <div className="StartBody">
-                    {/*<h1 className="StartHeading"> Game Tracker </h1>*/}
+                    <h1 className="StartHeading"> Game Tracker </h1>
                     <div className="StartButtonContainer">
                         <button className="StartButton StartDemoButton turn-white-on-hover"> Demo </button>
                         <button className="StartButton turn-white-on-hover"> Sign In </button>

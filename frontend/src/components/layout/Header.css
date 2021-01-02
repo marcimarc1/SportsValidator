@@ -1,9 +1,10 @@
 #header {
-    /*background-color: #067;*/
-    height: 10%;
+    /*background-color: rgba(0, 50, 40, 0.9);*/
+    background-color: rgba(0, 0, 0, 0.7);
+    /*height: 10%;*/
     width: 100%;
     position: absolute;
-    margin-top: 30px;
+    padding-top: 40px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -16,10 +17,15 @@
     /*color: navajowhite;*/
     color: #727272;
     font-size: 2rem;
+    z-index: 2;
 }
 
 .HeaderIcon {
     transform: scale(2);
+}
+
+.HeaderText {
+    letter-spacing: 6px;
 }
 
 #home-logo {
@@ -28,8 +34,4 @@
 
 #account-logo {
     margin-right: 4rem;
-}
-
-h1 {
-    letter-spacing: 6px;
 }

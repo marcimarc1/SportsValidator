@@ -20,6 +20,7 @@ html, body {
     color: white;
     border-color: white;
 }
+
 /*START PAGE*/
 
 .Start {
@@ -30,31 +31,50 @@ html, body {
 .StartBody {
     position: absolute;
     width: 100%;
-    top: 60%;
+    height: 100%;
+    /*top: 60%;*/
     margin: auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    /*display: flex;*/
+    /*align-items: center;*/
+    /*justify-content: center;*/
+}
+
+.StartHeading {
+    color: #727272;
+    width: 100%;
+    position: absolute;
+    top: 30%;
+    text-align: center;
+    font-size: 8rem;
+    letter-spacing: 8px;
 }
 
 .StartButtonContainer {
-
+    position: absolute;
+    top: 65%;
+    width: 60em;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    left: 50%;
+    transform: translateX(-50%);
 }
 
 .StartButton {
     height: 2em;
     font-size: 3em;
+    font-weight: bold;
     color: #727272;
     background-color: transparent;
-    margin: 30px;
+    margin: 0.4vw;
     padding: 0 2rem 0 1.5rem;
     border: 7px solid #727272;
-    border-radius: 30%;
-    border-bottom-right-radius: 10%;
-    border-top-left-radius: 10%;
+    border-radius: 10% 30% 10% 30%;
+    transition: 0.7s;
 }
 
-/*.StartButton:hover {*/
-/*    background-color: white;*/
-/*}*/
+.StartButton:hover {
+    top: -50px;
+    font-size: 3.5em;
+}
 
