@@ -7,11 +7,17 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/*Set font-family inheritance for the Form elements use (they don't inherit it by default like most other elements') */
+/*TODO add Form elements as needed*/
+button{
+  font-family: inherit;
+}
+
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
 
 #root {
-  height: 100%;   /* so that you can subsequently style heigth in % */
+  height: 100%;   /* so that you can subsequently style height in % */
 }
