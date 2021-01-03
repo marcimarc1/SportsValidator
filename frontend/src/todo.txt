@@ -1,0 +1,18 @@
+Naming Conventions
+file names:
+js files have UppercaseCamelCase names, for class components this is also the name of the class.
+css files corresponding to react class components have the same name as the file/class.
+
+for CSS classes:
+CamelCase for classes that are used for a certain element. Name them the same as the
+React Component if it's the outer HTML element in that component. If it's inside use "ClassNameElementSubelement..."
+For generic classes use normal lowercase-dashed-case
+
+TODO
+
+check if/how to add source for fonts/icons etc
+So far all icons are svgbox => material
+fonts: Google Fonts
+
+use local version of fonts instead of url in script tag in index.html
+
