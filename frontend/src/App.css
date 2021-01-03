@@ -23,6 +23,12 @@ html, body {
 
 /*START PAGE*/
 
+/*TODO figure out why this version with having the font in the local fonts folder is not working*/
+/*@font-face {*/
+/*    font-family: "Big Shoulder Stencil Display";*/
+/*    src: local("./fonts/Big_Shoulders_Stencil_Display/BigShouldersStencilDisplay-Black.ttf");*/
+/*}*/
+
 .Start {
     background-image: url("./pictures/dark_football_field.jpg");
     background-size: cover;
@@ -40,12 +46,13 @@ html, body {
 }
 
 .StartHeading {
+    font-family: 'Big Shoulders Stencil Display', Roboto, cursive;
     color: #727272;
     width: 100%;
     position: absolute;
-    top: 30%;
+    top: 20%;
     text-align: center;
-    font-size: 8rem;
+    font-size: 9rem;
     letter-spacing: 8px;
 }
 
