@@ -1,14 +1,29 @@
-#header {
+.Header {
     /*background-color: rgba(0, 50, 40, 0.9);*/
     background-color: rgba(0, 0, 0, 0.7);
     /*height: 10%;*/
     width: 100%;
-    position: absolute;
-    padding-top: 40px;
+    /*position: absolute;*/
+    /*padding-top: 40px;*/
     display: flex;
     justify-content: space-between;
     align-items: center;
+    animation: grow-header 0.5s ease-out reverse;
 }
+ .Header.on-start-page {
+     position: absolute;
+     padding-top: 40px;
+     animation: grow-header 0.5s ease-out;
+ }
+
+ @keyframes grow-header {
+     0% {
+         padding-top: 0px;
+     }
+     100% {
+         padding-top: 40px;
+     }
+ }
 
 #header-spacer {
     width: 25%;
@@ -17,6 +32,12 @@
     /*color: navajowhite;*/
     color: #727272;
     font-size: 2rem;
+    margin-block-start: 0.67rem;
+    margin-block-end: 0.67rem;
+    z-index: 2;
+}
+
+.HeaderLinkWrapper {
     z-index: 2;
 }
 
@@ -26,6 +47,8 @@
 
 .HeaderText {
     letter-spacing: 6px;
+    text-decoration: none;
+    font-weight: bold;
 }
 
 #home-logo {
