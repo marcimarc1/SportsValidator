@@ -19,9 +19,11 @@
  @keyframes grow-header {
      0% {
          padding-top: 0px;
+         margin-bottom: 0px;
      }
      100% {
          padding-top: 40px;
+         margin-bottom: -40px;
      }
  }
 
