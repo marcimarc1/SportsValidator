@@ -16,6 +16,7 @@ class TrackingEditor extends Component {
     state = {
         // canvas: undefined,
         video: "no video assigned",
+        canvasElements: [],
         scalingFactor: undefined,
         categories: [],
         currentFrame: undefined,
@@ -30,7 +31,8 @@ class TrackingEditor extends Component {
             3: 'rgb(0, 250, 0)',
             4: 'rgb(100, 0, 100)'
         },
-        playerColors: {}    //TODO
+        playerColors: {},    //TODO
+        labelVisibility: 'always'      //selected, always or none; TODO add button to change that (Toggle between labels visible when hovering over /having selected box, always, never
     }
 
     static getDerivedStateFromProps(props, state) {
@@ -109,18 +111,19 @@ class TrackingEditor extends Component {
             // canvas.setHeight(img.height * scalingFactor);
         }
 
-        //configure Event Handlers for canvas
 
-        // TODO maybe attach modified listener directly to each Rect?
-        canvas.on('object:modified', function(options) {
-            if(options.target) {
-                console.log("e: ");
-                console.log(options.e);
-                console.log("coordinates of modified: ");
-                console.log(options.target.aCoords);
 
-            }
-        })
+
+
+        // canvas.on('mouse:over', function(e) {
+        //     e?.target?.my.idObject.set('visible', 'true');
+        //     canvas.renderAll();
+        // });
+
+
+
+
+
 
         this.canvas = canvas;
         this.setState({scalingFactor: scalingFactor, categories: categories, annotationCache: cachedAnnotations, frameCache: loadedFrames},
@@ -145,10 +148,19 @@ class TrackingEditor extends Component {
     plotBBoxes = () => {
         // TODO maybe add support for iscrowd (right now it is ignored), see/ask if it is used in backend
         let annotationsCurrentFrame = this.getAnnotationsForFrames(this.state.annotationCache, this.state.currentFrame, this.state.currentFrame);
+        let newCanvasElements = [];
         for(let i = 0; i < annotationsCurrentFrame.length; i++) {
-            this.addNewBBox(annotationsCurrentFrame[i]);
+            newCanvasElements.push(this.CreateNewBBox(annotationsCurrentFrame[i]));
         }
-        console.log(annotationsCurrentFrame);
+        // console.log(annotationsCurrentFrame);
+        // console.log(newCanvasElements);
+
+        // Add labels and bounding boxes to canvas; Start with labels so they are behind all bBoxes => bBoxes behind labels can be selected
+        // let canvasCopy = this.canvas;
+        // newCanvasElements.forEach(bBox => canvasCopy.add(bBox.idObject, bBox.teamObject, bBox.playerObject));
+        // newCanvasElements.forEach(bBox => canvasCopy.add(bBox));
+
+        this.setState(state => {canvasElements: state.canvasElements.concat(newCanvasElements)});        // concat does not mutate the original array
     }
 
     getFrame = (i) => {
@@ -168,13 +180,9 @@ class TrackingEditor extends Component {
         );
     }
 
-    addNewBBox = (args) => {
-        console.log("Adding new Bounding Box! Args:");
-        console.log(args);
-
-
-        console.log("************************");
-        console.log(this.state);
+    CreateNewBBox = (args) => {
+        // console.log("Adding new Bounding Box! Args:");
+        // console.log(args);
 
 
         //get values for BBox position and color
@@ -194,6 +202,42 @@ class TrackingEditor extends Component {
         // generate fill color which is regular color but more transparent
         let fill = new fabric.Color(color).setAlpha(0.4).toRgba();
 
+
+        //get metadata for BBox
+        let textHorizontalOffset = 5;
+        let textLeft = left + width + textHorizontalOffset;
+        let textVerticalDistance = 25;
+        let fontSize = 20;
+        let fontFamily = "Roboto";
+        let visible = this.state.labelVisibility === "always" ? true : false;
+        let id = new fabric.Text("ID: " + args.id.toString(), {     //Todo add dict that translates id to name? => to support renaming
+            fontSize,
+            fontFamily,
+            visible,
+            selectable: false,
+            hoverCursor: 'normal',
+            left: textLeft,
+            top: top
+        });
+        let team = new fabric.Text("Team: " + args.category_id.toString(), {
+            fontSize,
+            fontFamily,
+            visible,
+            selectable: false,
+            hoverCursor: 'normal',
+            left: textLeft,
+            top: top + textVerticalDistance
+        });
+        let player = new fabric.Text("Player: " + args.attributes.track_id.toString(), {
+            fontSize,
+            fontFamily,
+            visible,
+            selectable: false,
+            hoverCursor: 'normal',
+            left: textLeft,
+            top: top + 2 * textVerticalDistance
+        });
+
         let bBox = new fabric.Rect({
             left,
             top,
@@ -208,53 +252,98 @@ class TrackingEditor extends Component {
             height,
             padding: 0,  // to make sure the pixel coordinates are correct
             cornerStyle: 'circle',
-            lockRotation: true,
-            // noScaleCache: false
+            lockRotation: true
         });
 
-        //get metadata for BBox
-        let textLeft = left + width + 5;
-        let verticalDistance = 25;
-        let fontSize = 20;
-        let fontFamily = "Roboto";
-        let id = new fabric.Text("ID: " + args.id.toString(), {     //Todo add dict that translates id to name? => to support renaming
-            fontSize,
-            fontFamily,
-            selectable: false,
-            hoverCursor: 'normal',
-            left: textLeft,
-            top: top
-        });
-        let team = new fabric.Text("Team: " + args.category_id.toString(), {
-            fontSize,
-            fontFamily,
-            selectable: false,
-            hoverCursor: 'normal',
-            left: textLeft,
-            top: top + verticalDistance
-        });
-        let player = new fabric.Text("Player: " + args.attributes.track_id.toString(), {
-            fontSize,
-            fontFamily,
-            selectable: false,
-            hoverCursor: 'normal',
-            left: textLeft,
-            top: top + 2 * verticalDistance
-        });
+        // add Metadata and labels to bBox (using .my to not accidentally override attributes of the fabric Rect object
+        bBox.my = {
+            id: args.id,
+            dirty: false,       // dirty flag to keep track of which bBoxes have been changed so that only dirty BBoxes have to be sent to/updated in the Backend
+            idObject: id,
+            teamObject: team,
+            playerObject: player
+        };
 
-        // bBox.cornerSize = Math.min(bBox.width, bBox.height) /
 
-        // let group = new fabric.Group([bBox, id, team, player]);
-        bBox.on({'moving': function(e) {
-            console.log(e);
-            // TODO get text corresponding to moved bbox(e.target);
-                // either set text to visible or add text to canvas (then use
-                // if setting text to visible move text with bBox in this function
+
+
+
+        // bBox.cornerSize = Math.min(bBox.width, bBox.height) / ... // Dynamically change corner size so they are more visible on bigger BBoxes? Probably do not do it
+
+
+        let maybeHideLabels = () => {
+            if(this.state.labelVisibility === "selected" && !(this.canvas.getActiveObject() === bBox)) {
+                bBox.my.idObject.set('visible', false);
+                bBox.my.teamObject.set('visible', false);
+                bBox.my.playerObject.set('visible', false);
+                this.canvas.requestRenderAll();     //otherwise it is just updated when clicking somewhere
+            }
         }
+
+        let maybeShowLabels = () => {
+            if(this.state.labelVisibility === "selected") {
+                bBox.my.idObject.set('visible', true);
+                bBox.my.teamObject.set('visible', true);
+                bBox.my.playerObject.set('visible', true);
+                this.canvas.requestRenderAll();
+            }
+        }
+
+        bBox.on({
+            'selected': maybeShowLabels,
+            'mouseover': maybeShowLabels
         });
+
+
+        bBox.on({
+            'deselected': maybeHideLabels,
+            'mouseout': maybeHideLabels
+        });
+
+        let updateTextLocationAccordingToBBox = (options) => {
+            // console.log("Box is moving");
+            // console.log(options);
+
+
+
+            let textLeft = bBox.left + bBox.width * bBox.scaleX + textHorizontalOffset;
+            bBox.my.idObject.set('left', textLeft);
+            bBox.my.teamObject.set('left', textLeft);
+            bBox.my.playerObject.set('left', textLeft);
+
+            bBox.my.idObject.set('top', bBox.top).setCoords();
+            bBox.my.teamObject.set('top', (bBox.top + textVerticalDistance)).setCoords();
+            bBox.my.playerObject.set('top', (bBox.top + 2 *textVerticalDistance)).setCoords();
+
+        }
+
+
+        bBox.on({
+            'moving': updateTextLocationAccordingToBBox,
+            'scaling': updateTextLocationAccordingToBBox
+        });
+
+        // using modified event for stuff that is only necessary after modification is finished
+        bBox.on({'modified': function(e) {
+
+                // Set new positions for labels and call setCoords so that canvas coordinates (aCoords) are updated to rendered coordinates (oCoords)
+                // calling setCoords is not necessary because he labels cannot be selected anyways, it just keeps all their attributes consistent.
+                bBox.my.idObject.setCoords();
+                bBox.my.teamObject.setCoords();
+                bBox.my.playerObject.setCoords();
+
+                // Set dirty flag
+                bBox.my.dirty = true;
+            }
+        });
+
+
         // this.setState({canvas: this.state.canvas.add(bBox, id, team, player)});
         // this.setState({canvas: this.state.canvas.add(group)});
-        this.canvas.add(bBox, id, team, player);
+
+        this.canvas.add(bBox, bBox.my.idObject, bBox.my.teamObject, bBox.my.playerObject);
+
+        return bBox;
     }
 
 
