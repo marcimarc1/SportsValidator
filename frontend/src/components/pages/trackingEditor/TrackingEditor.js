@@ -3,16 +3,18 @@ import PropTypes from 'prop-types';
 import { fabric } from 'fabric';
 import './TrackingEditor.css';
 
-import pic from "../data/frame_000000.jpg";
-import tracking from "../data/instances_default.json";
+import pic from "../../../data/frame_000000.jpg";
+import tracking from "../../../data/instances_default.json";
 
 
 class TrackingEditor extends Component {
 
     cacheSize = 5;  //TODO experiment with this to check performance
 
+    canvas = undefined;
+
     state = {
-        canvas: undefined,
+        // canvas: undefined,
         video: "no video assigned",
         scalingFactor: undefined,
         categories: [],
@@ -114,12 +116,14 @@ class TrackingEditor extends Component {
             if(options.target) {
                 console.log("e: ");
                 console.log(options.e);
-                console.log("coordinates of modified: " + options.target.aCoords);
+                console.log("coordinates of modified: ");
+                console.log(options.target.aCoords);
 
             }
         })
 
-        this.setState({canvas: canvas, scalingFactor: scalingFactor, categories: categories, annotationCache: cachedAnnotations, frameCache: loadedFrames},
+        this.canvas = canvas;
+        this.setState({scalingFactor: scalingFactor, categories: categories, annotationCache: cachedAnnotations, frameCache: loadedFrames},
             () => this.plotBBoxes());
 
 
@@ -139,6 +143,7 @@ class TrackingEditor extends Component {
     }
 
     plotBBoxes = () => {
+        // TODO maybe add support for iscrowd (right now it is ignored), see/ask if it is used in backend
         let annotationsCurrentFrame = this.getAnnotationsForFrames(this.state.annotationCache, this.state.currentFrame, this.state.currentFrame);
         for(let i = 0; i < annotationsCurrentFrame.length; i++) {
             this.addNewBBox(annotationsCurrentFrame[i]);
@@ -166,14 +171,13 @@ class TrackingEditor extends Component {
     addNewBBox = (args) => {
         console.log("Adding new Bounding Box! Args:");
         console.log(args);
-        let id = new fabric.Text("ID: " + args.id.toString());      //Todo add dict that translates id to name? => to support renaming
-        let group = new fabric.Text("Team: " + args.category_id.toString());
-        let player = new fabric.Text("Player: " + args.attributes.track_id.toString());
 
 
         console.log("************************");
         console.log(this.state);
 
+
+        //get values for BBox position and color
         let left = args.bbox[0] * this.state.scalingFactor;
         let top = args.bbox[1] * this.state.scalingFactor;
         let width = args.bbox[2] * this.state.scalingFactor;
@@ -208,10 +212,49 @@ class TrackingEditor extends Component {
             // noScaleCache: false
         });
 
+        //get metadata for BBox
+        let textLeft = left + width + 5;
+        let verticalDistance = 25;
+        let fontSize = 20;
+        let fontFamily = "Roboto";
+        let id = new fabric.Text("ID: " + args.id.toString(), {     //Todo add dict that translates id to name? => to support renaming
+            fontSize,
+            fontFamily,
+            selectable: false,
+            hoverCursor: 'normal',
+            left: textLeft,
+            top: top
+        });
+        let team = new fabric.Text("Team: " + args.category_id.toString(), {
+            fontSize,
+            fontFamily,
+            selectable: false,
+            hoverCursor: 'normal',
+            left: textLeft,
+            top: top + verticalDistance
+        });
+        let player = new fabric.Text("Player: " + args.attributes.track_id.toString(), {
+            fontSize,
+            fontFamily,
+            selectable: false,
+            hoverCursor: 'normal',
+            left: textLeft,
+            top: top + 2 * verticalDistance
+        });
+
         // bBox.cornerSize = Math.min(bBox.width, bBox.height) /
 
-
-        this.setState({canvas: this.state.canvas.add(bBox)});
+        // let group = new fabric.Group([bBox, id, team, player]);
+        bBox.on({'moving': function(e) {
+            console.log(e);
+            // TODO get text corresponding to moved bbox(e.target);
+                // either set text to visible or add text to canvas (then use
+                // if setting text to visible move text with bBox in this function
+        }
+        });
+        // this.setState({canvas: this.state.canvas.add(bBox, id, team, player)});
+        // this.setState({canvas: this.state.canvas.add(group)});
+        this.canvas.add(bBox, id, team, player);
     }
 
 

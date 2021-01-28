@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import TrackingEditor from "../TrackingEditor";
+import TrackingEditor from "./trackingEditor/TrackingEditor";
 class Demo extends Component {
 
     render() {
