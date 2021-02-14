@@ -5,6 +5,8 @@ import './TrackingEditor.css';
 
 import pic from "../../../data/frame_000000.jpg";
 import tracking from "../../../data/instances_default.json";
+import TrackList from "./trackList";
+import TrackListItem from "./trackListItem";
 
 
 class TrackingEditor extends Component {
@@ -14,9 +16,12 @@ class TrackingEditor extends Component {
     canvas = undefined;
 
     state = {
+
+        dummy: true,
         // canvas: undefined,
         video: "no video assigned",
         canvasElements: [],
+        trackListElements: [],
         scalingFactor: undefined,
         categories: [],
         currentFrame: undefined,
@@ -32,10 +37,17 @@ class TrackingEditor extends Component {
             4: 'rgb(100, 0, 100)'
         },
         playerColors: {},    //TODO
-        labelVisibility: 'always'      //selected, always or none; TODO add button to change that (Toggle between labels visible when hovering over /having selected box, always, never
+        idToName: {         //
+            1: "Peter",
+            2: "Max",
+            20: "Florian"
+        },
+        labelVisibility: 'selected'      //selected, always or never; TODO add button to change that (Toggle between labels visible when hovering over /having selected box, always, never
     }
 
-    static getDerivedStateFromProps(props, state) {
+
+    componentDidMount() {
+
         // delete fabric's rotation control from Controls object so it is disabled for all elements
         // alternatively use fabric.Object.setControlsVisibility for per-object control
         delete fabric.Object.prototype.controls.mtr;
@@ -43,11 +55,6 @@ class TrackingEditor extends Component {
         // disable object caching during scaling => borders of BBoxes stay the same thickness during resizing of them.
         // this probably requires more computation but should be completely fine.
         fabric.Object.prototype.noScaleCache = false;
-
-        return {video: props.video, currentFrame: props.currentFrame};
-    }
-
-    componentDidMount() {
 
         let frameSource = "../data/";
         let currentFrameNumber = this.props.currentFrame;
@@ -111,22 +118,8 @@ class TrackingEditor extends Component {
             // canvas.setHeight(img.height * scalingFactor);
         }
 
-
-
-
-
-        // canvas.on('mouse:over', function(e) {
-        //     e?.target?.my.idObject.set('visible', 'true');
-        //     canvas.renderAll();
-        // });
-
-
-
-
-
-
         this.canvas = canvas;
-        this.setState({scalingFactor: scalingFactor, categories: categories, annotationCache: cachedAnnotations, frameCache: loadedFrames},
+        this.setState({video: this.props.video, currentFrame: this.props.currentFrame, scalingFactor: scalingFactor, categories: categories, annotationCache: cachedAnnotations, frameCache: loadedFrames},
             () => this.plotBBoxes());
 
 
@@ -157,10 +150,19 @@ class TrackingEditor extends Component {
 
         // Add labels and bounding boxes to canvas; Start with labels so they are behind all bBoxes => bBoxes behind labels can be selected
         // let canvasCopy = this.canvas;
-        // newCanvasElements.forEach(bBox => canvasCopy.add(bBox.idObject, bBox.teamObject, bBox.playerObject));
+        // newCanvasElements.forEach(bBox => canvasCopy.add(bBox.idOrNameObject, bBox.teamObject, bBox.playerObject));
         // newCanvasElements.forEach(bBox => canvasCopy.add(bBox));
 
-        this.setState(state => {canvasElements: state.canvasElements.concat(newCanvasElements)});        // concat does not mutate the original array
+        // let newTrackListItems = [];
+
+        // Using concat() because for push() (which would be more appropriate) because the HTML Tag syntax did only work in a list
+        // newCanvasElements.forEach(bBox => newTrackListItems = newTrackListItems.concat([<TrackListItem bBox={bBox} blink={this.blink} />]));
+
+
+        this.setState({
+            canvasElements: this.state.canvasElements.concat(newCanvasElements)      // concat does not mutate the original array
+            // , trackListElements: this.state.trackListElements.concat(newTrackListItems)
+        });//, () => this.render);
     }
 
     getFrame = (i) => {
@@ -171,10 +173,35 @@ class TrackingEditor extends Component {
         return ret;
     }
 
+    getColor = (categoryId, trackId) => {
+        let color;
+        if(this.state.colorByCategory) {
+            let categoryColorDict = `category_${this.state.colorCategoryNumber}_Colors`;
+            color = this.state[categoryColorDict][categoryId];
+        }
+        else {
+            color = this.state.playerColors[trackId];
+        }
+        return color;
+    }
+
     render() {
+        let propsTracklist = {};
+        console.log("Tracking Editor rendered!");
+        let trackListElementsTest = [];
+        this.state.canvasElements.forEach((bBox) => trackListElementsTest = trackListElementsTest.concat([<TrackListItem bBox={bBox} blink={this.blink} />]));
+
+
+
         return (
             <div className="TrackingEditor">
                 <canvas id="tracking-editor-canvas" width="1440" height="810" ></canvas>
+                <TrackList>
+                    {/*<h1>Test 1</h1>*/}
+                    {/*<h2>Test 2</h2>*/}
+                    {/*{this.state.trackListElements}*/}
+                    {trackListElementsTest}
+                </TrackList>
                 <button type="button" onClick={this.addNewRect}> Draw! </button>
             </div>
         );
@@ -190,14 +217,8 @@ class TrackingEditor extends Component {
         let top = args.bbox[1] * this.state.scalingFactor;
         let width = args.bbox[2] * this.state.scalingFactor;
         let height = args.bbox[3] * this.state.scalingFactor;
-        let color;
-        if(this.state.colorByCategory) {
-            let categoryColorDict = `category_${this.state.colorCategoryNumber}_Colors`;
-            color = this.state[categoryColorDict][args.category_id];
-        }
-        else {
-            color = this.state.playerColors[args.attributes.track_id];
-        }
+        let color = this.getColor(args.category_id, args.attributes.track_id);
+
 
         // generate fill color which is regular color but more transparent
         let fill = new fabric.Color(color).setAlpha(0.4).toRgba();
@@ -210,7 +231,12 @@ class TrackingEditor extends Component {
         let fontSize = 20;
         let fontFamily = "Roboto";
         let visible = this.state.labelVisibility === "always" ? true : false;
-        let id = new fabric.Text("ID: " + args.id.toString(), {     //Todo add dict that translates id to name? => to support renaming
+        let id = args.id;
+        let team = args.category_id;
+        let player = args.attributes.track_id
+        let name = args.id in this.state.idToName ? this.state.idToName[args.id] : undefined;
+        let idText = name ? "Name: " + this.state.idToName[args.id] : "ID: " + args.id.toString();
+        let idOrNameObject = new fabric.Text(idText, {     //Todo add dict that translates id to name? => to support renaming
             fontSize,
             fontFamily,
             visible,
@@ -219,7 +245,7 @@ class TrackingEditor extends Component {
             left: textLeft,
             top: top
         });
-        let team = new fabric.Text("Team: " + args.category_id.toString(), {
+        let teamObject = new fabric.Text("Team: " + team.toString(), {
             fontSize,
             fontFamily,
             visible,
@@ -228,7 +254,7 @@ class TrackingEditor extends Component {
             left: textLeft,
             top: top + textVerticalDistance
         });
-        let player = new fabric.Text("Player: " + args.attributes.track_id.toString(), {
+        let playerObject = new fabric.Text("Player: " + player.toString(), {
             fontSize,
             fontFamily,
             visible,
@@ -257,11 +283,15 @@ class TrackingEditor extends Component {
 
         // add Metadata and labels to bBox (using .my to not accidentally override attributes of the fabric Rect object
         bBox.my = {
-            id: args.id,
+            id,
+            name,
+            team,
+            player,
             dirty: false,       // dirty flag to keep track of which bBoxes have been changed so that only dirty BBoxes have to be sent to/updated in the Backend
-            idObject: id,
-            teamObject: team,
-            playerObject: player
+            selected: false,
+            idOrNameObject,
+            teamObject,
+            playerObject
         };
 
 
@@ -273,7 +303,7 @@ class TrackingEditor extends Component {
 
         let maybeHideLabels = () => {
             if(this.state.labelVisibility === "selected" && !(this.canvas.getActiveObject() === bBox)) {
-                bBox.my.idObject.set('visible', false);
+                bBox.my.idOrNameObject.set('visible', false);
                 bBox.my.teamObject.set('visible', false);
                 bBox.my.playerObject.set('visible', false);
                 this.canvas.requestRenderAll();     //otherwise it is just updated when clicking somewhere
@@ -282,7 +312,7 @@ class TrackingEditor extends Component {
 
         let maybeShowLabels = () => {
             if(this.state.labelVisibility === "selected") {
-                bBox.my.idObject.set('visible', true);
+                bBox.my.idOrNameObject.set('visible', true);
                 bBox.my.teamObject.set('visible', true);
                 bBox.my.playerObject.set('visible', true);
                 this.canvas.requestRenderAll();
@@ -290,13 +320,40 @@ class TrackingEditor extends Component {
         }
 
         bBox.on({
-            'selected': maybeShowLabels,
+            'selected': () => {
+                // bBox.my.selected = true;        //TODO figure out how to call setState to change bBox.selected so that selected id is highlighted in TrackList!!!!!!
+
+                let modifiedCanvasElements = [];
+                this.state.canvasElements.forEach(bb => {
+                    if (bb === bBox) {
+                        let bBoxDeepCopy = bBox;    //TODO how can I deep clone something in JS??????????
+                        bBoxDeepCopy.my.selected = true;
+                        console.log("Setting bBox " + bBox.my.id + " to selected!");
+                        console.log(bBoxDeepCopy);
+                        return bBoxDeepCopy;
+                    } else {
+                        return bb;
+                    }
+                });
+
+                    // moved the stuff below above, TODO continue here
+                // this.setState(state =>
+                // }));
+
+                this.setState({dummy: this.state.dummy});       // TODO shouldn't be necessary with Deep Clone!
+
+                // this.forceUpdate();      //Alternative to setting dummy state like above
+                maybeShowLabels();
+            },
             'mouseover': maybeShowLabels
         });
 
 
         bBox.on({
-            'deselected': maybeHideLabels,
+            'deselected': function() {
+                bBox.my.selected = false;
+                maybeHideLabels();
+            },
             'mouseout': maybeHideLabels
         });
 
@@ -307,11 +364,11 @@ class TrackingEditor extends Component {
 
 
             let textLeft = bBox.left + bBox.width * bBox.scaleX + textHorizontalOffset;
-            bBox.my.idObject.set('left', textLeft);
+            bBox.my.idOrNameObject.set('left', textLeft);
             bBox.my.teamObject.set('left', textLeft);
             bBox.my.playerObject.set('left', textLeft);
 
-            bBox.my.idObject.set('top', bBox.top).setCoords();
+            bBox.my.idOrNameObject.set('top', bBox.top).setCoords();
             bBox.my.teamObject.set('top', (bBox.top + textVerticalDistance)).setCoords();
             bBox.my.playerObject.set('top', (bBox.top + 2 *textVerticalDistance)).setCoords();
 
@@ -319,7 +376,7 @@ class TrackingEditor extends Component {
 
 
         bBox.on({
-            'moving': updateTextLocationAccordingToBBox,
+            'moving': updateTqextLocationAccordingToBBox,
             'scaling': updateTextLocationAccordingToBBox
         });
 
@@ -328,7 +385,7 @@ class TrackingEditor extends Component {
 
                 // Set new positions for labels and call setCoords so that canvas coordinates (aCoords) are updated to rendered coordinates (oCoords)
                 // calling setCoords is not necessary because he labels cannot be selected anyways, it just keeps all their attributes consistent.
-                bBox.my.idObject.setCoords();
+                bBox.my.idOrNameObject.setCoords();
                 bBox.my.teamObject.setCoords();
                 bBox.my.playerObject.setCoords();
 
@@ -341,7 +398,7 @@ class TrackingEditor extends Component {
         // this.setState({canvas: this.state.canvas.add(bBox, id, team, player)});
         // this.setState({canvas: this.state.canvas.add(group)});
 
-        this.canvas.add(bBox, bBox.my.idObject, bBox.my.teamObject, bBox.my.playerObject);
+        this.canvas.add(bBox, bBox.my.idOrNameObject, bBox.my.teamObject, bBox.my.playerObject);
 
         return bBox;
     }
@@ -377,7 +434,40 @@ class TrackingEditor extends Component {
 
         this.setState(addNewRect2);
     }
+
+    blink = (bBox) => {
+        // TODO maybe make more visible? Add bigger version of bBox and let it shrink to real bBox?
+        let originalColor = bBox.fill;
+        let repeats = 3;
+        let time = 0;
+        let interval = 400;
+        let blinkColor = 'rgb(255, 255, 255)';
+        for(let i = repeats; i > 0; i--) {
+            setTimeout(() => {
+                bBox.set({
+                    fill: blinkColor,
+                    cornerColor: blinkColor,
+                    stroke: blinkColor
+                });
+                this.canvas.renderAll();
+            }, time);
+
+            time += interval;
+            setTimeout(() => {
+                bBox.set({
+                    fill: originalColor,
+                    cornerColor: originalColor,
+                    stroke: originalColor
+                });
+                this.canvas.renderAll();
+            }, time);
+            time += interval;
+        }
+    }
 }
+
+
+
 
 TrackingEditor.propTypes = {
     video: PropTypes.string, //make required

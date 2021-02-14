@@ -6,3 +6,14 @@ canvas {
     margin-left: 30px;
     margin-top: 30px;
 }
+
+.TrackList {
+    width: 200px;
+    height: 810px;
+    overflow: auto;     /* Scrollbar appears when content is too big for div */
+
+}
+
+.selected {
+    color: white !important;
+}
