@@ -5,6 +5,7 @@ import './TrackingEditor.css';
 
 import pic from "../../../data/frame_000000.jpg";
 import tracking from "../../../data/instances_default.json";
+import NavBar from "./NavBar";
 import TrackList from "./trackList";
 import TrackListItem from "./trackListItem";
 
@@ -24,20 +25,20 @@ class TrackingEditor extends Component {
         trackListElements: [],
         scalingFactor: undefined,
         categories: [],
-        currentFrame: undefined,
+        currentFrame: undefined,    //BACKEND
         frameCache: [],
         annotationCache: [],
         frameSource: "../data/frame_000000.jpg",
         colorByCategory: true,      //Toggle between coloring BBoxes by Category or Player
-        colorCategoryNumber: 1,     //which category to color the BBoxes by if colorByCategory is true
-        category_1_Colors: {
+        colorCategoryNumber: 1,     // not used so far, for enabling multiple categories; which category to color the BBoxes by if colorByCategory is true;
+        category_1_Colors: {        //BACKEND
             1: 'rgb(100, 0, 0)',
             2: 'rgb(0, 0, 200)',
             3: 'rgb(0, 250, 0)',
             4: 'rgb(100, 0, 100)'
         },
-        playerColors: {},    //TODO
-        idToName: {         //
+        playerColors: {},    //BACKEND TODO; id: color (maybe also add corners)
+        idToName: {         //BACKEND
             1: "Peter",
             2: "Max",
             20: "Florian"
@@ -185,9 +186,16 @@ class TrackingEditor extends Component {
         return color;
     }
 
-    render() {
+    // function to be passed to NavBar, currentFrame is only used for initialization and then NavBar manages the frame number
+    // Using a function this way instead of passing a prop directly should make NavBar not remount every time the Frame changes
+    getCurrentFrame = () => {
+        return this.state.currentFrame
+    }
+
+    render = () => {
         let propsTracklist = {};
         console.log("Tracking Editor rendered!");
+        let canvasWidth = this.canvas?.getWidth()   // ?. is conditional chaining, returns undefined if this.canvas is undefined
         let trackListElementsTest = [];
         this.state.canvasElements.forEach((bBox) => trackListElementsTest = trackListElementsTest.concat([<TrackListItem bBox={bBox} blink={this.blink} />]));
 
@@ -195,6 +203,7 @@ class TrackingEditor extends Component {
 
         return (
             <div className="TrackingEditor">
+                <NavBar getCurrentFrame={this.getCurrentFrame()} maxFrame={10} width={canvasWidth}/>   {/*Todo: pass correct maxFrame*/}
                 <canvas id="tracking-editor-canvas" width="1440" height="810" ></canvas>
                 <TrackList>
                     {/*<h1>Test 1</h1>*/}
@@ -202,7 +211,7 @@ class TrackingEditor extends Component {
                     {/*{this.state.trackListElements}*/}
                     {trackListElementsTest}
                 </TrackList>
-                <button type="button" onClick={this.addNewRect}> Draw! </button>
+                {/*<button type="button" onClick={this.addNewRect}> Draw! </button>*/}
             </div>
         );
     }
@@ -340,7 +349,7 @@ class TrackingEditor extends Component {
                 // this.setState(state =>
                 // }));
 
-                this.setState({dummy: this.state.dummy});       // TODO shouldn't be necessary with Deep Clone!
+                this.setState({dummy: !this.state.dummy});       // TODO shouldn't be necessary with Deep Clone!
 
                 // this.forceUpdate();      //Alternative to setting dummy state like above
                 maybeShowLabels();
@@ -350,8 +359,9 @@ class TrackingEditor extends Component {
 
 
         bBox.on({
-            'deselected': function() {
+            'deselected': () => {
                 bBox.my.selected = false;
+                this.setState({dummy: !this.state.dummy});
                 maybeHideLabels();
             },
             'mouseout': maybeHideLabels
@@ -376,7 +386,7 @@ class TrackingEditor extends Component {
 
 
         bBox.on({
-            'moving': updateTqextLocationAccordingToBBox,
+            'moving': updateTextLocationAccordingToBBox,
             'scaling': updateTextLocationAccordingToBBox
         });
 
@@ -470,7 +480,7 @@ class TrackingEditor extends Component {
 
 
 TrackingEditor.propTypes = {
-    video: PropTypes.string, //make required
+    video: PropTypes.string.isRequired, //make required
     currentFrame: PropTypes.number
 };
 

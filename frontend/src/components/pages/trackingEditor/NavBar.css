@@ -1,0 +1,55 @@
+
+.NavBar {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    background-color: #BBB;
+    /*padding: 1.2em 0;   !* top and bottom *!*/
+    height: 73px;
+}
+
+.NavBarSlider {
+    margin-left: 5rem;
+}
+
+.NavBarTransport {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+}
+
+/*.NavBarTransportButtonContainer {*/
+/*    margin-left: 20%;*/
+/*}*/
+
+.NavBarTransportButton {
+    margin: 0 3px;  /* top/bottom left/right margin */
+
+}
+
+.NavBarTransportButtonPlay {
+    margin: 0 10px;
+}
+
+.NavBarTransportButtonDoubleChevronRight {
+    margin: 0 0 0 1px;
+}
+
+.NavBarTransportButtonFirst, .NavBarTransportButtonLast{
+    margin: 0 0;
+}
+
+.Slider {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.SliderSlider {
+    width: 350px !important;
+    margin-right: 10px;
+}
+
+.SliderNumberInput {
+    width: 50px !important;
+}

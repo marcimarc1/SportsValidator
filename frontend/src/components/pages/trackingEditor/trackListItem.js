@@ -15,7 +15,7 @@ class TrackListItem extends Component {
 
     render() {
         let bBox = this.props.bBox;
-        let style = {color: this.props.bBox.cornerColor};
+        let style = {borderColor: this.props.bBox.cornerColor};
         console.log("rendering TrackListItem " + bBox.my.id);
         if(this.props.bBox.my.selected) {
             console.log("This one is selected!");
@@ -27,8 +27,8 @@ class TrackListItem extends Component {
         // style = {color: this.state.color};
         console.log(style);
         return (
-            <div className={"TrackListItem" + (bBox.my.selected ? " selected" : "")}>
-                <h1 style={style} className={bBox.my.selected ? " selected" : ""}> {this.props.bBox.my.id} </h1>
+            <div className={"TrackListItem" + (bBox.my.selected ? " selected" : "")} style={style}>
+                <h1 className={"TrackListItemId" + (bBox.my.selected ? " selected" : "")}> {this.props.bBox.my.id} </h1>
                 <button onClick={this.props.blink.bind(this, bBox)}> Blink </button>
             </div>
         );
