@@ -8,19 +8,22 @@ import './Header.css';
 class Header extends Component {
     render() {
         return (
-            <header className={"Header" + (this.props.onStartPage ? " on-start-page" : "")}>
-                {/*The above is just the standard html header tag (instead of div), not to be confused with the Header component*/}
-                <Link className="HeaderLinkWrapper" to="/">
-                    <HomeLogo id="home-logo" className="HeaderIcon turn-white-on-hover"/>
-                </Link>
-                <div id="header-spacer"></div>
-                <Link className="HeaderText turn-white-on-hover" to="/about"> About </Link>
-                <Link className="HeaderText turn-white-on-hover" to="/feedback"> Feedback </Link>
-                <Link className="HeaderLinkWrapper" to="/account">
-                    <AccountLogo id="account-logo" className="HeaderIcon turn-white-on-hover"/>
-                </Link>
-            </header>
+            // <div>
+                <header className={"Header" + (this.props.onStartPage ? " on-start-page" : " not-on-start-page")}>
+                    {/*The above is just the standard html header tag (instead of div), not to be confused with the Header component*/}
+                    <Link className="HeaderLinkWrapper" to="/">
+                        <HomeLogo id="home-logo" className="HeaderIcon turn-light-gray-on-hover"/>
+                    </Link>
+                    <div id="header-spacer"></div>
+                    <Link className="HeaderText turn-light-gray-on-hover" to="/about"> About </Link>
+                    <Link className="HeaderText turn-light-gray-on-hover" to="/feedback"> Feedback </Link>
+                    <Link className="HeaderLinkWrapper" to="/account">
+                        <AccountLogo id="account-logo" className="HeaderIcon turn-light-gray-on-hover"/>
+                    </Link>
+                </header>
         );
+            // {/*    <div className={"HeaderSpacerDummy" + (this.props.onStartPage ? " on-start-page" : "")}></div>*/}
+            // {/*</div>*/}
     }
 }
 

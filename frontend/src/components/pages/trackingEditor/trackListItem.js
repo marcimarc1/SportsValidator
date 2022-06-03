@@ -1,5 +1,13 @@
 import React, {Component} from 'react';
+import PropTypes from 'prop-types';
+import InputLabel from '@material-ui/core/InputLabel';
+import MenuItem from '@material-ui/core/MenuItem';
+import FormControl from '@material-ui/core/FormControl';
+import Select from '@material-ui/core/Select';
+
 import './TrackingEditor.css';
+import NavBar from "./NavBar";
+import {ReactComponent as Highlight} from "../../../icons/highlight.svg";
 
 
 class TrackListItem extends Component {
@@ -13,26 +21,59 @@ class TrackListItem extends Component {
     //     return {color};
     // }
 
+    handleChangeTeam = (event) => {
+        this.props.setTeam(this.props.bBox, event.target.value);
+    }
+
     render() {
         let bBox = this.props.bBox;
+        let currentTeam = this.props.bBox.my.team;
+        let allTeams = this.props.getTeams();
+        let categoryName = allTeams.find(item => item.id === currentTeam).name;
         let style = {borderColor: this.props.bBox.cornerColor};
-        console.log("rendering TrackListItem " + bBox.my.id);
+
+        let teamMenuItems = allTeams.map(team => <MenuItem value={team.id}>{team.name}</MenuItem>)
+        //console.log("rendering TrackListItem " + bBox.my.id);
         if(this.props.bBox.my.selected) {
-            console.log("This one is selected!");
+            //console.log("This one is selected!");
             style = {color: 'FFF'};
         }
         let selectedStyle = {color: 'FFF'};
+
+        let name = this.props.bBox.my.name ? this.props.bBox.my.name : this.props.bBox.my.id;
 
 
         // style = {color: this.state.color};
         console.log(style);
         return (
             <div className={"TrackListItem" + (bBox.my.selected ? " selected" : "")} style={style}>
-                <h1 className={"TrackListItemId" + (bBox.my.selected ? " selected" : "")}> {this.props.bBox.my.id} </h1>
-                <button onClick={this.props.blink.bind(this, bBox)}> Blink </button>
+                <h1 className={"TrackListItemName" + (bBox.my.selected ? " selected" : "")}> {name} </h1>
+                <button className={"TrackListItemBlink"} onClick={this.props.blink.bind(this, bBox)}>
+                    <Highlight/>
+                </button>
+
+                {/*Material UI Dropdown Select*/}
+                <FormControl className={"TrackListItemTeamDropdown"}>
+                    <InputLabel id="demo-simple-select-label">Team</InputLabel>
+                    <Select
+                        labelId="demo-simple-select-label"
+                        id="demo-simple-select"
+                        value={currentTeam}
+                        onChange={this.handleChangeTeam}
+                    >
+                        {teamMenuItems}
+                    </Select>
+                </FormControl>
             </div>
         );
     }
 }
+
+NavBar.propTypes = {
+    bBox: PropTypes.object.isRequired,
+    blink: PropTypes.func.isRequired,
+    getTeams: PropTypes.func.isRequired,
+    setTeam: PropTypes.func.isRequired
+};
 
 export default TrackListItem;

@@ -24,7 +24,7 @@ class TrackingEditor extends Component {
         canvasElements: [],
         trackListElements: [],
         scalingFactor: undefined,
-        categories: [],
+        categories: [],             // read in from annotations file
         currentFrame: undefined,    //BACKEND
         frameCache: [],
         annotationCache: [],
@@ -192,12 +192,26 @@ class TrackingEditor extends Component {
         return this.state.currentFrame
     }
 
+    getTeams = () => {
+        return this.state.categories
+    }
+
+    setTeam = (bBox, teamID) => {
+        bBox.my.team = teamID;
+        // TODO call backend
+        this.setState({dummy: !this.state.dummy});
+    }
+
     render = () => {
-        let propsTracklist = {};
+        let propsTracklist = {
+            players: [],
+            corners: [],
+            groups: []
+        };
         console.log("Tracking Editor rendered!");
         let canvasWidth = this.canvas?.getWidth()   // ?. is conditional chaining, returns undefined if this.canvas is undefined
-        let trackListElementsTest = [];
-        this.state.canvasElements.forEach((bBox) => trackListElementsTest = trackListElementsTest.concat([<TrackListItem bBox={bBox} blink={this.blink} />]));
+        //let trackListElementsTest = [];
+        this.state.canvasElements.forEach((bBox) => propsTracklist.players = propsTracklist.players.concat([<TrackListItem bBox={bBox} blink={this.blink} getTeams={this.getTeams} setTeam={this.setTeam}/>]));
 
 
 
@@ -209,7 +223,7 @@ class TrackingEditor extends Component {
                     {/*<h1>Test 1</h1>*/}
                     {/*<h2>Test 2</h2>*/}
                     {/*{this.state.trackListElements}*/}
-                    {trackListElementsTest}
+                    {propsTracklist}
                 </TrackList>
                 {/*<button type="button" onClick={this.addNewRect}> Draw! </button>*/}
             </div>

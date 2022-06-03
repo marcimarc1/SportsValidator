@@ -11,10 +11,10 @@ class Start extends Component {
                     <h1 className="StartHeading"> Game Tracker </h1>
                     <div className="StartButtonContainer">
                         <Link to="/demo">
-                            <button className="StartButton StartDemoButton turn-white-on-hover"> Demo </button>
+                            <button className="StartButton StartDemoButton turn-light-gray-on-hover"> Demo </button>
                         </Link>
-                        <button className="StartButton turn-white-on-hover"> Sign In </button>
-                        <button className="StartButton turn-white-on-hover"> Register </button>
+                        <button className="StartButton turn-light-gray-on-hover"> Sign In </button>
+                        <button className="StartButton turn-light-gray-on-hover"> Register </button>
                     </div>
                 </div>
             </div>

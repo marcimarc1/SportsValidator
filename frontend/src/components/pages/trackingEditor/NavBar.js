@@ -38,7 +38,7 @@ class NavBar extends Component {
                     </div>
                 </div>
                 <div className="NavBarLabelVisibilityDropdown">
-                    <FontAwesomeIcon icon={faTag} />
+                    <FontAwesomeIcon icon={faTag} transform="grow-10"/>
                     {/*  TODO dropdown for selection when to show labels (always, selected, ..)  */}
                 </div>
             </div>

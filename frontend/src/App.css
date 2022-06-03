@@ -16,9 +16,9 @@ html, body {
     height: 100%;
 }
 
-.turn-white-on-hover:hover {
-    color: white;
-    border-color: white;
+.turn-light-gray-on-hover:hover {
+    color: #BBBBBB;
+    border-color: #BBBBBB;
 }
 
 /*START PAGE*/

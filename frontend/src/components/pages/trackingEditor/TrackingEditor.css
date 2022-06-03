@@ -16,29 +16,76 @@ canvas {
 .TrackList {
     grid-area: TrackList;
     width: 100%;
-    overflow: auto;     /* Scrollbar appears when content is too big for div */
 }
 
 .TrackListTabs {
-    border-width: 0px 0px 0px 8px;
+    border-width: 0px 0px 3px 8px;
     border-style: solid;
     border-color: black;
     height: 73px;
     background-color: #BBB;
 }
 
+.TrackListTabs Button {     /*selects all elements of type Button inside element with class TrackListTabs*/
+    height: 100%;
+    width: 33.33%;
+    /*border-radius: 40px 40px 0 0;*/
+    border-radius: 0;
+}
+
+.TrackListTabs .active {
+    background-color: #727272;
+}
+
+/* so that active button appears not clickable, also otherwise it only turns dark grey (~ looks active) after mouse is gone */
+.TrackListTabs .active:hover {
+    background-color: #727272;
+}
+
 .TrackListList {
     height: 810px;
+    overflow: auto;     /* Scrollbar appears when content is too big for div */
+}
+
+.TrackListList > .inactive {
+    display: none;
+}
+
+.TrackListList p {
+    margin: 0px;
 }
 
 .TrackListItem {
     border-style: none none solid solid;
-    border-width: 0px 0px 2px 8px;
+    border-width: 0px 0px 3px 8px;
+    background-color: #727272;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
 }
 
-.TrackListItemId {
+.TrackListItemName {
+    font-weight: lighter;
+    width: 100px;
+    margin-left: 5px;
     margin-top: 0;
     margin-bottom: 0;
+}
+
+.TrackListItemBlink {
+    height: 75%;
+    background-color: inherit;
+    border-width: 3px;
+    margin-right: 10px;
+    border-radius: 5px;
+}
+
+.TrackListItemBlink:focus {
+    outline: none;
+}
+
+.TrackListItemTeamDropdown {
+    width: 200px;
 }
 
 NavBar {
@@ -50,6 +97,6 @@ canvas {
 }
 
 .selected {
-    background-color: white;
+    background-color: #BBBBBB;
     /*color: white !important;  this would change the color (effects for example ID and border) */
 }

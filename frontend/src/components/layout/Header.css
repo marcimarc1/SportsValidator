@@ -1,7 +1,6 @@
 .Header {
     /*background-color: rgba(0, 50, 40, 0.9);*/
     background-color: rgba(0, 0, 0, 0.7);
-    /*height: 10%;*/
     width: 100%;
     /*position: absolute;*/
     /*padding-top: 40px;*/
@@ -9,12 +8,27 @@
     justify-content: space-between;
     align-items: center;
     animation: grow-header 0.5s ease-out reverse;
+
+    /*position: fixed;*/
 }
  .Header.on-start-page {
      position: absolute;
      padding-top: 40px;
      animation: grow-header 0.5s ease-out;
  }
+
+ /*.Header .not-on-start-page {*/
+ /*    height: 60px;  !*Added afterwards to what it turned out to be (actually 59.2px) with items/padding so that spacer can be same height*!*/
+ /*}*/
+
+ /*.HeaderSpacerDummy {*/
+ /*    width: 100%;*/
+ /*    height: 60px;*/
+ /*}*/
+
+/*.HeaderSpacerDummy .on-start-page {*/
+/*    display: none;*/
+/*}*/
 
  @keyframes grow-header {
      0% {
