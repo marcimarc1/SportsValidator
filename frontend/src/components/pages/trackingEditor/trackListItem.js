@@ -44,7 +44,6 @@ class TrackListItem extends Component {
 
 
         // style = {color: this.state.color};
-        console.log(style);
         return (
             <div className={"TrackListItem" + (bBox.my.selected ? " selected" : "")} style={style}>
                 <h1 className={"TrackListItemName" + (bBox.my.selected ? " selected" : "")}> {name} </h1>

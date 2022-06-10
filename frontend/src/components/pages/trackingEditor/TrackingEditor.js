@@ -43,7 +43,7 @@ class TrackingEditor extends Component {
             2: "Max",
             20: "Florian"
         },
-        labelVisibility: 'selected'      //selected, always or never; TODO add button to change that (Toggle between labels visible when hovering over /having selected box, always, never
+        labelVisibility: 'selected'      //selected, always or never;
     }
 
 
@@ -142,6 +142,8 @@ class TrackingEditor extends Component {
     plotBBoxes = () => {
         // TODO maybe add support for iscrowd (right now it is ignored), see/ask if it is used in backend
         let annotationsCurrentFrame = this.getAnnotationsForFrames(this.state.annotationCache, this.state.currentFrame, this.state.currentFrame);
+        // console.log("ANNOTATIONS");
+        // console.log(annotationsCurrentFrame);
         let newCanvasElements = [];
         for(let i = 0; i < annotationsCurrentFrame.length; i++) {
             newCanvasElements.push(this.CreateNewBBox(annotationsCurrentFrame[i]));
@@ -202,6 +204,28 @@ class TrackingEditor extends Component {
         this.setState({dummy: !this.state.dummy});
     }
 
+    setLabelVisibility = (visibility) => {
+
+        let hideOrShowLabels = () => {
+            this.state.canvasElements.forEach((bBox) => {
+                let vis = (visibility==="always" ? true : false);
+                if(visibility==="selected" && bBox.my.selected) {
+                    vis = true;
+                }
+                bBox.my.idOrNameObject.set('visible', vis);
+                bBox.my.teamObject.set('visible', vis);
+                bBox.my.playerObject.set('visible', vis);
+                this.canvas.requestRenderAll();     //otherwise it is just updated when clicking somewhere
+            })
+        };
+
+        if(!["always", "selected", "never"].includes(visibility)) {
+            console.log("ERROR: incorrect visibility parameter!");
+        }
+        else
+            this.setState({labelVisibility: visibility}, hideOrShowLabels);
+    }
+
     render = () => {
         let propsTracklist = {
             players: [],
@@ -217,7 +241,7 @@ class TrackingEditor extends Component {
 
         return (
             <div className="TrackingEditor">
-                <NavBar getCurrentFrame={this.getCurrentFrame()} maxFrame={10} width={canvasWidth}/>   {/*Todo: pass correct maxFrame*/}
+                <NavBar getCurrentFrame={this.getCurrentFrame} labelVisibility={this.state.labelVisibility} setLabelVisibility={this.setLabelVisibility} maxFrame={10} width={canvasWidth}/>   {/*Todo: pass correct maxFrame*/}
                 <canvas id="tracking-editor-canvas" width="1440" height="810" ></canvas>
                 <TrackList>
                     {/*<h1>Test 1</h1>*/}

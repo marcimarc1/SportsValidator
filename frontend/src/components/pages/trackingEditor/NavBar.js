@@ -4,6 +4,10 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPlay, faChevronLeft, faStepBackward, faTag} from '@fortawesome/free-solid-svg-icons'
 import Slider from "./Slider"
 import "./NavBar.css"
+import InputLabel from "@material-ui/core/InputLabel";
+import Select from "@material-ui/core/Select";
+import MenuItem from '@material-ui/core/MenuItem';
+import FormControl from "@material-ui/core/FormControl";
 
 class NavBar extends Component {
 
@@ -11,9 +15,15 @@ class NavBar extends Component {
         console.log("Changed Frame via slider")
     }
 
-    transportButtonSize = "fa-2x"
+    transportButtonSize = "fa-2x";
+
+
+    handleChangeVisibility = (event) => {
+        this.props.setLabelVisibility(event.target.value);
+    }
 
     render() {
+        let visibilityOptions = ["always", "selected", "never"].map(v => <MenuItem value={v}>{v}</MenuItem>);
         return (
             <div  className="NavBar"> {/*style={{width: this.props.width}}*/}
                 <div className="NavBarTransport">
@@ -37,9 +47,21 @@ class NavBar extends Component {
                         <Slider currentFrame={this.props.getCurrentFrame} maxFrame={this.props.maxFrame} changeFrame={this.changeFrameViaSlider}/>
                     </div>
                 </div>
+
                 <div className="NavBarLabelVisibilityDropdown">
-                    <FontAwesomeIcon icon={faTag} transform="grow-10"/>
+                    <FontAwesomeIcon className="NavBarLabelVisibilityDropdownIcon" icon={faTag} transform="grow-10"/>
                     {/*  TODO dropdown for selection when to show labels (always, selected, ..)  */}
+                    <FormControl>
+                        <InputLabel id="labeling-select-label"></InputLabel>
+                        <Select
+                            labelId="labeling-select-label"
+                            id="labeling-select"
+                            value={this.props.labelVisibility}
+                            onChange={this.handleChangeVisibility}
+                        >
+                            {visibilityOptions}
+                        </Select>
+                    </FormControl>
                 </div>
             </div>
         );
@@ -48,6 +70,8 @@ class NavBar extends Component {
 
 NavBar.propTypes = {
     getCurrentFrame: PropTypes.func.isRequired,
+    labelVisibility: PropTypes.string.isRequired,
+    setLabelVisibility: PropTypes.func.isRequired,
     maxFrame: PropTypes.number.isRequired,
     width: PropTypes.number.isRequired
 };

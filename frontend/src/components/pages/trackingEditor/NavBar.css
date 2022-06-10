@@ -53,3 +53,15 @@
 .SliderNumberInput {
     width: 50px !important;
 }
+
+.NavBarLabelVisibilityDropdown {
+    display: flex;
+    align-items: center;
+}
+
+#labeling-select-label {
+    margin-left: 5px;
+}
+
+.NavBarLabelVisibilityDropdownIcon {
+}
