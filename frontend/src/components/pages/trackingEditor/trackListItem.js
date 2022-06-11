@@ -42,10 +42,14 @@ class TrackListItem extends Component {
 
         let name = this.props.bBox.my.name ? this.props.bBox.my.name : this.props.bBox.my.id;
 
+        let clickItem = () => {
+            //TODO check if active => if not search for active, make inactive, and:
+            this.props.changeSelection("player", bBox.my.id, false);
+        }
 
         // style = {color: this.state.color};
         return (
-            <div className={"TrackListItem" + (bBox.my.selected ? " selected" : "")} style={style}>
+            <div className={"TrackListItem" + (bBox.my.selected ? " selected" : "")} style={style} onClick={clickItem}>
                 <h1 className={"TrackListItemName" + (bBox.my.selected ? " selected" : "")}> {name} </h1>
                 <button className={"TrackListItemBlink"} onClick={this.props.blink.bind(this, bBox)}>
                     <Highlight/>
@@ -70,6 +74,7 @@ class TrackListItem extends Component {
 
 NavBar.propTypes = {
     bBox: PropTypes.object.isRequired,
+    changeSelection: PropTypes.func.isRequired,
     blink: PropTypes.func.isRequired,
     getTeams: PropTypes.func.isRequired,
     setTeam: PropTypes.func.isRequired

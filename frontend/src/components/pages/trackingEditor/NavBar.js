@@ -23,7 +23,7 @@ class NavBar extends Component {
     }
 
     render() {
-        let visibilityOptions = ["always", "selected", "never"].map(v => <MenuItem value={v}>{v}</MenuItem>);
+        let visibilityOptions = ["always", "selected", "hover", "never"].map(v => <MenuItem value={v}>{v}</MenuItem>);
         return (
             <div  className="NavBar"> {/*style={{width: this.props.width}}*/}
                 <div className="NavBarTransport">

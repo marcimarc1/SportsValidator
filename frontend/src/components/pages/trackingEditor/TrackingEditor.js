@@ -43,7 +43,7 @@ class TrackingEditor extends Component {
             2: "Max",
             20: "Florian"
         },
-        labelVisibility: 'selected'      //selected, always or never;
+        labelVisibility: 'selected'      //selected, hover, always or never;
     }
 
 
@@ -219,7 +219,7 @@ class TrackingEditor extends Component {
             })
         };
 
-        if(!["always", "selected", "never"].includes(visibility)) {
+        if(!["always", "selected", "hover", "never"].includes(visibility)) {
             console.log("ERROR: incorrect visibility parameter!");
         }
         else
@@ -235,7 +235,7 @@ class TrackingEditor extends Component {
         console.log("Tracking Editor rendered!");
         let canvasWidth = this.canvas?.getWidth()   // ?. is conditional chaining, returns undefined if this.canvas is undefined
         //let trackListElementsTest = [];
-        this.state.canvasElements.forEach((bBox) => propsTracklist.players = propsTracklist.players.concat([<TrackListItem bBox={bBox} blink={this.blink} getTeams={this.getTeams} setTeam={this.setTeam}/>]));
+        this.state.canvasElements.forEach((bBox) => propsTracklist.players = propsTracklist.players.concat([<TrackListItem bBox={bBox} changeSelection={(type, id, deselect) => this.changeSelection(type, id, deselect)} blink={this.blink} getTeams={this.getTeams} setTeam={this.setTeam}/>]));
 
 
 
@@ -252,8 +252,82 @@ class TrackingEditor extends Component {
                 {/*<button type="button" onClick={this.addNewRect}> Draw! </button>*/}
             </div>
         );
+    };
+
+    hideLabels = (bBox) => {
+        bBox.my.setLabelVisibility(false);
+        this.canvas.requestRenderAll();     //otherwise it is just updated when clicking somewhere
+
     }
 
+    maybeHideLabels = (bBox) => {
+        if((this.state.labelVisibility === "selected" && !(this.canvas.getActiveObject() === bBox)) || this.state.labelVisibility === "hover")
+            this.hideLabels(bBox);
+    }
+
+    showLabels = (bBox) => {
+        bBox.my.setLabelVisibility(true);
+        this.canvas.requestRenderAll();
+    }
+
+    maybeShowLabels = (bBox) => {
+        if(this.state.labelVisibility === "selected") {
+            this.showLabels(bBox);
+
+        }
+    }
+
+    selectBBox = (id) => {
+
+        this.state.canvasElements.forEach(bBox => {
+            if (bBox.my.id == id) {
+                let bBoxDeepCopy = bBox;    //TODO the cleaner/correct version would be to do a deep clone as indicated (but not done) here. JS does not really have a deep clone functionality.
+                bBoxDeepCopy.my.selected = true;
+                console.log("Setting bBox " + bBox.my.id + " to selected!");
+                console.log(bBoxDeepCopy);
+                this.maybeShowLabels(bBoxDeepCopy);
+                return bBoxDeepCopy;
+            } else {
+                if(bBox.my.selected) {  //old selection => deselect (not necessary when selecting next box in canvas and in that case this if clause will not be active since the box is already not selected anymore, but necessary when selecting next box in tracklist
+                    console.log("deselecting old bBox");
+                    bBox.my.selected = false;
+                    this.maybeHideLabels(bBox);
+                }
+                return bBox;
+            }
+        });
+
+        this.setState({dummy: !this.state.dummy});       // TODO shouldn't be necessary with Deep Clone!
+
+        // this.forceUpdate();      //Alternative to setting dummy state like above
+    };
+
+    deselectBBox = (id) => {
+        this.state.canvasElements.forEach(bBox => {
+            if (bBox.my.id == id) {
+                //TODO comments from selectBBox about deep clone also apply here!
+                bBox.my.selected = false;
+                this.setState({dummy: !this.state.dummy});
+                this.maybeHideLabels(bBox);
+            }
+        });
+    };
+
+    changeSelection = (type, id, deselect) => {
+        switch (type) {
+            case "player":
+                if(deselect)
+                    this.selectBBox(id);
+                else
+                    this.deselectBBox(id);
+                break;
+            case "corner":
+                //TODO
+                break;
+            case "team":
+                //TODO (do nothing?)
+        };
+    }
     CreateNewBBox = (args) => {
         // console.log("Adding new Bounding Box! Args:");
         // console.log(args);
@@ -338,7 +412,11 @@ class TrackingEditor extends Component {
             selected: false,
             idOrNameObject,
             teamObject,
-            playerObject
+            playerObject,
+            setLabelVisibility: (vis) => {  //vis is boolean value
+                bBox.my.idOrNameObject.set('visible', vis);
+                bBox.my.teamObject.set('visible', vis);
+                bBox.my.playerObject.set('visible', vis);}
         };
 
 
@@ -348,61 +426,24 @@ class TrackingEditor extends Component {
         // bBox.cornerSize = Math.min(bBox.width, bBox.height) / ... // Dynamically change corner size so they are more visible on bigger BBoxes? Probably do not do it
 
 
-        let maybeHideLabels = () => {
-            if(this.state.labelVisibility === "selected" && !(this.canvas.getActiveObject() === bBox)) {
-                bBox.my.idOrNameObject.set('visible', false);
-                bBox.my.teamObject.set('visible', false);
-                bBox.my.playerObject.set('visible', false);
-                this.canvas.requestRenderAll();     //otherwise it is just updated when clicking somewhere
-            }
-        }
-
-        let maybeShowLabels = () => {
-            if(this.state.labelVisibility === "selected") {
-                bBox.my.idOrNameObject.set('visible', true);
-                bBox.my.teamObject.set('visible', true);
-                bBox.my.playerObject.set('visible', true);
-                this.canvas.requestRenderAll();
-            }
-        }
-
         bBox.on({
             'selected': () => {
-                // bBox.my.selected = true;        //TODO figure out how to call setState to change bBox.selected so that selected id is highlighted in TrackList!!!!!!
-
-                let modifiedCanvasElements = [];
-                this.state.canvasElements.forEach(bb => {
-                    if (bb === bBox) {
-                        let bBoxDeepCopy = bBox;    //TODO how can I deep clone something in JS??????????
-                        bBoxDeepCopy.my.selected = true;
-                        console.log("Setting bBox " + bBox.my.id + " to selected!");
-                        console.log(bBoxDeepCopy);
-                        return bBoxDeepCopy;
-                    } else {
-                        return bb;
-                    }
-                });
-
-                    // moved the stuff below above, TODO continue here
-                // this.setState(state =>
-                // }));
-
-                this.setState({dummy: !this.state.dummy});       // TODO shouldn't be necessary with Deep Clone!
-
-                // this.forceUpdate();      //Alternative to setting dummy state like above
-                maybeShowLabels();
+                this.selectBBox(bBox.my.id);
             },
-            'mouseover': maybeShowLabels
+            'mouseover': () => {
+                console.log("MOUSEOVER");
+                if(["selected", "hover"].includes(this.state.labelVisibility)) {
+                    this.showLabels(bBox);
+                }
+            }
         });
 
 
         bBox.on({
             'deselected': () => {
-                bBox.my.selected = false;
-                this.setState({dummy: !this.state.dummy});
-                maybeHideLabels();
+                this.deselectBBox(id);
             },
-            'mouseout': maybeHideLabels
+            'mouseout': this.maybeHideLabels.bind(this, bBox)
         });
 
         let updateTextLocationAccordingToBBox = (options) => {
