@@ -42,9 +42,10 @@ class TrackListItem extends Component {
 
         let name = this.props.bBox.my.name ? this.props.bBox.my.name : this.props.bBox.my.id;
 
+        // selects or deselects (if its already selected) the clicked item (e.g. player)
         let clickItem = () => {
-            //TODO check if active => if not search for active, make inactive, and:
-            this.props.changeSelection("player", bBox.my.id, false);
+            let deselect = this.props.bBox.my.selected;
+            this.props.changeSelection("player", bBox.my.id, deselect);
         }
 
         // style = {color: this.state.color};

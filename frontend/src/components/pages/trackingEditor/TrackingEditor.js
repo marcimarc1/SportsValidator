@@ -261,7 +261,8 @@ class TrackingEditor extends Component {
     }
 
     maybeHideLabels = (bBox) => {
-        if((this.state.labelVisibility === "selected" && !(this.canvas.getActiveObject() === bBox)) || this.state.labelVisibility === "hover")
+        // if labelVisibility is hover, the label should always be hidden when this function is called
+        if((this.state.labelVisibility === "selected" && !(bBox.my.selected)) || this.state.labelVisibility === "hover")
             this.hideLabels(bBox);
     }
 
@@ -277,19 +278,18 @@ class TrackingEditor extends Component {
         }
     }
 
+    // Automatically deselects all other selected boxes
     selectBBox = (id) => {
 
         this.state.canvasElements.forEach(bBox => {
             if (bBox.my.id == id) {
                 let bBoxDeepCopy = bBox;    //TODO the cleaner/correct version would be to do a deep clone as indicated (but not done) here. JS does not really have a deep clone functionality.
                 bBoxDeepCopy.my.selected = true;
-                console.log("Setting bBox " + bBox.my.id + " to selected!");
                 console.log(bBoxDeepCopy);
                 this.maybeShowLabels(bBoxDeepCopy);
                 return bBoxDeepCopy;
             } else {
                 if(bBox.my.selected) {  //old selection => deselect (not necessary when selecting next box in canvas and in that case this if clause will not be active since the box is already not selected anymore, but necessary when selecting next box in tracklist
-                    console.log("deselecting old bBox");
                     bBox.my.selected = false;
                     this.maybeHideLabels(bBox);
                 }
@@ -305,7 +305,7 @@ class TrackingEditor extends Component {
     deselectBBox = (id) => {
         this.state.canvasElements.forEach(bBox => {
             if (bBox.my.id == id) {
-                //TODO comments from selectBBox about deep clone also apply here!
+                //comments from selectBBox about deep clone also apply here!
                 bBox.my.selected = false;
                 this.setState({dummy: !this.state.dummy});
                 this.maybeHideLabels(bBox);
@@ -317,9 +317,9 @@ class TrackingEditor extends Component {
         switch (type) {
             case "player":
                 if(deselect)
-                    this.selectBBox(id);
-                else
                     this.deselectBBox(id);
+                else
+                    this.selectBBox(id);
                 break;
             case "corner":
                 //TODO
