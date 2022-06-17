@@ -285,6 +285,7 @@ class TrackingEditor extends Component {
             if (bBox.my.id == id) {
                 let bBoxDeepCopy = bBox;    //TODO the cleaner/correct version would be to do a deep clone as indicated (but not done) here. JS does not really have a deep clone functionality.
                 bBoxDeepCopy.my.selected = true;
+                this.canvas.setActiveObject(bBoxDeepCopy);  //necessary so that canvas behaves as expected, e.g. clicking in empty spot clears selection
                 console.log(bBoxDeepCopy);
                 this.maybeShowLabels(bBoxDeepCopy);
                 return bBoxDeepCopy;
@@ -431,7 +432,6 @@ class TrackingEditor extends Component {
                 this.selectBBox(bBox.my.id);
             },
             'mouseover': () => {
-                console.log("MOUSEOVER");
                 if(["selected", "hover"].includes(this.state.labelVisibility)) {
                     this.showLabels(bBox);
                 }
