@@ -4,6 +4,8 @@ import InputLabel from '@material-ui/core/InputLabel';
 import MenuItem from '@material-ui/core/MenuItem';
 import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
+import { EditText, EditTextarea } from 'react-edit-text';
+import 'react-edit-text/dist/index.css';
 
 import './TrackingEditor.css';
 import NavBar from "./NavBar";
@@ -23,6 +25,10 @@ class TrackListItem extends Component {
 
     handleChangeTeam = (event) => {
         this.props.setTeam(this.props.bBox, event.target.value);
+    }
+
+    handleChangeName = (obj) => {
+        this.props.setName(this.props.bBox, obj.value);
     }
 
     render() {
@@ -51,7 +57,12 @@ class TrackListItem extends Component {
         // style = {color: this.state.color};
         return (
             <div className={"TrackListItem" + (bBox.my.selected ? " selected" : "")} style={style} onClick={clickItem}>
-                <h1 className={"TrackListItemName" + (bBox.my.selected ? " selected" : "")}> {name} </h1>
+                {/*<h1 className={"TrackListItemName" + (bBox.my.selected ? " selected" : "")}> {name} </h1>*/}
+                <EditText
+                    className={"TrackListItemName" + (bBox.my.selected ? " selected" : "")}
+                    defaultValue={name.toString()}
+                    onSave={this.handleChangeName}
+                />
                 <button className={"TrackListItemBlink"} onClick={this.props.blink.bind(this, bBox)}>
                     <Highlight/>
                 </button>
@@ -78,7 +89,8 @@ NavBar.propTypes = {
     changeSelection: PropTypes.func.isRequired,
     blink: PropTypes.func.isRequired,
     getTeams: PropTypes.func.isRequired,
-    setTeam: PropTypes.func.isRequired
+    setTeam: PropTypes.func.isRequired,
+    setName: PropTypes.func.isRequired
 };
 
 export default TrackListItem;

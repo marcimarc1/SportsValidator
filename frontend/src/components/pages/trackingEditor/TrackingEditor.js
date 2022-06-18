@@ -204,6 +204,17 @@ class TrackingEditor extends Component {
         this.setState({dummy: !this.state.dummy});
     }
 
+    setName = (bBox, name) => {
+        fabric.Object.prototype.objectCaching = false;
+        console.log("setting name of " + bBox.my.id + " to " + name);
+        bBox.my.name = name;
+        bBox.my.idOrNameObject.set('text', "Name: " + name);
+        this.canvas.requestRenderAll();
+        //bBox.my.idOrNameObject.visible = false;
+        // TODO call backend
+        this.setState((state) => ({idToName: {...state.idToName}[bBox.my.id] = name}));
+    }
+
     setLabelVisibility = (visibility) => {
 
         let hideOrShowLabels = () => {
@@ -235,7 +246,7 @@ class TrackingEditor extends Component {
         console.log("Tracking Editor rendered!");
         let canvasWidth = this.canvas?.getWidth()   // ?. is conditional chaining, returns undefined if this.canvas is undefined
         //let trackListElementsTest = [];
-        this.state.canvasElements.forEach((bBox) => propsTracklist.players = propsTracklist.players.concat([<TrackListItem bBox={bBox} changeSelection={(type, id, deselect) => this.changeSelection(type, id, deselect)} blink={this.blink} getTeams={this.getTeams} setTeam={this.setTeam}/>]));
+        this.state.canvasElements.forEach((bBox) => propsTracklist.players = propsTracklist.players.concat([<TrackListItem bBox={bBox} changeSelection={this.changeSelection} setName={this.setName} blink={this.blink} getTeams={this.getTeams} setTeam={this.setTeam}/>]));
 
 
 
@@ -358,7 +369,7 @@ class TrackingEditor extends Component {
         let player = args.attributes.track_id
         let name = args.id in this.state.idToName ? this.state.idToName[args.id] : undefined;
         let idText = name ? "Name: " + this.state.idToName[args.id] : "ID: " + args.id.toString();
-        let idOrNameObject = new fabric.Text(idText, {     //Todo add dict that translates id to name? => to support renaming
+        let idOrNameObject = new fabric.Text(idText, {
             fontSize,
             fontFamily,
             visible,
@@ -385,6 +396,12 @@ class TrackingEditor extends Component {
             left: textLeft,
             top: top + 2 * textVerticalDistance
         });
+
+        // add "text" property to cacheProperties so elements are redrawn when their text changes
+        // (for example when a player name is changed the labels in the canvas would otherwise not update)
+        idOrNameObject.cacheProperties.push("text");
+        teamObject.cacheProperties.push("text");
+        playerObject.cacheProperties.push("text");
 
         let bBox = new fabric.Rect({
             left,
