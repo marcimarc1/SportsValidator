@@ -12,12 +12,12 @@ class Slider extends Component {
         };
     }
 
-    handleSliderChange = () => {
-        this.props.changeFrame()
+    handleSliderChange = (event, value) => {
+        this.props.changeFrame(event, value);
     }
 
-    handleInputChange = () => {
-        this.props.changeFrame()
+    handleInputChange = (event, value) => {
+        this.props.changeFrame(event, value);
     }
 
     render() {

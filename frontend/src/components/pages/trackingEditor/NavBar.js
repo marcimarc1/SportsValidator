@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
 import PropTypes from 'prop-types';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faPlay, faChevronLeft, faStepBackward, faTag} from '@fortawesome/free-solid-svg-icons'
+import { faPlay, faPause, faChevronLeft, faStepBackward, faTag} from '@fortawesome/free-solid-svg-icons'
 import Slider from "./Slider"
 import "./NavBar.css"
 import InputLabel from "@material-ui/core/InputLabel";
@@ -11,12 +11,33 @@ import FormControl from "@material-ui/core/FormControl";
 
 class NavBar extends Component {
 
-    changeFrameViaSlider = () => {
-        console.log("Changed Frame via slider")
+    state = {
+        playing: false  // to indicate whether play is active or no (in order to switch between play and pause button)
+    }
+
+    bigStepSize = 10;   // how many frames the doubleChevron buttons go forward or backward
+
+    switchFrame = (i) => () => {
+        if(i != this.props.getCurrentFrame() || i > 0 || i < this.props.maxFrame) {
+            this.props.switchFrame(i);
+        }
+    }
+
+    switchFrameRelative = (i) => {
+        return this.switchFrame(this.props.getCurrentFrame() + i);
+    }
+
+    changeFrameViaSlider = (event, value) => {
+        console.log("Changed Frame via slider to frame "+value);
+        this.switchFrame(value);
     }
 
     transportButtonSize = "fa-2x";
 
+    playPause = () => {
+        // TODO
+        this.setState({playing: !this.state.playing});
+    }
 
     handleChangeVisibility = (event) => {
         this.props.setLabelVisibility(event.target.value);
@@ -28,15 +49,16 @@ class NavBar extends Component {
             <div  className="NavBar"> {/*style={{width: this.props.width}}*/}
                 <div className="NavBarTransport">
                     <div className="NavBarTransportButtonContainer">
-                        <FontAwesomeIcon icon={faStepBackward} className={this.transportButtonSize + " NavBarTransportButton NavBarTransportButtonFirst"} />
-                        <span className={this.transportButtonSize + " fa-layers fa-fw NavBarTransportButton"}>      {/* making a double chevron because fontawesome does not have one (double angle is scaled down)*/}
+                        <FontAwesomeIcon icon={faStepBackward} onClick={this.switchFrame(0)} className={this.transportButtonSize + " NavBarTransportButton NavBarTransportButtonFirst"} />
+                        <span onClick={this.switchFrameRelative(-this.bigStepSize)} className={this.transportButtonSize + " fa-layers fa-fw NavBarTransportButton"}>      {/* making a double chevron because fontawesome does not have one (double angle is scaled down)*/}
                             <FontAwesomeIcon icon={faChevronLeft} />
                             <FontAwesomeIcon icon={faChevronLeft} transform="right-6" />
                         </span>
-                        <FontAwesomeIcon icon={faChevronLeft} className={this.transportButtonSize + " NavBarTransportButton"} />
-                        <FontAwesomeIcon icon={faPlay} className={this.transportButtonSize + " NavBarTransportButton NavBarTransportButtonPlay"} />
-                        <FontAwesomeIcon icon={faChevronLeft} flip="horizontal" className={this.transportButtonSize + " NavBarTransportButton"} />
-                        <span className={this.transportButtonSize + " fa-layers fa-fw NavBarTransportButton NavBarTransportButtonDoubleChevronRight"}>      {/* making a double chevron because fontawesome does not have one (double angle is scaled down)*/}
+                        <FontAwesomeIcon icon={faChevronLeft} onClick={this.switchFrameRelative(-1)} className={this.transportButtonSize + " NavBarTransportButton"} />
+                        <FontAwesomeIcon icon={faPlay} onClick={this.playPause} className={this.transportButtonSize + " NavBarTransportButton NavBarTransportButtonPlay" + (this.state.playing ? "": " remove")} />
+                        <FontAwesomeIcon icon={faPause} onClick={this.playPause} className={this.transportButtonSize + " NavBarTransportButton NavBarTransportButtonPause" + (this.state.playing ? " remove": "")} />
+                        <FontAwesomeIcon icon={faChevronLeft} flip="horizontal" onClick={this.switchFrameRelative(1)} className={this.transportButtonSize + " NavBarTransportButton"} />
+                        <span onClick={this.switchFrameRelative(this.bigStepSize)} className={this.transportButtonSize + " fa-layers fa-fw NavBarTransportButton NavBarTransportButtonDoubleChevronRight"}>      {/* making a double chevron because fontawesome does not have one (double angle is scaled down)*/}
                             <FontAwesomeIcon icon={faChevronLeft} flip="horizontal"/>
                             <FontAwesomeIcon icon={faChevronLeft} flip="horizontal" transform="left-6" />
                         </span>
@@ -69,6 +91,7 @@ class NavBar extends Component {
 }
 
 NavBar.propTypes = {
+    switchFrame: PropTypes.func.isRequired,
     getCurrentFrame: PropTypes.func.isRequired,
     labelVisibility: PropTypes.string.isRequired,
     setLabelVisibility: PropTypes.func.isRequired,

@@ -3,18 +3,23 @@ import PropTypes from 'prop-types';
 import { fabric } from 'fabric';
 import './TrackingEditor.css';
 
-import pic from "../../../data/frame_000000.jpg";
+// import pic from "../../../data/frame_000000.jpg";
 import tracking from "../../../data/instances_default.json";
 import NavBar from "./NavBar";
 import TrackList from "./trackList";
-import TrackListItem from "./trackListItem";
+import TrackListItemPlayer from "./trackListItemPlayer";
 
+require('require-context/register');
 
 class TrackingEditor extends Component {
-
     cacheSize = 5;  //TODO experiment with this to check performance
+    demoFrameSource = '../../../data/';//"../data/";
+    framesCache = [];
+    annotationsCache = [];
 
     canvas = undefined;
+    demoImages = require.context('../../../data/', false, /.*/);    // /.*/ is a regex that matches everything
+    pic = {};
 
     state = {
 
@@ -26,9 +31,6 @@ class TrackingEditor extends Component {
         scalingFactor: undefined,
         categories: [],             // read in from annotations file
         currentFrame: undefined,    //BACKEND
-        frameCache: [],
-        annotationCache: [],
-        frameSource: "../data/frame_000000.jpg",
         colorByCategory: true,      //Toggle between coloring BBoxes by Category or Player
         colorCategoryNumber: 1,     // not used so far, for enabling multiple categories; which category to color the BBoxes by if colorByCategory is true;
         category_1_Colors: {        //BACKEND
@@ -46,6 +48,13 @@ class TrackingEditor extends Component {
         labelVisibility: 'selected'      //selected, hover, always or never;
     }
 
+    constructor(props) {
+        super(props);
+        for(let i = 0; i < 11; i++) {
+            let filename = "./" + this.getDemoFrameFilename(i);
+            this.pic[i] = this.demoImages(filename).default;//require("../../../data/frame_000000.jpg");
+        }
+    }
 
     componentDidMount() {
 
@@ -57,9 +66,7 @@ class TrackingEditor extends Component {
         // this probably requires more computation but should be completely fine.
         fabric.Object.prototype.noScaleCache = false;
 
-        let frameSource = "../data/";
-        let currentFrameNumber = this.props.currentFrame;
-        let loadedFrames = [];
+        let currentFrameNumber = this.props.startFrame;
 
         //compute how many frames before and after the current frame should be cached
         let cacheSizeBefore = Math.floor((this.cacheSize - 1) / 2);
@@ -74,9 +81,9 @@ class TrackingEditor extends Component {
         // load video frames to cache (TODO not working right now, probably because of require, just sticking to 1 frame for now)
         for(let i=currentFrameNumber-cacheSizeBefore; i<=currentFrameNumber+cacheSizeBehind; i++) {
             // TODO if this code is reused, check if frame is already cached before loading it
-            let framePath = frameSource + "frame_" + i.toString().padStart(6, "0") + ".jpg";
+            // let framePath = this.getDemoFramePath(i);
             // let currentFrame = require(framePath);     //probably/maybe bad to use import here, but will be changed once API is there anyways
-            // loadedFrames.push({index: i, data: currentFrame});
+            // this.framesCache.push({index: i, data: currentFrame});
         }
 
         console.log(tracking);
@@ -93,9 +100,9 @@ class TrackingEditor extends Component {
         console.log("cacheSizeBefore: " + cacheSizeBefore);
         let firstCachedFrame = currentFrameNumber - cacheSizeBefore;
         let lastCachedFrame = currentFrameNumber + cacheSizeBehind;
-        let cachedAnnotations = this.getAnnotationsForFrames(annotations, firstCachedFrame, lastCachedFrame);
+        this.annotationsCache = this.getAnnotationsForFrames(annotations, firstCachedFrame, lastCachedFrame);
         console.log(`Frames from ${firstCachedFrame} to ${lastCachedFrame}: `);
-        console.log(cachedAnnotations);
+        console.log(this.annotationsCache);
 
 
 
@@ -111,19 +118,51 @@ class TrackingEditor extends Component {
         //compute scaling factor for image to fit into fixed size canvas (only using width to keep picture ratio)
 
         let img = new Image();
-        img.src = pic;
+        img.src = this.pic[currentFrameNumber];
+        // let img = new fabric.Image.fromURL(framePath, image => {
+        //     scalingFactor = image.width;
+        //     this.setState({scalingFactor: scalingFactor});
+        //     // canvas.setBackgroundImage(pic, canvas.renderAll.bind(canvas), {scaleX: scalingFactor, scaleY: scalingFactor});
+        //     image.scale(0.3);
+        //     canvas.add(image);
+        //     canvas.renderAll();
+        // });
         scalingFactor = canvas.getWidth() / img.width;
         img.onload = () => {
             this.setState({scalingFactor: scalingFactor});
-            canvas.setBackgroundImage(pic, canvas.renderAll.bind(canvas), {scaleX: scalingFactor, scaleY: scalingFactor});
+            canvas.setBackgroundImage(this.pic[currentFrameNumber], canvas.renderAll.bind(canvas), {scaleX: scalingFactor, scaleY: scalingFactor});
             // canvas.setHeight(img.height * scalingFactor);
         }
 
         this.canvas = canvas;
-        this.setState({video: this.props.video, currentFrame: this.props.currentFrame, scalingFactor: scalingFactor, categories: categories, annotationCache: cachedAnnotations, frameCache: loadedFrames},
+        this.setState({video: this.props.video, currentFrame: currentFrameNumber, scalingFactor: scalingFactor, categories: categories},
             () => this.plotBBoxes());
 
 
+    }
+
+    componentDidUpdate(prevProps, prevState) {
+        console.log("Frame: " + this.state.currentFrame);
+
+        if(prevState.currentFrame != this.state.currentFrame) {
+            // TODO optional: take prevState.currentFrame - this.state.currentFrame and adjust Cache accordingly
+            let img = new Image();
+            img.src = this.pic[this.state.currentFrame];
+            let scalingFactor = this.canvas.getWidth() / img.width;
+            img.onload = () => {
+                this.canvas.setBackgroundImage(this.pic[this.state.currentFrame], this.canvas.renderAll.bind(this.canvas), {scaleX: scalingFactor, scaleY: scalingFactor});
+                this.plotBBoxes();
+                this.canvas.renderAll();
+            }
+        }
+    }
+
+    getDemoFramePath(i) {
+        return this.demoFrameSource + this.getDemoFrameFilename(i);
+    }
+
+    getDemoFrameFilename(i) {
+        return "frame_" + i.toString().padStart(6, "0") + ".jpg";
     }
 
     // assumes that annotations array is ordered by increasing frame number (image_id)
@@ -141,7 +180,7 @@ class TrackingEditor extends Component {
 
     plotBBoxes = () => {
         // TODO maybe add support for iscrowd (right now it is ignored), see/ask if it is used in backend
-        let annotationsCurrentFrame = this.getAnnotationsForFrames(this.state.annotationCache, this.state.currentFrame, this.state.currentFrame);
+        let annotationsCurrentFrame = this.getAnnotationsForFrames(this.annotationsCache, this.state.currentFrame, this.state.currentFrame);
         // console.log("ANNOTATIONS");
         // console.log(annotationsCurrentFrame);
         let newCanvasElements = [];
@@ -159,7 +198,7 @@ class TrackingEditor extends Component {
         // let newTrackListItems = [];
 
         // Using concat() because for push() (which would be more appropriate) because the HTML Tag syntax did only work in a list
-        // newCanvasElements.forEach(bBox => newTrackListItems = newTrackListItems.concat([<TrackListItem bBox={bBox} blink={this.blink} />]));
+        // newCanvasElements.forEach(bBox => newTrackListItems = newTrackListItems.concat([<TrackListItemPlayer bBox={bBox} blink={this.blink} />]));
 
 
         this.setState({
@@ -169,11 +208,22 @@ class TrackingEditor extends Component {
     }
 
     getFrame = (i) => {
-        let ret = this.state.frameCache.find(element => element.index = i);
+        let ret = this.framesCache.find(element => element.index = i);
         if(ret === undefined) {
-            console.log("tried to get Frame " + i + ", but that frame is not yet loaded into TrackingEditor.state.frameCache");
+            console.log("tried to get Frame " + i + ", but that frame is not yet loaded into TrackingEditor.framesCache");
         }
         return ret;
+    }
+
+    // parameter check is already done in NavBar so this function expects a valid value for i
+    switchFrame = (i) => {
+        //TODO call backend and delete the following hardcoded numbers in if clause (they are because there are only so many sample images here)
+        if(i<0 || i>10) {
+            console.log("frame number invalid: " + i);
+            return;
+        }
+        this.setState({currentFrame: i});
+
     }
 
     getColor = (categoryId, trackId) => {
@@ -246,13 +296,13 @@ class TrackingEditor extends Component {
         console.log("Tracking Editor rendered!");
         let canvasWidth = this.canvas?.getWidth()   // ?. is conditional chaining, returns undefined if this.canvas is undefined
         //let trackListElementsTest = [];
-        this.state.canvasElements.forEach((bBox) => propsTracklist.players = propsTracklist.players.concat([<TrackListItem bBox={bBox} changeSelection={this.changeSelection} setName={this.setName} blink={this.blink} getTeams={this.getTeams} setTeam={this.setTeam}/>]));
+        this.state.canvasElements.forEach((bBox) => propsTracklist.players = propsTracklist.players.concat([<TrackListItemPlayer bBox={bBox} changeSelection={this.changeSelection} setName={this.setName} blink={this.blink} getTeams={this.getTeams} setTeam={this.setTeam} delete={this.deletePlayer}/>]));
 
 
 
         return (
             <div className="TrackingEditor">
-                <NavBar getCurrentFrame={this.getCurrentFrame} labelVisibility={this.state.labelVisibility} setLabelVisibility={this.setLabelVisibility} maxFrame={10} width={canvasWidth}/>   {/*Todo: pass correct maxFrame*/}
+                <NavBar switchFrame={this.switchFrame} getCurrentFrame={this.getCurrentFrame} labelVisibility={this.state.labelVisibility} setLabelVisibility={this.setLabelVisibility} maxFrame={10} width={canvasWidth}/>   {/*Todo: pass correct maxFrame*/}
                 <canvas id="tracking-editor-canvas" width="1440" height="810" ></canvas>
                 <TrackList>
                     {/*<h1>Test 1</h1>*/}
@@ -319,6 +369,7 @@ class TrackingEditor extends Component {
             if (bBox.my.id == id) {
                 //comments from selectBBox about deep clone also apply here!
                 bBox.my.selected = false;
+                this.canvas.discardActiveObject();
                 this.setState({dummy: !this.state.dummy});
                 this.maybeHideLabels(bBox);
             }
@@ -570,6 +621,60 @@ class TrackingEditor extends Component {
             time += interval;
         }
     }
+
+    deletePlayer = (bBox) => {
+        // TODO call backend
+
+        // remove from canvasElements
+        let stateUpdate = (state) => {
+            let canvasElements = [...state.canvasElements];
+            canvasElements.splice(canvasElements.indexOf(bBox), 1); // remove bBox
+            let stateModifier = {canvasElements: canvasElements};
+
+            // remove from other dicts (name and color mapping)
+            if(bBox.my.id in this.state.idToName) {
+                let idToName = {...this.state.idToName};
+                delete idToName[bBox.my.id];
+                stateModifier.idToName = idToName;
+            }
+            if(bBox.my.id in this.state.playerColors) {
+                let playerColors = {...this.state.playerColors};
+                delete playerColors[bBox.my.id];
+                stateModifier.playerColors = playerColors;
+            }
+            return stateModifier;
+        };
+
+        this.setState(stateUpdate, () => console.log(this.state.idToName))
+
+        this.canvas.remove(bBox.my.idOrNameObject);
+        this.canvas.remove(bBox.my.teamObject);
+        this.canvas.remove(bBox.my.playerObject);
+
+        // TODO not quite working yet, corners stay behind. Also make sure bBox is not clickable?
+        // this.canvas.remove(bBox);    // breaks canvas in a very strange way
+        bBox.set('visible', false);
+
+        // does not have any effect
+        bBox.set('visible', false, 'hasBorders', false, 'hasControls', false, 'cornerSize', 0);
+        this.canvas.discardActiveObject();
+        this.canvas.requestRenderAll();
+
+        // // TODO delete just for testing
+        // var rect = new fabric.Rect({
+        //     left: 100,
+        //     top: 100,
+        //     fill: 'red',
+        //     width: 20,
+        //     height: 20
+        // });
+        //
+        // this.canvas.add(rect);
+        // this.canvas.remove(rect);
+
+
+    }
+
 }
 
 
@@ -577,12 +682,12 @@ class TrackingEditor extends Component {
 
 TrackingEditor.propTypes = {
     video: PropTypes.string.isRequired, //make required
-    currentFrame: PropTypes.number
+    startFrame: PropTypes.number
 };
 
-TrackingEditor.defaultProps = {
-    video: "Demo",
-    currentFrame: 1
-};
+// TrackingEditor.defaultProps = {
+//     video: "Demo",
+//     startFrame: 1
+// };
 
 export default TrackingEditor;

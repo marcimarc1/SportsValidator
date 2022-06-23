@@ -5,7 +5,7 @@ class Demo extends Component {
     render() {
         return (
             <div className="Demo full-page">
-                <TrackingEditor video="Demo" />
+                <TrackingEditor video="Demo" startFrame={1}/>
             </div>
         );
     }
