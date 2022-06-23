@@ -16,6 +16,8 @@ class TrackingEditor extends Component {
     demoFrameSource = '../../../data/';//"../data/";
     framesCache = [];
     annotationsCache = [];
+    canvasElements= [];
+
 
     canvas = undefined;
     demoImages = require.context('../../../data/', false, /.*/);    // /.*/ is a regex that matches everything
@@ -26,7 +28,6 @@ class TrackingEditor extends Component {
         dummy: true,
         // canvas: undefined,
         video: "no video assigned",
-        canvasElements: [],
         trackListElements: [],
         scalingFactor: undefined,
         categories: [],             // read in from annotations file
@@ -200,11 +201,12 @@ class TrackingEditor extends Component {
         // Using concat() because for push() (which would be more appropriate) because the HTML Tag syntax did only work in a list
         // newCanvasElements.forEach(bBox => newTrackListItems = newTrackListItems.concat([<TrackListItemPlayer bBox={bBox} blink={this.blink} />]));
 
-
-        this.setState({
-            canvasElements: this.state.canvasElements.concat(newCanvasElements)      // concat does not mutate the original array
-            // , trackListElements: this.state.trackListElements.concat(newTrackListItems)
-        });//, () => this.render);
+        this.canvasElements = this.canvasElements.concat(newCanvasElements);      // concat does not mutate the original array
+        // instead of the following in order to not trigger endless rerender!
+        // this.setState({
+        //     canvasElements: this.state.canvasElements.concat(newCanvasElements)      // concat does not mutate the original array
+        //     // , trackListElements: this.state.trackListElements.concat(newTrackListItems)
+        // });//, () => this.render);
     }
 
     getFrame = (i) => {
@@ -268,7 +270,7 @@ class TrackingEditor extends Component {
     setLabelVisibility = (visibility) => {
 
         let hideOrShowLabels = () => {
-            this.state.canvasElements.forEach((bBox) => {
+            this.canvasElements.forEach((bBox) => {
                 let vis = (visibility==="always" ? true : false);
                 if(visibility==="selected" && bBox.my.selected) {
                     vis = true;
@@ -296,7 +298,7 @@ class TrackingEditor extends Component {
         console.log("Tracking Editor rendered!");
         let canvasWidth = this.canvas?.getWidth()   // ?. is conditional chaining, returns undefined if this.canvas is undefined
         //let trackListElementsTest = [];
-        this.state.canvasElements.forEach((bBox) => propsTracklist.players = propsTracklist.players.concat([<TrackListItemPlayer bBox={bBox} changeSelection={this.changeSelection} setName={this.setName} blink={this.blink} getTeams={this.getTeams} setTeam={this.setTeam} delete={this.deletePlayer}/>]));
+        this.canvasElements.forEach((bBox) => propsTracklist.players = propsTracklist.players.concat([<TrackListItemPlayer bBox={bBox} changeSelection={this.changeSelection} setName={this.setName} blink={this.blink} getTeams={this.getTeams} setTeam={this.setTeam} delete={this.deletePlayer}/>]));
 
 
 
@@ -342,12 +344,19 @@ class TrackingEditor extends Component {
     // Automatically deselects all other selected boxes
     selectBBox = (id) => {
 
-        this.state.canvasElements.forEach(bBox => {
+        this.canvasElements.forEach(bBox => {
             if (bBox.my.id == id) {
                 let bBoxDeepCopy = bBox;    //TODO the cleaner/correct version would be to do a deep clone as indicated (but not done) here. JS does not really have a deep clone functionality.
+                console.log("**************************");
+                console.log("bBox to select:");
+                console.log(bBox);
+                console.log("active Element:");
+                console.log(this.canvas.getActiveObject());
+                console.log("Comparison result:" + this.canvas.getActiveObject()?.my?.id !== bBoxDeepCopy.my.id);
+                console.log("*****************************");
+                if(this.canvas.getActiveObject()?.my?.id !== bBoxDeepCopy.my.id)  // comparison by reference which is intended in this case
+                    this.canvas.setActiveObject(bBoxDeepCopy);  //necessary so that canvas behaves as expected, e.g. clicking in empty spot clears selection
                 bBoxDeepCopy.my.selected = true;
-                this.canvas.setActiveObject(bBoxDeepCopy);  //necessary so that canvas behaves as expected, e.g. clicking in empty spot clears selection
-                console.log(bBoxDeepCopy);
                 this.maybeShowLabels(bBoxDeepCopy);
                 return bBoxDeepCopy;
             } else {
@@ -359,18 +368,18 @@ class TrackingEditor extends Component {
             }
         });
 
-        this.setState({dummy: !this.state.dummy});       // TODO shouldn't be necessary with Deep Clone!
+        //this.setState({dummy: !this.state.dummy});       // TODO shouldn't be necessary with Deep Clone!
 
         // this.forceUpdate();      //Alternative to setting dummy state like above
     };
 
     deselectBBox = (id) => {
-        this.state.canvasElements.forEach(bBox => {
+        this.canvasElements.forEach(bBox => {
             if (bBox.my.id == id) {
                 //comments from selectBBox about deep clone also apply here!
                 bBox.my.selected = false;
                 this.canvas.discardActiveObject();
-                this.setState({dummy: !this.state.dummy});
+                //this.setState({dummy: !this.state.dummy});
                 this.maybeHideLabels(bBox);
             }
         });
@@ -627,9 +636,14 @@ class TrackingEditor extends Component {
 
         // remove from canvasElements
         let stateUpdate = (state) => {
-            let canvasElements = [...state.canvasElements];
-            canvasElements.splice(canvasElements.indexOf(bBox), 1); // remove bBox
-            let stateModifier = {canvasElements: canvasElements};
+            // done below this function now since canvasElements is moved out of state
+            // let canvasElements = [...state.canvasElements];
+            // canvasElements.splice(canvasElements.indexOf(bBox), 1); // remove bBox
+            // let stateModifier = {canvasElements: canvasElements};
+
+            // canvasElements moved out of state!
+            let stateModifier= {};
+
 
             // remove from other dicts (name and color mapping)
             if(bBox.my.id in this.state.idToName) {
@@ -644,6 +658,9 @@ class TrackingEditor extends Component {
             }
             return stateModifier;
         };
+
+        let index = this.canvasElements.indexOf(bBox);
+        this.canvasElements.splice(index, 1); // remove bBox
 
         this.setState(stateUpdate, () => console.log(this.state.idToName))
 
