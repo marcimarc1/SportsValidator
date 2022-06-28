@@ -130,14 +130,15 @@ class TrackingEditor extends Component {
         // });
         scalingFactor = canvas.getWidth() / img.width;
         img.onload = () => {
-            this.setState({scalingFactor: scalingFactor});
             canvas.setBackgroundImage(this.pic[currentFrameNumber], canvas.renderAll.bind(canvas), {scaleX: scalingFactor, scaleY: scalingFactor});
             // canvas.setHeight(img.height * scalingFactor);
         }
 
         this.canvas = canvas;
         this.setState({video: this.props.video, currentFrame: currentFrameNumber, scalingFactor: scalingFactor, categories: categories},
-            () => this.plotBBoxes());
+            () => {this.plotBBoxes(); this.setState({dummy: !this.state.dummy})});
+        // calling setState twice is necessary here because the plotBBoxes function relies on some info about the state
+        // not an issue since this is only called on mount anyways; maybe plotBBoxes could be rewritten but then it would be easier to introduce bugs that violate data consistency with state?
 
 
     }
