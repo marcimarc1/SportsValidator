@@ -147,14 +147,8 @@ class TrackingEditor extends Component {
 
         if(prevState.currentFrame != this.state.currentFrame) {
             // TODO optional: take prevState.currentFrame - this.state.currentFrame and adjust Cache accordingly
-            let img = new Image();
-            img.src = this.pic[this.state.currentFrame];
-            let scalingFactor = this.canvas.getWidth() / img.width;
-            img.onload = () => {
-                this.canvas.setBackgroundImage(this.pic[this.state.currentFrame], this.canvas.renderAll.bind(this.canvas), {scaleX: scalingFactor, scaleY: scalingFactor});
-                this.plotBBoxes();
-                this.canvas.renderAll();
-            }
+
+
         }
     }
 
@@ -201,7 +195,11 @@ class TrackingEditor extends Component {
         // Using concat() because for push() (which would be more appropriate) because the HTML Tag syntax did only work in a list
         // newCanvasElements.forEach(bBox => newTrackListItems = newTrackListItems.concat([<TrackListItemPlayer bBox={bBox} blink={this.blink} />]));
 
+        console.log("bBox array before:");
+        console.log(this.canvasElements);
         this.canvasElements = this.canvasElements.concat(newCanvasElements);      // concat does not mutate the original array
+        console.log("bBox array after:");
+        console.log(this.canvasElements);
         // instead of the following in order to not trigger endless rerender!
         // this.setState({
         //     canvasElements: this.state.canvasElements.concat(newCanvasElements)      // concat does not mutate the original array
@@ -224,6 +222,37 @@ class TrackingEditor extends Component {
             console.log("frame number invalid: " + i);
             return;
         }
+
+        // clear canvas
+
+        // this should work according to https://stackoverflow.com/questions/2142535/how-to-clear-the-canvas-for-redrawing but does not
+        // there seems to be no function to just clear the canvas...
+        // const context = this.canvas.getContext('2d');
+        // context.clearRect(0, 0, this.canvas.width, this.canvas.height); //Might have to be adapted when/if using zoom, see https://stackoverflow.com/questions/2142535/how-to-clear-the-canvas-for-redrawing
+        // context.beginPath();
+
+        // this works but is a bit brute-force...
+        this.canvasElements.forEach((e) => {
+            this.canvas.remove(e);
+            if(e?.my) {
+                this.canvas.remove(e.my.playerObject);
+                this.canvas.remove(e.my.teamObject);
+                this.canvas.remove(e.my.idOrNameObject);
+            }
+        });
+
+        this.canvasElements = [];
+
+        // add new content to canvas
+        let img = new Image();
+        img.src = this.pic[this.state.currentFrame];
+        let scalingFactor = this.canvas.getWidth() / img.width;
+        this.plotBBoxes();  // do not call this in img.onload, otherwise the setState may be called before bBoxes are plotted! Been there, done that ;)
+        img.onload = () => {
+            this.canvas.setBackgroundImage(this.pic[this.state.currentFrame], this.canvas.renderAll.bind(this.canvas), {scaleX: scalingFactor, scaleY: scalingFactor});
+            this.canvas.renderAll();
+        }
+
         this.setState({currentFrame: i});
 
     }
@@ -295,12 +324,10 @@ class TrackingEditor extends Component {
             corners: [],
             groups: []
         };
-        console.log("Tracking Editor rendered!");
+        console.log("Tracking Editor rendering!");
         let canvasWidth = this.canvas?.getWidth()   // ?. is conditional chaining, returns undefined if this.canvas is undefined
         //let trackListElementsTest = [];
         this.canvasElements.forEach((bBox) => propsTracklist.players = propsTracklist.players.concat([<TrackListItemPlayer bBox={bBox} changeSelection={this.changeSelection} setName={this.setName} blink={this.blink} getTeams={this.getTeams} setTeam={this.setTeam} delete={this.deletePlayer}/>]));
-
-
 
         return (
             <div className="TrackingEditor">
@@ -354,8 +381,11 @@ class TrackingEditor extends Component {
                 console.log(this.canvas.getActiveObject());
                 console.log("Comparison result:" + this.canvas.getActiveObject()?.my?.id !== bBoxDeepCopy.my.id);
                 console.log("*****************************");
-                if(this.canvas.getActiveObject()?.my?.id !== bBoxDeepCopy.my.id)  // comparison by reference which is intended in this case
+                console.log(this.canvas.getActiveObject()?.my?.id);
+                console.log(bBoxDeepCopy.my.id);
+                if(this.canvas.getActiveObject()?.my?.id !== bBoxDeepCopy.my.id) { // comparison by reference which is intended in this case
                     this.canvas.setActiveObject(bBoxDeepCopy);  //necessary so that canvas behaves as expected, e.g. clicking in empty spot clears selection
+                }
                 bBoxDeepCopy.my.selected = true;
                 this.maybeShowLabels(bBoxDeepCopy);
                 return bBoxDeepCopy;
@@ -368,7 +398,7 @@ class TrackingEditor extends Component {
             }
         });
 
-        //this.setState({dummy: !this.state.dummy});       // TODO shouldn't be necessary with Deep Clone!
+        this.setState({dummy: !this.state.dummy});       // triggers rerender so that Tracklist etc updates
 
         // this.forceUpdate();      //Alternative to setting dummy state like above
     };
@@ -383,6 +413,7 @@ class TrackingEditor extends Component {
                 this.maybeHideLabels(bBox);
             }
         });
+        this.setState({dummy: !this.state.dummy});       // triggers rerender so that Tracklist etc updates
     };
 
     changeSelection = (type, id, deselect) => {
