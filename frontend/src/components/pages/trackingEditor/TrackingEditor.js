@@ -130,14 +130,16 @@ class TrackingEditor extends Component {
         // });
         scalingFactor = canvas.getWidth() / img.width;
         img.onload = () => {
-            this.setState({scalingFactor: scalingFactor});
             canvas.setBackgroundImage(this.pic[currentFrameNumber], canvas.renderAll.bind(canvas), {scaleX: scalingFactor, scaleY: scalingFactor});
             // canvas.setHeight(img.height * scalingFactor);
         }
 
         this.canvas = canvas;
         this.setState({video: this.props.video, currentFrame: currentFrameNumber, scalingFactor: scalingFactor, categories: categories},
-            () => this.plotBBoxes());
+            () => {this.plotBBoxes(); this.setState({dummy: !this.state.dummy})});
+        // calling setState twice is necessary here because the plotBBoxes function relies on some info about the state
+        // the same is done in ComponentDidUpdate, causing rerenders; maybe plotBBoxes could be rewritten but then it would be easier to introduce bugs that violate data consistency with state?
+        // The problem could be circumvented by following the functional paradigm of react better and making the canvas a separate component but I believe this does not work that well with fabric and leads to other problems/strange app design
 
 
     }
@@ -247,13 +249,13 @@ class TrackingEditor extends Component {
         let img = new Image();
         img.src = this.pic[this.state.currentFrame];
         let scalingFactor = this.canvas.getWidth() / img.width;
-        this.plotBBoxes();  // do not call this in img.onload, otherwise the setState may be called before bBoxes are plotted! Been there, done that ;)
+        // in order to trigger update after bBoxes are created setState is called another time as callback; see comment in ComponentDidMount
+        this.setState({currentFrame: i}, () => {this.plotBBoxes(); this.setState({dummy: !this.state.dummy})});
         img.onload = () => {
             this.canvas.setBackgroundImage(this.pic[this.state.currentFrame], this.canvas.renderAll.bind(this.canvas), {scaleX: scalingFactor, scaleY: scalingFactor});
             this.canvas.renderAll();
         }
 
-        this.setState({currentFrame: i});
 
     }
 
