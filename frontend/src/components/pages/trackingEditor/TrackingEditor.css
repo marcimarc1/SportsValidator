@@ -64,10 +64,10 @@ canvas {
     align-items: center;
 }
 
+/* Font weight is working but not the rest? not even display: none ?? probably has something to do with react-edit-text package,
+for now just using style property of EditText component */
 .TrackListItemName {
-    font-weight: lighter;
-    width: 100px;
-    margin-left: 5px;
+    /*font-weight: lighter;*/
     margin-top: 0;
     margin-bottom: 0;
 }

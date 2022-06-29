@@ -8,7 +8,7 @@ class TrackList extends Component {
 
     state = {activeTab: 0}
 
-    changeTab = (tabID) => () => {      // currying to that tabID can be a parameter but onClick still receives a function
+    changeTab = (tabID) => () => {      // currying so that tabID can be a parameter but onClick still receives a function
         this.setState({activeTab: tabID})
     }
 

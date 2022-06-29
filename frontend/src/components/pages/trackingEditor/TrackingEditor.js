@@ -177,7 +177,7 @@ class TrackingEditor extends Component {
 
     plotBBoxes = () => {
         // TODO maybe add support for iscrowd (right now it is ignored), see/ask if it is used in backend
-        let annotationsCurrentFrame = this.getAnnotationsForFrames(this.annotationsCache, this.state.currentFrame, this.state.currentFrame);
+        let annotationsCurrentFrame = this.getAnnotationsForFrames(tracking.annotations, this.state.currentFrame, this.state.currentFrame);
         // console.log("ANNOTATIONS");
         // console.log(annotationsCurrentFrame);
         let newCanvasElements = [];
@@ -700,29 +700,9 @@ class TrackingEditor extends Component {
         this.canvas.remove(bBox.my.idOrNameObject);
         this.canvas.remove(bBox.my.teamObject);
         this.canvas.remove(bBox.my.playerObject);
+        this.canvas.remove(bBox);
 
-        // TODO not quite working yet, corners stay behind. Also make sure bBox is not clickable?
-        // this.canvas.remove(bBox);    // breaks canvas in a very strange way
-        bBox.set('visible', false);
-
-        // does not have any effect
-        bBox.set('visible', false, 'hasBorders', false, 'hasControls', false, 'cornerSize', 0);
-        this.canvas.discardActiveObject();
         this.canvas.requestRenderAll();
-
-        // // TODO delete just for testing
-        // var rect = new fabric.Rect({
-        //     left: 100,
-        //     top: 100,
-        //     fill: 'red',
-        //     width: 20,
-        //     height: 20
-        // });
-        //
-        // this.canvas.add(rect);
-        // this.canvas.remove(rect);
-
-
     }
 
 }
