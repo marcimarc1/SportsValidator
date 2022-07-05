@@ -1,4 +1,8 @@
 
+.Pointer {
+    cursor: pointer;
+}
+
 .NavBar {
     display: flex;
     justify-content: space-around;
@@ -6,6 +10,10 @@
     background-color: #bbbbbb;
     /*padding: 1.2em 0;   !* top and bottom *!*/
     height: 73px;
+}
+
+.NavBarUndoRedoIcon {
+    margin: 0 10px;
 }
 
 .NavBarSlider {

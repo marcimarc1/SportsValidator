@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
 import PropTypes from 'prop-types';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faPlay, faPause, faChevronLeft, faStepBackward, faTag} from '@fortawesome/free-solid-svg-icons'
+import { faPlay, faPause, faChevronLeft, faStepBackward, faTag, faUndo} from '@fortawesome/free-solid-svg-icons'
 import Slider from "./Slider"
 import "./NavBar.css"
 import InputLabel from "@material-ui/core/InputLabel";
@@ -47,22 +47,26 @@ class NavBar extends Component {
         let visibilityOptions = ["always", "selected", "hover", "never"].map(v => <MenuItem value={v}>{v}</MenuItem>);
         return (
             <div  className="NavBar"> {/*style={{width: this.props.width}}*/}
+                <div className="NavBarUndoRedo">
+                    <FontAwesomeIcon icon={faUndo} onClick={this.props.undoRedo(true)} className={this.transportButtonSize + " NavBarUndoRedoIcon Pointer"}/>
+                    <FontAwesomeIcon icon={faUndo} flip="horizontal" onClick={this.props.undoRedo(false)} className={this.transportButtonSize + " NavBarUndoRedoIcon Pointer"}/>
+                </div>
                 <div className="NavBarTransport">
                     <div className="NavBarTransportButtonContainer">
-                        <FontAwesomeIcon icon={faStepBackward} onClick={this.switchFrame(0)} className={this.transportButtonSize + " NavBarTransportButton NavBarTransportButtonFirst"} />
-                        <span onClick={this.switchFrameRelative(-this.bigStepSize)} className={this.transportButtonSize + " fa-layers fa-fw NavBarTransportButton"}>      {/* making a double chevron because fontawesome does not have one (double angle is scaled down)*/}
+                        <FontAwesomeIcon icon={faStepBackward} onClick={this.switchFrame(0)} className={this.transportButtonSize + " NavBarTransportButton NavBarTransportButtonFirst Pointer"} />
+                        <span onClick={this.switchFrameRelative(-this.bigStepSize)} className={this.transportButtonSize + " fa-layers fa-fw NavBarTransportButton  Pointer"}>      {/* making a double chevron because fontawesome does not have one (double angle is scaled down)*/}
                             <FontAwesomeIcon icon={faChevronLeft} />
                             <FontAwesomeIcon icon={faChevronLeft} transform="right-6" />
                         </span>
-                        <FontAwesomeIcon icon={faChevronLeft} onClick={this.switchFrameRelative(-1)} className={this.transportButtonSize + " NavBarTransportButton"} />
-                        <FontAwesomeIcon icon={faPlay} onClick={this.playPause} className={this.transportButtonSize + " NavBarTransportButton NavBarTransportButtonPlay" + (this.state.playing ? "": " remove")} />
-                        <FontAwesomeIcon icon={faPause} onClick={this.playPause} className={this.transportButtonSize + " NavBarTransportButton NavBarTransportButtonPause" + (this.state.playing ? " remove": "")} />
-                        <FontAwesomeIcon icon={faChevronLeft} flip="horizontal" onClick={this.switchFrameRelative(1)} className={this.transportButtonSize + " NavBarTransportButton"} />
-                        <span onClick={this.switchFrameRelative(this.bigStepSize)} className={this.transportButtonSize + " fa-layers fa-fw NavBarTransportButton NavBarTransportButtonDoubleChevronRight"}>      {/* making a double chevron because fontawesome does not have one (double angle is scaled down)*/}
+                        <FontAwesomeIcon icon={faChevronLeft} onClick={this.switchFrameRelative(-1)} className={this.transportButtonSize + " NavBarTransportButton Pointer"} />
+                        <FontAwesomeIcon icon={faPlay} onClick={this.playPause} className={this.transportButtonSize + " NavBarTransportButton NavBarTransportButtonPlay Pointer" + (this.state.playing ? "": " remove")} />
+                        <FontAwesomeIcon icon={faPause} onClick={this.playPause} className={this.transportButtonSize + " NavBarTransportButton NavBarTransportButtonPause Pointer" + (this.state.playing ? " remove": "")} />
+                        <FontAwesomeIcon icon={faChevronLeft} flip="horizontal" onClick={this.switchFrameRelative(1)} className={this.transportButtonSize + " NavBarTransportButton Pointer"} />
+                        <span onClick={this.switchFrameRelative(this.bigStepSize)} className={this.transportButtonSize + " fa-layers fa-fw NavBarTransportButton NavBarTransportButtonDoubleChevronRight Pointer"}>      {/* making a double chevron because fontawesome does not have one (double angle is scaled down)*/}
                             <FontAwesomeIcon icon={faChevronLeft} flip="horizontal"/>
                             <FontAwesomeIcon icon={faChevronLeft} flip="horizontal" transform="left-6" />
                         </span>
-                        <FontAwesomeIcon icon={faStepBackward} flip="horizontal" className={this.transportButtonSize + " NavBarTransportButton NavBarTransportButtonLast"} />
+                        <FontAwesomeIcon icon={faStepBackward} flip="horizontal" className={this.transportButtonSize + " NavBarTransportButton NavBarTransportButtonLast Pointer"} />
                     </div>
 
                     <div className="NavBarSlider">
@@ -91,6 +95,7 @@ class NavBar extends Component {
 }
 
 NavBar.propTypes = {
+    undoRedo: PropTypes.func.isRequired,
     switchFrame: PropTypes.func.isRequired,
     getCurrentFrame: PropTypes.func.isRequired,
     labelVisibility: PropTypes.string.isRequired,

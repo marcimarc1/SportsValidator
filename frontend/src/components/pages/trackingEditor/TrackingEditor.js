@@ -209,6 +209,18 @@ class TrackingEditor extends Component {
         // });//, () => this.render);
     }
 
+    // parameter (undo) to distinguish between undo (true) and redo (false); Currying so that function for onClick is returned after passing parameter
+    undoRedo = (undo) => () => {
+        if(undo) {
+            console.log("Undo");
+            // TODO Backend
+            // probably the backend should keep track of operations and return exactly what to undo/redo?
+        }
+        else {
+            console.log("Redo");
+            // TODO Backend
+        }
+    }
     getFrame = (i) => {
         let ret = this.framesCache.find(element => element.index = i);
         if(ret === undefined) {
@@ -333,7 +345,7 @@ class TrackingEditor extends Component {
 
         return (
             <div className="TrackingEditor">
-                <NavBar switchFrame={this.switchFrame} getCurrentFrame={this.getCurrentFrame} labelVisibility={this.state.labelVisibility} setLabelVisibility={this.setLabelVisibility} maxFrame={10} width={canvasWidth}/>   {/*Todo: pass correct maxFrame*/}
+                <NavBar undoRedo={this.undoRedo} switchFrame={this.switchFrame} getCurrentFrame={this.getCurrentFrame} labelVisibility={this.state.labelVisibility} setLabelVisibility={this.setLabelVisibility} maxFrame={10} width={canvasWidth}/>   {/*Todo: pass correct maxFrame*/}
                 <canvas id="tracking-editor-canvas" width="1440" height="810" ></canvas>
                 <TrackList>
                     {/*<h1>Test 1</h1>*/}
