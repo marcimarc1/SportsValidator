@@ -11,11 +11,21 @@ import FormControl from "@material-ui/core/FormControl";
 
 class NavBar extends Component {
 
+    // Playing frames (what happens when pressing the Play button is currently working but not very smoothly.
+    // Caching Frames should help but I believe this should be done together with the Backend
+    // because in the end the frames will not be read from disk anyway.
     state = {
         playing: false  // to indicate whether play is active or no (in order to switch between play and pause button)
     }
 
     bigStepSize = 10;   // how many frames the doubleChevron buttons go forward or backward
+    playMillisecondsPerFrame = 5000;
+
+    componentDidUpdate(prevProps, prevState) {
+        if(this.state.playing) {
+            setTimeout(this.switchFrameRelative(1), this.playMillisecondsPerFrame);
+        }
+    }
 
     switchFrame = (i) => () => {
         if(i != this.props.getCurrentFrame() || i > 0 || i < this.props.maxFrame) {
@@ -59,8 +69,8 @@ class NavBar extends Component {
                             <FontAwesomeIcon icon={faChevronLeft} transform="right-6" />
                         </span>
                         <FontAwesomeIcon icon={faChevronLeft} onClick={this.switchFrameRelative(-1)} className={this.transportButtonSize + " NavBarTransportButton Pointer"} />
-                        <FontAwesomeIcon icon={faPlay} onClick={this.playPause} className={this.transportButtonSize + " NavBarTransportButton NavBarTransportButtonPlay Pointer" + (this.state.playing ? "": " remove")} />
-                        <FontAwesomeIcon icon={faPause} onClick={this.playPause} className={this.transportButtonSize + " NavBarTransportButton NavBarTransportButtonPause Pointer" + (this.state.playing ? " remove": "")} />
+                        <FontAwesomeIcon icon={faPlay} onClick={this.playPause} className={this.transportButtonSize + " NavBarTransportButton NavBarTransportButtonPlay Pointer" + (this.state.playing ? " remove": "")} />
+                        <FontAwesomeIcon icon={faPause} onClick={this.playPause} className={this.transportButtonSize + " NavBarTransportButton NavBarTransportButtonPause Pointer" + (this.state.playing ? "": " remove")} />
                         <FontAwesomeIcon icon={faChevronLeft} flip="horizontal" onClick={this.switchFrameRelative(1)} className={this.transportButtonSize + " NavBarTransportButton Pointer"} />
                         <span onClick={this.switchFrameRelative(this.bigStepSize)} className={this.transportButtonSize + " fa-layers fa-fw NavBarTransportButton NavBarTransportButtonDoubleChevronRight Pointer"}>      {/* making a double chevron because fontawesome does not have one (double angle is scaled down)*/}
                             <FontAwesomeIcon icon={faChevronLeft} flip="horizontal"/>
