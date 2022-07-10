@@ -28,18 +28,19 @@ class NavBar extends Component {
     }
 
     switchFrame = (i) => () => {
-        if(i != this.props.getCurrentFrame() || i > 0 || i < this.props.maxFrame) {
+        console.log("Navbar: switch Frame");
+        if(i != this.props.currentFrame || i < 0 || i < this.props.maxFrame) {
             this.props.switchFrame(i);
         }
     }
 
     switchFrameRelative = (i) => {
-        return this.switchFrame(this.props.getCurrentFrame() + i);
+        return this.switchFrame(this.props.currentFrame + i);
     }
 
     changeFrameViaSlider = (event, value) => {
         console.log("Changed Frame via slider to frame "+value);
-        this.switchFrame(value);
+        this.switchFrame(value)();
     }
 
     transportButtonSize = "fa-2x";
@@ -80,7 +81,7 @@ class NavBar extends Component {
                     </div>
 
                     <div className="NavBarSlider">
-                        <Slider currentFrame={this.props.getCurrentFrame} maxFrame={this.props.maxFrame} changeFrame={this.changeFrameViaSlider}/>
+                        <Slider currentFrame={this.props.currentFrame} maxFrame={this.props.maxFrame} changeFrame={this.changeFrameViaSlider}/>
                     </div>
                 </div>
 
@@ -107,7 +108,7 @@ class NavBar extends Component {
 NavBar.propTypes = {
     undoRedo: PropTypes.func.isRequired,
     switchFrame: PropTypes.func.isRequired,
-    getCurrentFrame: PropTypes.func.isRequired,
+    currentFrame: PropTypes.func.isRequired,
     labelVisibility: PropTypes.string.isRequired,
     setLabelVisibility: PropTypes.func.isRequired,
     maxFrame: PropTypes.number.isRequired,

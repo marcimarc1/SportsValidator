@@ -5,15 +5,27 @@ import Input from '@material-ui/core/Input';
 import "./NavBar.css"
 
 class Slider extends Component {
+    state = {currentFrame: 0};
+
     constructor(props) {
         super(props);
-        this.state = {
-            currentFrame: props.currentFrame
-        };
     }
 
-    handleSliderChange = (event, value) => {
+        componentDidUpdate(prevProps, prevState, snapshot) {
+        if(prevProps.currentFrame != this.props.currentFrame) {       // if Frame is changed somewhere else, i.e. in Transport Buttons
+            this.setState({currentFrame: this.props.currentFrame});
+        }
+    }
+
+    // calls functions in parent components once slider is released (mouseup) so that change takes effect
+    onChangeCommitted = (event, value) => {
         this.props.changeFrame(event, value);
+    }
+
+    // handles change of local variable so that slider moves while it's being adjusted but change only takes effect in onChangeCommitted
+    onChange = (event, value) => {
+        this.setState({currentFrame: value});
+        //this.forceUpdate();
     }
 
     handleInputChange = (event, value) => {
@@ -27,7 +39,10 @@ class Slider extends Component {
                     className="SliderSlider"
                     width={500}
                     value={this.state.currentFrame}
-                    onChange={this.handleSliderChange}
+                    min={0} //TODO change to 1 once frames are also changed
+                    max={this.props.maxFrame}
+                    onChange={this.onChange}
+                    onChangeCommitted={this.onChangeCommitted}
                     aria-labelledby="input-slider"
                 />
 
@@ -51,7 +66,7 @@ class Slider extends Component {
 }
 
 Slider.propTypes = {
-    getCurrentFrame: PropTypes.func.isRequired,
+    currentFrame: PropTypes.number.isRequired,
     maxFrame: PropTypes.number.isRequired,
     changeFrame: PropTypes.func.isRequired
 };

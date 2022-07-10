@@ -231,6 +231,7 @@ class TrackingEditor extends Component {
 
     // parameter check is already done in NavBar so this function expects a valid value for i
     switchFrame = (i) => {
+        console.log("TrackingEditor: Switching Frame to " + i);
         //TODO call backend and delete the following hardcoded numbers in if clause (they are because there are only so many sample images here)
         if(i<0 || i>10) {
             console.log("frame number invalid: " + i);
@@ -285,9 +286,11 @@ class TrackingEditor extends Component {
 
     // function to be passed to NavBar, currentFrame is only used for initialization and then NavBar manages the frame number
     // Using a function this way instead of passing a prop directly should make NavBar not remount every time the Frame changes
-    getCurrentFrame = () => {
-        return this.state.currentFrame
-    }
+    // TODO delete comments
+    // Changed because with the slider, NavBar is supposed to change every time the frame changes so it updates
+    // getCurrentFrame = () => {
+    //     return this.state.currentFrame
+    // }
 
     getTeams = () => {
         return this.state.categories
@@ -345,7 +348,7 @@ class TrackingEditor extends Component {
 
         return (
             <div className="TrackingEditor">
-                <NavBar undoRedo={this.undoRedo} switchFrame={this.switchFrame} getCurrentFrame={this.getCurrentFrame} labelVisibility={this.state.labelVisibility} setLabelVisibility={this.setLabelVisibility} maxFrame={10} width={canvasWidth}/>   {/*Todo: pass correct maxFrame*/}
+                <NavBar undoRedo={this.undoRedo} switchFrame={this.switchFrame} currentFrame={this.state.currentFrame} labelVisibility={this.state.labelVisibility} setLabelVisibility={this.setLabelVisibility} maxFrame={10} width={canvasWidth}/>   {/*Todo: pass correct maxFrame*/}
                 <canvas id="tracking-editor-canvas" width="1440" height="810" ></canvas>
                 <TrackList>
                     {/*<h1>Test 1</h1>*/}
