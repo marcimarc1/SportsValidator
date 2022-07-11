@@ -38,9 +38,8 @@ class NavBar extends Component {
         return this.switchFrame(this.props.currentFrame + i);
     }
 
-    changeFrameViaSlider = (event, value) => {
-        console.log("Changed Frame via slider to frame "+value);
-        this.switchFrame(value)();
+    changeFrameViaSlider = (i) => {
+        this.switchFrame(i)();
     }
 
     transportButtonSize = "fa-2x";

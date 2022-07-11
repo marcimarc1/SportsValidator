@@ -19,7 +19,7 @@ class Slider extends Component {
 
     // calls functions in parent components once slider is released (mouseup) so that change takes effect
     onChangeCommitted = (event, value) => {
-        this.props.changeFrame(event, value);
+        this.props.changeFrame(value);
     }
 
     // handles change of local variable so that slider moves while it's being adjusted but change only takes effect in onChangeCommitted
@@ -28,8 +28,12 @@ class Slider extends Component {
         //this.forceUpdate();
     }
 
-    handleInputChange = (event, value) => {
-        this.props.changeFrame(event, value);
+    handleInputChange = (event) => {
+        console.log("**************");
+        console.log(event);
+        let newFrame = Number(event.target.value); // returns NaN, int or float
+        if(Number.isInteger(newFrame))
+            this.props.changeFrame(newFrame);
     }
 
     render() {
@@ -48,7 +52,7 @@ class Slider extends Component {
 
                 <Input
                     className="SliderNumberInput"
-                    value={this.props.currentFrame}
+                    value={this.state.currentFrame}
                     margin="dense"
                     onChange={this.handleInputChange}
                     // onBlur={handleBlur}
