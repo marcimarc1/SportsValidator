@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
 import PropTypes from 'prop-types';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faPlay, faPause, faChevronLeft, faStepBackward, faTag, faUndo} from '@fortawesome/free-solid-svg-icons'
+import { faPlay, faPause, faChevronLeft, faStepBackward, faTag, faUndo, faPlus} from '@fortawesome/free-solid-svg-icons'
 import Slider from "./Slider"
 import "./NavBar.css"
 import InputLabel from "@material-ui/core/InputLabel";
@@ -99,6 +99,10 @@ class NavBar extends Component {
                         </Select>
                     </FormControl>
                 </div>
+
+                {/*<div>*/}
+                {/*    <FontAwesomeIcon icon={faPlus} onClick={this.props.add} className={this.transportButtonSize} />*/}
+                {/*</div>*/}
             </div>
         );
     }
@@ -110,6 +114,7 @@ NavBar.propTypes = {
     currentFrame: PropTypes.func.isRequired,
     labelVisibility: PropTypes.string.isRequired,
     setLabelVisibility: PropTypes.func.isRequired,
+    // add: PropTypes.func.isRequired,
     maxFrame: PropTypes.number.isRequired,
     width: PropTypes.number.isRequired
 };
