@@ -2,6 +2,11 @@ import React, {Component} from 'react';
 import PropTypes from 'prop-types';
 import './TrackingEditor.css';
 import {Button} from "@material-ui/core";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faChevronLeft} from "@fortawesome/free-solid-svg-icons";
+import {ReactComponent as Add} from "../../../icons/plus.svg";
+
+
 
 
 class TrackList extends Component {
@@ -15,7 +20,6 @@ class TrackList extends Component {
     render = () => {
         console.log("TrackList props.children");
         console.log(this.props.children);
-
         return (
             <div className="TrackList">
                 <div className="TrackListTabs">
@@ -29,12 +33,18 @@ class TrackList extends Component {
                         {this.props.children.players}
                     </div>
                     <div className={(this.state.activeTab == 1 ? "" : "inactive")}>
-                        <p>CORNERS</p>
+                        {this.props.children.corners}
                     </div>
                     <div className={(this.state.activeTab == 2 ? "" : "inactive")}>
-                        <p>GROUPS</p>
+                        {this.props.children.groups}
                     </div>
                 </div>
+
+                {/*<div className="TrackListControls" >*/}
+                {/*    test*/}
+                {/*    <Add />*/}
+                {/*    /!*TODO suggestions: Search Bar, Sort By Dropdown*!/*/}
+                {/*</div>*/}
             </div>
         );
     }
