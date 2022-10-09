@@ -11,7 +11,6 @@ import { EditText, EditTextarea } from 'react-edit-text';
 import 'react-edit-text/dist/index.css';
 
 import './TrackingEditor.css';
-import NavBar from "./NavBar";
 import {ReactComponent as Highlight} from "../../../icons/highlight.svg";
 import {ReactComponent as Delete} from "../../../icons/delete.svg";
 
@@ -52,9 +51,8 @@ class TrackListItemPlayer extends Component {
         //console.log("rendering TrackListItemPlayer " + bBox.my.id);
         if(this.props.bBox.my.selected) {
             //console.log("This one is selected!");
-            style = {color: 'FFF'};
+            style['color'] = 'FFF';
         }
-        let selectedStyle = {color: 'FFF'};
 
         let name = this.props.bBox.my.name ? this.props.bBox.my.name : this.props.bBox.my.id;
 
@@ -101,7 +99,7 @@ class TrackListItemPlayer extends Component {
     }
 }
 
-NavBar.propTypes = {
+TrackListItemPlayer.propTypes = {
     bBox: PropTypes.object.isRequired,
     changeSelection: PropTypes.func.isRequired,
     blink: PropTypes.func.isRequired,
