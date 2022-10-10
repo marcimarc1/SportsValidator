@@ -1,0 +1,13 @@
+.FileOverview {
+    width: 100%;
+    display: flex;
+    align-items: center;
+
+}
+
+.FileOverviewFileListItem {
+    background-color: #727272;
+    width: 70%;
+    height: 10rem;
+
+}

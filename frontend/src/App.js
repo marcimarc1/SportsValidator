@@ -4,6 +4,7 @@ import Start from "./components/pages/Start";
 import './App.css';
 import {BrowserRouter as Router, Route} from 'react-router-dom';
 import Demo from "./components/pages/Demo";
+import FileOverview from "./components/pages/FileOverview/FileOverview";
 
 class App extends Component {
 
@@ -16,7 +17,7 @@ class App extends Component {
                     <Header onStartPage={true}/>
                 </Route>
 
-                <Route exact path="(/about|/feedback|/account|/demo)" >
+                <Route exact path="(/about|/feedback|/account|/demo|/games)" >
                     <Header/>
                 </Route>
 
@@ -30,6 +31,10 @@ class App extends Component {
 
                 <Route exact path="/demo" >
                     <Demo/>
+                </Route>
+
+                <Route exact path="/games">
+                    <FileOverview/>
                 </Route>
 
             </div>
