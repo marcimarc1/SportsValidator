@@ -257,7 +257,7 @@ class TrackingEditor extends Component {
             return;
         }
 
-        // clear canvas
+        // clear canvas and save changes to Backend
 
         // this should work according to https://stackoverflow.com/questions/2142535/how-to-clear-the-canvas-for-redrawing but does not
         // there seems to be no function to just clear the canvas...
@@ -267,6 +267,9 @@ class TrackingEditor extends Component {
 
         // this works but is a bit brute-force...
         this.canvasElementsPlayers.forEach((e) => {
+            if(e?.my?.dirty) {
+                // TODO BACKEND post changes to backend (only for position and size, the rest should be done directly in the respctive functions, e.g. changing names, teams, etc.)
+            }
             this.canvas.remove(e);
             if(e?.my) {
                 this.canvas.remove(e.my.playerObject);
@@ -277,6 +280,9 @@ class TrackingEditor extends Component {
 
         this.canvasElementsCorners.forEach((e) => {
             this.canvas.remove(e);
+            if(e?.my?.dirty) {
+                // TODO BACKEND post changes to backend
+            }
         });
 
         this.canvasElementsPlayers = [];
@@ -327,7 +333,7 @@ class TrackingEditor extends Component {
 
     setTeam = (bBox, teamID) => {
         bBox.my.team = teamID;
-        // TODO call backend
+        // TODO BACKEND call backend (something like teamChange(bBox.my.id, teamID)
         this.setState({dummy: !this.state.dummy});
     }
 
@@ -338,7 +344,7 @@ class TrackingEditor extends Component {
         bBox.my.idOrNameObject.set('text', "Name: " + name);
         this.canvas.requestRenderAll();
         //bBox.my.idOrNameObject.visible = false;
-        // TODO call backend
+        // TODO BACKEND call backend
         this.setState((state) => ({idToName: {...state.idToName}[bBox.my.id] = name}));
     }
 
@@ -381,7 +387,8 @@ class TrackingEditor extends Component {
                 console.log("***");
                 console.log(group);
                 console.log(groupIds);
-                if(!(group in groupIds)) {
+                console.log(group in groupIds);
+                if(!(groupIds.includes(group))) {
                     propsTracklist.groups = propsTracklist.groups.concat([<TrackListItemGroup id={group}
                                                                                               activeGroup={this.state.activeGroup}
                                                                                               changeSelection={this.changeSelection}
