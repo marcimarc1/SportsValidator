@@ -43,7 +43,7 @@ canvas {
 }
 
 .TrackListList {
-    height: 810px;
+    height: 810px;      /* if adding TrackListControls, subtract TrackListControls.height from this height */
     overflow: auto;     /* Scrollbar appears when content is too big for div */
 }
 
@@ -54,6 +54,11 @@ canvas {
 .TrackListList p {
     margin: 0px;
 }
+
+/*.TrackListControls {*/
+/*    height: 100px;*/
+/*    background-color: #BBB;*/
+/*}*/
 
 .TrackListItem {
     border-style: none none solid solid;

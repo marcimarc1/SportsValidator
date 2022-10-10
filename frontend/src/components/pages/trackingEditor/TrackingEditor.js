@@ -5,9 +5,12 @@ import './TrackingEditor.css';
 
 // import pic from "../../../data/frame_000000.jpg";
 import tracking from "../../../data/instances_default.json";
+import cornerfile from "../../../data/corners.json";
 import NavBar from "./NavBar";
 import TrackList from "./trackList";
 import TrackListItemPlayer from "./trackListItemPlayer";
+import TrackListItemGroup from "./trackListItemGroup";
+import TrackListItemCorner from "./trackListItemCorner";
 
 require('require-context/register');
 
@@ -16,7 +19,9 @@ class TrackingEditor extends Component {
     demoFrameSource = '../../../data/';//"../data/";
     framesCache = [];
     annotationsCache = [];
-    canvasElements= [];
+    cornersCache = [];
+    canvasElementsPlayers= [];
+    canvasElementsCorners = [];
 
 
     canvas = undefined;
@@ -33,20 +38,23 @@ class TrackingEditor extends Component {
         categories: [],             // read in from annotations file
         currentFrame: undefined,    //BACKEND
         colorByCategory: true,      //Toggle between coloring BBoxes by Category or Player
-        colorCategoryNumber: 1,     // not used so far, for enabling multiple categories; which category to color the BBoxes by if colorByCategory is true;
+        colorCategoryNumber: 1,     // for enabling multiple categories; which category to color the BBoxes by if colorByCategory is true;
         category_1_Colors: {        //BACKEND
             1: 'rgb(100, 0, 0)',
             2: 'rgb(0, 0, 200)',
             3: 'rgb(0, 250, 0)',
             4: 'rgb(100, 0, 100)'
         },
+        cornerColor: 'green',
         playerColors: {},    //BACKEND TODO; id: color (maybe also add corners)
         idToName: {         //BACKEND
             1: "Peter",
             2: "Max",
             20: "Florian"
         },
-        labelVisibility: 'selected'      //selected, hover, always or never;
+        labelVisibility: 'selected',      //selected, hover, always or never;
+        activeGroup: undefined,            //for TrackList -> Group Tab: Which trackListItemGroup is currently selected
+        activeCorner: undefined            //for TrackList -> Corner Tab
     }
 
     constructor(props) {
@@ -91,7 +99,6 @@ class TrackingEditor extends Component {
 
         //load categories and annotations
         let categories = tracking.categories;
-        console.log(categories);
 
         //load annotations
         let annotations = tracking.annotations;
@@ -105,6 +112,9 @@ class TrackingEditor extends Component {
         console.log(`Frames from ${firstCachedFrame} to ${lastCachedFrame}: `);
         console.log(this.annotationsCache);
 
+        //load corners
+        let corners = cornerfile.corners;
+        this.cornersCache = this.getAnnotationsForFrames(corners, firstCachedFrame, lastCachedFrame);
 
 
 
@@ -136,7 +146,7 @@ class TrackingEditor extends Component {
 
         this.canvas = canvas;
         this.setState({video: this.props.video, currentFrame: currentFrameNumber, scalingFactor: scalingFactor, categories: categories},
-            () => {this.plotBBoxes(); this.setState({dummy: !this.state.dummy})});
+            () => {this.plotBBoxes(); this.plotCorners(); this.setState({dummy: !this.state.dummy})});
         // calling setState twice is necessary here because the plotBBoxes function relies on some info about the state
         // the same is done in ComponentDidUpdate, causing rerenders; maybe plotBBoxes could be rewritten but then it would be easier to introduce bugs that violate data consistency with state?
         // The problem could be circumvented by following the functional paradigm of react better and making the canvas a separate component but I believe this does not work that well with fabric and leads to other problems/strange app design
@@ -198,15 +208,24 @@ class TrackingEditor extends Component {
         // newCanvasElements.forEach(bBox => newTrackListItems = newTrackListItems.concat([<TrackListItemPlayer bBox={bBox} blink={this.blink} />]));
 
         console.log("bBox array before:");
-        console.log(this.canvasElements);
-        this.canvasElements = this.canvasElements.concat(newCanvasElements);      // concat does not mutate the original array
+        console.log(this.canvasElementsPlayers);
+        this.canvasElementsPlayers = this.canvasElementsPlayers.concat(newCanvasElements);      // concat does not mutate the original array
         console.log("bBox array after:");
-        console.log(this.canvasElements);
+        console.log(this.canvasElementsPlayers);
         // instead of the following in order to not trigger endless rerender!
         // this.setState({
-        //     canvasElements: this.state.canvasElements.concat(newCanvasElements)      // concat does not mutate the original array
+        //     canvasElementsPlayers: this.state.canvasElementsPlayers.concat(newCanvasElements)      // concat does not mutate the original array
         //     // , trackListElements: this.state.trackListElements.concat(newTrackListItems)
         // });//, () => this.render);
+    }
+
+    plotCorners = () => {
+        let cornersCurrentFrame = this.getAnnotationsForFrames(cornerfile.corners, this.state.currentFrame, this.state.currentFrame);
+        let newCornerElements = [];
+        for(let i = 0; i < cornersCurrentFrame.length; i++) {
+            newCornerElements.push(this.createNewCorner(cornersCurrentFrame[i]));
+        }
+        this.canvasElementsCorners = this.canvasElementsCorners.concat(newCornerElements);
     }
 
     // parameter (undo) to distinguish between undo (true) and redo (false); Currying so that function for onClick is returned after passing parameter
@@ -247,7 +266,7 @@ class TrackingEditor extends Component {
         // context.beginPath();
 
         // this works but is a bit brute-force...
-        this.canvasElements.forEach((e) => {
+        this.canvasElementsPlayers.forEach((e) => {
             this.canvas.remove(e);
             if(e?.my) {
                 this.canvas.remove(e.my.playerObject);
@@ -256,14 +275,19 @@ class TrackingEditor extends Component {
             }
         });
 
-        this.canvasElements = [];
+        this.canvasElementsCorners.forEach((e) => {
+            this.canvas.remove(e);
+        });
+
+        this.canvasElementsPlayers = [];
+        this.canvasElementsCorners = [];
 
         // add new content to canvas
         let img = new Image();
         img.src = this.pic[this.state.currentFrame];
         let scalingFactor = this.canvas.getWidth() / img.width;
         // in order to trigger update after bBoxes are created setState is called another time as callback; see comment in ComponentDidMount
-        this.setState({currentFrame: i}, () => {this.plotBBoxes(); this.setState({dummy: !this.state.dummy})});
+        this.setState({currentFrame: i}, () => {this.plotBBoxes(); this.plotCorners(); this.setState({dummy: !this.state.dummy})});
         img.onload = () => {
             this.canvas.setBackgroundImage(this.pic[this.state.currentFrame], this.canvas.renderAll.bind(this.canvas), {scaleX: scalingFactor, scaleY: scalingFactor});
             this.canvas.renderAll();
@@ -275,13 +299,18 @@ class TrackingEditor extends Component {
     getColor = (categoryId, trackId) => {
         let color;
         if(this.state.colorByCategory) {
-            let categoryColorDict = `category_${this.state.colorCategoryNumber}_Colors`;
-            color = this.state[categoryColorDict][categoryId];
+            color = this.getCategoryColor(categoryId);
         }
         else {
             color = this.state.playerColors[trackId];
         }
         return color;
+    }
+
+    // With this implementation, backend should make sure that there is always a color defined. If it is undefined, it could just return e.g. white
+    getCategoryColor = (categoryId) => {
+        let categoryColorDict = `category_${this.state.colorCategoryNumber}_Colors`;
+        return this.state[categoryColorDict][categoryId];
     }
 
     // function to be passed to NavBar, currentFrame is only used for initialization and then NavBar manages the frame number
@@ -316,7 +345,7 @@ class TrackingEditor extends Component {
     setLabelVisibility = (visibility) => {
 
         let hideOrShowLabels = () => {
-            this.canvasElements.forEach((bBox) => {
+            this.canvasElementsPlayers.forEach((bBox) => {
                 let vis = (visibility==="always" ? true : false);
                 if(visibility==="selected" && bBox.my.selected) {
                     vis = true;
@@ -341,10 +370,34 @@ class TrackingEditor extends Component {
             corners: [],
             groups: []
         };
+        let groupIds = [];
         console.log("Tracking Editor rendering!");
         let canvasWidth = this.canvas?.getWidth()   // ?. is conditional chaining, returns undefined if this.canvas is undefined
         //let trackListElementsTest = [];
-        this.canvasElements.forEach((bBox) => propsTracklist.players = propsTracklist.players.concat([<TrackListItemPlayer bBox={bBox} changeSelection={this.changeSelection} setName={this.setName} blink={this.blink} getTeams={this.getTeams} setTeam={this.setTeam} delete={this.deletePlayer}/>]));
+        this.canvasElementsPlayers.forEach(
+            (bBox) => {
+                propsTracklist.players = propsTracklist.players.concat([<TrackListItemPlayer bBox={bBox} changeSelection={this.changeSelection} setName={this.setName} blink={this.blink} getTeams={this.getTeams} setTeam={this.setTeam} delete={this.deletePlayer}/>]);
+                let group = bBox.my.team;
+                console.log("***");
+                console.log(group);
+                console.log(groupIds);
+                if(!(group in groupIds)) {
+                    propsTracklist.groups = propsTracklist.groups.concat([<TrackListItemGroup id={group}
+                                                                                              activeGroup={this.state.activeGroup}
+                                                                                              changeSelection={this.changeSelection}
+                                                                                              color={this.getCategoryColor(group)}
+                                                                                              delete={undefined}/>]);
+                    groupIds = groupIds.concat([group]);
+                }
+            });
+        console.log("******************GROUP IDs******");
+        console.log(groupIds);
+
+        this.canvasElementsCorners.forEach(
+            (corner) => {
+                propsTracklist.corners = propsTracklist.corners.concat([<TrackListItemCorner id={corner.my.id} activeCorner={this.state.activeCorner} changeSelection={this.changeSelection} delete={undefined} /> ]);
+            }
+        )
 
         return (
             <div className="TrackingEditor">
@@ -387,10 +440,11 @@ class TrackingEditor extends Component {
 
     // Automatically deselects all other selected boxes
     selectBBox = (id) => {
-
-        this.canvasElements.forEach(bBox => {
+        let activeGroup;
+        this.canvasElementsPlayers.forEach(bBox => {
             if (bBox.my.id == id) {
                 let bBoxDeepCopy = bBox;    //TODO the cleaner/correct version would be to do a deep clone as indicated (but not done) here. JS does not really have a deep clone functionality.
+                activeGroup = bBox.my.team;
                 console.log("**************************");
                 console.log("bBox to select:");
                 console.log(bBox);
@@ -400,7 +454,7 @@ class TrackingEditor extends Component {
                 console.log("*****************************");
                 console.log(this.canvas.getActiveObject()?.my?.id);
                 console.log(bBoxDeepCopy.my.id);
-                if(this.canvas.getActiveObject()?.my?.id !== bBoxDeepCopy.my.id) { // comparison by reference which is intended in this case
+                if((this.canvas.getActiveObject()?.my?.id !== bBoxDeepCopy.my.id) || this.canvas.getActiveObject()?.my?.player === undefined) { // 1st: comparison by reference which is intended in this case; 2nd condition: To catch the case that active Object is e.g. corner which might have the same id
                     this.canvas.setActiveObject(bBoxDeepCopy);  //necessary so that canvas behaves as expected, e.g. clicking in empty spot clears selection
                 }
                 bBoxDeepCopy.my.selected = true;
@@ -415,13 +469,32 @@ class TrackingEditor extends Component {
             }
         });
 
-        this.setState({dummy: !this.state.dummy});       // triggers rerender so that Tracklist etc updates
+        this.setState({dummy: !this.state.dummy, activeGroup});       // triggers rerender with dummy so that Tracklist etc updates
 
         // this.forceUpdate();      //Alternative to setting dummy state like above
     };
 
+    selectCorner = (id) => {
+        this.canvasElementsCorners.forEach(corner => {
+            if(corner.my.id == id) {
+                this.canvas.setActiveObject(corner);
+                return corner;
+            }
+        });
+        this.selectBBox(undefined); // to deselect all BBoxes
+        this.canvas.requestRenderAll();
+        this.setState({activeCorner: id});  // setState for BBoxes is already handled in selectBBox
+    };
+
+    deselectCorner = (id) => {
+        this.canvas.discardActiveObject();
+        this.canvas.requestRenderAll();
+        this.setState({activeCorner: undefined});
+    }
+
     deselectBBox = (id) => {
-        this.canvasElements.forEach(bBox => {
+        let activeGroup = undefined;
+        this.canvasElementsPlayers.forEach(bBox => {
             if (bBox.my.id == id) {
                 //comments from selectBBox about deep clone also apply here!
                 bBox.my.selected = false;
@@ -430,7 +503,7 @@ class TrackingEditor extends Component {
                 this.maybeHideLabels(bBox);
             }
         });
-        this.setState({dummy: !this.state.dummy});       // triggers rerender so that Tracklist etc updates
+        this.setState({dummy: !this.state.dummy, activeGroup});       // triggers rerender so that Tracklist etc updates
     };
 
     changeSelection = (type, id, deselect) => {
@@ -442,12 +515,63 @@ class TrackingEditor extends Component {
                     this.selectBBox(id);
                 break;
             case "corner":
-                //TODO
-                break;
-            case "team":
-                //TODO (do nothing?)
+                if(deselect)
+                    this.deselectCorner(id);
+                else
+                    this.selectCorner(id);
+            case "group":
+                if(deselect)
+                    this.setState({activeGroup: undefined});
+                else
+                    this.setState({activeGroup: id});
         };
-    }
+    };
+
+    createNewCorner = (args) => {
+        let x = args.location[0] * this.state.scalingFactor;
+        let y = args.location[1] * this.state.scalingFactor;
+        let color = this.state.cornerColor;
+        let id = args.id;
+
+        let cornerObject = new fabric.Circle({
+            radius: 5,
+            originX: 'center',
+            originY: 'center',
+            fill: 'green',
+            left: x,
+            top: y,
+            cornerSize: 4,
+            // stroke: color,
+            hasBorders: true,              // disables the control borders (the lines connecting the controls the show up when object is selected
+            hasControls: false,
+            padding: 0,  // to make sure the pixel coordinates are correct
+            cornerStyle: 'circle',
+            lockRotation: true
+        });
+
+        cornerObject.my = {
+            id,
+            dirty: false,
+            selected: false
+        }
+
+        cornerObject.on({
+            'selected': () => {
+                this.selectCorner(cornerObject.my.id);
+            },
+            'deselected': () => {
+                this.deselectCorner(cornerObject.my.id);
+            },
+            'modified': function(e) {
+                cornerObject.my.dirty = true;
+            }
+        });
+
+
+        this.canvas.add(cornerObject);
+        return cornerObject;
+    };
+
     CreateNewBBox = (args) => {
         // console.log("Adding new Bounding Box! Args:");
         // console.log(args);
@@ -626,7 +750,7 @@ class TrackingEditor extends Component {
                 left: 100,
                 top: 100,
                 fill: 'rgba(0, 0, 0, 0)',
-                stroke: 'green',
+                stroke: this.state.cornerColor,
                 strokeWidth: 5,
                 width: 20,
                 height: 20,
@@ -682,14 +806,14 @@ class TrackingEditor extends Component {
     deletePlayer = (bBox) => {
         // TODO call backend
 
-        // remove from canvasElements
+        // remove from canvasElementsPlayers
         let stateUpdate = (state) => {
-            // done below this function now since canvasElements is moved out of state
-            // let canvasElements = [...state.canvasElements];
-            // canvasElements.splice(canvasElements.indexOf(bBox), 1); // remove bBox
-            // let stateModifier = {canvasElements: canvasElements};
+            // done below this function now since canvasElementsPlayers is moved out of state
+            // let canvasElementsPlayers = [...state.canvasElementsPlayers];
+            // canvasElementsPlayers.splice(canvasElementsPlayers.indexOf(bBox), 1); // remove bBox
+            // let stateModifier = {canvasElementsPlayers: canvasElementsPlayers};
 
-            // canvasElements moved out of state!
+            // canvasElementsPlayers moved out of state!
             let stateModifier= {};
 
 
@@ -707,8 +831,8 @@ class TrackingEditor extends Component {
             return stateModifier;
         };
 
-        let index = this.canvasElements.indexOf(bBox);
-        this.canvasElements.splice(index, 1); // remove bBox
+        let index = this.canvasElementsPlayers.indexOf(bBox);
+        this.canvasElementsPlayers.splice(index, 1); // remove bBox
 
         this.setState(stateUpdate, () => console.log(this.state.idToName))
 

@@ -37,9 +37,9 @@ class TrackListItemCorner extends Component {
         // selects or deselects (if its already selected) the clicked item (e.g. player)
         let clickItem = () => {
             this.props.changeSelection("corner", this.props.id, selected);
-            this.setState(prevState => ({
-                selected: !prevState.selected
-            }));
+            // this.setState(prevState => ({
+            //     selected: !prevState.selected
+            // }));
 
         }
 
