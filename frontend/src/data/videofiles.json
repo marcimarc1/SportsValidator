@@ -1,4 +1,4 @@
 {"files": [
-  {"id": 1, "name": "2022-08-01: Team 1 vs. Team 2", "duration": 94, "thumbnail": "../../../data/thumbnail_1.jpg" },
-  {"id": 2, "name": "2021-07-15: Team 1 vs. Team 3", "duration": 96, "thumbnail": "../../../data/thumbnail_1.jpg" }
+  {"id": 1, "name": "2022-08-01: Team 1 vs. Team 2", "duration": 94, "notes": "Result: 3:2, want to look at this again to improve free kicks", "thumbnail": "../../../data/thumbnail_1.jpg" },
+  {"id": 2, "name": "2021-07-15: Team 1 vs. Team 3", "duration": 96, "notes": null, "thumbnail": "../../../data/thumbnail_1.jpg" }
 ]}

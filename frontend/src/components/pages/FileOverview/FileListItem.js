@@ -1,8 +1,12 @@
 import React, {Component} from 'react';
+import { Link } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import {faTrash, faPenToSquare, faChartColumn} from '@fortawesome/free-solid-svg-icons'
+import {faTrash, faEdit, faChartBar} from '@fortawesome/free-solid-svg-icons'
 import {Card} from "@material-ui/core";
+import IconButton from '@material-ui/core/IconButton';
+import Button from '@material-ui/core/Button';
+import { withStyles } from "@material-ui/core/styles";
 import { EditText, EditTextarea } from 'react-edit-text';
 import 'react-edit-text/dist/index.css';
 
@@ -21,6 +25,25 @@ class FileListItem extends Component {
         this.props.changeName(this.props.id, obj.value);
     }
 
+    handleChangeNotes = (obj) => {
+        this.props.changeNotes(this.props.id, obj.value);
+    }
+
+    delete = () => {
+        this.props.delete(this.props.id);
+    }
+
+    // handleButtonClick = (button) => () => {
+    //     switch(button) {
+    //         case "edit":
+    //
+    //             break;
+    //         case "delete":
+    //             this.props.delete(this.props.id);
+    //     }
+    //
+    // }
+
     render() {
         let thumbnailWidth = Math.floor(this.thumbnailImageWidth * this.thumbnailRescale);
         let thumbnailHeight = Math.floor(this.thumbnailImageHeight * this.thumbnailRescale);
@@ -29,24 +52,67 @@ class FileListItem extends Component {
             duration = duration.toString() + "min";
         else
             duration = `${Math.floor(duration / 60)}h ${duration % 60}min`;
+        let borderStyle = {borderRadius: `5px ${thumbnailHeight/2}px ${thumbnailHeight/2}px 5px`};
+
+
+        // const CustomButton = withStyles({
+        //     root: {
+        //         background: "#2c3a17",
+        //         secondary: "#F00",
+        //         borderRadius: 3,
+        //         border: 0,
+        //         color: "#BBB",
+        //         height: 48,
+        //         padding: "0 30px",
+        //         // boxShadow: "0 3px 5px 2px rgba(255, 105, 135, .3)"
+        //     },
+        //     label: {
+        //         textTransform: "capitalize"
+        //     }
+        // })(props => <Button {...props} />);
+
         return (
-            <div className="FileOverviewListItem" style={{height: thumbnailHeight}}>
-                <img className="FileOverviewListItemThumbnail" src={Thumbnail1} alt="Thumbnail" width={thumbnailWidth} height={thumbnailHeight}/>
-                <div className="FileOverviewListItemMetadata">
-                    <EditText
-                        className="FileOverviewListItemMetadataName"
-                        defaultValue={this.props.name}
-                        onSave={this.handleChangeName}
-                    />
-                    <div className="Duration">
-                        <p>{'  '}Duration: {duration}</p>
+            <div className="FileOverviewListItem" style={{...borderStyle, height: thumbnailHeight}}>
+                <div className="FileOverviewListItemContainerLeft">
+                    <img className="FileOverviewListItemThumbnail" src={Thumbnail1} alt="Thumbnail" width={thumbnailWidth} height={thumbnailHeight} style={borderStyle}/>
+                    <div className="FileOverviewListItemMetadata">
+                        <EditText
+                            className="FileOverviewListItemMetadataName"
+                            defaultValue={this.props.name}
+                            onSave={this.handleChangeName}
+                        />
+                        <div className="FileOverviewListItemMetadataDuration AlignWithMetaDataName">
+                            {'  '}Duration: <span className="spacer1"></span>{duration}
+                        </div>
+                        <div className="FileOverviewListItemMetadataNotes AlignWithMetaDataName">
+                            <label style={{ paddingTop: '3px' }}>Notes:</label> {/*padding to align label with EditTextarea*/}
+                            <span className="spacer2"></span>
+                            <EditTextarea
+                                className="NotesEditTextarea"
+                                name='Notes:'
+                                rows={2}
+                                style={{ paddingTop: 0}}
+                                defaultValue={this.props?.notes}
+                                placeholder='Enter your notes here'
+                                onSave={this.handleChangeNotes}
+                            />
+                        </div>
                     </div>
                 </div>
-                <div className="FileOverviewListItemButtons">
-                    <FontAwesomeIcon icon={faPenToSquare} />
-                    <FontAwesomeIcon icon={faTrash} />
-                    <FontAwesomeIcon icon={faChartColumn} />
-
+                <div className="FileOverviewListItemButtonContainer">
+                    <Link to={`trackingEditor/${this.props.id}`} >
+                        <IconButton size="large" variant="contained" className={"FileOverviewListItemButton"} aria-label="edit annotations">
+                            <FontAwesomeIcon icon={faEdit} />
+                        </IconButton>
+                    </Link>
+                    <Link to={`analysis/${this.props.id}`} >
+                        <IconButton size="large" variant="contained" className={"FileOverviewListItemButton"} aria-label="show analysis">
+                            <FontAwesomeIcon icon={faChartBar} />
+                        </IconButton>
+                    </Link>
+                    <IconButton size="large" variant="contained" className={"FileOverviewListItemButton"} onClick={this.delete} aria-label="delete videofile">
+                        <FontAwesomeIcon icon={faTrash} />
+                    </IconButton>
                 </div>
 
             </div>
@@ -58,7 +124,10 @@ FileListItem.propTypes = {
     id: PropTypes.number.isRequired,
     name: PropTypes.string.isRequired,
     duration: PropTypes.number.isRequired,      //video duration in minutes
-    changeName: PropTypes.func.isRequired
+    notes: PropTypes.string,
+    changeName: PropTypes.func.isRequired,
+    changeNotes: PropTypes.func.isRequired,
+    delete: PropTypes.func.isRequired
 }
 
 export default FileListItem;

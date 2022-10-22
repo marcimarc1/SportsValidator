@@ -1,4 +1,18 @@
-.body {
+element {
+    --my-box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+}
+
+.spacer1 {
+    margin-right: 1.4em;
+}
+
+.spacer2 {
+    margin-right: 2.5em;
+}
+
+@keyframes appear {
+    0% {opacity: 0}
+    100% {opacity: 1}
 }
 
 .FileOverview {
@@ -8,12 +22,83 @@
     flex-direction: column;
     align-items: center;
     background-color: #727272;
+}
+
+.FileOverviewHeadingContainer {
+    width: 100%;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 2.5em;
+    margin-bottom: 2em;
+}
+
+.FileOverviewAddButtonContainer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #BBBBBB;
+    position: absolute !important;
+    left: 10px;
+    box-shadow: var(--my-box-shadow);
+    border-radius: 22px;    /* a bit quick and dirty but should be fine since icon size does not change*/
+    transition: width 0.3s ease-out;
+}
+
+.FileOverviewAddButtonContainer.expanded{
+    /*animation: grow-upload 1s;*/
+    /*animation-fill-mode: both;*/
+    width: 386px;
 
 }
 
+.FileOverviewAddButtonContainer.unexpanded{
+    /*animation: grow-upload 1s reverse;*/
+    /*animation-fill-mode: both;*/
+    width: 48px;
+}
+
+.PlusIcon {
+    transition: transform 0.3s ease-in;
+}
+.PlusIcon.expanded {
+    transform: rotate(45deg);
+}
+
+.PlusIcon.unexpanded {
+
+}
+
+.FileOverviewAddButton {
+    float: right;
+}
+
+.FileInput {
+    margin-left: 8px;
+    width: 330px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    /*transition: display;*/
+    /*transition-delay: 2s;*/
+}
+
+.FileInput.expanded {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    /*animation: appear 1s;*/
+}
+
+
 .FileOverviewHeading {
     color: #BBBBBB;
-    margin-top: 1em;
+    text-shadow: 3px 3px 10px rgba(0, 0, 0, 0.4), -3px -3px 10px rgba(0, 0, 0, 0.1);
+    /*, 0 6px 20px rgba(0, 0, 0, 0.19);*/
+    margin: 0;
     font-size: 3em;
     font-family: 'Big Shoulders Stencil Display', Roboto, cursive;
     letter-spacing: 5px;
@@ -34,11 +119,69 @@
     border-radius: 0 40px 40px 0;
     display: flex;
     flex-direction: row;
-    justify-items: flex-start;
+    justify-content: space-between;
     align-items: stretch;
+    box-shadow: var(--my-box-shadow);}
 
+.FileOverviewListItemThumbnail {
+    /*border-radius: 0 40px 40px 0;*/
+}
+
+.FileOverviewListItemContainerLeft {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    justify-content: space-between;
+    width: 70%;
 }
 
 .FileOverviewListItemMetadata {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    align-items: flex-start;
     margin-left: 1em;
+    width: 100%;
+}
+
+.FileOverviewListItemMetadataName {
+    font-weight: bold;
+    font-size: 1.3em;
+    overflow: hidden;
+    padding-top: 2px;
+}
+
+.AlignWithMetaDataName {
+    margin-left: 5px;
+}
+.FileOverviewListItemMetadataDuration {
+}
+
+.FileOverviewListItemMetadataNotes {
+    display: flex;
+    width: 100%;
+}
+
+.NotesEditTextarea {
+    paddingTop: 0;
+    width: 100%;
+}
+
+.FileOverviewListItemButtonContainer {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin-right: 5em;
+}
+
+.FileOverviewListItemButton {
+    variant: contained;
+    background-color: #344911 !important;
+    color: #BBBBBB !important;
+    border-radius: 50% !important;
+    margin: 3px !important;
+}
+
+.hide {
+    display: none;
 }
