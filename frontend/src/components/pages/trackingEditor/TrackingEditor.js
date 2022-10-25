@@ -1,5 +1,6 @@
 import React, {Component} from 'react';
 import PropTypes from 'prop-types';
+import { withRouter } from "react-router";
 import { fabric } from 'fabric';
 import './TrackingEditor.css';
 
@@ -23,16 +24,16 @@ class TrackingEditor extends Component {
     canvasElementsPlayers= [];
     canvasElementsCorners = [];
 
-
     canvas = undefined;
     demoImages = require.context('../../../data/', false, /.*/);    // /.*/ is a regex that matches everything
+    id = -1;
     pic = {};
 
     state = {
 
         dummy: true,
         // canvas: undefined,
-        video: "no video assigned",
+        demo: undefined,
         trackListElements: [],
         scalingFactor: undefined,
         categories: [],             // read in from annotations file
@@ -59,14 +60,21 @@ class TrackingEditor extends Component {
 
     constructor(props) {
         super(props);
+        this.id = this.props.match.params.id;
+
+        // if(!this.state.demo) {
+            // TODO BACKEND load images and save in pic[framenumber], or implement some kind of cache depending on how fast/slow loading would be
+            // maybe just save image name and load each image?
+        //}
+        // else {
         for(let i = 0; i < 11; i++) {
             let filename = "./" + this.getDemoFrameFilename(i);
             this.pic[i] = this.demoImages(filename).default;//require("../../../data/frame_000000.jpg");
         }
+        //}
     }
 
     componentDidMount() {
-
         // delete fabric's rotation control from Controls object so it is disabled for all elements
         // alternatively use fabric.Object.setControlsVisibility for per-object control
         delete fabric.Object.prototype.controls.mtr;
@@ -97,10 +105,11 @@ class TrackingEditor extends Component {
 
         console.log(tracking);
 
-        //load categories and annotations
+        // TODO BACKEND wrap all data fetching in if(this.state.demo) block and keep existing code for demo if Demo should stay in the website
+        //load categories and annotations TODO BACKEND categories = loadCategories(this.id);
         let categories = tracking.categories;
 
-        //load annotations
+        //load annotations TODO BACKEND annotations = loadAnnotations(this.id);
         let annotations = tracking.annotations;
         console.log("annotations: ");
         console.log(annotations);
@@ -109,10 +118,10 @@ class TrackingEditor extends Component {
         let firstCachedFrame = currentFrameNumber - cacheSizeBefore;
         let lastCachedFrame = currentFrameNumber + cacheSizeBehind;
         this.annotationsCache = this.getAnnotationsForFrames(annotations, firstCachedFrame, lastCachedFrame);
-        console.log(`Frames from ${firstCachedFrame} to ${lastCachedFrame}: `);
-        console.log(this.annotationsCache);
+        // console.log(`Frames from ${firstCachedFrame} to ${lastCachedFrame}: `);
+        // console.log(this.annotationsCache);
 
-        //load corners
+        //load corners TODO BACKEND TODO BACKEND corners = loadCorners(this.id);
         let corners = cornerfile.corners;
         this.cornersCache = this.getAnnotationsForFrames(corners, firstCachedFrame, lastCachedFrame);
 
@@ -145,7 +154,7 @@ class TrackingEditor extends Component {
         }
 
         this.canvas = canvas;
-        this.setState({video: this.props.video, currentFrame: currentFrameNumber, scalingFactor: scalingFactor, categories: categories},
+        this.setState({demo: this.props.demo, currentFrame: currentFrameNumber, scalingFactor: scalingFactor, categories: categories},
             () => {this.plotBBoxes(); this.plotCorners(); this.setState({dummy: !this.state.dummy})});
         // calling setState twice is necessary here because the plotBBoxes function relies on some info about the state
         // the same is done in ComponentDidUpdate, causing rerenders; maybe plotBBoxes could be rewritten but then it would be easier to introduce bugs that violate data consistency with state?
@@ -207,11 +216,8 @@ class TrackingEditor extends Component {
         // Using concat() because for push() (which would be more appropriate) because the HTML Tag syntax did only work in a list
         // newCanvasElements.forEach(bBox => newTrackListItems = newTrackListItems.concat([<TrackListItemPlayer bBox={bBox} blink={this.blink} />]));
 
-        console.log("bBox array before:");
-        console.log(this.canvasElementsPlayers);
+
         this.canvasElementsPlayers = this.canvasElementsPlayers.concat(newCanvasElements);      // concat does not mutate the original array
-        console.log("bBox array after:");
-        console.log(this.canvasElementsPlayers);
         // instead of the following in order to not trigger endless rerender!
         // this.setState({
         //     canvasElementsPlayers: this.state.canvasElementsPlayers.concat(newCanvasElements)      // concat does not mutate the original array
@@ -250,7 +256,7 @@ class TrackingEditor extends Component {
 
     // parameter check is already done in NavBar so this function expects a valid value for i
     switchFrame = (i) => {
-        console.log("TrackingEditor: Switching Frame to " + i);
+        // console.log("TrackingEditor: Switching Frame to " + i);
         //TODO call backend and delete the following hardcoded numbers in if clause (they are because there are only so many sample images here)
         if(i<0 || i>10) {
             console.log("frame number invalid: " + i);
@@ -384,10 +390,6 @@ class TrackingEditor extends Component {
             (bBox) => {
                 propsTracklist.players = propsTracklist.players.concat([<TrackListItemPlayer bBox={bBox} changeSelection={this.changeSelection} setName={this.setName} blink={this.blink} getTeams={this.getTeams} setTeam={this.setTeam} delete={this.deletePlayer}/>]);
                 let group = bBox.my.team;
-                console.log("***");
-                console.log(group);
-                console.log(groupIds);
-                console.log(group in groupIds);
                 if(!(groupIds.includes(group))) {
                     propsTracklist.groups = propsTracklist.groups.concat([<TrackListItemGroup id={group}
                                                                                               activeGroup={this.state.activeGroup}
@@ -397,8 +399,6 @@ class TrackingEditor extends Component {
                     groupIds = groupIds.concat([group]);
                 }
             });
-        console.log("******************GROUP IDs******");
-        console.log(groupIds);
 
         this.canvasElementsCorners.forEach(
             (corner) => {
@@ -452,15 +452,15 @@ class TrackingEditor extends Component {
             if (bBox.my.id == id) {
                 let bBoxDeepCopy = bBox;    //TODO the cleaner/correct version would be to do a deep clone as indicated (but not done) here. JS does not really have a deep clone functionality.
                 activeGroup = bBox.my.team;
-                console.log("**************************");
-                console.log("bBox to select:");
-                console.log(bBox);
-                console.log("active Element:");
-                console.log(this.canvas.getActiveObject());
-                console.log("Comparison result:" + this.canvas.getActiveObject()?.my?.id !== bBoxDeepCopy.my.id);
-                console.log("*****************************");
-                console.log(this.canvas.getActiveObject()?.my?.id);
-                console.log(bBoxDeepCopy.my.id);
+                // console.log("**************************");
+                // console.log("bBox to select:");
+                // console.log(bBox);
+                // console.log("active Element:");
+                // console.log(this.canvas.getActiveObject());
+                // console.log("Comparison result:" + this.canvas.getActiveObject()?.my?.id !== bBoxDeepCopy.my.id);
+                // console.log("*****************************");
+                // console.log(this.canvas.getActiveObject()?.my?.id);
+                // console.log(bBoxDeepCopy.my.id);
                 if((this.canvas.getActiveObject()?.my?.id !== bBoxDeepCopy.my.id) || this.canvas.getActiveObject()?.my?.player === undefined) { // 1st: comparison by reference which is intended in this case; 2nd condition: To catch the case that active Object is e.g. corner which might have the same id
                     this.canvas.setActiveObject(bBoxDeepCopy);  //necessary so that canvas behaves as expected, e.g. clicking in empty spot clears selection
                 }
@@ -857,7 +857,7 @@ class TrackingEditor extends Component {
 
 
 TrackingEditor.propTypes = {
-    video: PropTypes.string.isRequired, //make required
+    video: PropTypes.bool.isRequired,
     startFrame: PropTypes.number
 };
 
@@ -866,4 +866,4 @@ TrackingEditor.propTypes = {
 //     startFrame: 1
 // };
 
-export default TrackingEditor;
+export default withRouter(TrackingEditor);

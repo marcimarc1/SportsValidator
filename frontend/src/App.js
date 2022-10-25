@@ -6,6 +6,7 @@ import {BrowserRouter as Router, Route} from 'react-router-dom';
 import Demo from "./components/pages/Demo";
 import FileOverview from "./components/pages/FileOverview/FileOverview";
 import TrackingEditor from "./components/pages/trackingEditor/TrackingEditor";
+import Analysis from "./components/pages/analysis/Analysis";
 
 class App extends Component {
 
@@ -35,7 +36,11 @@ class App extends Component {
                 </Route>
 
                 <Route exact path="/trackingEditor/:id" >
-                    <TrackingEditor video="Demo" startFrame={1}/>
+                    <TrackingEditor demo={false} startFrame={1}/>
+                </Route>
+
+                <Route exact path="/analysis/:id" >
+                    <Analysis/>
                 </Route>
 
                 <Route exact path="/games">
