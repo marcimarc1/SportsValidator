@@ -1,0 +1,6 @@
+{"data": {
+  "labels": ["Team 1", "Team 2"],
+  "values": [82, 87],
+  "xLabel": "Team",
+  "yLabel": "Distance covered"
+}}

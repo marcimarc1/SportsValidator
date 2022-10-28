@@ -19,7 +19,8 @@ class App extends Component {
                     <Header onStartPage={true}/>
                 </Route>
 
-                <Route exact path="(/about|/feedback|/account|/demo|/games)" >
+                {/*using path instead of exact path so it works with trackingEditor/:id and analysis/:id */}
+                <Route path="(/trackingEditor|/about|/feedback|/account|/demo|/games|/analysis)" >
                     <Header/>
                 </Route>
 
