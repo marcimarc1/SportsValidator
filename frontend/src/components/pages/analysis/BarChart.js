@@ -52,8 +52,6 @@ class BarChart extends Component {
             labels: rawData.labels,
             datasets: datasets
         };
-        console.log("***********");
-        console.log(rawData.xLabel);
         this.chart = new Chart(ctx, {
             type: "bar",
             data: chartData,

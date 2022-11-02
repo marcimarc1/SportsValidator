@@ -1,0 +1,44 @@
+{
+  "data": {
+    "teams": {
+      "0": {
+        "name": "Team 1",
+        "players": {
+          "0": {
+            "name": "Michael",
+            "team": 0
+          },
+          "1": {
+            "name": "Marc",
+            "team": 0
+          },
+          "2": {
+            "name": "Max",
+            "team": 0
+          }
+        }
+      },
+      "1": {
+        "name": "Team 2",
+        "players": {
+          "3": {
+            "name": "Nico",
+            "team": 1
+          },
+          "4": {
+            "name": "Niko",
+            "team": 1
+          },
+          "5": {
+            "name": "Niklas",
+            "team": 1
+          },
+          "6": {
+            "name": "6",
+            "team": 1
+          }
+        }
+      }
+    }
+  }
+}

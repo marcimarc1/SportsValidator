@@ -1,0 +1,217 @@
+import React, {Component} from 'react';
+import PropTypes from 'prop-types';
+import InputLabel from '@material-ui/core/InputLabel';
+import MenuItem from '@material-ui/core/MenuItem';
+import FormControl from '@material-ui/core/FormControl';
+import FormControlLabel from "@material-ui/core/FormControlLabel";
+import Switch from "@material-ui/core/Switch";
+import Select from '@material-ui/core/Select';
+import OutlinedInput from "@material-ui/core/OutlinedInput";
+import ListItemText from "@material-ui/core/ListItemText";
+import Checkbox from "@material-ui/core/Checkbox";
+import Box from "@material-ui/core/Box";
+import Chip from "@material-ui/core/Chip";
+import ListSubheader from "@material-ui/core/ListSubheader";
+
+
+
+import IconButton from '@material-ui/core/IconButton';
+import Button from '@material-ui/core/Button';
+
+class TileTypeSelector extends Component {
+
+    state = {
+        currentType: "",
+        groupByTeams: false,
+        currentTeams: [],
+        currentPlayers: [],
+        visibilities: {     // for which selections should be shown depending on previous selections
+            groupByTeams: false,
+            teams: false,
+            players: false,
+            notes: false
+        }
+    };
+
+    componentDidMount() {
+    }
+
+    selectTileType = () => {
+        let changes =
+            {
+                type: this.state.currentType
+            };
+        this.props.selectTileType(changes);
+    }
+
+    handleChangeType = (event) => {
+        let type = event.target.value;
+        let stateChanges = {currentType: type, groupByTeams: false};
+        if(type === "distance-barchart" || type === "heatmap") {
+            stateChanges.visibilities = {
+                groupByTeams: true,
+                players: true
+            }
+        }
+        else
+            if(type === "notes") {
+                stateChanges.visibilities = {
+                    notes: true
+                };
+            }
+        this.setState(stateChanges);
+    }
+
+    handleChangeGroupByTeams = (event) => {
+        let checked = event.target.checked;
+        let stateChanges = {
+            groupByTeams: checked,//!this.state.groupByTeams,
+            visibilities: {
+                ...this.state.visibilities,
+                players: !checked,
+                teams: checked}
+        };
+        this.setState(stateChanges);
+    }
+
+    handleChangeTeams = (event) => {
+        let selection = event.target.value;
+        let stateChanges = {
+            currentTeams: selection
+        };
+        this.setState(stateChanges);
+    }
+
+    handleChangePlayers = (event) => {
+        let selection = event.target.value;
+        let stateChanges = {
+            currentPlayers: selection
+        };
+        this.setState(stateChanges);
+    }
+
+    render() {
+        let hiddenClass = "hidden";
+        let typeMenuItems = [
+            <MenuItem value={"distance-barchart"}>Distance Barchart</MenuItem>,
+            <MenuItem value={"heatmap"}>Heatmap</MenuItem>,
+            <MenuItem value={"notes"}>Note</MenuItem>
+        ];
+        let teamsMenuItems = undefined;
+        let playersMenuItems = [];
+        let playerNameLookup = {};
+
+        if(this.props.data) {
+            teamsMenuItems = Object.entries(this.props.data?.teams).map(([key, value]) => {
+                return <MenuItem key={key} value={key} >
+                    <Checkbox checked={this.state.currentTeams.indexOf(key) > -1} />
+                    <ListItemText primary={value.name} />
+                </MenuItem>
+            });
+
+            // populate playersMenuItems
+            let moreThanOneTeam = Object.entries(this.props.data?.teams).length > 1;
+            for(const [key, value] of Object.entries(this.props.data?.teams)) {
+                if(moreThanOneTeam)
+                    playersMenuItems.push(<ListSubheader>{value.name}</ListSubheader>)
+                let newPlayerMenuItems = Object.entries(value.players).map(([key, value]) => {
+                    playerNameLookup[key] = value.name;
+                    return <MenuItem key={key} value={key} >
+                        <Checkbox checked={this.state.currentPlayers.indexOf(key) > -1} />
+                        <ListItemText primary={value.name} />
+                    </MenuItem>})
+                playersMenuItems = playersMenuItems.concat(newPlayerMenuItems);
+            }
+        }
+        return (
+            <div className="TileTypeSelector">
+                {/*Material UI Dropdown Select*/}
+                <div className={"TileTypeSelectorForm"}>
+                    <FormControl>
+                        <InputLabel id="demo-simple-select-label">Tile Type</InputLabel>
+                        <Select
+                            labelId="demo-simple-select-label"
+                            id="demo-simple-select"
+                            value={this.state.currentType}
+                            onChange={this.handleChangeType}
+                        >
+                            {typeMenuItems}
+                        </Select>
+                    </FormControl>
+                </div>
+
+                <div className={"TileTypeSelectorForm" + (this.state.visibilities.groupByTeams?"":" " + hiddenClass)}>
+                    <FormControl>
+                        <FormControlLabel control={<Switch checked={this.state.groupByTeams} onChange={this.handleChangeGroupByTeams}/>} label="Group by Teams" labelPlacement="start"/>
+                    </FormControl>
+                </div>
+
+                <div className={"TileTypeSelectorForm" + (this.state.visibilities.teams?"":" " + hiddenClass)}>
+                    <FormControl>
+                        <InputLabel id="team-selection-multiple-checkbox-label">Teams</InputLabel>
+                        <Select
+                            labelId="team-selection-multiple-checkbox-label"
+                            id="team-selection-multiple-checkbox"
+                            multiple
+                            value={this.state.currentTeams}
+                            onChange={this.handleChangeTeams}
+                            input={<OutlinedInput label="chip" />}
+
+                            renderValue={(selected) => (
+                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                                    {selected.map((value) => (
+                                        <Chip key={value} label={this.props.data.teams[value].name} />
+                                    ))}
+                                </Box>
+                            )}
+
+                            // Alternative way to show selected values in a simple list without chips:
+                            // // in the following line it would be better to use the ListItemText text from each menu entry but there seems to be no good way to access it in renderValue
+                            // renderValue={(selected) => selected.map((t) => this.props.data.teams[t].name).join(', ')}
+
+                            // MenuProps={MenuProps}
+                        >
+                            {teamsMenuItems}
+                        </Select>
+                    </FormControl>
+                </div>
+
+                <div className={"TileTypeSelectorForm" + (this.state.visibilities.players?"":" " + hiddenClass)}>
+                    <FormControl>
+                        <InputLabel id="player-selection-multiple-checkbox-label">Players</InputLabel>
+                        <Select
+                            labelId="player-selection-multiple-checkbox-label"
+                            id="player-selection-multiple-checkbox"
+                            multiple
+                            value={this.state.currentPlayers}
+                            onChange={this.handleChangePlayers}
+                            input={<OutlinedInput label="chip" />}
+                            renderValue={(selected) => (
+                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                                    {selected.map((value) => (
+                                        <Chip key={value} label={playerNameLookup[value]} />
+                                    ))}
+                                </Box>
+                            )}
+                            // MenuProps={MenuProps}
+                        >
+                            {playersMenuItems}
+                        </Select>
+                    </FormControl>
+                </div>
+
+
+
+                <Button onClick={this.selectTileType}>Create Tile</Button>
+                
+            </div>
+        );
+    }
+}
+
+TileTypeSelector.propTypes = {
+    data: PropTypes.object.isRequired,
+    selectTileType: PropTypes.func.isRequired
+};
+
+export default TileTypeSelector;

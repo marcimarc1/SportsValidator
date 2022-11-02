@@ -4,7 +4,7 @@ import AnalysisTile from "./AnalysisTile";
 import "./Analysis.css";
 import IconButton from "@material-ui/core/IconButton";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faCheck, faPlus} from "@fortawesome/free-solid-svg-icons";
+import {faPlus} from "@fortawesome/free-solid-svg-icons";
 
 class Analysis extends Component {
 
@@ -15,7 +15,8 @@ class Analysis extends Component {
         // groupByTeams:
         {type: "distance-barchart", groupByTeams: false, teams: [1, 2], players: undefined},
         {type: "distance-barchart", groupByTeams: true, teams: undefined, players: undefined},
-        {type: "distance-barchart", groupByTeams: true, teams: undefined, players: undefined}
+        {type: "distance-barchart", groupByTeams: true, teams: undefined, players: undefined},
+        {type: "notes", notes: "As you can cleary see, the players of one of the team ran further doing the game."}
     ];
 
     state = {
@@ -42,12 +43,30 @@ class Analysis extends Component {
         }
     }
 
+    addButton = () => {
+        let newAnalysisTile = {type: "new", groupByTeams: false};
+        this.setState((prevState) => {return {analysisTiles: [...prevState.analysisTiles, newAnalysisTile]};});
+    }
+
+    // expects changes object with all properties that have changed
+    changeTile = (id) => (changes) => {
+
+        console.log("Changes to Tile " + id);
+        console.log(changes);
+        // TODO
+
+    }
+
     render() {
-        let analysisTiles = this.state.analysisTiles.map((t, index) => <AnalysisTile gameId={this.id} tileId={index} type={t.type} groupByTeams={t.groupByTeams} teams={t?.teams} players={t?.players} />);
+        let analysisTiles = this.state.analysisTiles.map((t, index) => <AnalysisTile gameId={this.id} tileId={index} type={t.type} groupByTeams={t?.groupByTeams} teams={t?.teams} players={t?.players} notes={t?.notes} changeTile={this.changeTile(index)}/>);
         return (
             <div className="Analysis">
                 <div className="AnalysisHeadingContainer">
-                    
+                    <div className={"AnalysisAddButtonContainer"}>
+                        <IconButton size="large" variant="contained" className={"AnalysisAddButton"} onClick={this.addButton} aria-label="add new analysis tile">
+                            <FontAwesomeIcon className="PlusIcon" icon={faPlus} />
+                        </IconButton>
+                    </div>
                     <div className="AnalysisHeadingAndSubheading">
                         <h1 className="AnalysisHeading">Analysis</h1>
                         <h2 className="AnalysisSubheading">{this.state.filename}</h2>
