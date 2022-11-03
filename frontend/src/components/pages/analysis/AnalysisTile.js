@@ -70,7 +70,7 @@ class AnalysisTile extends Component {
                         <EditTextarea
                             className="NotesEditTextarea"
                             rows={20}
-                            style={{ paddingTop: 0}}
+                            style={{ paddingTop: 0, width: "535px", height: "535px", margin: "15px"}}
                             defaultValue={this.state.data}
                             placeholder='Enter your notes here'
                             onSave={this.handleChangeNotes}

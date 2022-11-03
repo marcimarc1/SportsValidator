@@ -76,11 +76,12 @@ h1 {
     margin: 30px;
 }
 
-.NotesEditTextarea {
-    margin: 15px;
-    width: 535px;   /* 500 - margin + 2*Chart.margin*/
-    height: 535px;
-}
+/* This is moved to js file in style prop because here it was not active while editing text */
+/*.NotesEditTextarea {*/
+/*    margin: 15px;*/
+/*    width: 535px;   !* 500 - margin + 2*Chart.margin*!*/
+/*    height: 535px;*/
+/*}*/
 
 .TileTypeSelector {
     display: flex;
