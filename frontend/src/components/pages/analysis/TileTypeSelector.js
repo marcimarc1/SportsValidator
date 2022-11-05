@@ -17,6 +17,7 @@ import ListSubheader from "@material-ui/core/ListSubheader";
 
 import IconButton from '@material-ui/core/IconButton';
 import Button from '@material-ui/core/Button';
+import {EditTextarea} from "react-edit-text";
 
 class TileTypeSelector extends Component {
 
@@ -25,6 +26,7 @@ class TileTypeSelector extends Component {
         groupByTeams: false,
         currentTeams: [],
         currentPlayers: [],
+        currentNotes: "",
         visibilities: {     // for which selections should be shown depending on previous selections
             groupByTeams: false,
             teams: false,
@@ -41,6 +43,18 @@ class TileTypeSelector extends Component {
             {
                 type: this.state.currentType
             };
+        switch (this.state.currentType) {
+            case "distance-barchart":
+            case "heatmap":
+                changes.groupByTeams = this.state.groupByTeams;
+                if(this.state.groupByTeams)
+                    changes.teams = this.state.currentTeams;
+                else
+                    changes.players = this.state.currentPlayers;
+                break;
+            case "notes":
+                changes.notes = this.state.currentNotes;
+        }
         this.props.selectTileType(changes);
     }
 
@@ -90,7 +104,16 @@ class TileTypeSelector extends Component {
         this.setState(stateChanges);
     }
 
+    handleChangeNotes = (obj) => {
+        let notes = obj.value;
+        let stateChanges = {
+            currentNotes: notes
+        };
+        this.setState(stateChanges);
+    }
+
     render() {
+        let createButtonDisabled = this.state.currentType === "";
         let hiddenClass = "hidden";
         let typeMenuItems = [
             <MenuItem value={"distance-barchart"}>Distance Barchart</MenuItem>,
@@ -125,84 +148,103 @@ class TileTypeSelector extends Component {
         }
         return (
             <div className="TileTypeSelector">
-                {/*Material UI Dropdown Select*/}
-                <div className={"TileTypeSelectorForm"}>
-                    <FormControl>
-                        <InputLabel id="demo-simple-select-label">Tile Type</InputLabel>
-                        <Select
-                            labelId="demo-simple-select-label"
-                            id="demo-simple-select"
-                            value={this.state.currentType}
-                            onChange={this.handleChangeType}
-                        >
-                            {typeMenuItems}
-                        </Select>
-                    </FormControl>
+                <div className="TileTypeSelectorFormContainer">
+                    <div className={"TileTypeSelectorForm"}>
+                        <FormControl fullWidth={true}>
+                            <InputLabel id="demo-simple-select-label">Tile Type</InputLabel>
+                            <Select
+                                labelId="demo-simple-select-label"
+                                id="demo-simple-select"
+                                value={this.state.currentType}
+                                onChange={this.handleChangeType}
+                            >
+                                {typeMenuItems}
+                            </Select>
+                        </FormControl>
+                    </div>
+
+                    <div className={"TileTypeSelectorForm" + (this.state.visibilities.groupByTeams?"":" " + hiddenClass)}>
+                        <FormControl fullWidth={true}>
+                            <FormControlLabel control={<Switch checked={this.state.groupByTeams} onChange={this.handleChangeGroupByTeams}/>} label="Group by Teams" labelPlacement="end"/>
+                        </FormControl>
+                    </div>
+
+                    <div className={"TileTypeSelectorForm" + (this.state.visibilities.teams?"":" " + hiddenClass)}>
+                        <FormControl fullWidth={true}>
+                            <InputLabel id="team-selection-multiple-checkbox-label">Teams</InputLabel>
+                            <Select
+                                labelId="team-selection-multiple-checkbox-label"
+                                id="team-selection-multiple-checkbox"
+                                multiple
+                                value={this.state.currentTeams}
+                                onChange={this.handleChangeTeams}
+                                input={<OutlinedInput label="chip" />}
+
+                                renderValue={(selected) => (
+                                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }} >
+                                        {selected.map((value) => (
+                                            <Chip key={value} label={this.props.data.teams[value].name} />
+                                        ))}
+                                    </Box>
+                                )}
+
+                                // Alternative way to show selected values in a simple list without chips:
+                                // // in the following line it would be better to use the ListItemText text from each menu entry but there seems to be no good way to access it in renderValue
+                                // renderValue={(selected) => selected.map((t) => this.props.data.teams[t].name).join(', ')}
+
+                                // MenuProps={MenuProps}
+                            >
+                                {teamsMenuItems}
+                            </Select>
+                        </FormControl>
+                    </div>
+
+                    <div className={"TileTypeSelectorForm" + (this.state.visibilities.players?"":" " + hiddenClass)}>
+                        <FormControl fullWidth={true}>
+                            <InputLabel id="player-selection-multiple-checkbox-label">Players</InputLabel>
+                            <Select
+                                labelId="player-selection-multiple-checkbox-label"
+                                id="player-selection-multiple-checkbox"
+                                multiple
+                                value={this.state.currentPlayers}
+                                onChange={this.handleChangePlayers}
+                                input={<OutlinedInput label="chip" />}
+                                renderValue={(selected) => (
+                                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                                        {selected.map((value) => (
+                                            <Chip key={value} label={playerNameLookup[value]} />
+                                        ))}
+                                    </Box>
+                                )}
+                                // MenuProps={MenuProps}
+                            >
+                                {playersMenuItems}
+                            </Select>
+                        </FormControl>
+                    </div>
+
+                    {/* notes */}
+                    <div className={"TileTypeSelectorForm" + (this.state.visibilities.notes?"":" " + hiddenClass)}>
+                        <EditTextarea
+                            className="NotesEditTextarea"
+                            rows={10}
+                            style={{ paddingTop: 0, width: "535px", height: "300px", margin: "15px"}}
+                            defaultValue={this.state.currentNotes}
+                            placeholder='Enter your notes here'
+                            onSave={this.handleChangeNotes}
+                        />
+                    </div>
                 </div>
 
-                <div className={"TileTypeSelectorForm" + (this.state.visibilities.groupByTeams?"":" " + hiddenClass)}>
-                    <FormControl>
-                        <FormControlLabel control={<Switch checked={this.state.groupByTeams} onChange={this.handleChangeGroupByTeams}/>} label="Group by Teams" labelPlacement="start"/>
-                    </FormControl>
-                </div>
-
-                <div className={"TileTypeSelectorForm" + (this.state.visibilities.teams?"":" " + hiddenClass)}>
-                    <FormControl>
-                        <InputLabel id="team-selection-multiple-checkbox-label">Teams</InputLabel>
-                        <Select
-                            labelId="team-selection-multiple-checkbox-label"
-                            id="team-selection-multiple-checkbox"
-                            multiple
-                            value={this.state.currentTeams}
-                            onChange={this.handleChangeTeams}
-                            input={<OutlinedInput label="chip" />}
-
-                            renderValue={(selected) => (
-                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                                    {selected.map((value) => (
-                                        <Chip key={value} label={this.props.data.teams[value].name} />
-                                    ))}
-                                </Box>
-                            )}
-
-                            // Alternative way to show selected values in a simple list without chips:
-                            // // in the following line it would be better to use the ListItemText text from each menu entry but there seems to be no good way to access it in renderValue
-                            // renderValue={(selected) => selected.map((t) => this.props.data.teams[t].name).join(', ')}
-
-                            // MenuProps={MenuProps}
-                        >
-                            {teamsMenuItems}
-                        </Select>
-                    </FormControl>
-                </div>
-
-                <div className={"TileTypeSelectorForm" + (this.state.visibilities.players?"":" " + hiddenClass)}>
-                    <FormControl>
-                        <InputLabel id="player-selection-multiple-checkbox-label">Players</InputLabel>
-                        <Select
-                            labelId="player-selection-multiple-checkbox-label"
-                            id="player-selection-multiple-checkbox"
-                            multiple
-                            value={this.state.currentPlayers}
-                            onChange={this.handleChangePlayers}
-                            input={<OutlinedInput label="chip" />}
-                            renderValue={(selected) => (
-                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                                    {selected.map((value) => (
-                                        <Chip key={value} label={playerNameLookup[value]} />
-                                    ))}
-                                </Box>
-                            )}
-                            // MenuProps={MenuProps}
-                        >
-                            {playersMenuItems}
-                        </Select>
-                    </FormControl>
-                </div>
 
 
-
-                <Button onClick={this.selectTileType}>Create Tile</Button>
+                <Button
+                    className={"TileTypeSelectorCreateButton" + (createButtonDisabled?" disabled":"")}
+                    variant="outlined" disabled={createButtonDisabled}
+                    onClick={this.selectTileType}
+                >
+                    Create Tile
+                </Button>
                 
             </div>
         );

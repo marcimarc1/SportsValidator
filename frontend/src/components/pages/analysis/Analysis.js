@@ -16,7 +16,8 @@ class Analysis extends Component {
         {type: "distance-barchart", groupByTeams: false, teams: [1, 2], players: undefined},
         {type: "distance-barchart", groupByTeams: true, teams: undefined, players: undefined},
         {type: "distance-barchart", groupByTeams: true, teams: undefined, players: undefined},
-        {type: "notes", notes: "As you can cleary see, the players of one of the team ran further doing the game."}
+        {type: "notes", notes: "As you can cleary see, the players of one of the team ran further doing the game."},
+        {type: "new"}
     ];
 
     state = {
@@ -43,18 +44,24 @@ class Analysis extends Component {
         }
     }
 
+    componentWillUnmount() {
+        // TODO BACKEND save changes in analysis to backend so that next time .../analysis/gameId is accessed, same AnalysisTiles are loaded
+        // BACKEND.saveAnalysis(this.id, this.state.analysisTiles);
+    }
+
     addButton = () => {
-        let newAnalysisTile = {type: "new", groupByTeams: false};
+        let newAnalysisTile = {type: "new"};
         this.setState((prevState) => {return {analysisTiles: [...prevState.analysisTiles, newAnalysisTile]};});
     }
 
     // expects changes object with all properties that have changed
     changeTile = (id) => (changes) => {
-
-        console.log("Changes to Tile " + id);
-        console.log(changes);
-        // TODO
-
+        // console.log("Changes to Tile " + id);
+        // console.log(changes);
+        if(changes.hasOwnProperty("type"))
+            this.setState((prevState) => ({analysisTiles: prevState.analysisTiles.map((tile, index) => index === id?{...changes}:tile)}));
+        else
+            this.setState((prevState) => ({analysisTiles: prevState.analysisTiles.map((tile, index) => index === id?{...tile, ...changes}:tile)}));
     }
 
     render() {

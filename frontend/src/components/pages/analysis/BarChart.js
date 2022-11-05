@@ -12,8 +12,6 @@ class BarChart extends Component {
     componentDidMount() {
         const ctx = document.getElementById("Chart"+this.props.tileId).getContext("2d");
         let rawData = this.props.data;
-        console.log(this.props);
-        console.log(rawData);
         // if(this.props.groupByTeams) {
         //     let datasets = [];
         //     let currentTeam = this.props.data.teams[0];

@@ -22,7 +22,8 @@ class AnalysisTile extends Component {
             // let data = BACKEND.getNewTileSelectionOptions(this.props.gameId);
             this.setState({data: dataNewTile.data});
         if(this.props.type === "notes") {
-            this.setState({data: this.props?.notes});
+            // editText is currently working in a uncontrolled fashion and is therefore not using the state
+            // this.setState({data: this.props?.notes});
         }
         else {
             // TODO BACKEND
@@ -40,15 +41,22 @@ class AnalysisTile extends Component {
         }
     }
 
-    selectTileType = (changes) => {
+    changeTile = (changes) => {
         this.props.changeTile(changes);
+    }
+
+    handleChangeNotes = (obj) => {
+        this.changeTile({notes: obj.value});
+    }
+
+    selectTileType = (changes) => {
+        this.setState({data: undefined});
+        this.changeTile(changes)
     }
 
     render() {
         let chart;
         let headingText;
-        console.log(this.props.type);
-        console.log(this.state.data);
         if(this.state.data || this.props.type === "new" || this.props.type === "notes") {
             switch (this.props.type) {
                 case "distance-barchart":
@@ -71,7 +79,7 @@ class AnalysisTile extends Component {
                             className="NotesEditTextarea"
                             rows={20}
                             style={{ paddingTop: 0, width: "535px", height: "535px", margin: "15px"}}
-                            defaultValue={this.state.data}
+                            defaultValue={this.props?.notes}
                             placeholder='Enter your notes here'
                             onSave={this.handleChangeNotes}
                         />

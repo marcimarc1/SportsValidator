@@ -4,6 +4,8 @@ element {
 
 h1 {
     text-align: center;
+    margin-left: 2em;
+    margin-right: 2em;
 }
 
 .Analysis {
@@ -67,9 +69,12 @@ h1 {
 .AnalysisTile {
     /*width: 45%;*/
     background-color: #BBBBBB;
+    min-height: 500px;
     border-radius: 5px;
     box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
     margin: 50px;
+    display: flex;
+    flex-direction: column;
 }
 
 .Chart {
@@ -85,17 +90,53 @@ h1 {
 
 .TileTypeSelector {
     display: flex;
+    height: 100%;
     flex-direction: column;
     align-items: stretch;
-    justify-content: space-around;
+    justify-content: space-between;
+}
+
+.TileTypeSelectorFormContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
 }
 
 .TileTypeSelectorForm {
-    margin: 0 3em 0 3em !important;
+    margin: 0.5em 3em 0.5em 3em !important;
     display: flex;
     justify-content: stretch;
+    align-items: stretch;
+
+}
+
+FormControl {
+    width: 90%;
+}
+
+.TileTypeSelectorCreateButton {
+    margin-bottom: 10px !important;
+    width: 50% !important;
+    align-self: center;
+    background-color: #344911 !important;
+    color: #BBBBBB !important;
+    border-radius: 10px !important;
+}
+
+.TileTypeSelectorCreateButton.disabled {
+    visibility: hidden;
 }
 
 .hidden {
     display: none;
+}
+
+/* Sets max width of the Google MUI dropdowns in TileTypeSelector (so that it does not extend when the number of names selected gets too big) */
+#player-selection-multiple-checkbox {
+    max-width: 450px !important;
+}
+
+#team-selection-multiple-checkbox {
+    max-width: 450px !important;
 }
