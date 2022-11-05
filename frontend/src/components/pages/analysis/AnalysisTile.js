@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import PropTypes from 'prop-types';
-import { EditText, EditTextarea } from 'react-edit-text';
+import { EditTextarea } from 'react-edit-text';
 import 'react-edit-text/dist/index.css';
 
 import dataBarchart1 from "../../../data/analysis_distance_barchart_Teams_1_2.json";
@@ -101,7 +101,7 @@ AnalysisTile.propTypes = {
     gameId: PropTypes.number.isRequired,
     tileId: PropTypes.number.isRequired,
     type: PropTypes.string.isRequired,
-    groupByTeams: PropTypes.bool.isRequired,
+    groupByTeams: PropTypes.bool,
     teams: PropTypes.arrayOf(PropTypes.number),
     players: PropTypes.arrayOf(PropTypes.number),
     notes: PropTypes.string,

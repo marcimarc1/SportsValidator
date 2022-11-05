@@ -3,10 +3,7 @@ import { Link } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {faTrash, faEdit, faChartBar} from '@fortawesome/free-solid-svg-icons'
-import {Card} from "@material-ui/core";
 import IconButton from '@material-ui/core/IconButton';
-import Button from '@material-ui/core/Button';
-import { withStyles } from "@material-ui/core/styles";
 import { EditText, EditTextarea } from 'react-edit-text';
 import 'react-edit-text/dist/index.css';
 

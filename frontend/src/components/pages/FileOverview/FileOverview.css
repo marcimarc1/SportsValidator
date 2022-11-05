@@ -41,7 +41,8 @@ element {
     background-color: #BBBBBB;
     position: absolute !important;
     left: 10px;
-    box-shadow: var(--my-box-shadow);
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+            /*var(--my-box-shadow);*/
     border-radius: 22px;    /* a bit quick and dirty but should be fine since icon size does not change*/
     transition: width 0.3s ease-out;
 }
@@ -116,12 +117,13 @@ element {
     background-color: #BBBBBB;
     width: 100%;
     margin-top: 3em;
-    border-radius: 0 40px 40px 0;
     display: flex;
     flex-direction: row;
     justify-content: space-between;
     align-items: stretch;
-    box-shadow: var(--my-box-shadow);}
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    /*var(--my-box-shadow);*/
+}
 
 .FileOverviewListItemThumbnail {
     /*border-radius: 0 40px 40px 0;*/

@@ -48,9 +48,9 @@ class TileTypeSelector extends Component {
             case "heatmap":
                 changes.groupByTeams = this.state.groupByTeams;
                 if(this.state.groupByTeams)
-                    changes.teams = this.state.currentTeams;
+                    changes.teams = this.state.currentTeams.map((e) => parseInt(e));
                 else
-                    changes.players = this.state.currentPlayers;
+                    changes.players = this.state.currentPlayers.map((e) => parseInt(e));
                 break;
             case "notes":
                 changes.notes = this.state.currentNotes;
@@ -115,10 +115,11 @@ class TileTypeSelector extends Component {
     render() {
         let createButtonDisabled = this.state.currentType === "";
         let hiddenClass = "hidden";
+        let i = 0;
         let typeMenuItems = [
-            <MenuItem value={"distance-barchart"}>Distance Barchart</MenuItem>,
-            <MenuItem value={"heatmap"}>Heatmap</MenuItem>,
-            <MenuItem value={"notes"}>Note</MenuItem>
+            <MenuItem key={i++} value={"distance-barchart"}>Distance Barchart</MenuItem>,
+            <MenuItem key={i++} value={"heatmap"}>Heatmap</MenuItem>,
+            <MenuItem key={i++} value={"notes"}>Note</MenuItem>
         ];
         let teamsMenuItems = undefined;
         let playersMenuItems = [];
@@ -136,7 +137,7 @@ class TileTypeSelector extends Component {
             let moreThanOneTeam = Object.entries(this.props.data?.teams).length > 1;
             for(const [key, value] of Object.entries(this.props.data?.teams)) {
                 if(moreThanOneTeam)
-                    playersMenuItems.push(<ListSubheader>{value.name}</ListSubheader>)
+                    playersMenuItems.push(<ListSubheader key={key+1000}>{value.name}</ListSubheader>)   // couldnt figure out a better key for ListSubheader (without there is a warning), but this is relatively safe and could only cause issues if number of players exceeds 1000
                 let newPlayerMenuItems = Object.entries(value.players).map(([key, value]) => {
                     playerNameLookup[key] = value.name;
                     return <MenuItem key={key} value={key} >
@@ -252,7 +253,7 @@ class TileTypeSelector extends Component {
 }
 
 TileTypeSelector.propTypes = {
-    data: PropTypes.object.isRequired,
+    data: PropTypes.object,
     selectTileType: PropTypes.func.isRequired
 };
 

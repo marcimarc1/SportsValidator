@@ -27,7 +27,7 @@ class Analysis extends Component {
 
     constructor(props) {
         super(props);
-        this.id = this.props.match.params.id;
+        this.id = parseInt(this.props.match.params.id);
     }
 
     componentDidMount() {
@@ -65,12 +65,12 @@ class Analysis extends Component {
     }
 
     render() {
-        let analysisTiles = this.state.analysisTiles.map((t, index) => <AnalysisTile gameId={this.id} tileId={index} type={t.type} groupByTeams={t?.groupByTeams} teams={t?.teams} players={t?.players} notes={t?.notes} changeTile={this.changeTile(index)}/>);
+        let analysisTiles = this.state.analysisTiles.map((t, index) => <AnalysisTile key={index} gameId={this.id} tileId={index} type={t.type} groupByTeams={t?.groupByTeams} teams={t?.teams} players={t?.players} notes={t?.notes} changeTile={this.changeTile(index)}/>);
         return (
             <div className="Analysis">
                 <div className="AnalysisHeadingContainer">
                     <div className={"AnalysisAddButtonContainer"}>
-                        <IconButton size="large" variant="contained" className={"AnalysisAddButton"} onClick={this.addButton} aria-label="add new analysis tile">
+                        <IconButton size="medium" variant="contained" className={"AnalysisAddButton"} onClick={this.addButton} aria-label="add new analysis tile">
                             <FontAwesomeIcon className="PlusIcon" icon={faPlus} />
                         </IconButton>
                     </div>

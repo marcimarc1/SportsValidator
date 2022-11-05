@@ -7,10 +7,6 @@ import "./NavBar.css"
 class Slider extends Component {
     state = {currentFrame: 0};
 
-    constructor(props) {
-        super(props);
-    }
-
         componentDidUpdate(prevProps, prevState, snapshot) {
         if(prevProps.currentFrame != this.props.currentFrame) {       // if Frame is changed somewhere else, i.e. in Transport Buttons
             this.setState({currentFrame: this.props.currentFrame});
