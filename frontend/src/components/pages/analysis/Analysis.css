@@ -77,6 +77,34 @@ h1 {
     flex-direction: column;
 }
 
+.AnalysisTileHeadingContainer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.AnalysisTileHeading {
+    color: rgb(70, 70, 70);     /* making the heading appear roughly the color of the header  */
+}
+
+.AnalysisTileButtonContainer {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.AnalysisTileButton {
+    /*margin-right: 0.3em !important;*/
+}
+
+.AnalysisTileButton.right {
+    margin-right: 0.5em !important;
+}
+
+.ButtonIcon {
+    color: rgb(70, 70, 70);
+}
+
 .Chart {
     margin: 30px;
 }
@@ -136,7 +164,18 @@ FormControl {
 #player-selection-multiple-checkbox {
     max-width: 450px !important;
 }
-
 #team-selection-multiple-checkbox {
     max-width: 450px !important;
+}
+
+#team-selection-multiple-checkbox-label {
+    margin-left: 0.5em;
+}
+
+#player-selection-multiple-checkbox-label {
+    margin-left: 0.5em;
+}
+
+.reorder {
+    order: 0;
 }

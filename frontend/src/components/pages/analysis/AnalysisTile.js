@@ -10,6 +10,11 @@ import BarChart from "./BarChart";
 import TileTypeSelector from "./TileTypeSelector";
 import "./Analysis.css";
 
+import {ReactComponent as Delete} from "../../../icons/delete.svg";
+import IconButton from "@material-ui/core/IconButton";
+import {faTrash, faChevronLeft} from "@fortawesome/free-solid-svg-icons";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+
 class AnalysisTile extends Component {
 
     state = {
@@ -54,6 +59,24 @@ class AnalysisTile extends Component {
         this.changeTile(changes)
     }
 
+    delete = () => {
+        this.changeTile({type: "delete"});
+    }
+
+    // shiftRight is true means tile should move one spot to the right, false makes it moves to the left
+    changeOrder = (shiftRight) => {
+        let shift = shiftRight?"shift-right":"shift-left";
+        this.changeTile({type: shift});
+    }
+
+    shiftRight = () => {
+        this.changeOrder(true);
+    }
+
+    shiftLeft = () => {
+        this.changeOrder(false);
+    }
+
     render() {
         let chart;
         let headingText;
@@ -90,7 +113,21 @@ class AnalysisTile extends Component {
 
         return (
             <div className="AnalysisTile">
-                <h1>{headingText}</h1>
+                <div className="AnalysisTileHeadingContainer">
+                    <div></div>     {/*dummy element to center heading*/}
+                    <h1 className="AnalysisTileHeading">{headingText}</h1>
+                    <div className="AnalysisTileButtonContainer">
+                        <IconButton size="medium" className={"AnalysisTileButton"} onClick={this.shiftLeft} aria-label="shift tile to the left">
+                            <FontAwesomeIcon className="ButtonIcon" icon={faChevronLeft} />
+                        </IconButton>
+                        <IconButton size="medium" className={"AnalysisTileButton"} onClick={this.delete} aria-label="delete tile">
+                            <FontAwesomeIcon className="ButtonIcon" icon={faTrash} />
+                        </IconButton>
+                        <IconButton size="medium" className={"AnalysisTileButton right"} onClick={this.shiftRight} aria-label="shift tile to the right">
+                            <FontAwesomeIcon className="ButtonIcon" icon={faChevronLeft} flip="horizontal" />
+                        </IconButton>
+                    </div>
+                </div>
                 {chart}
             </div>
         );

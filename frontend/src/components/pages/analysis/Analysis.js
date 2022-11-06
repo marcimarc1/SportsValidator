@@ -20,8 +20,11 @@ class Analysis extends Component {
         {type: "new"}
     ];
 
+    runningIndex = 5;
+
     state = {
         analysisTiles: [],
+        order: [],
         filename: undefined
     }
 
@@ -46,26 +49,78 @@ class Analysis extends Component {
 
     componentWillUnmount() {
         // TODO BACKEND save changes in analysis to backend so that next time .../analysis/gameId is accessed, same AnalysisTiles are loaded
-        // BACKEND.saveAnalysis(this.id, this.state.analysisTiles);
+        // the backend should reorder the tiles according to order and sent them in the correct order next time
+        // BACKEND.saveAnalysis(this.id, this.state.analysisTiles, this.state.order);
     }
 
     addButton = () => {
         let newAnalysisTile = {type: "new"};
         this.setState((prevState) => {return {analysisTiles: [...prevState.analysisTiles, newAnalysisTile]};});
+        // TODO append one number to order too
     }
 
     // expects changes object with all properties that have changed
+    // special operations:
+    //   type = "delete": deletes the tile
+    //   type = "shift-right" || "shift-left": changes order of tiles by shifting current tile to right/left
     changeTile = (id) => (changes) => {
         // console.log("Changes to Tile " + id);
         // console.log(changes);
-        if(changes.hasOwnProperty("type"))
-            this.setState((prevState) => ({analysisTiles: prevState.analysisTiles.map((tile, index) => index === id?{...changes}:tile)}));
+
+        // Delete Tile
+        if (changes?.type === "delete") {
+            let filterFunction = (tile, index) => index !== id;
+            this.setState((prevState) => ({
+                analysisTiles: prevState.analysisTiles.filter(filterFunction),
+                order: prevState.order.filter(filterFunction)
+            }));
+            return;
+        }
+
+        // Change position of tile
+        if(changes?.type === "shift-right" || changes?.type === "shift-left") {
+            let order = this.state.order;
+            if(order.length == 0) {
+                for (let i = 0; i < this.state.analysisTiles.length; i++) {
+                    order.push(i);
+                }
+            }
+            let indexTile = order.findIndex((value) => value == id);
+            let relativeIndexChangePartner = changes.type==="shift-right"?1:-1;
+            let indexChangePartner = indexTile+relativeIndexChangePartner;
+            if(indexChangePartner < 0 || indexChangePartner >= order.length)
+                return;     // when tile cannot be shifted because it is already at start or end, nothing happens
+            let cache = order[indexTile];
+            order[indexTile] = order[indexChangePartner];
+            order[indexChangePartner] = cache;
+            console.log(order);
+
+            this.setState({order: order});
+            return;
+        }
+
+        // Do other / "normal" changes of tile
+        if (changes.hasOwnProperty("type"))
+            this.setState((prevState) => ({analysisTiles: prevState.analysisTiles.map((tile, index) => index === id ? {...changes} : tile)}));
         else
-            this.setState((prevState) => ({analysisTiles: prevState.analysisTiles.map((tile, index) => index === id?{...tile, ...changes}:tile)}));
+            this.setState((prevState) => ({analysisTiles: prevState.analysisTiles.map((tile, index) => index === id ? {...tile, ...changes} : tile)}));
     }
 
     render() {
-        let analysisTiles = this.state.analysisTiles.map((t, index) => <AnalysisTile key={index} gameId={this.id} tileId={index} type={t.type} groupByTeams={t?.groupByTeams} teams={t?.teams} players={t?.players} notes={t?.notes} changeTile={this.changeTile(index)}/>);
+        console.log("ANALYSIS TILES:");
+        console.log(this.state.analysisTiles);
+        let analysisTiles = this.state.analysisTiles.map((t, index) =>
+            <div key={index} style={this.state.order?({order: this.state.order.indexOf(index)}):undefined}>
+                <AnalysisTile
+                    gameId={this.id}
+                    tileId={index}
+                    type={t.type}
+                    groupByTeams={t?.groupByTeams}
+                    teams={t?.teams}
+                    players={t?.players}
+                    notes={t?.notes}
+                    changeTile={this.changeTile(index)}/>
+            </div>);
         return (
             <div className="Analysis">
                 <div className="AnalysisHeadingContainer">
