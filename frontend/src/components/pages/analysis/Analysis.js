@@ -13,18 +13,18 @@ class Analysis extends Component {
         // teams: considers players from all (undefined) or specific teams (team id)
         // players: same as teams
         // groupByTeams:
-        {type: "distance-barchart", groupByTeams: false, teams: [1, 2], players: undefined},
-        {type: "distance-barchart", groupByTeams: true, teams: undefined, players: undefined},
-        {type: "distance-barchart", groupByTeams: true, teams: undefined, players: undefined},
-        {type: "notes", notes: "As you can cleary see, the players of one of the team ran further doing the game."},
-        {type: "new"}
+        {id: 0, type: "distance-barchart", groupByTeams: false, teams: [1, 2], players: undefined},
+        {id: 1, type: "distance-barchart", groupByTeams: true, teams: undefined, players: undefined},
+        {id: 2, type: "distance-barchart", groupByTeams: true, teams: undefined, players: undefined},
+        {id: 3, type: "notes", notes: "As you can cleary see, the players of one of the team ran further doing the game."},
+        {id: 4, type: "new"}
     ];
 
     runningIndex = 5;
 
     state = {
         analysisTiles: [],
-        order: [],
+        order: [],  // order does not use the ids of the analysisTiles but is simply a permutation of the natural numbers 0 - (numberTiles-1)
         filename: undefined
     }
 
@@ -54,9 +54,12 @@ class Analysis extends Component {
     }
 
     addButton = () => {
-        let newAnalysisTile = {type: "new"};
-        this.setState((prevState) => {return {analysisTiles: [...prevState.analysisTiles, newAnalysisTile]};});
-        // TODO append one number to order too
+        let newAnalysisTile = {id: this.runningIndex++, type: "new"};
+        this.setState((prevState) => {
+            return ({
+                analysisTiles: [...prevState.analysisTiles, newAnalysisTile],
+                order: prevState.order.length == []?[]:[...prevState.order, prevState.order.length]
+            });});
     }
 
     // expects changes object with all properties that have changed
@@ -69,23 +72,26 @@ class Analysis extends Component {
 
         // Delete Tile
         if (changes?.type === "delete") {
-            let filterFunction = (tile, index) => index !== id;
+            let indexToDelete = this.state.analysisTiles.findIndex((e) => e.id == id);
+            let filterFunction = (tile, index) => index !== indexToDelete;      // quite inefficient, should use splice on a copy of the arrays but does not matter here
             this.setState((prevState) => ({
                 analysisTiles: prevState.analysisTiles.filter(filterFunction),
-                order: prevState.order.filter(filterFunction)
+                order: prevState.order.filter(filterFunction)   // does nothing if prevState.order === []
             }));
             return;
         }
 
         // Change position of tile
         if(changes?.type === "shift-right" || changes?.type === "shift-left") {
-            let order = this.state.order;
-            if(order.length == 0) {
+            let order = [];
+            if(this.state.order.length == 0) {
                 for (let i = 0; i < this.state.analysisTiles.length; i++) {
                     order.push(i);
                 }
             }
-            let indexTile = order.findIndex((value) => value == id);
+            else
+                order = [...this.state.order]
+            let indexTile = order.findIndex((value) => value == this.state.analysisTiles.findIndex((tile) => tile.id == id));
             let relativeIndexChangePartner = changes.type==="shift-right"?1:-1;
             let indexChangePartner = indexTile+relativeIndexChangePartner;
             if(indexChangePartner < 0 || indexChangePartner >= order.length)
@@ -93,7 +99,6 @@ class Analysis extends Component {
             let cache = order[indexTile];
             order[indexTile] = order[indexChangePartner];
             order[indexChangePartner] = cache;
-            console.log(order);
 
             this.setState({order: order});
             return;
@@ -101,25 +106,23 @@ class Analysis extends Component {
 
         // Do other / "normal" changes of tile
         if (changes.hasOwnProperty("type"))
-            this.setState((prevState) => ({analysisTiles: prevState.analysisTiles.map((tile, index) => index === id ? {...changes} : tile)}));
+            this.setState((prevState) => ({analysisTiles: prevState.analysisTiles.map((tile) => tile.id === id ? {...changes} : tile)}));
         else
-            this.setState((prevState) => ({analysisTiles: prevState.analysisTiles.map((tile, index) => index === id ? {...tile, ...changes} : tile)}));
+            this.setState((prevState) => ({analysisTiles: prevState.analysisTiles.map((tile) => tile.id === id ? {...tile, ...changes} : tile)}));
     }
 
     render() {
-        console.log("ANALYSIS TILES:");
-        console.log(this.state.analysisTiles);
         let analysisTiles = this.state.analysisTiles.map((t, index) =>
-            <div key={index} style={this.state.order?({order: this.state.order.indexOf(index)}):undefined}>
+            <div key={t.id} style={this.state.order?({order: this.state.order.indexOf(index)}):undefined}>
                 <AnalysisTile
                     gameId={this.id}
-                    tileId={index}
+                    tileId={t.id}
                     type={t.type}
                     groupByTeams={t?.groupByTeams}
                     teams={t?.teams}
                     players={t?.players}
                     notes={t?.notes}
-                    changeTile={this.changeTile(index)}/>
+                    changeTile={this.changeTile(t.id)}/>
             </div>);
         return (
             <div className="Analysis">
