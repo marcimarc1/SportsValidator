@@ -34,16 +34,17 @@ class Analysis extends Component {
     }
 
     componentDidMount() {
+        let analyses = undefined;
+        let order = undefined;
         // TODO BACKEND
         // let filename = BACKEND.getFilename(this.id);
-        // let analyses = BACKEND.getAnalyses(this.id); // should return data in the same format as this.defaultAnalysisTiles or undefined if there are no analyses/charts yet
-        let analyses = undefined;
+        // let analyses, order = BACKEND.getAnalyses(this.id); // should return data in the same format as this.defaultAnalysisTiles or undefined if there are no analyses/charts yet
         let filename = this.id === 1?"2022-08-01: Team 1 vs. Team 2":"2021-07-15: Team 1 vs. Team 3";
         if(analyses) {
-            this.setState({analysisTiles: analyses, filename});
+            this.setState({analysisTiles: analyses, order, filename});
         }
         else {
-            this.setState({analysisTiles: this.defaultAnalysisTiles, filename});   // TODO BACKEND maybe get rid of default analyses once Backend is done, this is just for demo/development purposes
+            this.setState({analysisTiles: this.defaultAnalysisTiles, order: this.defaultAnalysisTiles.map((tile) => tile.id), filename});   // TODO BACKEND maybe get rid of default analyses once Backend is done, this is just for demo/development purposes
         }
     }
 
@@ -54,11 +55,11 @@ class Analysis extends Component {
     }
 
     addButton = () => {
-        let newAnalysisTile = {id: this.runningIndex++, type: "new"};
+        let newAnalysisTile = {id: this.runningIndex, type: "new"};
         this.setState((prevState) => {
             return ({
                 analysisTiles: [...prevState.analysisTiles, newAnalysisTile],
-                order: prevState.order.length == []?[]:[...prevState.order, prevState.order.length]
+                order: [...prevState.order, this.runningIndex++]
             });});
     }
 
@@ -73,25 +74,17 @@ class Analysis extends Component {
         // Delete Tile
         if (changes?.type === "delete") {
             let indexToDelete = this.state.analysisTiles.findIndex((e) => e.id == id);
-            let filterFunction = (tile, index) => index !== indexToDelete;      // quite inefficient, should use splice on a copy of the arrays but does not matter here
             this.setState((prevState) => ({
-                analysisTiles: prevState.analysisTiles.filter(filterFunction),
-                order: prevState.order.filter(filterFunction)   // does nothing if prevState.order === []
+                analysisTiles: prevState.analysisTiles.filter((tile) => tile.id !== id),    // quite inefficient, should use splice on a copy of the arrays but does not matter here
+                order: prevState.order.filter((e) => e !== id)
             }));
             return;
         }
 
         // Change position of tile
         if(changes?.type === "shift-right" || changes?.type === "shift-left") {
-            let order = [];
-            if(this.state.order.length == 0) {
-                for (let i = 0; i < this.state.analysisTiles.length; i++) {
-                    order.push(i);
-                }
-            }
-            else
-                order = [...this.state.order]
-            let indexTile = order.findIndex((value) => value == this.state.analysisTiles.findIndex((tile) => tile.id == id));
+            let order = [...this.state.order];
+            let indexTile = order.findIndex((value) => value == id);
             let relativeIndexChangePartner = changes.type==="shift-right"?1:-1;
             let indexChangePartner = indexTile+relativeIndexChangePartner;
             if(indexChangePartner < 0 || indexChangePartner >= order.length)
@@ -106,14 +99,14 @@ class Analysis extends Component {
 
         // Do other / "normal" changes of tile
         if (changes.hasOwnProperty("type"))
-            this.setState((prevState) => ({analysisTiles: prevState.analysisTiles.map((tile) => tile.id === id ? {...changes} : tile)}));
+            this.setState((prevState) => ({analysisTiles: prevState.analysisTiles.map((tile) => tile.id === id ? {id: tile.id, ...changes} : tile)}));
         else
             this.setState((prevState) => ({analysisTiles: prevState.analysisTiles.map((tile) => tile.id === id ? {...tile, ...changes} : tile)}));
     }
 
     render() {
         let analysisTiles = this.state.analysisTiles.map((t, index) =>
-            <div key={t.id} style={this.state.order?({order: this.state.order.indexOf(index)}):undefined}>
+            <div key={t.id} style={{order: this.state.order.indexOf(t.id)}}>
                 <AnalysisTile
                     gameId={this.id}
                     tileId={t.id}
