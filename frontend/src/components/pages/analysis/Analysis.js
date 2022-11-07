@@ -17,10 +17,11 @@ class Analysis extends Component {
         {id: 1, type: "distance-barchart", groupByTeams: true, teams: undefined, players: undefined},
         {id: 2, type: "distance-barchart", groupByTeams: true, teams: undefined, players: undefined},
         {id: 3, type: "notes", notes: "As you can cleary see, the players of one of the team ran further doing the game."},
-        {id: 4, type: "new"}
+        {id: 4, type: "new"},
+        {id: 5, type: "heatmap"}
     ];
 
-    runningIndex = 5;
+    runningIndex = 6;
 
     state = {
         analysisTiles: [],

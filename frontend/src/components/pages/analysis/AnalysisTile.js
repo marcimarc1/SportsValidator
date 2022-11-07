@@ -8,6 +8,7 @@ import dataBarchart2 from "../../../data/analysis_distance_barchart_groupByTeams
 import dataNewTile from "../../../data/analysis_new_tile_selections_1.json";
 import BarChart from "./BarChart";
 import TileTypeSelector from "./TileTypeSelector";
+import Heatmap from "./Heatmap";
 import "./Analysis.css";
 
 import {ReactComponent as Delete} from "../../../icons/delete.svg";
@@ -15,10 +16,22 @@ import IconButton from "@material-ui/core/IconButton";
 import {faTrash, faChevronLeft} from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 
+import tracking from "../../../data/instances_default.json";       // TODO BACKEND delete this again once Backend is implemented
+
 class AnalysisTile extends Component {
 
     state = {
         data: undefined
+    }
+
+    // for testing without backend
+    annotations;
+    teams;
+
+    constructor(props) {
+        super(props);
+        this.annotations = tracking.annotations;
+        this.teams = tracking.categories;
     }
 
     componentDidMount() {
@@ -29,6 +42,33 @@ class AnalysisTile extends Component {
         if(this.props.type === "notes") {
             // editText is currently working in a uncontrolled fashion and is therefore not using the state
             // this.setState({data: this.props?.notes});
+        }
+        if(this.props.type === "heatmap") {
+            // TODO BACKEND
+            // let positionData, teams, categoryColors, originalImageDimensions = BACKEND.getAnalysisData(this.props.gameId, this.props.type, this.props.groupByTeams, this.props.Teams, this.props.Players);
+            // should return position data either aggregated for teams (format the same way as for 2 players, player names are team names) or for players, in both cases filtered so only data for requested teams/players is returned
+            let positionData = this.getAnnotationsForFrames(this.annotations, 1, 100);
+            let teams = this.teams;
+            let categoryColors = {
+                1: 'rgb(100, 0, 0)',
+                2: 'rgb(0, 0, 200)',
+                3: 'rgb(0, 250, 0)',
+                4: 'rgb(100, 0, 100)'
+            }
+            let originalImageDimensions = {
+                x: 3840,
+                y: 2160
+            }
+            let scalingFactor = 8;  // might make sense to set this depending on the originalImageDimension, maybe so that canvasWidth is always (roughly) the same
+            let data = {
+                positionData,
+                teams,
+                categoryColors,
+                canvasWidth: originalImageDimensions.x/scalingFactor,
+                canvasHeight: originalImageDimensions.y/scalingFactor,
+                scalingFactor
+            };
+            this.setState({data: data});
         }
         else {
             // TODO BACKEND
@@ -44,6 +84,22 @@ class AnalysisTile extends Component {
                 this.setState({data: dataBarchart2.data});
             }
         }
+    }
+
+    // just copy-pasted from TrackingEditor.js to get data without backend
+    getAnnotationsForFrames = (annotations, firstFrame, lastFrame) => {
+        // TODO BACKEND
+        // return BACKEND.getAnnotations(gameId, firstFrame, lastFrame);
+
+        console.log(annotations);
+        let firstAnnotation = annotations.findIndex(element => element.image_id == firstFrame);
+        console.log("first Annotation: " + firstAnnotation);
+        let lastAnnotation = annotations.findIndex(element => element.image_id == lastFrame + 1);
+        console.log("last Annotation: " + lastAnnotation);
+
+        let cachedAnnotations = annotations.slice(firstAnnotation, lastAnnotation);
+        console.log(cachedAnnotations);
+        return cachedAnnotations;
     }
 
     changeTile = (changes) => {
@@ -88,8 +144,9 @@ class AnalysisTile extends Component {
                     headingText = "Distance covered";
                     break;
                 case "heatmap":
-                    // TODO
+                    // TODO BACKEND maybe get team colors assigned to team from backend and pass them here so colors in chart match team colors?
                     headingText = (this.props.groupByTeams?"Team":"Player") + " Position Heatmap";
+                    chart = <Heatmap positionData={this.state.data.positionData} teams={this.state.data.teams} categoryColors={this.state.data.categoryColors} canvasWidth={this.state.data.canvasWidth} canvasHeight={this.state.data.canvasHeight} scalingFactor={this.state.data.scalingFactor} />
                     break;
                 case "new":
                     headingText = "Select Type of Chart";
