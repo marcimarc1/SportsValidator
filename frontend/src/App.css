@@ -54,6 +54,8 @@ html, body {
     text-align: center;
     font-size: 9rem;
     letter-spacing: 8px;
+    margin-left: 0;
+    margin-right: 0;
 }
 
 .StartButtonContainer {
