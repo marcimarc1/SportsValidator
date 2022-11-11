@@ -9,6 +9,7 @@ import tracking from "../../../data/instances_default.json";
 import cornerfile from "../../../data/corners.json";
 import NavBar from "./NavBar";
 import TrackList from "./trackList";
+import TrackListItemAdd from "./trackListItemAdd";
 import TrackListItemPlayer from "./trackListItemPlayer";
 import TrackListItemGroup from "./trackListItemGroup";
 import TrackListItemCorner from "./trackListItemCorner";
@@ -21,7 +22,7 @@ class TrackingEditor extends Component {
     framesCache = [];
     annotationsCache = [];
     cornersCache = [];
-    canvasElementsPlayers= [];
+    canvasElementsPlayers = [];
     canvasElementsCorners = [];
 
     canvas = undefined;
@@ -34,7 +35,7 @@ class TrackingEditor extends Component {
         dummy: true,
         // canvas: undefined,
         demo: undefined,
-        trackListElements: [],
+        // trackListElements: [],
         scalingFactor: undefined,
         categories: [],             // read in from annotations file
         currentFrame: undefined,    //BACKEND
@@ -111,21 +112,17 @@ class TrackingEditor extends Component {
 
         //load annotations TODO BACKEND annotations = loadAnnotations(this.id);
         let annotations = tracking.annotations;
-        console.log("annotations: ");
-        console.log(annotations);
-        console.log("currentFrameNumber: " + currentFrameNumber);
-        console.log("cacheSizeBefore: " + cacheSizeBefore);
+        // console.log("annotations: ");
+        // console.log(annotations);
+        // console.log("currentFrameNumber: " + currentFrameNumber);
+        // console.log("cacheSizeBefore: " + cacheSizeBefore);
         let firstCachedFrame = currentFrameNumber - cacheSizeBefore;
         let lastCachedFrame = currentFrameNumber + cacheSizeBehind;
         this.annotationsCache = this.getAnnotationsForFrames(annotations, firstCachedFrame, lastCachedFrame);
-        // console.log(`Frames from ${firstCachedFrame} to ${lastCachedFrame}: `);
-        // console.log(this.annotationsCache);
 
         //load corners TODO BACKEND TODO BACKEND corners = loadCorners(this.id);
         let corners = cornerfile.corners;
         this.cornersCache = this.getAnnotationsForFrames(corners, firstCachedFrame, lastCachedFrame);
-
-
 
         console.log("finished filtering and caching annotations!");
 
@@ -164,12 +161,9 @@ class TrackingEditor extends Component {
     }
 
     componentDidUpdate(prevProps, prevState) {
-        console.log("Frame: " + this.state.currentFrame);
 
         if(prevState.currentFrame != this.state.currentFrame) {
             // TODO optional: take prevState.currentFrame - this.state.currentFrame and adjust Cache accordingly
-
-
         }
     }
 
@@ -188,12 +182,9 @@ class TrackingEditor extends Component {
         // return BACKEND.getAnnotations(gameId, firstFrame, lastFrame);
 
         let firstAnnotation = annotations.findIndex(element => element.image_id == firstFrame);
-        console.log("first Annotation: " + firstAnnotation);
         let lastAnnotation = annotations.findIndex(element => element.image_id == lastFrame + 1);
-        console.log("last Annotation: " + lastAnnotation);
 
         let cachedAnnotations = annotations.slice(firstAnnotation, lastAnnotation);
-        console.log(cachedAnnotations);
         return cachedAnnotations;
     }
 
@@ -204,10 +195,8 @@ class TrackingEditor extends Component {
         // console.log(annotationsCurrentFrame);
         let newCanvasElements = [];
         for(let i = 0; i < annotationsCurrentFrame.length; i++) {
-            newCanvasElements.push(this.CreateNewBBox(annotationsCurrentFrame[i]));
+            newCanvasElements.push(this.createNewBBox(annotationsCurrentFrame[i]));
         }
-        // console.log(annotationsCurrentFrame);
-        // console.log(newCanvasElements);
 
         // Add labels and bounding boxes to canvas; Start with labels so they are behind all bBoxes => bBoxes behind labels can be selected
         // let canvasCopy = this.canvas;
@@ -252,7 +241,7 @@ class TrackingEditor extends Component {
     getFrame = (i) => {
         let ret = this.framesCache.find(element => element.index = i);
         if(ret === undefined) {
-            console.log("tried to get Frame " + i + ", but that frame is not yet loaded into TrackingEditor.framesCache");
+            console.warn("tried to get Frame " + i + ", but that frame is not yet loaded into TrackingEditor.framesCache");
         }
         return ret;
     }
@@ -348,7 +337,7 @@ class TrackingEditor extends Component {
 
     setName = (bBox, name) => {
         fabric.Object.prototype.objectCaching = false;
-        console.log("setting name of " + bBox.my.player + " to " + name);
+        // console.log("setting name of " + bBox.my.player + " to " + name);
         bBox.my.name = name;
         bBox.my.playerIdOrNameObject.set('text', "Name: " + name);
         this.canvas.requestRenderAll();
@@ -373,7 +362,7 @@ class TrackingEditor extends Component {
         };
 
         if(!["always", "selected", "hover", "never"].includes(visibility)) {
-            console.log("ERROR: incorrect visibility parameter!");
+            console.warn("ERROR: incorrect visibility parameter!");
         }
         else
             this.setState({labelVisibility: visibility}, hideOrShowLabels);
@@ -381,31 +370,41 @@ class TrackingEditor extends Component {
 
     render = () => {
         let propsTracklist = {
-            players: [],
-            corners: [],
-            groups: []
+            players: [<TrackListItemAdd add={this.add("player")} blink={this.blink} />],
+            corners: [<TrackListItemAdd add={this.add("corner")} />],
+            groups: [<TrackListItemAdd add={this.add("group")} />]
         };
-        let groupIds = [];
-        console.log("Tracking Editor rendering!");
+        // let groupIds = [];
         let canvasWidth = this.canvas?.getWidth()   // ?. is conditional chaining, returns undefined if this.canvas is undefined
-        //let trackListElementsTest = [];
         this.canvasElementsPlayers.forEach(
             (bBox) => {
                 propsTracklist.players = propsTracklist.players.concat([<TrackListItemPlayer bBox={bBox} changeSelection={this.changeSelection} setName={this.setName} blink={this.blink} getTeams={this.getTeams} setTeam={this.setTeam} delete={this.deletePlayer}/>]);
-                let group = bBox.my.team;
-                if(!(groupIds.includes(group))) {
-                    propsTracklist.groups = propsTracklist.groups.concat([<TrackListItemGroup id={group}
-                                                                                              activeGroup={this.state.activeGroup}
-                                                                                              changeSelection={this.changeSelection}
-                                                                                              color={this.getCategoryColor(group)}
-                                                                                              delete={undefined}/>]);
-                    groupIds = groupIds.concat([group]);
-                }
+
+                // // is now done below, this version extracts all the teams from the bBoxes, it also works on tracking files that do not provide a category Object with a summary of all categories.
+                // let group = bBox.my.team;
+                // if(!(groupIds.includes(group))) {
+                //     propsTracklist.groups = propsTracklist.groups.concat([<TrackListItemGroup id={group}
+                //                                                                               activeGroup={this.state.activeGroup}
+                //                                                                               changeSelection={this.changeSelection}
+                //                                                                               color={this.getCategoryColor(group)}
+                //                                                                               delete={undefined}/>]);
+                //     groupIds = groupIds.concat([group]);
+                // }
             });
 
         this.canvasElementsCorners.forEach(
             (corner) => {
                 propsTracklist.corners = propsTracklist.corners.concat([<TrackListItemCorner id={corner.my.id} activeCorner={this.state.activeCorner} changeSelection={this.changeSelection} delete={undefined} /> ]);
+            }
+        );
+
+        this.state.categories.forEach(
+            (category) => {
+                propsTracklist.groups = propsTracklist.groups.concat([<TrackListItemGroup id={category.id}
+                                                                                              activeGroup={this.state.activeGroup}
+                                                                                              changeSelection={this.changeSelection}
+                                                                                              color={this.getCategoryColor(category.id)}
+                                                                                              delete={undefined}/>]);
             }
         )
 
@@ -455,15 +454,6 @@ class TrackingEditor extends Component {
             if (bBox.my.id == id) {
                 let bBoxDeepCopy = bBox;    //TODO the cleaner/correct version would be to do a deep clone as indicated (but not done) here. JS does not really have a deep clone functionality.
                 activeGroup = bBox.my.team;
-                // console.log("**************************");
-                // console.log("bBox to select:");
-                // console.log(bBox);
-                // console.log("active Element:");
-                // console.log(this.canvas.getActiveObject());
-                // console.log("Comparison result:" + this.canvas.getActiveObject()?.my?.id !== bBoxDeepCopy.my.id);
-                // console.log("*****************************");
-                // console.log(this.canvas.getActiveObject()?.my?.id);
-                // console.log(bBoxDeepCopy.my.id);
                 if((this.canvas.getActiveObject()?.my?.id !== bBoxDeepCopy.my.id) || this.canvas.getActiveObject()?.my?.player === undefined) { // 1st: comparison by reference which is intended in this case; 2nd condition: To catch the case that active Object is e.g. corner which might have the same id
                     this.canvas.setActiveObject(bBoxDeepCopy);  //necessary so that canvas behaves as expected, e.g. clicking in empty spot clears selection
                 }
@@ -582,10 +572,9 @@ class TrackingEditor extends Component {
         return cornerObject;
     };
 
-    CreateNewBBox = (args) => {
+    createNewBBox = (args) => {
         // console.log("Adding new Bounding Box! Args:");
         // console.log(args);
-
 
         //get values for BBox position and color
         let left = args.bbox[0] * this.state.scalingFactor;
@@ -813,11 +802,73 @@ class TrackingEditor extends Component {
         }
     }
 
-    deletePlayer = (bBox) => {
-        // TODO call backend
+    add = (itemType) => () => {
+        switch (itemType) {
+            case "player":
+                // TODO BACKEND
+                // let newPlayer = BACKEND.newItem(....);
+                // necessary because backend needs to assign IDs etc.
+                // Might make sense to reserve a "No Team yet" team for new or unassigned items
+                // Also needs to add the player to the following (and maybe previous?) frames, maybe even by running detection algorithm with new initialisation from this bBox again?
+                // Maybe Backend could even return a size for the bBox that is the average bBox size so user does not have to resize as much/often manually?
+                let newPlayer = {
+                    attributes: {track_id: 1000},
+                    bbox: [2200, 1000, 65, 65],
+                    category_id: 1, // needs to be initialized in a sensible manner from backend
+                    id: 1000,
+                    image_id: this.state.currentFrame
+                };
+                let playerId = newPlayer.id;
+                newPlayer = this.createNewBBox(newPlayer);
+                this.canvasElementsPlayers.push(newPlayer);
+                this.setState({dummy: !this.state.dummy}, () => {
+                    this.selectBBox(playerId);
+                    this.blink(newPlayer)
+                });
+                break;
+            case "corner":
+                // TODO BACKEND
+                // let newCorner = BACKEND.newItem(...);
+                let newCorner = {
+                    id: 1000,
+                    image_id: this.state.currentFrame,
+                    location: [2200, 1000]
+                };
+                let cornerId = newCorner.id;
+                newCorner = this.createNewCorner(newCorner);
+                this.canvasElementsCorners.push(newCorner);
+                this.setState({dummy: !this.state.dummy}, () => {
+                    this.selectCorner(cornerId);
+                    // does not blink because corners will likely not be used in the end; If they do it would be nice to have a blink function for corners.
+                });
+                break;
+            case "group":
+                // TODO BACKEND
+                // let newGroup, color = BACKEND.newItem(...);
+                let color = 'rgb(0, 0, 0)';
+                let newGroup = {
+                    id: 1000,
+                    name: "New Group"
+                }
+                let groupId = newGroup.id;
+                this.setState((prevState) => {
+                     let colors = Object.assign(prevState.category_1_Colors);
+                     colors[newGroup.id] = color;
+                     return {
+                        categories: [...prevState.categories, newGroup],
+                        activeGroup: groupId,
+                        category_1_Colors: colors
+                    };
+                });
+                break;
+            default:
+                console.warn("Passed invalid itemType, nothing is added!");
+        }
+    }
 
-        console.log("DELETING...");
-        console.log(this.canvasElementsPlayers);
+    deletePlayer = (bBox) => {
+        // TODO BACKEND
+        // BACKEND.deletePlayer(bBox.my.player);
 
         // remove from canvasElementsPlayers
         let stateUpdate = (state) => {
