@@ -27,7 +27,8 @@ class FileListItem extends Component {
     }
 
     delete = () => {
-        this.props.delete(this.props.id);
+        if(window.confirm("Do you really want to delete the file " + this.props.name + "?"))
+            this.props.delete(this.props.id);
     }
 
     // handleButtonClick = (button) => () => {

@@ -17,16 +17,6 @@ import {ReactComponent as Delete} from "../../../icons/delete.svg";
 
 class TrackListItemPlayer extends Component {
 
-    state = {
-        color: undefined,
-        deleted: false
-    }
-
-    // static getDerivedStateFromProps(props, state) {
-    //     let color = props.bBox.my.selected ? 'FFF' : props.bBox.cornerColor
-    //     return {color};
-    // }
-
     handleChangeTeam = (event) => {
         this.props.setTeam(this.props.bBox, event.target.value);
     }
@@ -36,8 +26,9 @@ class TrackListItemPlayer extends Component {
     }
 
     delete = () => {
-        this.setState({deleted: true});
-        this.props.delete(this.props.bBox);
+        if(window.confirm("Do you really want to delete player " + (this.props.bBox.my.name?this.props.bBox.my.name:this.props.bBox.my.player) + "?")) {
+            this.props.delete(this.props.bBox);
+        }
     }
 
     render() {
@@ -47,14 +38,14 @@ class TrackListItemPlayer extends Component {
         let categoryName = allTeams.find(item => item.id === currentTeam).name;
         let style = {borderColor: this.props.bBox.cornerColor};
 
-        let teamMenuItems = allTeams.map(team => <MenuItem value={team.id}>{team.name}</MenuItem>)
+        let teamMenuItems = allTeams.map(team => <MenuItem key={team.id} value={team.id}>{team.name}</MenuItem>)
         //console.log("rendering TrackListItemPlayer " + bBox.my.id);
         if(this.props.bBox.my.selected) {
             //console.log("This one is selected!");
             style['color'] = 'FFF';
         }
 
-        let name = this.props.bBox.my.name ? this.props.bBox.my.name : this.props.bBox.my.id;
+        let name = this.props.bBox.my.name ? this.props.bBox.my.name : this.props.bBox.my.player;
 
         // selects or deselects (if its already selected) the clicked item (e.g. player)
         let clickItem = () => {
@@ -62,40 +53,37 @@ class TrackListItemPlayer extends Component {
             this.props.changeSelection("player", bBox.my.id, deselect);
         }
 
-        if(this.state.deleted)
-            return null;
-        else
-            return (
-                <div className={"TrackListItem" + (bBox.my.selected ? " selected" : "")} style={style} onClick={clickItem}>
-                    {/*<h1 className={"TrackListItemName" + (bBox.my.selected ? " selected" : "")}> {name} </h1>*/}
-                    <EditText
-                        className={"TrackListItemName" + (bBox.my.selected ? " selected" : "")}
-                        defaultValue={name.toString()}
-                        onSave={this.handleChangeName}
-                        style={{marginLeft: '5px', width: '50px'}}
-                    />
-                    <IconButton size="small" className={"TrackListItemBlink"} onClick={this.props.blink.bind(this, bBox)} aria-label="blink item">
-                        <Highlight/>
-                    </IconButton>
+        return (
+            <div className={"TrackListItem" + (bBox.my.selected ? " selected" : "")} style={style} onClick={clickItem}>
+                {/*<h1 className={"TrackListItemName" + (bBox.my.selected ? " selected" : "")}> {name} </h1>*/}
+                <EditText
+                    className={"TrackListItemName" + (bBox.my.selected ? " selected" : "")}
+                    defaultValue={name.toString()}
+                    onSave={this.handleChangeName}
+                    style={{marginLeft: '5px', width: '50px'}}
+                />
+                <IconButton size="small" className={"TrackListItemBlink"} onClick={this.props.blink.bind(this, bBox)} aria-label="blink item">
+                    <Highlight/>
+                </IconButton>
 
-                    <IconButton size="small" className={"TrackListItemDelete"} onClick={this.delete} aria-label="delete item">
-                        <Delete/>
-                    </IconButton>
+                <IconButton size="small" className={"TrackListItemDelete"} onClick={this.delete} aria-label="delete item">
+                    <Delete/>
+                </IconButton>
 
-                    {/*Material UI Dropdown Select*/}
-                    <FormControl className={"TrackListItemTeamDropdown"}>
-                        <InputLabel id="demo-simple-select-label">Team</InputLabel>
-                        <Select
-                            labelId="demo-simple-select-label"
-                            id="demo-simple-select"
-                            value={currentTeam}
-                            onChange={this.handleChangeTeam}
-                        >
-                            {teamMenuItems}
-                        </Select>
-                    </FormControl>
-                </div>
-            );
+                {/*Material UI Dropdown Select*/}
+                <FormControl className={"TrackListItemTeamDropdown"}>
+                    <InputLabel id="demo-simple-select-label">Team</InputLabel>
+                    <Select
+                        labelId="demo-simple-select-label"
+                        id="demo-simple-select"
+                        value={currentTeam}
+                        onChange={this.handleChangeTeam}
+                    >
+                        {teamMenuItems}
+                    </Select>
+                </FormControl>
+            </div>
+        );
     }
 }
 

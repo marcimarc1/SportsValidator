@@ -16,24 +16,14 @@ import {ReactComponent as Delete} from "../../../icons/delete.svg";
 
 class TrackListItemGroup extends Component {
 
-    state = {
-        color: undefined,
-        deleted: false
-    }
-
-    // static getDerivedStateFromProps(props, state) {
-    //     let color = props.bBox.my.selected ? 'FFF' : props.bBox.cornerColor
-    //     return {color};
-    // }
-
-
     handleChangeName = (obj) => {
         // this.props.setName(this.props.id, this.props.name, obj.value);
     }
 
     delete = () => {
-        this.setState({deleted: true});
-        this.props.delete(this.props.id);
+        if(window.confirm("Do you really want to delete the group " + (this.props.name ? this.props.name : this.props.id) + "?")) {
+            this.props.delete(this.props.id);
+        }
     }
 
     render() {
@@ -54,32 +44,30 @@ class TrackListItemGroup extends Component {
 
         }
 
-        if(this.state.deleted)
-            return null;
-        else
-            return (
-                <div className={"TrackListItem" + (selected ? " selected" : "")} style={style} onClick={clickItem}>
-                    {/*<h1 className={"TrackListItemName" + (bBox.my.selected ? " selected" : "")}> {name} </h1>*/}
-                    <EditText
-                        className={"TrackListItemName" + (selected ? " selected" : "")}
-                        defaultValue={name.toString()}
-                        onSave={this.handleChangeName}
-                        style={{marginLeft: '5px', width: '50px'}}
-                    />
+        return (
+            <div className={"TrackListItem" + (selected ? " selected" : "")} style={style} onClick={clickItem}>
+                {/*<h1 className={"TrackListItemName" + (bBox.my.selected ? " selected" : "")}> {name} </h1>*/}
+                <EditText
+                    className={"TrackListItemName" + (selected ? " selected" : "")}
+                    defaultValue={name.toString()}
+                    onSave={this.handleChangeName}
+                    style={{marginLeft: '5px', width: '50px'}}
+                />
 
-                    <IconButton size="small" className={"TrackListItemDelete"} onClick={this.delete} aria-label="delete item">
-                        <Delete/>
-                    </IconButton>
-                </div>
-            );
+                <IconButton size="small" className={"TrackListItemDelete"} onClick={this.delete} aria-label="delete item">
+                    <Delete/>
+                </IconButton>
+            </div>
+        );
     }
 }
 
 TrackListItemGroup.propTypes = {
     id: PropTypes.number.isRequired,
+    name: PropTypes.string,
     activeGroup: PropTypes.number,          // can be undefined if no group is active
     changeSelection: PropTypes.func.isRequired,
-    color: PropTypes.object.isRequired,     // TODO check if rgb object works here
+    color: PropTypes.string.isRequired,
     delete: PropTypes.func.isRequired,
     setName: PropTypes.func.isRequired
 };

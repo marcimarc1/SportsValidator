@@ -49,8 +49,8 @@ class TrackingEditor extends Component {
         cornerColor: 'green',
         playerColors: {},    //BACKEND TODO; id: color (maybe also add corners)
         idToName: {         //BACKEND
-            1: "Peter",
-            2: "Max",
+            0: "Peter",
+            1: "Max",
             20: "Florian"
         },
         labelVisibility: 'selected',      //selected, hover, always or never;
@@ -103,7 +103,7 @@ class TrackingEditor extends Component {
             // this.framesCache.push({index: i, data: currentFrame});
         }
 
-        console.log(tracking);
+        // console.log(tracking);
 
         // TODO BACKEND wrap all data fetching in if(this.state.demo) block and keep existing code for demo if Demo should stay in the website
         //load categories and annotations TODO BACKEND categories = loadCategories(this.id);
@@ -184,6 +184,9 @@ class TrackingEditor extends Component {
     // assumes that annotations array is ordered by increasing frame number (image_id)
     // lastFrame is included
     getAnnotationsForFrames = (annotations, firstFrame, lastFrame) => {
+        // TODO BACKEND
+        // return BACKEND.getAnnotations(gameId, firstFrame, lastFrame);
+
         let firstAnnotation = annotations.findIndex(element => element.image_id == firstFrame);
         console.log("first Annotation: " + firstAnnotation);
         let lastAnnotation = annotations.findIndex(element => element.image_id == lastFrame + 1);
@@ -208,7 +211,7 @@ class TrackingEditor extends Component {
 
         // Add labels and bounding boxes to canvas; Start with labels so they are behind all bBoxes => bBoxes behind labels can be selected
         // let canvasCopy = this.canvas;
-        // newCanvasElements.forEach(bBox => canvasCopy.add(bBox.idOrNameObject, bBox.teamObject, bBox.playerObject));
+        // newCanvasElements.forEach(bBox => canvasCopy.add(bBox.playerIdOrNameObject, bBox.teamObject, bBox.bBoxIdObject));
         // newCanvasElements.forEach(bBox => canvasCopy.add(bBox));
 
         // let newTrackListItems = [];
@@ -278,9 +281,9 @@ class TrackingEditor extends Component {
             }
             this.canvas.remove(e);
             if(e?.my) {
-                this.canvas.remove(e.my.playerObject);
+                this.canvas.remove(e.my.bBoxIdObject);
                 this.canvas.remove(e.my.teamObject);
-                this.canvas.remove(e.my.idOrNameObject);
+                this.canvas.remove(e.my.playerIdOrNameObject);
             }
         });
 
@@ -339,19 +342,19 @@ class TrackingEditor extends Component {
 
     setTeam = (bBox, teamID) => {
         bBox.my.team = teamID;
-        // TODO BACKEND call backend (something like teamChange(bBox.my.id, teamID)
+        // TODO BACKEND call backend (something like teamChange(bBox.my.player, teamID)
         this.setState({dummy: !this.state.dummy});
     }
 
     setName = (bBox, name) => {
         fabric.Object.prototype.objectCaching = false;
-        console.log("setting name of " + bBox.my.id + " to " + name);
+        console.log("setting name of " + bBox.my.player + " to " + name);
         bBox.my.name = name;
-        bBox.my.idOrNameObject.set('text', "Name: " + name);
+        bBox.my.playerIdOrNameObject.set('text', "Name: " + name);
         this.canvas.requestRenderAll();
-        //bBox.my.idOrNameObject.visible = false;
+        //bBox.my.playerIdOrNameObject.visible = false;
         // TODO BACKEND call backend
-        this.setState((state) => ({idToName: {...state.idToName}[bBox.my.id] = name}));
+        this.setState((state) => ({idToName: {...state.idToName}[bBox.my.player] = name}));
     }
 
     setLabelVisibility = (visibility) => {
@@ -362,9 +365,9 @@ class TrackingEditor extends Component {
                 if(visibility==="selected" && bBox.my.selected) {
                     vis = true;
                 }
-                bBox.my.idOrNameObject.set('visible', vis);
+                bBox.my.playerIdOrNameObject.set('visible', vis);
                 bBox.my.teamObject.set('visible', vis);
-                bBox.my.playerObject.set('visible', vis);
+                bBox.my.bBoxIdObject.set('visible', vis);
                 this.canvas.requestRenderAll();     //otherwise it is just updated when clicking somewhere
             })
         };
@@ -606,9 +609,9 @@ class TrackingEditor extends Component {
         let id = args.id;
         let team = args.category_id;
         let player = args.attributes.track_id
-        let name = args.id in this.state.idToName ? this.state.idToName[args.id] : undefined;
-        let idText = name ? "Name: " + this.state.idToName[args.id] : "ID: " + args.id.toString();
-        let idOrNameObject = new fabric.Text(idText, {
+        let name = player in this.state.idToName ? this.state.idToName[player] : undefined;
+        let idText = name ? "Name: " + name : "Player ID: " + player.toString();
+        let playerIdOrNameObject = new fabric.Text(idText, {
             fontSize,
             fontFamily,
             visible,
@@ -626,7 +629,7 @@ class TrackingEditor extends Component {
             left: textLeft,
             top: top + textVerticalDistance
         });
-        let playerObject = new fabric.Text("Player: " + player.toString(), {
+        let bBoxIdObject = new fabric.Text("Instance ID: " + args.id.toString(), {
             fontSize,
             fontFamily,
             visible,
@@ -638,9 +641,9 @@ class TrackingEditor extends Component {
 
         // add "text" property to cacheProperties so elements are redrawn when their text changes
         // (for example when a player name is changed the labels in the canvas would otherwise not update)
-        idOrNameObject.cacheProperties.push("text");
+        playerIdOrNameObject.cacheProperties.push("text");
         teamObject.cacheProperties.push("text");
-        playerObject.cacheProperties.push("text");
+        bBoxIdObject.cacheProperties.push("text");
 
         let bBox = new fabric.Rect({
             left,
@@ -667,13 +670,13 @@ class TrackingEditor extends Component {
             player,
             dirty: false,       // dirty flag to keep track of which bBoxes have been changed so that only dirty BBoxes have to be sent to/updated in the Backend
             selected: false,
-            idOrNameObject,
+            playerIdOrNameObject,
             teamObject,
-            playerObject,
+            bBoxIdObject,
             setLabelVisibility: (vis) => {  //vis is boolean value
-                bBox.my.idOrNameObject.set('visible', vis);
+                bBox.my.playerIdOrNameObject.set('visible', vis);
                 bBox.my.teamObject.set('visible', vis);
-                bBox.my.playerObject.set('visible', vis);}
+                bBox.my.bBoxIdObject.set('visible', vis);}
         };
 
 
@@ -709,13 +712,13 @@ class TrackingEditor extends Component {
 
 
             let textLeft = bBox.left + bBox.width * bBox.scaleX + textHorizontalOffset;
-            bBox.my.idOrNameObject.set('left', textLeft);
+            bBox.my.playerIdOrNameObject.set('left', textLeft);
             bBox.my.teamObject.set('left', textLeft);
-            bBox.my.playerObject.set('left', textLeft);
+            bBox.my.bBoxIdObject.set('left', textLeft);
 
-            bBox.my.idOrNameObject.set('top', bBox.top).setCoords();
+            bBox.my.playerIdOrNameObject.set('top', bBox.top).setCoords();
             bBox.my.teamObject.set('top', (bBox.top + textVerticalDistance)).setCoords();
-            bBox.my.playerObject.set('top', (bBox.top + 2 *textVerticalDistance)).setCoords();
+            bBox.my.bBoxIdObject.set('top', (bBox.top + 2 *textVerticalDistance)).setCoords();
 
         }
 
@@ -730,9 +733,9 @@ class TrackingEditor extends Component {
 
                 // Set new positions for labels and call setCoords so that canvas coordinates (aCoords) are updated to rendered coordinates (oCoords)
                 // calling setCoords is not necessary because he labels cannot be selected anyways, it just keeps all their attributes consistent.
-                bBox.my.idOrNameObject.setCoords();
+                bBox.my.playerIdOrNameObject.setCoords();
                 bBox.my.teamObject.setCoords();
-                bBox.my.playerObject.setCoords();
+                bBox.my.bBoxIdObject.setCoords();
 
                 // Set dirty flag
                 bBox.my.dirty = true;
@@ -743,7 +746,7 @@ class TrackingEditor extends Component {
         // this.setState({canvas: this.state.canvas.add(bBox, id, team, player)});
         // this.setState({canvas: this.state.canvas.add(group)});
 
-        this.canvas.add(bBox, bBox.my.idOrNameObject, bBox.my.teamObject, bBox.my.playerObject);
+        this.canvas.add(bBox, bBox.my.playerIdOrNameObject, bBox.my.teamObject, bBox.my.bBoxIdObject);
 
         return bBox;
     }
@@ -813,6 +816,9 @@ class TrackingEditor extends Component {
     deletePlayer = (bBox) => {
         // TODO call backend
 
+        console.log("DELETING...");
+        console.log(this.canvasElementsPlayers);
+
         // remove from canvasElementsPlayers
         let stateUpdate = (state) => {
             // done below this function now since canvasElementsPlayers is moved out of state
@@ -825,14 +831,14 @@ class TrackingEditor extends Component {
 
 
             // remove from other dicts (name and color mapping)
-            if(bBox.my.id in this.state.idToName) {
-                let idToName = {...this.state.idToName};
-                delete idToName[bBox.my.id];
+            if(bBox.my.player in state.idToName) {
+                let idToName = {...state.idToName};
+                delete idToName[bBox.my.player];
                 stateModifier.idToName = idToName;
             }
-            if(bBox.my.id in this.state.playerColors) {
-                let playerColors = {...this.state.playerColors};
-                delete playerColors[bBox.my.id];
+            if(bBox.my.player in state.playerColors) {
+                let playerColors = {...state.playerColors};
+                delete playerColors[bBox.my.player];
                 stateModifier.playerColors = playerColors;
             }
             return stateModifier;
@@ -841,11 +847,12 @@ class TrackingEditor extends Component {
         let index = this.canvasElementsPlayers.indexOf(bBox);
         this.canvasElementsPlayers.splice(index, 1); // remove bBox
 
-        this.setState(stateUpdate, () => console.log(this.state.idToName))
 
-        this.canvas.remove(bBox.my.idOrNameObject);
+        this.setState((prevState) => stateUpdate(prevState));
+
+        this.canvas.remove(bBox.my.playerIdOrNameObject);
         this.canvas.remove(bBox.my.teamObject);
-        this.canvas.remove(bBox.my.playerObject);
+        this.canvas.remove(bBox.my.bBoxIdObject);
         this.canvas.remove(bBox);
 
         this.canvas.requestRenderAll();

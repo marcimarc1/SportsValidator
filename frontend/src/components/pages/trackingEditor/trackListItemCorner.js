@@ -16,13 +16,10 @@ import {ReactComponent as Delete} from "../../../icons/delete.svg";
 
 class TrackListItemCorner extends Component {
 
-    state = {
-        deleted: false
-    }
-
     delete = () => {
-        this.setState({deleted: true});
-        this.props.delete(this.props.id);
+        if(window.confirm("Do you really want to delete this corner?")) {
+            this.props.delete(this.props.id);
+        }
     }
 
     render() {
@@ -43,24 +40,21 @@ class TrackListItemCorner extends Component {
 
         }
 
-        if(this.state.deleted)
-            return null;
-        else
-            return (
-                <div className={"TrackListItem" + (selected ? " selected" : "")} style={style} onClick={clickItem}>
-                    {/*<h1 className={"TrackListItemName" + (bBox.my.selected ? " selected" : "")}> {name} </h1>*/}
-                    <EditText
-                        className={"TrackListItemName" + (selected ? " selected" : "")}
-                        defaultValue={name.toString()}
-                        readonly={true}
-                        style={{marginLeft: '5px', width: '50px'}}
-                    />
+        return (
+            <div className={"TrackListItem" + (selected ? " selected" : "")} style={style} onClick={clickItem}>
+                {/*<h1 className={"TrackListItemName" + (bBox.my.selected ? " selected" : "")}> {name} </h1>*/}
+                <EditText
+                    className={"TrackListItemName" + (selected ? " selected" : "")}
+                    defaultValue={name.toString()}
+                    readonly={true}
+                    style={{marginLeft: '5px', width: '50px'}}
+                />
 
-                    <IconButton size="small" className={"TrackListItemDelete"} onClick={this.delete} aria-label="delete item">
-                        <Delete/>
-                    </IconButton>
-                </div>
-            );
+                <IconButton size="small" className={"TrackListItemDelete"} onClick={this.delete} aria-label="delete item">
+                    <Delete/>
+                </IconButton>
+            </div>
+        );
     }
 }
 
