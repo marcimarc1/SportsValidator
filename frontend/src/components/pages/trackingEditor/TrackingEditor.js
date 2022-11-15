@@ -107,7 +107,10 @@ class TrackingEditor extends Component {
         // console.log(tracking);
 
         // TODO BACKEND wrap all data fetching in if(this.state.demo) block and keep existing code for demo if Demo should stay in the website
-        //load categories and annotations TODO BACKEND categories = loadCategories(this.id);
+
+        //load categories and annotations
+
+        // TODO BACKEND categories = loadCategories(this.id);
         let categories = tracking.categories;
 
         //load annotations TODO BACKEND annotations = loadAnnotations(this.id);
@@ -120,7 +123,8 @@ class TrackingEditor extends Component {
         let lastCachedFrame = currentFrameNumber + cacheSizeBehind;
         this.annotationsCache = this.getAnnotationsForFrames(annotations, firstCachedFrame, lastCachedFrame);
 
-        //load corners TODO BACKEND TODO BACKEND corners = loadCorners(this.id);
+        //load corners
+        // TODO BACKEND TODO BACKEND corners = loadCorners(this.id);
         let corners = cornerfile.corners;
         this.cornersCache = this.getAnnotationsForFrames(corners, firstCachedFrame, lastCachedFrame);
 
@@ -394,7 +398,7 @@ class TrackingEditor extends Component {
 
         this.canvasElementsCorners.forEach(
             (corner) => {
-                propsTracklist.corners = propsTracklist.corners.concat([<TrackListItemCorner id={corner.my.id} activeCorner={this.state.activeCorner} changeSelection={this.changeSelection} delete={undefined} /> ]);
+                propsTracklist.corners = propsTracklist.corners.concat([<TrackListItemCorner id={corner.my.id} activeCorner={this.state.activeCorner} changeSelection={this.changeSelection} delete={this.deleteCorner} /> ]);
             }
         );
 
@@ -404,7 +408,7 @@ class TrackingEditor extends Component {
                                                                                               activeGroup={this.state.activeGroup}
                                                                                               changeSelection={this.changeSelection}
                                                                                               color={this.getCategoryColor(category.id)}
-                                                                                              delete={undefined}/>]);
+                                                                                              delete={this.deleteGroup}/>]);
             }
         )
 
@@ -907,6 +911,27 @@ class TrackingEditor extends Component {
         this.canvas.remove(bBox);
 
         this.canvas.requestRenderAll();
+    }
+
+    deleteCorner = (id) => {
+        // TODO BACKEND
+        // BACKEND.deleteCorner(id);
+
+        let index = this.canvasElementsCorners.findIndex((corner) => corner.my.id == id);
+        this.canvas.remove(this.canvasElementsCorners[index]);
+        this.canvas.requestRenderAll();
+
+        this.canvasElementsCorners.splice(index, 1);
+    }
+
+    deleteGroup = (id) => {
+        // TODO BACKEND
+        // BACKEND.deleteGroup(id);     // Also need to assign a new/unassigned team to players that have assigned the team that is to be deleted
+
+        // TODO BACKEND
+        // might be better to just modify the dummy element and reload the categories from the backend because there might have to be a "unassigned" category assigned to all players that now do not have a team anymore
+        // Also category colors etc are not handled here because they will be moved to the backend anyways.
+        this.setState((prevState) => ({categories: [...prevState.categories].filter((group) => group.id != id)}));
     }
 
 }

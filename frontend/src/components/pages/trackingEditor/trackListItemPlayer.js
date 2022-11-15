@@ -35,7 +35,6 @@ class TrackListItemPlayer extends Component {
         let bBox = this.props.bBox;
         let currentTeam = this.props.bBox.my.team;
         let allTeams = this.props.getTeams();
-        let categoryName = allTeams.find(item => item.id === currentTeam).name;
         let style = {borderColor: this.props.bBox.cornerColor};
 
         let teamMenuItems = allTeams.map(team => <MenuItem key={team.id} value={team.id}>{team.name}</MenuItem>)
