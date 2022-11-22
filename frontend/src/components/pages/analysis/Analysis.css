@@ -11,7 +11,13 @@ h1 {
 .Analysis {
     width: 100%;
     min-height: 100%;
-    background-color: #727272;
+    background-color: #727272;       /* GRASS BACKGROUND: comment this out and comment in the following background-image and background-repeat properties instead */
+    /*background-image: linear-gradient(  !* This way the linear gradient (which in this case is just a dark overlay to make the background image darker) is in front of the real background image *!*/
+    /*        to bottom,*/
+    /*        rgba(0, 0, 0, 0.7),*/
+    /*        rgba(0, 0, 0, 0.7)*/
+    /*), url("../../../pictures/green_grass_texture_512x512.png");*/
+    /*background-repeat: repeat;*/
 }
 
 .AnalysisHeadingContainer {

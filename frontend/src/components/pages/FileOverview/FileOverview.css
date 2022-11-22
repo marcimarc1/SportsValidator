@@ -21,7 +21,13 @@ element {
     display: flex;
     flex-direction: column;
     align-items: center;
-    background-color: #727272;
+    background-color: #727272;      /* GRASS BACKGROUND: comment this out and comment in the following background-image and background-repeat properties instead */
+    /*background-image: linear-gradient(  !* This way the linear gradient (which in this case is just a dark overlay to make the background image darker) is in front of the real background image *!*/
+    /*        to bottom,*/
+    /*        rgba(0, 0, 0, 0.7),*/
+    /*        rgba(0, 0, 0, 0.7)*/
+    /*), url("../../../pictures/green_grass_texture_512x512.png");*/
+    /*background-repeat: repeat;*/
 }
 
 .FileOverviewHeadingContainer {
@@ -126,7 +132,7 @@ element {
 }
 
 .FileOverviewListItemThumbnail {
-    /*border-radius: 0 40px 40px 0;*/
+    /*margin: 5px;*/    /*GRASS BACKGROUND: Comment this in (and adjust the height of FileOverviewListItem accordingly (make it taller by 2x this margin, that need to be done in js file) */
 }
 
 .FileOverviewListItemContainerLeft {
