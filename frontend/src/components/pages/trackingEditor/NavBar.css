@@ -62,10 +62,20 @@
     width: 50px !important;
 }
 
+.NavBarAppearanceSelectionContainer {
+    display: flex;
+    margin-top: 5px;
+}
+
 .NavBarLabelVisibilityDropdown {
     width: 10rem;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
+}
+
+.NavBarColorByCategorySwitch {
+    display: flex;
+    align-items: flex-start;
 }
 
 #labeling-select-label {
@@ -73,6 +83,10 @@
 }
 
 .NavBarLabelVisibilityDropdownIcon {
+}
+
+.Label {
+    font-weight: 450;   /* slightly bolder than normal */
 }
 
 .remove {

@@ -123,6 +123,15 @@ class TrackingEditor extends Component {
         let lastCachedFrame = currentFrameNumber + cacheSizeBehind;
         this.annotationsCache = this.getAnnotationsForFrames(annotations, firstCachedFrame, lastCachedFrame);
 
+        // randomly generate player colors (they will just come from the backend in the future
+        let playerColors = {};
+        for(let i = 0; i < 50; i++) {       // randomly using 50 as a big number
+            let r = Math.floor(Math.random() * 255)
+            let g = Math.floor(Math.random() * 255)
+            let b = Math.floor(Math.random() * 255)
+            playerColors[i] = `rgb(${r}, ${g}, ${b})`;
+        }
+
         //load corners
         // TODO BACKEND TODO BACKEND corners = loadCorners(this.id);
         let corners = cornerfile.corners;
@@ -155,7 +164,7 @@ class TrackingEditor extends Component {
         }
 
         this.canvas = canvas;
-        this.setState({demo: this.props.demo, currentFrame: currentFrameNumber, scalingFactor: scalingFactor, categories: categories},
+        this.setState({demo: this.props.demo, currentFrame: currentFrameNumber, scalingFactor: scalingFactor, categories: categories, playerColors},
             () => {this.plotBBoxes(); this.plotCorners(); this.setState({dummy: !this.state.dummy})});
         // calling setState twice is necessary here because the plotBBoxes function relies on some info about the state
         // the same is done in ComponentDidUpdate, causing rerenders; maybe plotBBoxes could be rewritten but then it would be easier to introduce bugs that violate data consistency with state?
@@ -242,6 +251,9 @@ class TrackingEditor extends Component {
             // TODO Backend
         }
     }
+
+    // function to be passed to NavBar, currentFrame is only used for initialization and then NavBar manages the frame number
+    // Using a function this way instead of passing a prop directly should make NavBar not remount every time the Frame changes
     getFrame = (i) => {
         let ret = this.framesCache.find(element => element.index = i);
         if(ret === undefined) {
@@ -304,9 +316,11 @@ class TrackingEditor extends Component {
 
     }
 
-    getColor = (categoryId, trackId) => {
+    generateBBoxFillColor = (color) => new fabric.Color(color).setAlpha(0.4).toRgba();
+
+    getColor = (categoryId, trackId, colorByCategory) => {
         let color;
-        if(this.state.colorByCategory) {
+        if(colorByCategory) {
             color = this.getCategoryColor(categoryId);
         }
         else {
@@ -321,13 +335,17 @@ class TrackingEditor extends Component {
         return this.state[categoryColorDict][categoryId];
     }
 
-    // function to be passed to NavBar, currentFrame is only used for initialization and then NavBar manages the frame number
-    // Using a function this way instead of passing a prop directly should make NavBar not remount every time the Frame changes
-    // TODO delete comments
-    // Changed because with the slider, NavBar is supposed to change every time the frame changes so it updates
-    // getCurrentFrame = () => {
-    //     return this.state.currentFrame
-    // }
+    handleSwitchColorByCategory = (colorByCategory) => {
+        this.canvasElementsPlayers.forEach((bBox) => {
+            let color = this.getColor(bBox.my.team, bBox.my.player, colorByCategory);
+            bBox.my.color = color;
+            bBox.set('cornerColor', color);
+            bBox.set('stroke', color);
+            bBox.set('fill', this.generateBBoxFillColor(color));
+        });
+        this.canvas.renderAll();
+        this.setState({colorByCategory: colorByCategory});
+    }
 
     getTeams = () => {
         return this.state.categories
@@ -382,7 +400,7 @@ class TrackingEditor extends Component {
         let canvasWidth = this.canvas?.getWidth()   // ?. is conditional chaining, returns undefined if this.canvas is undefined
         this.canvasElementsPlayers.forEach(
             (bBox) => {
-                propsTracklist.players = propsTracklist.players.concat([<TrackListItemPlayer bBox={bBox} changeSelection={this.changeSelection} setName={this.setName} blink={this.blink} getTeams={this.getTeams} setTeam={this.setTeam} delete={this.deletePlayer}/>]);
+                propsTracklist.players = propsTracklist.players.concat([<TrackListItemPlayer bBox={bBox} changeSelection={this.changeSelection} setName={this.setName} blink={this.blink} getTeams={this.getTeams} setTeam={this.setTeam} delete={this.deletePlayer} />]);
 
                 // // is now done below, this version extracts all the teams from the bBoxes, it also works on tracking files that do not provide a category Object with a summary of all categories.
                 // let group = bBox.my.team;
@@ -414,7 +432,7 @@ class TrackingEditor extends Component {
 
         return (
             <div className="TrackingEditor">
-                <NavBar undoRedo={this.undoRedo} switchFrame={this.switchFrame} currentFrame={this.state.currentFrame} labelVisibility={this.state.labelVisibility} setLabelVisibility={this.setLabelVisibility} maxFrame={10} width={canvasWidth}/>   {/*Todo: pass correct maxFrame*/}
+                <NavBar undoRedo={this.undoRedo} switchFrame={this.switchFrame} currentFrame={this.state.currentFrame} colorByCategory={this.state.colorByCategory} handleSwitchColorByCategory={this.handleSwitchColorByCategory} labelVisibility={this.state.labelVisibility} setLabelVisibility={this.setLabelVisibility} maxFrame={10} width={canvasWidth}/>   {/*Todo: pass correct maxFrame*/}
                 <canvas id="tracking-editor-canvas" width="1440" height="810" ></canvas>
                 <TrackList>
                     {/*<h1>Test 1</h1>*/}
@@ -585,11 +603,11 @@ class TrackingEditor extends Component {
         let top = args.bbox[1] * this.state.scalingFactor;
         let width = args.bbox[2] * this.state.scalingFactor;
         let height = args.bbox[3] * this.state.scalingFactor;
-        let color = this.getColor(args.category_id, args.attributes.track_id);
+        let color = this.getColor(args.category_id, args.attributes.track_id, this.state.colorByCategory);
 
 
         // generate fill color which is regular color but more transparent
-        let fill = new fabric.Color(color).setAlpha(0.4).toRgba();
+        let fill = this.generateBBoxFillColor(color);
 
 
         //get metadata for BBox
@@ -777,8 +795,8 @@ class TrackingEditor extends Component {
     }
 
     blink = (bBox) => {
-        // TODO maybe make more visible? Add bigger version of bBox and let it shrink to real bBox?
-        let originalColor = bBox.fill;
+        let originalColor = bBox.cornerColor;
+        let originalFillColor = bBox.fill;
         let repeats = 3;
         let time = 0;
         let interval = 400;
@@ -796,7 +814,7 @@ class TrackingEditor extends Component {
             time += interval;
             setTimeout(() => {
                 bBox.set({
-                    fill: originalColor,
+                    fill: originalFillColor,
                     cornerColor: originalColor,
                     stroke: originalColor
                 });

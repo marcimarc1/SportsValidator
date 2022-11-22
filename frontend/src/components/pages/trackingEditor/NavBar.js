@@ -8,6 +8,8 @@ import InputLabel from "@material-ui/core/InputLabel";
 import Select from "@material-ui/core/Select";
 import MenuItem from '@material-ui/core/MenuItem';
 import FormControl from "@material-ui/core/FormControl";
+import FormControlLabel from "@material-ui/core/FormControlLabel";
+import Switch from "@material-ui/core/Switch";
 
 class NavBar extends Component {
 
@@ -49,6 +51,10 @@ class NavBar extends Component {
         this.setState({playing: !this.state.playing});
     }
 
+    handleSwitchColorByCategory = () => {
+        this.props.handleSwitchColorByCategory(!this.props.colorByCategory);
+    }
+
     handleChangeVisibility = (event) => {
         this.props.setLabelVisibility(event.target.value);
     }
@@ -84,20 +90,32 @@ class NavBar extends Component {
                     </div>
                 </div>
 
-                <div className="NavBarLabelVisibilityDropdown">
-                    <FontAwesomeIcon className="NavBarLabelVisibilityDropdownIcon" icon={faTag} transform="grow-10"/>
-                    {/*  TODO dropdown for selection when to show labels (always, selected, ..)  */}
-                    <FormControl>
-                        <InputLabel id="labeling-select-label"></InputLabel>
-                        <Select
-                            labelId="labeling-select-label"
-                            id="labeling-select"
-                            value={this.props.labelVisibility}
-                            onChange={this.handleChangeVisibility}
-                        >
-                            {visibilityOptions}
-                        </Select>
-                    </FormControl>
+                <div className="NavBarAppearanceSelectionContainer">    {/* to bring inner elements a bit closer together */}
+                    <div className={"NavBarColorByCategorySwitch"}>
+                        <FormControl>
+                            <FormControlLabel control={<Switch checked={this.props.colorByCategory} onChange={this.handleSwitchColorByCategory}/>} label={<div className="Label">Color by Teams</div>} labelPlacement="top"/>
+                        </FormControl>
+                    </div>
+
+                    <div className="NavBarLabelVisibilityDropdown">
+                        {/*<FontAwesomeIcon className="NavBarLabelVisibilityDropdownIcon" icon={faTag} transform="grow-10"/>*/}
+                        {/*  TODO dropdown for selection when to show labels (always, selected, ..)  */}
+                        <FormControl>
+                            <FormControlLabel control={
+                                <Select
+                                    labelId="labeling-select-label"
+                                    id="labeling-select"
+                                    value={this.props.labelVisibility}
+                                    onChange={this.handleChangeVisibility}
+                                    sx={{height: '38px'}}
+                                >
+                                    {visibilityOptions}
+                                </Select>} label={<div className="Label">Label Visibility</div >} labelPlacement="top" sx={{fontWeight: 'light'}}/>
+                            {/*<InputLabel id="labeling-select-label" ></InputLabel>*/}
+
+
+                        </FormControl>
+                    </div>
                 </div>
 
                 {/*<div>*/}
@@ -112,6 +130,8 @@ NavBar.propTypes = {
     undoRedo: PropTypes.func.isRequired,
     switchFrame: PropTypes.func.isRequired,
     currentFrame: PropTypes.func.isRequired,
+    colorByCategory: PropTypes.bool.isRequired,
+    handleSwitchColorByCategory: PropTypes.func.isRequired,
     labelVisibility: PropTypes.string.isRequired,
     setLabelVisibility: PropTypes.func.isRequired,
     // add: PropTypes.func.isRequired,
