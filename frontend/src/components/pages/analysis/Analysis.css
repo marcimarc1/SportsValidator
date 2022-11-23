@@ -186,9 +186,21 @@ FormControl {
     order: 0;
 }
 
+.Heatmap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.HeatmapSliderContainer {
+    align-self: stretch;
+    margin-top: 10px;
+}
+
 .HeatmapSlider {
     display: flex;
-    margin: 0 15px 0 15px;
+    margin: 3px 15px 3px 15px;
 }
 
 .HeatmapSliderLabel {

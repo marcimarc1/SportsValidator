@@ -237,7 +237,7 @@ class Heatmap extends Component {
     render() {
         let width = 3840;
         return (
-            <div>
+            <div className="Heatmap">
                 <canvas id="heatmap-canvas" width={this.props.canvasWidth} height={this.props.canvasHeight+this.legendTotalHeight} ></canvas>
 
                 <div className="HeatmapSliderContainer">
