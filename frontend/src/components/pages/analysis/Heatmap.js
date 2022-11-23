@@ -48,7 +48,6 @@ class Heatmap extends Component {
     }
 
     componentDidMount() {
-        console.log("COMPONENTDIDMOUNT");
         // Setup Canvas and Fabric
         this.canvas = new fabric.Canvas('heatmap-canvas', {renderOnAddRemove: false});
         let strokeWidth = 5;
@@ -86,9 +85,6 @@ class Heatmap extends Component {
                 this.positionDataIndexByPlayer[player][this.props.positionData[i].image_id] = i;
             }
 
-            // Draw actual Heatmap
-            this.drawHeatmap();
-
             // Draw Legend
 
             // if there are too many teams, make legend smaller
@@ -106,25 +102,26 @@ class Heatmap extends Component {
             }
 
 
-            this.canvas.renderAll();
+            this.canvas.renderAll();    // Already calling renderAll() before heatmap is drawn so lines and legend already appear in case drawHeatmap() takes longer for some reason
+
             let somePlayerIndices = this.props.positionData[0].attributes.track_id;   // just randomly picking the first player id
 
             let stateModifier = {maxStepSize: this.positionDataIndexByPlayer[somePlayerIndices].length};
-            // if(this.props.stateVariables) {
-            //     stateModifier = {...stateModifier, ...this.props.stateVariables};
-            // }
+            if(this.props.stateVariables) {
+                stateModifier = {...stateModifier, ...this.props.stateVariables};
+            }
 
             // decreasing and increasing endframe of FrameSlider because that prevents an error from happening that otherwise occurs when moving start value before end value. Maybe a bug in the MUI slider?
             // this.setState(stateModifier);
-            this.setState((prevState) => ({...stateModifier, endFrame: prevState.endFrame-1}), () => this.setState((prevState) => ({endFrame: prevState.endFrame+1})));
+            this.setState((prevState) => ({...stateModifier, endFrame: prevState.endFrame-1}), () => this.setState((prevState) => ({endFrame: prevState.endFrame+1}), () => {this.drawHeatmap(); this.canvas.renderAll();}));
 
         }
     }
 
     saveState = () => {
-        // let stateCopy = {...this.state};
-        // delete stateCopy.maxStepSize;   // not necessary, is computed here anyways
-        // this.props.saveState(stateCopy);
+        let stateCopy = {...this.state};
+        delete stateCopy.maxStepSize;   // not necessary, is computed here anyways
+        this.props.saveState(stateCopy);
     }
 
     // does not rerender canvas, so this.canvas.renderAll() has to be called after this function!
@@ -221,9 +218,10 @@ class Heatmap extends Component {
     }
 
     committed = (stateVariable) => (event, value) => {
+        // this.props.stateVariables is duplicated in this components state which could maybe be done better. But saveState seems to not cause a rerender and state of this component is directly saved in state of Analysis via saveState, so this is not really a problem
+        // it's not possible to only use the state of the parent components because I want to decide here when heatmap gets redrawn (only on committed changes to sliders and not on other slider changes which are also handled via the state of this component)
         this.setState({[stateVariable]: value}, () => {
-            // this.redoHeatmap();
-            this.clearHeatmap();
+            this.redoHeatmap();
             this.saveState();
         });
     }
@@ -236,9 +234,8 @@ class Heatmap extends Component {
         this.setState({startFrame: value[0], endFrame: value[1]}, () => {this.redoHeatmap(); this.saveState();});
     }
 
-
     render() {
-        let width = 3840
+        let width = 3840;
         return (
             <div>
                 <canvas id="heatmap-canvas" width={this.props.canvasWidth} height={this.props.canvasHeight+this.legendTotalHeight} ></canvas>
@@ -324,8 +321,8 @@ Heatmap.propTypes = {
     canvasWidth: PropTypes.number.isRequired,
     canvasHeight: PropTypes.number.isRequired,      // actual canvas height is a bit taller to accommodate legend, this prop is height of playing field in canvas
     scalingFactor: PropTypes.number.isRequired,
-    // stateVariables: PropTypes.object,
-    // saveState: PropTypes.func
+    stateVariables: PropTypes.object,
+    saveState: PropTypes.func
 };
 
 export default Heatmap;

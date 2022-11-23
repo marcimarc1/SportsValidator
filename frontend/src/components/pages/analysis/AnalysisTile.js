@@ -133,6 +133,10 @@ class AnalysisTile extends Component {
         this.changeOrder(false);
     }
 
+    saveState = (state) => {
+        this.props.changeTile({stateVariables: state});
+    }
+
     render() {
         let chart;
         let headingText;
@@ -146,7 +150,16 @@ class AnalysisTile extends Component {
                 case "heatmap":
                     // TODO BACKEND maybe get team colors assigned to team from backend and pass them here so colors in chart match team colors?
                     headingText = (this.props.groupByTeams?"Team":"Player") + " Position Heatmap";
-                    chart = <Heatmap positionData={this.state.data.positionData} teams={this.state.data.teams} categoryColors={this.state.data.categoryColors} canvasWidth={this.state.data.canvasWidth} canvasHeight={this.state.data.canvasHeight} scalingFactor={this.state.data.scalingFactor} />
+                    chart = <Heatmap
+                        positionData={this.state.data.positionData}
+                        teams={this.state.data.teams}
+                        categoryColors={this.state.data.categoryColors}
+                        canvasWidth={this.state.data.canvasWidth}
+                        canvasHeight={this.state.data.canvasHeight}
+                        scalingFactor={this.state.data.scalingFactor}
+                        stateVariables={this.props.tileState}
+                        saveState={this.saveState}
+                    />
                     break;
                 case "new":
                     headingText = "Select Type of Chart";
@@ -199,7 +212,8 @@ AnalysisTile.propTypes = {
     teams: PropTypes.arrayOf(PropTypes.number),
     players: PropTypes.arrayOf(PropTypes.number),
     notes: PropTypes.string,
-    changeTile: PropTypes.func.isRequired
+    changeTile: PropTypes.func.isRequired,
+    tileState: PropTypes.object,
 };
 
 export default AnalysisTile;

@@ -18,14 +18,14 @@ class Analysis extends Component {
         {id: 2, type: "distance-barchart", groupByTeams: true, teams: undefined, players: undefined},
         {id: 3, type: "notes", notes: "As you can cleary see, the players of one of the team ran further doing the game."},
         {id: 4, type: "new"},
-        {id: 5, type: "heatmap"}
+        {id: 5, type: "heatmap", groupByTeams: true, teams: [1, 2, 3, 4], stateVariables: {stepSize: 1, startFrame: 0, endFrame: 100, heatmapBubbleRadius: 30, opacity: 0.3 }}
     ];
 
     runningIndex = 6;
 
     state = {
         analysisTiles: [],
-        order: [],  // order does not use the ids of the analysisTiles but is simply a permutation of the natural numbers 0 - (numberTiles-1)
+        order: [],
         filename: undefined
     }
 
@@ -74,7 +74,7 @@ class Analysis extends Component {
 
         // Delete Tile
         if (changes?.type === "delete") {
-            let indexToDelete = this.state.analysisTiles.findIndex((e) => e.id == id);
+            // let indexToDelete = this.state.analysisTiles.findIndex((e) => e.id == id);
             this.setState((prevState) => ({
                 analysisTiles: prevState.analysisTiles.filter((tile) => tile.id !== id),    // quite inefficient, should use splice on a copy of the arrays but does not matter here
                 order: prevState.order.filter((e) => e !== id)
@@ -116,7 +116,9 @@ class Analysis extends Component {
                     teams={t?.teams}
                     players={t?.players}
                     notes={t?.notes}
-                    changeTile={this.changeTile(t.id)}/>
+                    changeTile={this.changeTile(t.id)}
+                    TileState={t?.stateVariables}
+                />
             </div>);
         return (
             <div className="Analysis">
