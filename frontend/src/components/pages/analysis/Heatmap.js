@@ -44,6 +44,7 @@ class Heatmap extends Component {
         this.legendTotalHeight = this.props.teams.length * this.legendLineHeight + this.spaceAboveLegend;
         if(this.props.positionData) {
             this.state.endFrame = this.props.positionData[this.props.positionData.length-1].image_id;
+            this.state.startFrame = this.props.positionData[0].image_id;
         }
     }
 
@@ -101,20 +102,19 @@ class Heatmap extends Component {
                 y += this.legendLineHeight;
             }
 
+            // Drawing actual heatmap
+            this.drawHeatmap();
 
-            this.canvas.renderAll();    // Already calling renderAll() before heatmap is drawn so lines and legend already appear in case drawHeatmap() takes longer for some reason
+            this.canvas.renderAll();
 
             let somePlayerIndices = this.props.positionData[0].attributes.track_id;   // just randomly picking the first player id
 
-            let stateModifier = {maxStepSize: this.positionDataIndexByPlayer[somePlayerIndices].length};
+            let stateModifier = {maxStepSize: Math.floor(this.positionDataIndexByPlayer[somePlayerIndices].length/2+1)};    // setting maxStepSize so its maximum value only results in one value/heatmapBubble per player
             if(this.props.stateVariables) {
                 stateModifier = {...stateModifier, ...this.props.stateVariables};
             }
 
-            // decreasing and increasing endframe of FrameSlider because that prevents an error from happening that otherwise occurs when moving start value before end value. Maybe a bug in the MUI slider?
-            // this.setState(stateModifier);
-            this.setState((prevState) => ({...stateModifier, endFrame: prevState.endFrame-1}), () => this.setState((prevState) => ({endFrame: prevState.endFrame+1}), () => {this.drawHeatmap(); this.canvas.renderAll();}));
-
+            this.setState(stateModifier);
         }
     }
 
