@@ -17,7 +17,7 @@ import TrackListItemCorner from "./trackListItemCorner";
 require('require-context/register');
 
 class TrackingEditor extends Component {
-    cacheSize = 5;  //TODO experiment with this to check performance
+    cacheSize = 5;  // TODO BACKEND experiment with this to check performance
     demoFrameSource = '../../../data/';//"../data/";
     framesCache = [];
     annotationsCache = [];
@@ -368,6 +368,34 @@ class TrackingEditor extends Component {
         this.setState((state) => ({idToName: {...state.idToName}[bBox.my.player] = name}));
     }
 
+    // returns a list with elements {id: id, name: name or undefined} for each player; playerName is undefined if player was not given a name
+    getPlayers = () => {
+        let players = this.canvasElementsPlayers.map((bBox) => ({id: bBox.my.player, name: bBox.my.name}));
+        return players;
+    }
+
+    swap = (player1Id, player2Id) => {
+
+        // TODO BACKEND
+        // BACKEND.swapPlayers(player1Id, player2Id);
+        // setState function (modifying dummy like following line) has to be called once change took effect in backend so that new, changed data is loaded
+        // this.setState({dummy: !this.state.dummy});
+
+
+        // TODO BACKEND the following function call can be deleted, it is just used for testing/creating some effect upon calling swap
+        // therefore, it also only modifies one element instead of doing both and properly swapping elements
+        setTimeout(() => {  // using a timeout to give the loading animation some time to be displayed
+            this.canvasElementsPlayers.map((bBox) => {
+                if(bBox.my.player === player1Id) {
+                    bBox.my.player = player2Id;
+                    bBox.my.name = "CHANGED!";
+                }
+                return bBox;
+            });
+            this.setState({dummy: !this.state.dummy});
+        }, 1000);
+    }
+
     setLabelVisibility = (visibility) => {
 
         let hideOrShowLabels = () => {
@@ -400,7 +428,7 @@ class TrackingEditor extends Component {
         let canvasWidth = this.canvas?.getWidth()   // ?. is conditional chaining, returns undefined if this.canvas is undefined
         this.canvasElementsPlayers.forEach(
             (bBox) => {
-                propsTracklist.players = propsTracklist.players.concat([<TrackListItemPlayer bBox={bBox} changeSelection={this.changeSelection} setName={this.setName} blink={this.blink} getTeams={this.getTeams} setTeam={this.setTeam} delete={this.deletePlayer} />]);
+                propsTracklist.players = propsTracklist.players.concat([<TrackListItemPlayer bBox={bBox} changeSelection={this.changeSelection} setName={this.setName} blink={this.blink} getTeams={this.getTeams} setTeam={this.setTeam} delete={this.deletePlayer} getSwapMenuEntries={this.getPlayers} swap={this.swap} />]);
 
                 // // is now done below, this version extracts all the teams from the bBoxes, it also works on tracking files that do not provide a category Object with a summary of all categories.
                 // let group = bBox.my.team;
