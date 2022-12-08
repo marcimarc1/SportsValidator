@@ -829,26 +829,29 @@ class TrackingEditor extends Component {
         let time = 0;
         let interval = 400;
         let blinkColor = 'rgb(255, 255, 255)';
-        for(let i = repeats; i > 0; i--) {
-            setTimeout(() => {
-                bBox.set({
-                    fill: blinkColor,
-                    cornerColor: blinkColor,
-                    stroke: blinkColor
-                });
-                this.canvas.renderAll();
-            }, time);
 
-            time += interval;
-            setTimeout(() => {
-                bBox.set({
-                    fill: originalFillColor,
-                    cornerColor: originalColor,
-                    stroke: originalColor
-                });
-                this.canvas.renderAll();
-            }, time);
-            time += interval;
+        if(originalColor !== blinkColor) {  // necessary because otherwise bBox could permanently be set to blinkColor
+            for (let i = repeats; i > 0; i--) {
+                setTimeout(() => {
+                    bBox.set({
+                        fill: blinkColor,
+                        cornerColor: blinkColor,
+                        stroke: blinkColor
+                    });
+                    this.canvas.renderAll();
+                }, time);
+
+                time += interval;
+                setTimeout(() => {
+                    bBox.set({
+                        fill: originalFillColor,
+                        cornerColor: originalColor,
+                        stroke: originalColor
+                    });
+                    this.canvas.renderAll();
+                }, time);
+                time += interval;
+            }
         }
     }
 
