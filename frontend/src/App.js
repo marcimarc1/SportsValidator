@@ -20,7 +20,7 @@ class App extends Component {
                 </Route>
 
                 {/*using path instead of exact path so it works with trackingEditor/:id and analysis/:id */}
-                <Route path="(/trackingEditor|/about|/feedback|/account|/demo|/games|/analysis)" >
+                <Route path="(/about|/feedback|/account|/demo|/games)" >
                     <Header/>
                 </Route>
 
@@ -37,10 +37,12 @@ class App extends Component {
                 </Route>
 
                 <Route exact path="/trackingEditor/:id" >
+                    <Header/>
                     <TrackingEditor demo={false} startFrame={1}/>
                 </Route>
 
                 <Route exact path="/analysis/:id" >
+                    <Header/>
                     <Analysis/>
                 </Route>
 
