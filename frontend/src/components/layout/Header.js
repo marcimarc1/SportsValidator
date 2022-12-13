@@ -23,6 +23,13 @@ class Header extends Component {
         // find correct header links depending on current url
         switch (true) {
             case path === "/":
+                // decided to use Button for this link instead
+                // if(this.state.loggedIn) {
+                //     headerLinks.push(<Link className="HeaderText turn-light-gray-on-hover" to={"/games"} > File Overview </Link>);
+                // }
+            case path.split("/")[1] === "account":
+            case path.split("/")[1] === "about":
+            case path.split("/")[1] === "feedback":
                 headerLinks.push(<Link className="HeaderText turn-light-gray-on-hover" to="/about"> About </Link>);
                 headerLinks.push(<Link className="HeaderText turn-light-gray-on-hover" to="/feedback"> Feedback </Link>);
                 break;
