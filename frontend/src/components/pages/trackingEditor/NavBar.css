@@ -92,3 +92,16 @@
 .remove {
     display: none;
 }
+
+/* The following rules change the color of the Mui Switch */
+.MuiSwitch-colorSecondary.Mui-checked + .MuiSwitch-track {
+    background-color: #344911 !important;
+}
+
+.MuiSwitch-colorSecondary.Mui-checked {
+    color: #344911 !important;
+}
+
+.MuiSwitch-colorSecondary.Mui-checked:hover {   /* sets the very slightly colored shade around the thumb before clicking when mouse is on the thumb of the switch */
+    background-color: rgba(34, 49, 11, 0.04) !important;
+}

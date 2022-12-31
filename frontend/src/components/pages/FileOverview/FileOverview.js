@@ -26,12 +26,10 @@ class FileOverview extends Component {
     fileInput;
 
     componentDidMount() {
-        // TODO BACKEND: files = BACKENDEND.getFiles();
+        // TODO BACKEND: files = BACKEND.getFiles();
         let files = videofiles.files;
-        console.log(files);
         let fileListItems = [];
         for(const f of files) {
-            console.log(f);
             fileListItems[f.id] = {name: f.name, duration: f.duration, notes: f.notes};
         }
         this.setState({fileListItems});
@@ -75,7 +73,7 @@ class FileOverview extends Component {
             () => setTimeout(() => {
                 if(this.state.uploadExpanded)
                     this.setState({fileSelectionVisible: true});
-                }, 1000));
+                }, 400));
     }
 
     fileHandler = (event) => {
