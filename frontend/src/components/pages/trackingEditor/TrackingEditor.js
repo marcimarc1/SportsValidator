@@ -197,7 +197,11 @@ class TrackingEditor extends Component {
         let firstAnnotation = annotations.findIndex(element => element.image_id == firstFrame);
         let lastAnnotation = annotations.findIndex(element => element.image_id == lastFrame + 1);
 
-        let cachedAnnotations = annotations.slice(firstAnnotation, lastAnnotation);
+        if(firstAnnotation === -1) {
+            console.warn("Annotation (either player positions or corners) for frame " + firstFrame + " not found!");
+            return [];
+        }
+        let cachedAnnotations = lastAnnotation === -1 ? annotations.slice(firstAnnotation) : annotations.slice(firstAnnotation, lastAnnotation); // using just annotations.slice(firstAnnotation, lastAnnotation)  would mean last element of annotation is not included for lastAnnotation === -1 which is not intended because it means all elements after firstAnnotation need to be returned.
         return cachedAnnotations;
     }
 
