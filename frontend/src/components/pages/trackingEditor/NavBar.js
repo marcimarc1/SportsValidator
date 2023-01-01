@@ -30,8 +30,8 @@ class NavBar extends Component {
     }
 
     switchFrame = (i) => () => {
-        console.log("Navbar: switch Frame");
-        if(i != this.props.currentFrame || i < 0 || i < this.props.maxFrame) {
+        // TODO BACKEND this needs to be changed in case frame numbers start from 0 instead of 1
+        if(i != this.props.currentFrame) {
             this.props.switchFrame(i);
         }
     }
@@ -47,7 +47,6 @@ class NavBar extends Component {
     transportButtonSize = "fa-2x";
 
     playPause = () => {
-        // TODO
         this.setState({playing: !this.state.playing});
     }
 
@@ -82,7 +81,7 @@ class NavBar extends Component {
                             <FontAwesomeIcon icon={faChevronLeft} flip="horizontal"/>
                             <FontAwesomeIcon icon={faChevronLeft} flip="horizontal" transform="left-6" />
                         </span>
-                        <FontAwesomeIcon icon={faStepBackward} flip="horizontal" className={this.transportButtonSize + " NavBarTransportButton NavBarTransportButtonLast Pointer"} />
+                        <FontAwesomeIcon icon={faStepBackward} flip="horizontal" onClick={this.switchFrame(this.props.maxFrame)} className={this.transportButtonSize + " NavBarTransportButton NavBarTransportButtonLast Pointer"} />
                     </div>
 
                     <div className="NavBarSlider">
@@ -99,7 +98,6 @@ class NavBar extends Component {
 
                     <div className="NavBarLabelVisibilityDropdown">
                         {/*<FontAwesomeIcon className="NavBarLabelVisibilityDropdownIcon" icon={faTag} transform="grow-10"/>*/}
-                        {/*  TODO dropdown for selection when to show labels (always, selected, ..)  */}
                         <FormControl>
                             <FormControlLabel control={
                                 <Select

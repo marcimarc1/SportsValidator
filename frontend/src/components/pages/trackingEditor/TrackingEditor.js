@@ -268,10 +268,10 @@ class TrackingEditor extends Component {
 
     // parameter check is already done in NavBar so this function expects a valid value for i
     switchFrame = (i) => {
-        // console.log("TrackingEditor: Switching Frame to " + i);
-        //TODO call backend and delete the following hardcoded numbers in if clause (they are because there are only so many sample images here)
+        console.log("TrackingEditor: Switching Frame to " + i);
+        //TODO BACKEND call backend and delete the following hardcoded numbers in if clause (they are because there are only so many sample images here)
         if(i<0 || i>10) {
-            console.log("frame number invalid: " + i);
+            console.warn("frame number invalid: " + i);
             return;
         }
 
@@ -286,7 +286,7 @@ class TrackingEditor extends Component {
         // this works but is a bit brute-force...
         this.canvasElementsPlayers.forEach((e) => {
             if(e?.my?.dirty) {
-                // TODO BACKEND post changes to backend (only for position and size, the rest should be done directly in the respctive functions, e.g. changing names, teams, etc.)
+                // TODO BACKEND post changes to backend (only for position and size, the rest should be done directly in the respective functions, e.g. changing names, teams, etc.)
             }
             this.canvas.remove(e);
             if(e?.my) {
