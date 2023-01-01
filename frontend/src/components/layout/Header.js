@@ -44,7 +44,7 @@ class Header extends Component {
 
         return (
             // <div>
-                <header className={"Header" + (this.props.onStartPage ? " on-start-page" : " not-on-start-page")}>
+                <header className={"Header" + (this.props.onStartPage ? " on-start-page" : " not-on-start-page") + (this.props.shrinkAnimation ? " shrink-animation" : "")}>
                     {/*The above is just the standard html header tag (instead of div), not to be confused with the Header component*/}
 
                     <Link className="HeaderLinkWrapper" to="/">
@@ -86,11 +86,13 @@ class Header extends Component {
 }
 
     Header.propTypes = {
-        onStartPage: PropTypes.bool
+        onStartPage: PropTypes.bool,
+        shrinkAnimation: PropTypes.bool
     };
 
     Header.defaultProps = {
-        onStartPage: false
+        onStartPage: false,
+        shrinkAnimation: false
     };
 
 

@@ -7,14 +7,18 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    animation: grow-header 0.5s ease-out reverse;
 
     /*position: fixed;*/
 }
+
  .Header.on-start-page {
      position: absolute;
      padding-top: 40px;
-     animation: grow-header 0.5s ease-out;
+     animation: grow-header 0.3s ease-out;
+ }
+
+ .Header.shrink-animation {
+     animation: grow-header 0.3s ease-out reverse;
  }
 
  /*.Header .not-on-start-page {*/
@@ -44,6 +48,7 @@
 #header-spacer {
     width: 25%;
 }
+
 .HeaderIcon, .HeaderText {
     /*color: navajowhite;*/
     color: #727272;

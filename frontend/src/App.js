@@ -20,12 +20,24 @@ class App extends Component {
                 </Route>
 
                 {/*using path instead of exact path so it works with trackingEditor/:id and analysis/:id */}
-                <Route path="(/about|/feedback|/account|/demo|/games)" >
+                <Route path="(/demo|/games)" >
                     <Header/>
                 </Route>
 
+                <Route exact path="(/about|/feedback|/account)" >
+                    <Header shrinkAnimation={true} />
+                </Route>
+
                 <Route exact path="/about" >
-                    <h1 color="red"> ABOUT </h1>
+                    <h1> About </h1>
+                </Route>
+
+                <Route exact path="/feedback" >
+                    <h1> Feedback </h1>
+                </Route>
+
+                <Route exact path="/account" >
+                    <h1> Account Information </h1>
                 </Route>
 
                 <Route exact path="/" >
