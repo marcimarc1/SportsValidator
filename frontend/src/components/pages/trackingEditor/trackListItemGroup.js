@@ -52,7 +52,7 @@ class TrackListItemGroup extends Component {
                     className={"TrackListItemName" + (selected ? " selected" : "")}
                     defaultValue={name.toString()}
                     onSave={this.handleChangeName}
-                    style={{marginLeft: '5px', width: '50px'}}
+                    style={{marginLeft: '5px', width: '70px'}}
                 />
 
                 <IconButton size="small" className={"TrackListItemDelete"} onClick={this.delete} aria-label="delete item">

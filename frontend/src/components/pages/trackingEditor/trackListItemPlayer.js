@@ -173,7 +173,7 @@ class TrackListItemPlayer extends Component {
                     className={"TrackListItemName" + (bBox.my.selected ? " selected" : "")}
                     defaultValue={name.toString()}
                     onSave={this.handleChangeName}
-                    style={{marginLeft: '5px', width: '50px'}}
+                    style={{marginLeft: '5px', width: '70px'}}
                 />
                 <IconButton size="small" className={"TrackListItemBlink"} onClick={this.props.blink.bind(this, bBox)} aria-label="blink item">
                     <Highlight/>
