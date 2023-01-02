@@ -4,7 +4,7 @@ import Start from "./components/pages/Start";
 import './App.css';
 import {BrowserRouter as Router, Route} from 'react-router-dom';
 import Demo from "./components/pages/Demo";
-import FileOverview from "./components/pages/FileOverview/FileOverview";
+import FileOverview from "./components/pages/fileOverview/FileOverview";
 import TrackingEditor from "./components/pages/trackingEditor/TrackingEditor";
 import Analysis from "./components/pages/analysis/Analysis";
 
