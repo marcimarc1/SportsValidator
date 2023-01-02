@@ -5,14 +5,14 @@ import { fabric } from 'fabric';
 import './TrackingEditor.css';
 
 // import pic from "../../../data/frame_000000.jpg";
-import tracking from "../../../data/instances_default.json";
+import tracking from "../../../data/tracking_data.json";
 import cornerfile from "../../../data/corners.json";
 import NavBar from "./NavBar";
-import TrackList from "./trackList";
-import TrackListItemAdd from "./trackListItemAdd";
-import TrackListItemPlayer from "./trackListItemPlayer";
-import TrackListItemGroup from "./trackListItemGroup";
-import TrackListItemCorner from "./trackListItemCorner";
+import TrackList from "./TrackList";
+import TrackListItemAdd from "./TrackListItemAdd";
+import TrackListItemPlayer from "./TrackListItemPlayer";
+import TrackListItemGroup from "./TrackListItemGroup";
+import TrackListItemCorner from "./TrackListItemCorner";
 
 require('require-context/register');
 

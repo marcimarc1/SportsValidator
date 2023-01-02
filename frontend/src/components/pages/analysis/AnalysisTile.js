@@ -16,7 +16,7 @@ import IconButton from "@material-ui/core/IconButton";
 import {faTrash, faChevronLeft} from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 
-import tracking from "../../../data/instances_default.json";       // TODO BACKEND delete this again once Backend is implemented
+import tracking from "../../../data/tracking_data.json";       // TODO BACKEND delete this again once Backend is implemented
 
 class AnalysisTile extends Component {
 
