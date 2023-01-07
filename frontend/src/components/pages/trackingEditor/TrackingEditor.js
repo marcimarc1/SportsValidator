@@ -17,8 +17,8 @@ import TrackListItemCorner from "./TrackListItemCorner";
 require('require-context/register');
 
 class TrackingEditor extends Component {
-    cacheSize = 5;  // TODO BACKEND experiment with this to check performance
-    demoFrameSource = '../../../data/';//"../data/";
+    cacheSize = 5;  // TODO BACKEND experiment with this to check performance and set to best size
+    demoFrameSource = '../../../data/';
     framesCache = [];
     annotationsCache = [];
     cornersCache = [];
@@ -32,14 +32,14 @@ class TrackingEditor extends Component {
 
     state = {
 
-        dummy: true,
+        dummy: true,                // dummy property that is used to trigger rerenders after state change whenever desired
         // canvas: undefined,
-        demo: undefined,
+        demo: undefined,            // whether to use the demo frames or a real, user uploaded video if a user is logged in
         // trackListElements: [],
-        scalingFactor: undefined,
-        categories: [],             // read in from annotations file
+        scalingFactor: undefined,   // scaling factor for the video frames in order to match them to canvas size
+        categories: [],             // read in from annotations file now => BACKEND
         currentFrame: undefined,    //BACKEND
-        colorByCategory: true,      //Toggle between coloring BBoxes by Category or Player
+        colorByCategory: true,      //Toggle between coloring BBoxes by Category or Player => Maybe BACKEND if this is supposed to be persistent after reloading of the app (not really necessary in my opinion but might be nice for users)
         colorCategoryNumber: 1,     // for enabling multiple categories; which category to color the BBoxes by if colorByCategory is true;
         category_1_Colors: {        //BACKEND
             1: 'rgb(100, 0, 0)',
@@ -48,13 +48,13 @@ class TrackingEditor extends Component {
             4: 'rgb(100, 0, 100)'
         },
         cornerColor: 'green',
-        playerColors: {},    //BACKEND TODO; id: color (maybe also add corners)
+        playerColors: {},    //BACKEND; should contain entries in the form: id: color (maybe also add corners); so far the player colors are generated randomly
         idToName: {         //BACKEND
             0: "Peter",
             1: "Max",
             20: "Florian"
         },
-        labelVisibility: 'selected',      //selected, hover, always or never;
+        labelVisibility: 'selected',      //selected, hover, always or never;   => BACKEND in case this should be persistent on reload of page
         activeGroup: undefined,            //for TrackList -> Group Tab: Which trackListItemGroup is currently selected
         activeCorner: undefined            //for TrackList -> Corner Tab
     }
@@ -206,7 +206,6 @@ class TrackingEditor extends Component {
     }
 
     plotBBoxes = () => {
-        // TODO maybe add support for iscrowd (right now it is ignored), see/ask if it is used in backend
         let annotationsCurrentFrame = this.getAnnotationsForFrames(tracking.annotations, this.state.currentFrame, this.state.currentFrame);
         // console.log("ANNOTATIONS");
         // console.log(annotationsCurrentFrame);
@@ -357,7 +356,7 @@ class TrackingEditor extends Component {
 
     setTeam = (bBox, teamID) => {
         bBox.my.team = teamID;
-        // TODO BACKEND call backend (something like teamChange(bBox.my.player, teamID)
+        // TODO BACKEND call backend (something like BACKEND.teamChange(bBox.my.player, teamID)
         this.setState({dummy: !this.state.dummy});
     }
 
@@ -573,11 +572,15 @@ class TrackingEditor extends Component {
                     this.deselectCorner(id);
                 else
                     this.selectCorner(id);
+                break;
             case "group":
                 if(deselect)
                     this.setState({activeGroup: undefined});
                 else
                     this.setState({activeGroup: id});
+                break;
+            default:
+                console.warn("Invalid type argument: " + type);
         };
     };
 
@@ -591,7 +594,7 @@ class TrackingEditor extends Component {
             radius: 5,
             originX: 'center',
             originY: 'center',
-            fill: 'green',
+            fill: color,
             left: x,
             top: y,
             cornerSize: 4,
@@ -794,37 +797,36 @@ class TrackingEditor extends Component {
         return bBox;
     }
 
-
-    addNewRect = () => {
-
-        let dirty = true;
-        let addNewRect2 = (state, props) => {
-            let rect = new fabric.Rect({
-                left: 100,
-                top: 100,
-                fill: 'rgba(0, 0, 0, 0)',
-                stroke: this.state.cornerColor,
-                strokeWidth: 5,
-                width: 20,
-                height: 20,
-                padding: 0,  // to make sure the pixel coordinates are correct
-                cornerStyle: 'circle',
-                lockRotation: true
-            });
-
-            rect.hasBorders = false;    // disables the control borders (the lines connecting the controls the show up when object is selected
-            rect.strokeUniform = true;  // to keep the bounding box a consisten thickness, independent of its size
-
-            //Rect has properties aCoords (with coordinates for all 4 corners), width, heigth
-
-            let canvas = state.canvas;
-
-
-            return {canvas: canvas.add(rect)};
-        };
-
-        this.setState(addNewRect2);
-    }
+    // // This function was just used for testing, it simply adds a rectangle to the canvas
+    // addNewRect = () => {
+    //
+    //     let addNewRect2 = (state, props) => {
+    //         let rect = new fabric.Rect({
+    //             left: 100,
+    //             top: 100,
+    //             fill: 'rgba(0, 0, 0, 0)',
+    //             stroke: this.state.cornerColor,
+    //             strokeWidth: 5,
+    //             width: 20,
+    //             height: 20,
+    //             padding: 0,  // to make sure the pixel coordinates are correct
+    //             cornerStyle: 'circle',
+    //             lockRotation: true
+    //         });
+    //
+    //         rect.hasBorders = false;    // disables the control borders (the lines connecting the controls the show up when object is selected
+    //         rect.strokeUniform = true;  // to keep the bounding box a consisten thickness, independent of its size
+    //
+    //         //Rect has properties aCoords (with coordinates for all 4 corners), width, heigth
+    //
+    //         let canvas = state.canvas;
+    //
+    //
+    //         return {canvas: canvas.add(rect)};
+    //     };
+    //
+    //     this.setState(addNewRect2);
+    // }
 
     blink = (bBox) => {
         let originalColor = bBox.cornerColor;

@@ -132,7 +132,7 @@ element {
 }
 
 .FileOverviewListItemThumbnail {
-    /*margin: 5px;*/    /*GRASS BACKGROUND: Comment this in (and adjust the height of FileOverviewListItem accordingly (make it taller by 2x this margin, that need to be done in js file) */
+    /*margin: 5px;*/    /*GRASS BACKGROUND: Comment this in (and adjust the height of FileOverviewListItem accordingly (make it taller by 2x this margin, that needs to be done in js file) */
 }
 
 .FileOverviewListItemContainerLeft {

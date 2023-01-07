@@ -1,13 +1,8 @@
 import React, {Component} from 'react';
 import PropTypes from 'prop-types';
-import InputLabel from '@material-ui/core/InputLabel';
-import MenuItem from '@material-ui/core/MenuItem';
-import FormControl from '@material-ui/core/FormControl';
-import Select from '@material-ui/core/Select';
 import IconButton from '@material-ui/core/IconButton';
-import Button from '@material-ui/core/Button';
 
-import { EditText, EditTextarea } from 'react-edit-text';
+import { EditText } from 'react-edit-text';
 import 'react-edit-text/dist/index.css';
 
 import './TrackingEditor.css';

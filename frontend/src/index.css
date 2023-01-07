@@ -7,9 +7,12 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/*Set font-family inheritance for the Form elements use (they don't inherit it by default like most other elements') */
-/*TODO add Form elements as needed*/
+/*Set font-family inheritance for the Form elements used (they don't inherit it by default like most other elements') */
+/*add Form elements as needed*/
 button{
+  font-family: inherit;
+}
+input{
   font-family: inherit;
 }
 

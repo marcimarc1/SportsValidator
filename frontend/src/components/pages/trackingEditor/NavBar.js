@@ -1,10 +1,10 @@
 import React, {Component} from 'react';
 import PropTypes from 'prop-types';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faPlay, faPause, faChevronLeft, faStepBackward, faTag, faUndo, faPlus} from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPlay, faPause, faChevronLeft, faStepBackward, faUndo} from '@fortawesome/free-solid-svg-icons';
+// import { faTag, faPlus } from '@fortawesome/free-solid-svg-icons';
 import Slider from "./Slider"
 import "./NavBar.css"
-import InputLabel from "@material-ui/core/InputLabel";
 import Select from "@material-ui/core/Select";
 import MenuItem from '@material-ui/core/MenuItem';
 import FormControl from "@material-ui/core/FormControl";

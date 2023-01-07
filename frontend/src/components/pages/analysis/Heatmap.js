@@ -1,9 +1,5 @@
 import React, {Component} from 'react';
 import PropTypes from 'prop-types';
-import InputLabel from "@material-ui/core/InputLabel";
-import Select from "@material-ui/core/Select";
-import MenuItem from '@material-ui/core/MenuItem';
-import FormControl from "@material-ui/core/FormControl";
 import {fabric} from "fabric";
 import MaterialUISlider from "@material-ui/core/Slider";
 
@@ -186,7 +182,7 @@ class Heatmap extends Component {
 
     drawHeatmap = () => {
         if (this.props.positionData) {
-            for(let [_, indexListCurrentPlayer] of Object.entries(this.positionDataIndexByPlayer)) {
+            for(let [, indexListCurrentPlayer] of Object.entries(this.positionDataIndexByPlayer)) {     //[, xyz] ignores first element of returned array
                 for (let i = this.state.startFrame; i < this.state.endFrame; i = i + this.state.stepSize) {
 
                     // for (let i = this.state.startFrame; i < this.state.endFrame; i = i + this.state.stepSize) {
@@ -235,7 +231,6 @@ class Heatmap extends Component {
     }
 
     render() {
-        let width = 3840;
         return (
             <div className="Heatmap">
                 <canvas id="heatmap-canvas" width={this.props.canvasWidth} height={this.props.canvasHeight+this.legendTotalHeight} ></canvas>
@@ -247,7 +242,6 @@ class Heatmap extends Component {
                         </div>
                         <MaterialUISlider
                             className="StepSizeSlider"
-                            width={300}
                             value={this.state.stepSize}
                             min={1}
                             max={this.state.maxStepSize}
@@ -263,7 +257,6 @@ class Heatmap extends Component {
                         </div>
                         <MaterialUISlider
                             className="OpacitySlider"
-                            width={300}
                             value={this.state.opacity}
                             min={0}
                             max={1}
@@ -280,7 +273,6 @@ class Heatmap extends Component {
                         </div>
                         <MaterialUISlider
                             className="SizeSlider"
-                            width={300}
                             value={this.state.heatmapBubbleRadius}
                             min={1}
                             max={30}
@@ -297,7 +289,6 @@ class Heatmap extends Component {
                         </div>
                         <MaterialUISlider
                             className="FrameSlider"
-                            width={300}
                             value={[this.state.startFrame, this.state.endFrame]}
                             min={this.props.positionData[0].image_id}
                             max={this.props.positionData[this.props.positionData.length-1].image_id}

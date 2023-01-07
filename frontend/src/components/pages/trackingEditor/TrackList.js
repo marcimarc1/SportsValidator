@@ -1,10 +1,7 @@
 import React, {Component} from 'react';
-import PropTypes from 'prop-types';
 import './TrackingEditor.css';
 import {Button} from "@material-ui/core";
-import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faChevronLeft} from "@fortawesome/free-solid-svg-icons";
-import {ReactComponent as Add} from "../../../icons/plus.svg";
+// import {ReactComponent as Add} from "../../../icons/plus.svg";
 
 
 

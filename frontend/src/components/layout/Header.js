@@ -1,6 +1,5 @@
 import React, {Component} from 'react';
 import { Link } from 'react-router-dom';
-import {BrowserRouter as Router, Route} from 'react-router-dom';
 import {ReactComponent as HomeLogo} from '../../icons/home.svg';    //Loading SVG files as components as opposed to in an <img> tag lets us style them
 import {ReactComponent as AccountLogo} from '../../icons/account.svg';
 import PropTypes from 'prop-types';
@@ -21,6 +20,7 @@ class Header extends Component {
         let headerLinks = [];
 
         // find correct header links depending on current url
+        let runningIndex = 0;
         switch (true) {
             case path === "/":
                 // decided to use Button for this link instead
@@ -30,16 +30,19 @@ class Header extends Component {
             case path.split("/")[1] === "account":
             case path.split("/")[1] === "about":
             case path.split("/")[1] === "feedback":
-                headerLinks.push(<Link className="HeaderText turn-light-gray-on-hover" to="/about"> About </Link>);
-                headerLinks.push(<Link className="HeaderText turn-light-gray-on-hover" to="/feedback"> Feedback </Link>);
+                headerLinks.push(<Link key={runningIndex++} className="HeaderText turn-light-gray-on-hover" to="/about"> About </Link>);
+                headerLinks.push(<Link key={runningIndex++} className="HeaderText turn-light-gray-on-hover" to="/feedback"> Feedback </Link>);
                 break;
             case path.split("/")[1] === "trackingEditor":
-                headerLinks.push(<Link className="HeaderText turn-light-gray-on-hover" to={"/games"} > File Overview </Link>);
-                headerLinks.push(<Link className="HeaderText turn-light-gray-on-hover" to={"/analysis/"+this.id} > Analysis </Link>);
+                headerLinks.push(<Link key={runningIndex++} className="HeaderText turn-light-gray-on-hover" to={"/games"} > File Overview </Link>);
+                headerLinks.push(<Link key={runningIndex++} className="HeaderText turn-light-gray-on-hover" to={"/analysis/"+this.id} > Analysis </Link>);
                 break;
             case path.split("/")[1] === "analysis":
-                headerLinks.push(<Link className="HeaderText turn-light-gray-on-hover" to={"/games"} > File Overview </Link>);
-                headerLinks.push(<Link className="HeaderText turn-light-gray-on-hover" to={"/trackingEditor/"+this.id} > TrackingEditor </Link>);
+                headerLinks.push(<Link key={runningIndex++} className="HeaderText turn-light-gray-on-hover" to={"/games"} > File Overview </Link>);
+                headerLinks.push(<Link key={runningIndex++} className="HeaderText turn-light-gray-on-hover" to={"/trackingEditor/"+this.id} > TrackingEditor </Link>);
+                break;
+            default:
+                console.warn("Header seems to be in an unknown location and will not display any links!");
         }
 
         return (

@@ -42,8 +42,9 @@ class FileOverview extends Component {
             let updatedFileListItems = [...prevState.fileListItems]; // shallow copy which is fine here
             updatedFileListItems[id].name = name;
             return {fileListItems: updatedFileListItems};
-        }, this.render);        // TODO render is just to check if it works, delete again!
-        // when Backend is added, might make sense to leave that line of code and just rerender the changed object
+        });
+        // when Backend is added, might make sense to leave the above setState callMichael
+        // code and just rerender the changed object
         // instead of getting the complete data again and rerendering everything
     }
 

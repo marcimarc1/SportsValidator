@@ -15,7 +15,6 @@ import ListSubheader from "@material-ui/core/ListSubheader";
 
 
 
-import IconButton from '@material-ui/core/IconButton';
 import Button from '@material-ui/core/Button';
 import {EditTextarea} from "react-edit-text";
 
@@ -27,7 +26,7 @@ class TileTypeSelector extends Component {
         currentTeams: [],
         currentPlayers: [],
         currentNotes: "",
-        visibilities: {     // for which selections should be shown depending on previous selections
+        visibilities: {     // which selections should be shown depending on previous selections
             groupByTeams: false,
             teams: false,
             players: false,
@@ -54,6 +53,10 @@ class TileTypeSelector extends Component {
                 break;
             case "notes":
                 changes.notes = this.state.currentNotes;
+                break;
+            default:
+                // fall through
+                break;
         }
         this.props.selectTileType(changes);
     }

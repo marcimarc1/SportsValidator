@@ -3,15 +3,16 @@ import PropTypes from 'prop-types';
 import { EditTextarea } from 'react-edit-text';
 import 'react-edit-text/dist/index.css';
 
+// TODO BACKEND delete this again once Backend is implemented
 import dataBarchart1 from "../../../data/analysis_distance_barchart_Teams_1_2.json";
 import dataBarchart2 from "../../../data/analysis_distance_barchart_groupByTeams_Teams_1_2.json";
 import dataNewTile from "../../../data/analysis_new_tile_selections_1.json";
+
 import BarChart from "./BarChart";
 import TileTypeSelector from "./TileTypeSelector";
 import Heatmap from "./Heatmap";
 import "./Analysis.css";
 
-import {ReactComponent as Delete} from "../../../icons/delete.svg";
 import IconButton from "@material-ui/core/IconButton";
 import {faTrash, faChevronLeft} from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
@@ -24,7 +25,7 @@ class AnalysisTile extends Component {
         data: undefined
     }
 
-    // for testing without backend
+    // for testing without backend TODO BACKEND can be removed again
     annotations;
     teams;
 
@@ -93,9 +94,7 @@ class AnalysisTile extends Component {
 
         console.log(annotations);
         let firstAnnotation = annotations.findIndex(element => element.image_id == firstFrame);
-        console.log("first Annotation: " + firstAnnotation);
         let lastAnnotation = annotations.findIndex(element => element.image_id == lastFrame + 1);
-        console.log("last Annotation: " + lastAnnotation);
 
         let cachedAnnotations = annotations.slice(firstAnnotation, lastAnnotation);
         console.log(cachedAnnotations);
@@ -178,6 +177,8 @@ class AnalysisTile extends Component {
                         />
                     </div>;
                 break;
+                default:
+                    console.warn("Encountered an unknown Tile Type (props.type): " + this.props.type);
             }
         }
 

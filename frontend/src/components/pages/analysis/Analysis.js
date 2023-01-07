@@ -14,7 +14,6 @@ class Analysis extends Component {
         // players: same as teams
         // groupByTeams:
         {id: 0, type: "distance-barchart", groupByTeams: false, teams: [1, 2], players: undefined},
-        {id: 1, type: "distance-barchart", groupByTeams: true, teams: undefined, players: undefined},
         {id: 2, type: "distance-barchart", groupByTeams: true, teams: undefined, players: undefined},
         {id: 3, type: "notes", notes: "As you can cleary see, the players of one of the team ran further doing the game."},
         {id: 4, type: "new"},
@@ -25,7 +24,7 @@ class Analysis extends Component {
 
     state = {
         analysisTiles: [],
-        order: [],
+        order: [],      // a list of tile ids, that defines in which order the tiles are displayed
         filename: undefined
     }
 
@@ -39,10 +38,12 @@ class Analysis extends Component {
         let order = undefined;
         // TODO BACKEND
         // let filename = BACKEND.getFilename(this.id);
-        // let analyses, order = BACKEND.getAnalyses(this.id); // should return data in the same format as this.defaultAnalysisTiles or undefined if there are no analyses/charts yet
+        // let analyses, order, runningIndex = BACKEND.getAnalyses(this.id); // should return data in the same format as this.defaultAnalysisTiles or undefined if there are no analyses/charts yet
+        // if analyses is not undefined, the order also cannot be undefined!
         let filename = this.id === 1?"2022-08-01: Team 1 vs. Team 2":"2021-07-15: Team 1 vs. Team 3";
         if(analyses) {
             this.setState({analysisTiles: analyses, order, filename});
+            // this.runningIndex = runningIndex; // TODO BACKEND comment this in to set running index
         }
         else {
             this.setState({analysisTiles: this.defaultAnalysisTiles, order: this.defaultAnalysisTiles.map((tile) => tile.id), filename});   // TODO BACKEND maybe get rid of default analyses once Backend is done, this is just for demo/development purposes
@@ -99,7 +100,7 @@ class Analysis extends Component {
         }
 
         // Do other / "normal" changes of tile
-        if (changes.hasOwnProperty("type"))
+        if (changes.hasOwnProperty("type")) // if the type changes, attributes of the old tile have to be discarded and only the new ones given in changes are applied to the tile of the new type
             this.setState((prevState) => ({analysisTiles: prevState.analysisTiles.map((tile) => tile.id === id ? {id: tile.id, ...changes} : tile)}));
         else
             this.setState((prevState) => ({analysisTiles: prevState.analysisTiles.map((tile) => tile.id === id ? {...tile, ...changes} : tile)}));
