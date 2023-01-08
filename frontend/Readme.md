@@ -24,4 +24,4 @@ For making a production build of the app have a look at https://create-react-app
     
 ### Further Documentation
 
-For my final report on this webapp which includes an overview of the features and the development process as well as documentation for further development, see the file ../documentation/frontend/final_report/Final_Report_Frontend.pdf
+For my final report on this webapp which includes an overview of the features and the development process as well as documentation for further development, see the file ../documentation/frontend/final_report/final_report_frontend.pdf

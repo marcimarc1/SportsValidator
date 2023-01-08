@@ -1,0 +1,56 @@
+\chapter{Einleitung}
+
+Dieser Bericht stellt den Abschluss meines Interdisziplinären Projektes (IDPs) dar, in dem ich das Frontend einer Webapp zur Spielanalyse entworfen und entwickelt habe. Das Projekt wurde von Marc Schmid sowie Professor Dr. Martin Lames vom Lehrstuhl für Trainingswissenschaft und Sportinformatik der Fakultät für Sport- und Gesundheitswissenschaften betreut.\\
+Nutzer der Webapp können Drohnenaufnahmen aus Vogelperspektive von unterschiedlichen Spielsportarten hochladen, diese durch Algorithmen des Lehrstuhls annotieren lassen (diese Funktion wird zukünftig von einem momentan noch nicht exisitierenden Backend bereitgestellt werden), die Annotierungen korrigieren oder erweitern und Spielanalysen mit Heatmaps und Diagrammen erstellen.
+
+Ich werde den Entwicklungsprozess beschreiben und dabei auch Design- und Entwicklungsentscheidungen begründen, sowie einen Überblick über Benutzung als auch Implementierung der Webapp geben. Dieses Dokument ist auch als Guide zur Weiterentwicklung des Frontends sowie zur Integration des Backends gedacht und enthält dahingehende Hinweise. Außerdem beinhaltet es einige Vorschläge zur Weiterentwicklung.
+
+\section{Motivation und Projektbeschreibung}
+
+Bild basiertes Video Tracking ist eines von vielen elektronischen Performance und
+Tracking Systemen (EPTS), das zur Positionsbestimmung von Spielern benutzt wird.
+Genaue Positionserkennung und -extraktion in Teamsportarten ist ein integraler
+Bestandteil der Analyse von Einzelspielern und Taktikanalyse im Training und
+Wettkampf. Hinsichtlich dessen ist ein Tool zu Extraktion von zuverlässigen
+Informationen über den Spielzustand essentiell. Gerade in professionellem Umfeld
+bei Sportarten, in denen viel Förderung, mediale Aufmerksamkeit und finanzielle Mittel vorhanden sind, wird Derartiges bereits sehr intensiv benutzt. Existierende Lösungen
+sind allerdings mit sehr hohen Kosten verbunden, werden oft spezifisch angepasst
+und setzen oft auf weitere, ebenfalls sehr teure Sensoren neben normalen Kameras.
+\\
+\\
+Im Rahmen dieses IDPs soll eine erste Version einer Pilotplattform erstellt werden,
+die videobasierte Spielanalyse auch für Nischensportarten und/oder weniger
+hochklassige Teams ermöglicht.
+Diese Plattform soll Funktionen zum Hochladen von eigenem Videomaterial bieten,
+welches dann mit bereits aus vorhergehender Forschung des Lehrstuhls für
+Trainingswissenschaft und Sportinformatik vorhandenen Methoden und Algorithmen
+analysiert wird. Die Ergebnisse der Analyse werden dem Benutzer schließlich in einem
+Webinterface dargestellt.
+Diese Plattform soll für verschiedene Sportarten geeignet sein, auch für ungeübte
+Benutzer leicht und intuitiv zu bedienen sein und modular und erweiterbar gestaltet
+sein.
+\\
+Dieses IDP umfasst den Entwurf und die Implementierung dieses User
+Interfaces. Ein Backend ist momentan noch nicht vorhanden und war auch nicht Teil diese IDPs. Es soll in Zukunft noch entwickelt und in die Webapp integriert werden.
+
+
+\section{Meilensteine}
+
+Bei der Planung des Projektes wurden folgende Meilensteine definiert:
+
+\begin{enumerate}
+    \item Auswahl und Einarbeitung in die zu verwendenden Frameworks, Libraries und Webdevelopment/\linebreak -design im Allgemeinen sowie grobes Design und Planung des Online Interfaces hinsichtlich Funktionalität und Optik
+    \item Implementierung des User Interfaces zum Eingriff ins Tracking, z.B. zur Fehlerkorrektur
+    \item Ausarbeitung und Implementierung von Statistiken und Visualisierungen der Trackingdaten
+    \item Erstellen von Dokumentation und Präsentation der Webapp
+\end{enumerate}
+
+Insgesamt wurden für das Projekt 330 Stunden oder ca. 2 Monate Vollzeit Arbeit veranschlagt, was dem vorgesehenen Arbeitsaufwand von 11 Credits entspricht. Meilenstein 1 und 4 wurde jeweils ein Sechstel dieser Zeit zugeordnet und den Meilensteinen 2 und 3 jeweils ein Drittel. Aufgrund der Komplexität und des Umfanges des entwickelten Tracking Editors nahm Meilenstein 2 und damit auch das gesamte Projekt mehr Aufwand als veranschlagt in Anspruch, die genaue Arbeitszeit wurde allerdings nicht dokumentiert. Insgesamt wurden alle geplanten Features und Funktionalitäten sowie einiges was darüber hinaus geht umgesetzt. Dennoch gibt es noch Verbesserungspotential für mehr Funktionsumfang oder eine vereinfachte Benutzung der Webapp, die in Kapitel \ref{chapter:vorschlaege-weiterentwicklung} beschrieben sind. Natürlich sollte dennoch zunächst die Entwicklung und Integration des Backends im Vordergrund stehen, um die Anwendung mit realen Daten nutzen und testen zu können und so bereits Anwenderfeedback für die weitere Entwicklung zu sammeln.
+
+
+\section{Begleitende Vorlesung}
+
+Die begleitenden Vorlesungen sind Grundlagen der Trainingswissenschaften 1 \& 2.
+Diese stehen in starker Verbindung mit dem Projekt, da die zu entwickelnde Plattform letztendlich dazu genutzt werden soll, das Training des analysierten Teams zu verbessern. Dazu werden Videodaten von Spielen und/oder Trainings analysiert mit dem Ziel, gezielte Ansatzpunkte zur Verbesserung des Trainings und dadurch eine allgemeine Leistungssteigerung zu erreichen.
+
+Eine fundierte Kenntnis über Training im allgemeinen und speziell Möglichkeiten und Methoden zur gezielten Leistungssteigerung in klar definierten Bereichen ist daher von großem Vorteil. Mit dieser kann eingeschätzt werden, welche Auswertungen und Statistiken den höchsten Nutzen für den oben beschrieben Zweck erbringen und wie diese präsentiert und gegliedert werden sollten.
