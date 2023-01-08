@@ -12,8 +12,8 @@ import {ReactComponent as Delete} from "../../../icons/delete.svg";
 class TrackListItemGroup extends Component {
 
     handleChangeName = (obj) => {
-        // TODO
-        // this.props.setName(this.props.id, this.props.name, obj.value);
+        let newName = obj.value;
+        this.props.setName(this.props.id, newName);
     }
 
     delete = () => {
@@ -28,7 +28,6 @@ class TrackListItemGroup extends Component {
         if(selected) {
             style['color'] = 'FFF';
         }
-
         let name = this.props.name ? this.props.name : this.props.id;
 
         // selects or deselects (if its already selected) the clicked item (e.g. player)

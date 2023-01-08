@@ -96,9 +96,9 @@ class TrackingEditor extends Component {
             cacheSizeBehind += 1;
         }
 
-        // load video frames to cache (TODO not working right now, probably because of require, just sticking to 1 frame for now)
+        // load video frames to cache (not working right now, probably because of require, just sticking to 1 frame for now)
         for(let i=currentFrameNumber-cacheSizeBefore; i<=currentFrameNumber+cacheSizeBehind; i++) {
-            // TODO if this code is reused, check if frame is already cached before loading it
+            // // if this code is reused, check if frame is already cached before loading it
             // let framePath = this.getDemoFramePath(i);
             // let currentFrame = require(framePath);     //probably/maybe bad to use import here, but will be changed once API is there anyways
             // this.framesCache.push({index: i, data: currentFrame});
@@ -133,7 +133,7 @@ class TrackingEditor extends Component {
         }
 
         //load corners
-        // TODO BACKEND TODO BACKEND corners = loadCorners(this.id);
+        // TODO BACKEND corners = BACKEND.loadCorners(this.id);
         let corners = cornerfile.corners;
         this.cornersCache = this.getAnnotationsForFrames(corners, firstCachedFrame, lastCachedFrame);
 
@@ -175,7 +175,7 @@ class TrackingEditor extends Component {
     componentDidUpdate(prevProps, prevState) {
 
         if(prevState.currentFrame != this.state.currentFrame) {
-            // TODO optional: take prevState.currentFrame - this.state.currentFrame and adjust Cache accordingly
+            // if using cache: take prevState.currentFrame - this.state.currentFrame and adjust Cache accordingly
         }
     }
 
@@ -342,6 +342,18 @@ class TrackingEditor extends Component {
         return this.state.categories
     }
 
+    getTeamName = (teamID) => {
+        let teams = this.getTeams();
+        let currentTeam = teams.find((t) => t.id == teamID);
+        if(currentTeam && currentTeam.name)
+            return currentTeam.name;
+        else {
+            // This might be normal behaviour depending on the design of the backend. The code can handle teams without names.
+            console.warn("Team " + teamID + "does not have a name assigned!");
+            return undefined;
+        }
+    }
+
     setTeam = (bBox, teamID) => {
         bBox.my.team = teamID;
         // TODO BACKEND call backend (something like BACKEND.teamChange(bBox.my.player, teamID)
@@ -356,12 +368,13 @@ class TrackingEditor extends Component {
         bBox.my.playerIdOrNameObject.set('text', "Name: " + name);
         this.canvas.requestRenderAll();
         //bBox.my.playerIdOrNameObject.visible = false;
-        // TODO BACKEND call backend
+        // TODO BACKEND call backend to update name
         this.setState((state) => ({idToName: {...state.idToName}[bBox.my.player] = name}));
     }
 
-    setTeamName = () => {
-        // TODO
+    setTeamName = (teamId, name) => {
+        // TODO BACKEND call backend to update team name
+        this.setState((state) => ({categories: state.categories.map((category) => category.id == teamId ? {...category, name: name} : category)}));
     }
 
     // returns a list with elements {id: id, name: name or undefined} for each player; playerName is undefined if player was not given a name
@@ -466,6 +479,8 @@ class TrackingEditor extends Component {
             (category) => {
                 propsTracklist.groups = propsTracklist.groups.concat([<TrackListItemGroup key={runningIndex++}
                                                                                           id={category.id}
+                                                                                          name={category.name}
+                                                                                          setName={this.setTeamName}
                                                                                           activeGroup={this.state.activeGroup}
                                                                                           changeSelection={this.changeSelection}
                                                                                           color={this.getCategoryColor(category.id)}
@@ -475,7 +490,7 @@ class TrackingEditor extends Component {
 
         return (
             <div className="TrackingEditor">
-                <NavBar undoRedo={this.undoRedo} switchFrame={this.switchFrame} currentFrame={this.state.currentFrame} colorByCategory={this.state.colorByCategory} handleSwitchColorByCategory={this.handleSwitchColorByCategory} labelVisibility={this.state.labelVisibility} setLabelVisibility={this.setLabelVisibility} maxFrame={10} width={canvasWidth}/>   {/*Todo: pass correct maxFrame*/}
+                <NavBar undoRedo={this.undoRedo} switchFrame={this.switchFrame} currentFrame={this.state.currentFrame} colorByCategory={this.state.colorByCategory} handleSwitchColorByCategory={this.handleSwitchColorByCategory} labelVisibility={this.state.labelVisibility} setLabelVisibility={this.setLabelVisibility} maxFrame={10} width={canvasWidth}/>   {/*TODO BACKEND: pass correct maxFrame*/}
                 <canvas id="tracking-editor-canvas" width="1440" height="810" ></canvas>
                 <TrackList>
                     {/*<h1>Test 1</h1>*/}
@@ -666,6 +681,7 @@ class TrackingEditor extends Component {
         let visible = this.state.labelVisibility === "always" ? true : false;
         let id = args.id;
         let team = args.category_id;
+        let teamName = this.getTeamName(team);  // this might be undefined if there is no name for the team
         let player = args.attributes.track_id
         let name = player in this.state.idToName ? this.state.idToName[player] : undefined;
         let idText = name ? "Name: " + name : "Player ID: " + player.toString();
@@ -678,7 +694,7 @@ class TrackingEditor extends Component {
             left: textLeft,
             top: top
         });
-        let teamObject = new fabric.Text("Team: " + team.toString(), {
+        let teamObject = new fabric.Text("Team: " + (teamName ? teamName : team.toString()), {
             fontSize,
             fontFamily,
             visible,
