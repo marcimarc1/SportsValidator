@@ -8,11 +8,11 @@ import {faPlus} from "@fortawesome/free-solid-svg-icons";
 
 class Analysis extends Component {
 
-    id = -1;
+    id = -1;    // id of the current game that is analyzed
     defaultAnalysisTiles = [
         // teams: considers players from all (undefined) or specific teams (team id)
         // players: same as teams
-        // groupByTeams:
+        // groupByTeams: if set to true, data is depicted by team and not by player
         {id: 0, type: "distance-barchart", groupByTeams: false, teams: [1, 2], players: undefined},
         {id: 2, type: "distance-barchart", groupByTeams: true, teams: undefined, players: undefined},
         {id: 3, type: "notes", notes: "As you can cleary see, the players of one of the team ran further doing the game."},

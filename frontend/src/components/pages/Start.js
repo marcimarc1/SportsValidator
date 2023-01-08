@@ -15,6 +15,8 @@ class Start extends Component {
         // TODO BACKEND
         //let loggedIn = BACKEND.isLoggedIn();
 
+        // TODO BACKEND User/Login Management, probably best done in App.js ?
+
         if(loggedIn)
             this.setState({loggedIn: loggedIn});
     }

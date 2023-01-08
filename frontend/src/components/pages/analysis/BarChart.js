@@ -12,14 +12,6 @@ class BarChart extends Component {
     componentDidMount() {
         const ctx = document.getElementById("Chart"+this.props.tileId).getContext("2d");
         let rawData = this.props.data;
-        // if(this.props.groupByTeams) {
-        //     let datasets = [];
-        //     let currentTeam = this.props.data.teams[0];
-        //     for(let i = 0; i < this.props.data.teams.length; i++) {
-        //
-        //     }
-        //
-        // }
 
         let chartColors;
         let datasets = [];
@@ -35,7 +27,7 @@ class BarChart extends Component {
             let counter = 0; // to assign colors to teams
             for(const t of teams) {
                 let booleanMask = rawData.teams.map((e) => e === t);
-                let indices = booleanMask.map((e, index) => e?index:-1).filter((e) => e >= 0);
+                let indices = booleanMask.map((e, index) => e?index:-1).filter((e) => e >= 0);  //generate a list of all indices of datapoints to keep
 
                 let currentDataset = {
                     label: rawData.teamNames[t],

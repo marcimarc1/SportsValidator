@@ -137,8 +137,7 @@ class TrackingEditor extends Component {
         let corners = cornerfile.corners;
         this.cornersCache = this.getAnnotationsForFrames(corners, firstCachedFrame, lastCachedFrame);
 
-        console.log("finished filtering and caching annotations!");
-
+        // console.log("finished filtering and caching annotations!");
 
         // Setup Canvas and Fabric
         let canvas = new fabric.Canvas('tracking-editor-canvas');
@@ -214,17 +213,6 @@ class TrackingEditor extends Component {
             newCanvasElements.push(this.createNewBBox(annotationsCurrentFrame[i]));
         }
 
-        // Add labels and bounding boxes to canvas; Start with labels so they are behind all bBoxes => bBoxes behind labels can be selected
-        // let canvasCopy = this.canvas;
-        // newCanvasElements.forEach(bBox => canvasCopy.add(bBox.playerIdOrNameObject, bBox.teamObject, bBox.bBoxIdObject));
-        // newCanvasElements.forEach(bBox => canvasCopy.add(bBox));
-
-        // let newTrackListItems = [];
-
-        // Using concat() because for push() (which would be more appropriate) because the HTML Tag syntax did only work in a list
-        // newCanvasElements.forEach(bBox => newTrackListItems = newTrackListItems.concat([<TrackListItemPlayer bBox={bBox} blink={this.blink} />]));
-
-
         this.canvasElementsPlayers = this.canvasElementsPlayers.concat(newCanvasElements);      // concat does not mutate the original array
         // instead of the following in order to not trigger endless rerender!
         // this.setState({
@@ -255,15 +243,15 @@ class TrackingEditor extends Component {
         }
     }
 
-    // function to be passed to NavBar, currentFrame is only used for initialization and then NavBar manages the frame number
-    // Using a function this way instead of passing a prop directly should make NavBar not remount every time the Frame changes
-    getFrame = (i) => {
-        let ret = this.framesCache.find(element => element.index = i);
-        if(ret === undefined) {
-            console.warn("tried to get Frame " + i + ", but that frame is not yet loaded into TrackingEditor.framesCache");
-        }
-        return ret;
-    }
+    // // Function to be passed to NavBar, currentFrame is only used for initialization and then NavBar manages the frame number
+    // // Using a function this way instead of passing a prop directly should make NavBar not remount every time the Frame changes
+    // getFrame = (i) => {
+    //     let ret = this.framesCache.find(element => element.index = i);
+    //     if(ret === undefined) {
+    //         console.warn("tried to get Frame " + i + ", but that frame is not yet loaded into TrackingEditor.framesCache");
+    //     }
+    //     return ret;
+    // }
 
     // parameter check is already done in NavBar so this function expects a valid value for i
     switchFrame = (i) => {
@@ -332,7 +320,7 @@ class TrackingEditor extends Component {
         return color;
     }
 
-    // With this implementation, backend should make sure that there is always a color defined. If it is undefined, it could just return e.g. white
+    // TODO BACKEND NOTE: With this implementation, backend should make sure that there is always a color defined. If it is undefined, it could just return e.g. white
     getCategoryColor = (categoryId) => {
         let categoryColorDict = `category_${this.state.colorCategoryNumber}_Colors`;
         return this.state[categoryColorDict][categoryId];
@@ -360,6 +348,7 @@ class TrackingEditor extends Component {
         this.setState({dummy: !this.state.dummy});
     }
 
+    // set Name of player
     setName = (bBox, name) => {
         fabric.Object.prototype.objectCaching = false;
         // console.log("setting name of " + bBox.my.player + " to " + name);
@@ -369,6 +358,10 @@ class TrackingEditor extends Component {
         //bBox.my.playerIdOrNameObject.visible = false;
         // TODO BACKEND call backend
         this.setState((state) => ({idToName: {...state.idToName}[bBox.my.player] = name}));
+    }
+
+    setTeamName = () => {
+        // TODO
     }
 
     // returns a list with elements {id: id, name: name or undefined} for each player; playerName is undefined if player was not given a name
@@ -422,16 +415,28 @@ class TrackingEditor extends Component {
     }
 
     render = () => {
+        let runningIndex = 0;   // runningIndex is used for list key instead of player/corner/group Id because TrackListItemAdd is the first element and needs a unique key too
         let propsTracklist = {
-            players: [<TrackListItemAdd add={this.add("player")} blink={this.blink} />],
-            corners: [<TrackListItemAdd add={this.add("corner")} />],
-            groups: [<TrackListItemAdd add={this.add("group")} />]
+            players: [<TrackListItemAdd key={runningIndex} add={this.add("player")} blink={this.blink} />],
+            corners: [<TrackListItemAdd key={runningIndex} add={this.add("corner")} />],
+            groups: [<TrackListItemAdd key={runningIndex} add={this.add("group")} />]
         };
+        runningIndex++;
+        let resetRunningIndex = runningIndex;
         // let groupIds = [];
         let canvasWidth = this.canvas?.getWidth()   // ?. is conditional chaining, returns undefined if this.canvas is undefined
         this.canvasElementsPlayers.forEach(
             (bBox) => {
-                propsTracklist.players = propsTracklist.players.concat([<TrackListItemPlayer bBox={bBox} changeSelection={this.changeSelection} setName={this.setName} blink={this.blink} getTeams={this.getTeams} setTeam={this.setTeam} delete={this.deletePlayer} getSwapMenuEntries={this.getPlayers} swap={this.swap} />]);
+                propsTracklist.players = propsTracklist.players.concat([<TrackListItemPlayer key={runningIndex++}
+                                                                                             bBox={bBox}
+                                                                                             changeSelection={this.changeSelection}
+                                                                                             setName={this.setName}
+                                                                                             blink={this.blink}
+                                                                                             getTeams={this.getTeams}
+                                                                                             setTeam={this.setTeam}
+                                                                                             delete={this.deletePlayer}
+                                                                                             getSwapMenuEntries={this.getPlayers}
+                                                                                             swap={this.swap} />]);
 
                 // // is now done below, this version extracts all the teams from the bBoxes, it also works on tracking files that do not provide a category Object with a summary of all categories.
                 // let group = bBox.my.team;
@@ -445,19 +450,26 @@ class TrackingEditor extends Component {
                 // }
             });
 
+        runningIndex = resetRunningIndex;
         this.canvasElementsCorners.forEach(
             (corner) => {
-                propsTracklist.corners = propsTracklist.corners.concat([<TrackListItemCorner id={corner.my.id} activeCorner={this.state.activeCorner} changeSelection={this.changeSelection} delete={this.deleteCorner} /> ]);
+                propsTracklist.corners = propsTracklist.corners.concat([<TrackListItemCorner key={runningIndex++}
+                                                                                             id={corner.my.id}
+                                                                                             activeCorner={this.state.activeCorner}
+                                                                                             changeSelection={this.changeSelection}
+                                                                                             delete={this.deleteCorner} /> ]);
             }
         );
 
+        runningIndex = resetRunningIndex;
         this.state.categories.forEach(
             (category) => {
-                propsTracklist.groups = propsTracklist.groups.concat([<TrackListItemGroup id={category.id}
-                                                                                              activeGroup={this.state.activeGroup}
-                                                                                              changeSelection={this.changeSelection}
-                                                                                              color={this.getCategoryColor(category.id)}
-                                                                                              delete={this.deleteGroup}/>]);
+                propsTracklist.groups = propsTracklist.groups.concat([<TrackListItemGroup key={runningIndex++}
+                                                                                          id={category.id}
+                                                                                          activeGroup={this.state.activeGroup}
+                                                                                          changeSelection={this.changeSelection}
+                                                                                          color={this.getCategoryColor(category.id)}
+                                                                                          delete={this.deleteGroup}/>]);
             }
         )
 
@@ -505,7 +517,7 @@ class TrackingEditor extends Component {
         let activeGroup;
         this.canvasElementsPlayers.forEach(bBox => {
             if (bBox.my.id == id) {
-                let bBoxDeepCopy = bBox;    //TODO the cleaner/correct version would be to do a deep clone as indicated (but not done) here. JS does not really have a deep clone functionality.
+                let bBoxDeepCopy = bBox;    // the cleaner/correcter version would be to do a deep clone as indicated (but not done) here. JS does not really have a deep clone functionality.
                 activeGroup = bBox.my.team;
                 if((this.canvas.getActiveObject()?.my?.id !== bBoxDeepCopy.my.id) || this.canvas.getActiveObject()?.my?.player === undefined) { // 1st: comparison by reference which is intended in this case; 2nd condition: To catch the case that active Object is e.g. corner which might have the same id
                     this.canvas.setActiveObject(bBoxDeepCopy);  //necessary so that canvas behaves as expected, e.g. clicking in empty spot clears selection
@@ -725,12 +737,7 @@ class TrackingEditor extends Component {
                 bBox.my.bBoxIdObject.set('visible', vis);}
         };
 
-
-
-
-
         // bBox.cornerSize = Math.min(bBox.width, bBox.height) / ... // Dynamically change corner size so they are more visible on bigger BBoxes? Probably do not do it
-
 
         bBox.on({
             'selected': () => {
@@ -743,7 +750,6 @@ class TrackingEditor extends Component {
             }
         });
 
-
         bBox.on({
             'deselected': () => {
                 this.deselectBBox(id);
@@ -752,11 +758,6 @@ class TrackingEditor extends Component {
         });
 
         let updateTextLocationAccordingToBBox = (options) => {
-            // console.log("Box is moving");
-            // console.log(options);
-
-
-
             let textLeft = bBox.left + bBox.width * bBox.scaleX + textHorizontalOffset;
             bBox.my.playerIdOrNameObject.set('left', textLeft);
             bBox.my.teamObject.set('left', textLeft);
@@ -765,9 +766,7 @@ class TrackingEditor extends Component {
             bBox.my.playerIdOrNameObject.set('top', bBox.top).setCoords();
             bBox.my.teamObject.set('top', (bBox.top + textVerticalDistance)).setCoords();
             bBox.my.bBoxIdObject.set('top', (bBox.top + 2 *textVerticalDistance)).setCoords();
-
         }
-
 
         bBox.on({
             'moving': updateTextLocationAccordingToBBox,
@@ -788,11 +787,10 @@ class TrackingEditor extends Component {
             }
         });
 
-
         // this.setState({canvas: this.state.canvas.add(bBox, id, team, player)});
         // this.setState({canvas: this.state.canvas.add(group)});
 
-        this.canvas.add(bBox, bBox.my.playerIdOrNameObject, bBox.my.teamObject, bBox.my.bBoxIdObject);
+        this.canvas.add(bBox.my.playerIdOrNameObject, bBox.my.teamObject, bBox.my.bBoxIdObject, bBox);
 
         return bBox;
     }
@@ -931,7 +929,7 @@ class TrackingEditor extends Component {
 
         // remove from canvasElementsPlayers
         let stateUpdate = (state) => {
-            // done below this function now since canvasElementsPlayers is moved out of state
+            // the following is done below this function now since canvasElementsPlayers is moved out of state
             // let canvasElementsPlayers = [...state.canvasElementsPlayers];
             // canvasElementsPlayers.splice(canvasElementsPlayers.indexOf(bBox), 1); // remove bBox
             // let stateModifier = {canvasElementsPlayers: canvasElementsPlayers};
@@ -995,12 +993,12 @@ class TrackingEditor extends Component {
 
 
 TrackingEditor.propTypes = {
-    video: PropTypes.bool.isRequired,
+    demo: PropTypes.bool.isRequired,
     startFrame: PropTypes.number
 };
 
 // TrackingEditor.defaultProps = {
-//     video: "Demo",
+//     demo: false,
 //     startFrame: 1
 // };
 

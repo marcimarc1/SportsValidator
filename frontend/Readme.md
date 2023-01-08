@@ -14,7 +14,9 @@ See for example https://docs.npmjs.com/downloading-and-installing-node-js-and-np
     In case that does not work you can try deleting frontend/package-lock.json and try again.  
     If there are any dependency issues you can try running `npm audit fix`.  
     
-    - `npm start` to build the app in development mode. This should automatically run the app locally and open a browser window. The app is usually served by default at localhost:3000.
+    - `npm start` to build the app in development mode. This should automatically run the app locally and open a browser window. The app is usually served by default at localhost:3000.  
+      
+In case the HOST environmental variable is set, the app might not be served at localhost. Try unsetting it temporarily by running `unset HOST` in your terminal or change your bash configuration in order to not set it (see https://stackoverflow.com/questions/53912056/npm-start-on-new-create-react-app-build-returns-elifecycle-error for more information and instructions).
     
 Currently, the Tracking Editor requires a reload (just refresh the page manually) in order to show the first frame in the tracking editor.
 

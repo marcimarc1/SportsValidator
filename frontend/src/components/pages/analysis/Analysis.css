@@ -1,5 +1,7 @@
 element {
-    --my-text-shadow: 3px 3px 10px rgba(0, 0, 0, 0.4), -3px -3px 10px rgba(0, 0, 0, 0.1);
+    /* Ideally, text and box shadows should be defined here (or in a different CSS file that is then also imported everywhere else these variables are then used) as variables so that they can be changes in one place instead of everywhere they are used. */
+    /* However, setting them like below did not work. */
+    /*--my-text-shadow: 3px 3px 10px rgba(0, 0, 0, 0.4), -3px -3px 10px rgba(0, 0, 0, 0.1);*/
 }
 
 h1 {

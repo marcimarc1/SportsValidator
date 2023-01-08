@@ -13,7 +13,7 @@ import Switch from "@material-ui/core/Switch";
 
 class NavBar extends Component {
 
-    // Playing frames (what happens when pressing the Play button is currently working but not very smoothly.
+    // Playing frames (what happens when pressing the Play button) is currently working but not very smoothly.
     // Caching Frames should help but I believe this should be done together with the Backend
     // because in the end the frames will not be read from disk anyway.
     state = {
@@ -30,7 +30,6 @@ class NavBar extends Component {
     }
 
     switchFrame = (i) => () => {
-        // TODO BACKEND this needs to be changed in case frame numbers start from 0 instead of 1
         if(i != this.props.currentFrame) {
             this.props.switchFrame(i);
         }
@@ -59,7 +58,7 @@ class NavBar extends Component {
     }
 
     render() {
-        let visibilityOptions = ["always", "selected", "hover", "never"].map(v => <MenuItem value={v}>{v}</MenuItem>);
+        let visibilityOptions = ["always", "selected", "hover", "never"].map((v, index) => <MenuItem key={index} value={v}>{v}</MenuItem>);
         return (
             <div  className="NavBar"> {/*style={{width: this.props.width}}*/}
                 <div className="NavBarUndoRedo">
@@ -127,14 +126,13 @@ class NavBar extends Component {
 NavBar.propTypes = {
     undoRedo: PropTypes.func.isRequired,
     switchFrame: PropTypes.func.isRequired,
-    currentFrame: PropTypes.func.isRequired,
+    currentFrame: PropTypes.number,
     colorByCategory: PropTypes.bool.isRequired,
     handleSwitchColorByCategory: PropTypes.func.isRequired,
     labelVisibility: PropTypes.string.isRequired,
     setLabelVisibility: PropTypes.func.isRequired,
     // add: PropTypes.func.isRequired,
-    maxFrame: PropTypes.number.isRequired,
-    width: PropTypes.number.isRequired
+    maxFrame: PropTypes.number.isRequired
 };
 
 export default NavBar;

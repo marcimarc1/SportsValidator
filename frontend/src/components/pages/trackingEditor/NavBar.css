@@ -1,4 +1,3 @@
-
 .Pointer {
     cursor: pointer;
 }
@@ -32,7 +31,6 @@
 
 .NavBarTransportButton {
     margin: 0 3px;  /* top/bottom left/right margin */
-
 }
 
 .NavBarTransportButtonPlay .NavBarTransportButtonPause {
@@ -80,9 +78,6 @@
 
 #labeling-select-label {
     margin-left: 5px;
-}
-
-.NavBarLabelVisibilityDropdownIcon {
 }
 
 .Label {

@@ -121,7 +121,7 @@ canvas {
 
 
 /* Font weight is working but not the rest? not even display: none ?? probably has something to do with react-edit-text package,
-for now just using style property of EditText component */
+for now just using style property of EditText component in JS code*/
 .TrackListItemName {
     /*font-weight: lighter;*/
     margin-top: 0;

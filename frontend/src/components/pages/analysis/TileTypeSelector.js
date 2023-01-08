@@ -140,7 +140,7 @@ class TileTypeSelector extends Component {
             let moreThanOneTeam = Object.entries(this.props.data?.teams).length > 1;
             for(const [key, value] of Object.entries(this.props.data?.teams)) {
                 if(moreThanOneTeam)
-                    playersMenuItems.push(<ListSubheader key={key+1000}>{value.name}</ListSubheader>)   // couldnt figure out a better key for ListSubheader (without there is a warning), but this is relatively safe and could only cause issues if number of players exceeds 1000
+                    playersMenuItems.push(<ListSubheader key={key+1000}>{value.name}</ListSubheader>)   // couldn't figure out a better key for ListSubheader (without there is a warning), but this is relatively safe and could only cause issues if number of players exceeds 1000
                 let newPlayerMenuItems = Object.entries(value.players).map(([key, value]) => {
                     playerNameLookup[key] = value.name;
                     return <MenuItem key={key} value={key} >

@@ -12,6 +12,7 @@ import {ReactComponent as Delete} from "../../../icons/delete.svg";
 class TrackListItemGroup extends Component {
 
     handleChangeName = (obj) => {
+        // TODO
         // this.props.setName(this.props.id, this.props.name, obj.value);
     }
 

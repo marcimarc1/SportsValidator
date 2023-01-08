@@ -13,8 +13,8 @@ class Heatmap extends Component {
         maxStepSize: 100,
         startFrame: 0,
         endFrame: 0,
-        heatmapBubbleRadius: 7, //2
-        opacity: 0.3 //0.1
+        heatmapBubbleRadius: 7,
+        opacity: 0.3
     }
 
     positionDataIndexByPlayer = {}; // every key is a player id and has a list of all indices in this.props.positionData that have a position corresponding to this player
@@ -28,10 +28,10 @@ class Heatmap extends Component {
 
     standardParams = {
         selectable: false,
-        evented: false, // makes sure cursor stays normal when hovering over object
+        evented: false,         // makes sure cursor stays normal when hovering over object
         objectCaching: false,
-        padding: 0,  // to make sure the pixel coordinates are correct
-        hasBorders: false,              // disables the control borders (the lines connecting the controls the show up when object is selected
+        padding: 0,             // to make sure the pixel coordinates are correct
+        hasBorders: false,      // disables the control borders (the lines connecting the controls the show up when object is selected
         hasControls: false
     }
 
@@ -50,6 +50,7 @@ class Heatmap extends Component {
         let strokeWidth = 5;
         let lines = [
             // outline of canvas/playing field (not considering corners because they are optional in the tracking/not necessarily existing/correct
+            // TODO BACKEND if corners are fully supported by the backend, they should be added here so that the drawn field is actually the detected playing field.
             [0, 0, 0, this.props.canvasHeight],
             [0, 0, this.props.canvasWidth, 0],
             [this.props.canvasWidth-strokeWidth, 0, this.props.canvasWidth-strokeWidth, this.props.canvasHeight],
@@ -57,12 +58,6 @@ class Heatmap extends Component {
         ];
         // middle line
         let middleLine = [this.props.canvasWidth/2, 0, this.props.canvasWidth/2, this.props.canvasHeight];
-
-        // this.canvas.add(new fabric.Line(lines[0], {
-        //     // left: 170,
-        //     // top: 150,
-        //     stroke: 'red'
-        // }));
 
         // Draw Outline of canvas
         lines.forEach((l) => this.nonHeatmapBubbleCanvasElements.push(this.makeLine(l, {strokeWidth: strokeWidth})));

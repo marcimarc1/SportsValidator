@@ -60,7 +60,7 @@ class AnalysisTile extends Component {
                 x: 3840,
                 y: 2160
             }
-            let scalingFactor = 8;  // might make sense to set this depending on the originalImageDimension, maybe so that canvasWidth is always (roughly) the same
+            let scalingFactor = 8;  // TODO BACKEND if there are videos with different resolutions/dimensions, it might make sense to set this depending on the originalImageDimension, maybe so that canvasWidth is always (roughly) the same
             let data = {
                 positionData,
                 teams,
@@ -74,6 +74,7 @@ class AnalysisTile extends Component {
         else {
             // TODO BACKEND
             // let data = BACKEND.getAnalysisData(this.props.gameId, this.props.type, this.props.groupByTeams, this.props.Teams, this.props.Players);
+            // this.setState({data: data});
 
             if (this.props.tileId === 0) {
                 this.setState({data: dataBarchart1.data});
@@ -92,12 +93,10 @@ class AnalysisTile extends Component {
         // TODO BACKEND
         // return BACKEND.getAnnotations(gameId, firstFrame, lastFrame);
 
-        console.log(annotations);
         let firstAnnotation = annotations.findIndex(element => element.image_id == firstFrame);
         let lastAnnotation = annotations.findIndex(element => element.image_id == lastFrame + 1);
 
         let cachedAnnotations = annotations.slice(firstAnnotation, lastAnnotation);
-        console.log(cachedAnnotations);
         return cachedAnnotations;
     }
 

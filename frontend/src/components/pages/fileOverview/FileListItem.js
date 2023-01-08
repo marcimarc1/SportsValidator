@@ -13,6 +13,7 @@ import "./FileOverview.css"
 class FileListItem extends Component {
 
     // image dimensions of original image, need to be changed when changing resolution of thumbnail!
+    // TODO BACKEND Thumbnail should always be the same size/resolution. If not, this needs to be adapted (for example return thumbnail size together with thumbnail and pass size as props to this component).
     thumbnailImageWidth = 500;
     thumbnailImageHeight = 281;
 
@@ -31,17 +32,6 @@ class FileListItem extends Component {
             this.props.delete(this.props.id);
     }
 
-    // handleButtonClick = (button) => () => {
-    //     switch(button) {
-    //         case "edit":
-    //
-    //             break;
-    //         case "delete":
-    //             this.props.delete(this.props.id);
-    //     }
-    //
-    // }
-
     render() {
         let thumbnailWidth = Math.floor(this.thumbnailImageWidth * this.thumbnailRescale);
         let thumbnailHeight = Math.floor(this.thumbnailImageHeight * this.thumbnailRescale);
@@ -52,7 +42,7 @@ class FileListItem extends Component {
             duration = `${Math.floor(duration / 60)}h ${duration % 60}min`;
         let borderStyle = {borderRadius: `5px ${thumbnailHeight/2}px ${thumbnailHeight/2}px 5px`};
 
-
+        // // Playing around with custom button styles, not used.
         // const CustomButton = withStyles({
         //     root: {
         //         background: "#2c3a17",

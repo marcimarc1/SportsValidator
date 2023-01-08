@@ -25,8 +25,6 @@ class Slider extends Component {
     }
 
     handleInputChange = (event) => {
-        console.log("**************");
-        console.log(event);
         let newFrame = Number(event.target.value); // returns NaN, int or float
         if(Number.isInteger(newFrame))
             this.props.changeFrame(newFrame);
@@ -39,7 +37,7 @@ class Slider extends Component {
                     className="SliderSlider"
                     width={500}
                     value={this.state.currentFrame}
-                    min={0} //TODO change to 1 once frames are also changed
+                    min={0}
                     max={this.props.maxFrame}
                     onChange={this.onChange}
                     onChangeCommitted={this.onChangeCommitted}
@@ -66,7 +64,7 @@ class Slider extends Component {
 }
 
 Slider.propTypes = {
-    currentFrame: PropTypes.number.isRequired,
+    currentFrame: PropTypes.number,
     maxFrame: PropTypes.number.isRequired,
     changeFrame: PropTypes.func.isRequired
 };

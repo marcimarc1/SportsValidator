@@ -42,7 +42,8 @@ class Header extends Component {
                 headerLinks.push(<Link key={runningIndex++} className="HeaderText turn-light-gray-on-hover" to={"/trackingEditor/"+this.id} > TrackingEditor </Link>);
                 break;
             default:
-                console.warn("Header seems to be in an unknown location and will not display any links!");
+                // fall through, Header does not display any extra links
+                break;
         }
 
         return (
