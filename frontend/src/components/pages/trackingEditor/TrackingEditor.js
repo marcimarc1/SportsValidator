@@ -255,7 +255,6 @@ class TrackingEditor extends Component {
 
     // parameter check is already done in NavBar so this function expects a valid value for i
     switchFrame = (i) => {
-        console.log("TrackingEditor: Switching Frame to " + i);
         //TODO BACKEND call backend and delete the following hardcoded numbers in if clause (they are because there are only so many sample images here)
         if(i<0 || i>10) {
             console.warn("frame number invalid: " + i);
@@ -555,13 +554,15 @@ class TrackingEditor extends Component {
     };
 
     selectCorner = (id) => {
-        this.canvasElementsCorners.forEach(corner => {
-            if(corner.my.id == id) {
-                this.canvas.setActiveObject(corner);
-                return corner;
-            }
-        });
-        this.selectBBox(undefined); // to deselect all BBoxes
+        if(this.canvas.getActiveObject()?.my?.id != id) {
+            this.canvasElementsCorners.forEach(corner => {
+                if (corner.my.id == id) {
+                    this.canvas.setActiveObject(corner);
+                    return corner;
+                }
+            });
+            this.selectBBox(undefined); // to deselect all BBoxes
+        }
         this.canvas.requestRenderAll();
         this.setState({activeCorner: id});  // setState for BBoxes is already handled in selectBBox
     };
@@ -903,7 +904,7 @@ class TrackingEditor extends Component {
                 // TODO BACKEND
                 // let newCorner = BACKEND.newItem(...);
                 let newCorner = {
-                    id: 1000,
+                    id: this.canvasElementsCorners.length + 1,
                     image_id: this.state.currentFrame,
                     location: [2200, 1000]
                 };
