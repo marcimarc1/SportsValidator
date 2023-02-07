@@ -45,7 +45,16 @@
 
 % load additional packages
 \usepackage{lipsum}
-
+\usepackage[%
+  backend=biber,
+  url=false,
+  style=numeric,
+  maxnames=4,
+  minnames=3,
+  maxbibnames=99,
+  giveninits,
+  uniquename=init]{biblatex} % citation style could be adjusted here (probably. somewhere here.)
+\bibliography{bibliography} % defining which .bib file to use for bibliography
 
 % thesis metadata
 \title{Interdisziplinäres Projekt: SaaS Projekt Positionsanalyse 1
@@ -82,7 +91,9 @@
 % \chapter{Appendix}
 % \lipsum[4]
 
-% \backmatter
-% \bibliography{}
+\backmatter
+\listoffigures{}
+
+\printbibliography{}
 
 \end{document}
