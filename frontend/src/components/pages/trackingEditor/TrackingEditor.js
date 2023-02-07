@@ -368,7 +368,13 @@ class TrackingEditor extends Component {
         this.canvas.requestRenderAll();
         //bBox.my.playerIdOrNameObject.visible = false;
         // TODO BACKEND call backend to update name
-        this.setState((state) => ({idToName: {...state.idToName}[bBox.my.player] = name}));
+        // let updatedIdToName = {...this.state.idToName};
+        this.setState((state) => // ({idToName: ({...state.idToName}[bBox.my.player] = name)}) //did not work like this, instead set idToName to name (not sure why)
+        {
+            let updatedIdToName = {...state.idToName};
+            updatedIdToName[bBox.my.player] = name;
+            return {idToName: updatedIdToName};
+        });
     }
 
     setTeamName = (teamId, name) => {
@@ -683,7 +689,7 @@ class TrackingEditor extends Component {
         let id = args.id;
         let team = args.category_id;
         let teamName = this.getTeamName(team);  // this might be undefined if there is no name for the team
-        let player = args.attributes.track_id
+        let player = args.attributes.track_id;
         let name = player in this.state.idToName ? this.state.idToName[player] : undefined;
         let idText = name ? "Name: " + name : "Player ID: " + player.toString();
         let playerIdOrNameObject = new fabric.Text(idText, {
