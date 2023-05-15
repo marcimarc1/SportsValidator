@@ -1,0 +1,7 @@
+**/build
+**/target
+
+**/.DS_Store
+
+backend/test_uploads/*
+backend/uploads/*
