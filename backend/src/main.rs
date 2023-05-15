@@ -19,7 +19,7 @@ const UPLOADS_DIRECTORY: &str = "uploads";
 #[tokio::main]
 async fn main() {
     let app = Router::new()
-        .route("/foo", get(|| async { "Hi from /foo" }))
+        .route("/foo", get(|| async { "Hi from /foo" })) // Simplest route for demonstration purposes
         .nest_service("/", get_service(ServeDir::new("./assets")))
         .route("/upload", post(upload))
         .layer(DefaultBodyLimit::max(1 << 30));
