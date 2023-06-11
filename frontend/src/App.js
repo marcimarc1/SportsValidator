@@ -7,6 +7,8 @@ import Demo from "./components/pages/Demo";
 import FileOverview from "./components/pages/fileOverview/FileOverview";
 import TrackingEditor from "./components/pages/trackingEditor/TrackingEditor";
 import Analysis from "./components/pages/analysis/Analysis";
+import FrameSlider from './components/pages/framesExtractor/FrameSlider';
+import { createFFmpeg, fetchFile } from '@ffmpeg/ffmpeg';
 
 class App extends Component {
 
@@ -50,7 +52,7 @@ class App extends Component {
 
                 <Route exact path="/trackingEditor/:id" >
                     <Header/>
-                    <TrackingEditor demo={false} startFrame={1}/>
+                    <FrameSlider/>
                 </Route>
 
                 <Route exact path="/analysis/:id" >

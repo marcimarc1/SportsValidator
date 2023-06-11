@@ -1,11 +1,13 @@
 use axum::{
     routing::{get, post, get_service},
-    Json, Router, extract::{Multipart, DefaultBodyLimit}, response::{IntoResponse, Redirect}, body::{StreamBody, Bytes}, http::StatusCode, BoxError,
+    Json, Router, extract::{Multipart, DefaultBodyLimit, Path}, response::{IntoResponse, Redirect}, body::{StreamBody, Bytes}, http::StatusCode, BoxError,
 };
 use futures::{Stream, TryStreamExt};
 use tokio::{io::BufWriter, fs::File};
 use tokio_util::io::{ReaderStream, StreamReader};
 use tower_http::services::ServeDir;
+use uuid::Uuid;
+use tower_http::cors::{CorsLayer};
 use std::{net::SocketAddr, io};
 
 // Base : https://medium.com/@lindblomdev/beginning-rust-by-exploring-a-very-basic-axum-web-api-in-detail-1f4c87e422e0
@@ -22,7 +24,8 @@ async fn main() {
         .route("/foo", get(|| async { "Hi from /foo" })) // Simplest route for demonstration purposes
         .nest_service("/", get_service(ServeDir::new("./assets")))
         .route("/upload", post(upload))
-        .layer(DefaultBodyLimit::max(1 << 30));
+        .layer(DefaultBodyLimit::max(1 << 30))
+        .layer(CorsLayer::permissive());
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 3030));
     println!("Server started, listening on {addr}");
@@ -49,6 +52,11 @@ struct Message {
 //         println!("Length of `{}` is {} bytes", name, data.len());
 //     }
 // }
+
+
+async fn download(Path(path): Path<Uuid>) {
+
+}
 
 
 // Why unwrap() after await ?
