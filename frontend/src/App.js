@@ -7,8 +7,8 @@ import Demo from "./components/pages/Demo";
 import FileOverview from "./components/pages/fileOverview/FileOverview";
 import TrackingEditor from "./components/pages/trackingEditor/TrackingEditor";
 import Analysis from "./components/pages/analysis/Analysis";
-import FrameSlider from './components/pages/framesExtractor/FrameSlider';
-import { createFFmpeg, fetchFile } from '@ffmpeg/ffmpeg';
+import VideoSlider from './components/pages/framesExtractor/VideoSlider';
+// import TrackingEditor from './components/pages/trackingEditor/TrackingEditor';
 
 class App extends Component {
 
@@ -52,7 +52,7 @@ class App extends Component {
 
                 <Route exact path="/trackingEditor/:id" >
                     <Header/>
-                    <FrameSlider/>
+                    <TrackingEditor/>
                 </Route>
 
                 <Route exact path="/analysis/:id" >
