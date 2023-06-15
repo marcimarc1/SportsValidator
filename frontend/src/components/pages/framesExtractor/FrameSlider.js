@@ -81,7 +81,7 @@ function FrameSlider() {
   function setVideo(video) {
     ffmpeg.FS('writeFile', 'input.mp4', video);
     // ffmpeg.run('-i', 'input.mp4', 'output_%d.png');
-    ffmpeg.run('-i', 'input.mp4', 'output_%d.png', '-vframes', '500');
+    ffmpeg.run('-i', 'input.mp4', 'output_%d.png', '-vsync', '0');
     // ffmpeg -i in.mp4 -vf select='eq(n\,100)+eq(n\,184)+eq(n\,213)' -vsync 0 frames%d.jpg
     // await ffmpeg.run("-i", "input.mp4", "-vf", "select='eq(n\,100)+eq(n\,184)+eq(n\,213)'", "-vsync", "0", "output_%d.png");
     var previousFramesCount = 0;
