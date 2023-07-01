@@ -1,0 +1,136 @@
+{
+    "licenses": [
+        // Not really sure what's that for
+        {
+            "name": "",
+            "id": 0,
+            "url": ""
+        }
+    ],
+    "info": {
+        "contributor": "",
+        "date_created": "",
+        "description": "",
+        "url": "",
+        "version": "",
+        "year": ""
+    },
+    "teams" : [
+        // Change here to get an effect on all frame, for example if teams were reversed
+        // Once again, only relevant information for the server is database id
+        // Name of teams should not be editable in the video edit page
+        {
+            "id": 1, // Database id
+            "Name": "Real Madrid"
+        },
+        {
+            "id": 2, // Database id
+            "Name": "FC Barcelona"
+        }
+    ],
+    "players" : [
+        // Change here to get an effect on all frames. 
+        // The only relevant information that will be processed by the server is the database id
+        // Name and team of players should not be editable in the video edit page
+        {
+            "id": 1, // Database id. Only thing used by the server to change player
+            "name": "Christiano",
+            "surname": "Ronaldo",
+            "team_index": 0 // Refers to the team at position 0 in the teams array
+        },
+        {
+            "id": 2,
+            "name": "Lionel",
+            "surname": "Messi",
+            "team_index": 1 // Refers to the team at position 1 in the teams array
+        }
+    ],
+    "video" : {
+        "framerate": 23.97603,
+        "frame_duration": 0.041708334,
+        "width": 3480,
+        "height": 2160
+    },
+    "frames" : [
+        // Only necessary in case we need to download individual frames from the server
+        // Maybe we can replace that by a pattern of frame naming in the video object
+        {
+            "file_name": "frame_000001.jpg"
+        },
+        {
+            "file_name": "frame_000002.jpg"
+        }
+    ],
+    "annotations": [
+        [ // Annotations of first frame, so index 0
+            {
+                // "frame_index": 0,
+                "player_index": 0,
+                "area": 664.822799999997, // Not sure if that's really necessary
+                "bbox": [
+                    2829.67,
+                    1851.8,
+                    27.18,
+                    24.46
+                ],
+                "iscrowd": 0,
+                "attributes": {
+                    "occluded": false,
+                    "track_id": 0,
+                    "keyframe": true
+                }
+            },
+            {
+                "player_index": 1,
+                "area": 664.822799999997,
+                "bbox": [
+                    2829.67,
+                    1851.8,
+                    27.18,
+                    24.46
+                ],
+                "iscrowd": 0,
+                "attributes": {
+                    "occluded": false,
+                    "track_id": 0,
+                    "keyframe": true
+                }
+            }
+        ],
+        [ // Annotations of second frame, so index 1
+        {
+            // "frame_index": 0,
+            "player_index": 0,
+            "area": 664.822799999997, // Not sure if that's really necessary
+            "bbox": [
+                2829.67,
+                1851.8,
+                27.18,
+                24.46
+            ],
+            "iscrowd": 0,
+            "attributes": {
+                "occluded": false,
+                "track_id": 0,
+                "keyframe": true
+            }
+        },
+        {
+            "player_index": 1,
+            "area": 664.822799999997,
+            "bbox": [
+                2829.67,
+                1851.8,
+                27.18,
+                24.46
+            ],
+            "iscrowd": 0,
+            "attributes": {
+                "occluded": false,
+                "track_id": 0,
+                "keyframe": true
+            }
+        }
+        ]
+    ]
+}
