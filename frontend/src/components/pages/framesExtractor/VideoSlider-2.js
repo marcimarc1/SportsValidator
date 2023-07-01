@@ -2,8 +2,8 @@ import React, { useRef, useState, useEffect } from 'react';
 import tracking from "../../../data/tracking_data.json";
 
 
-function VideoSlider() {
-    const [videoUrl, setVideoUrl] = useState("");
+function VideoSlider2() {
+    const [src, setSrc] = useState("");
     const [seekTime, setSeekTime] = useState(0);
     const [seekFrame, setSeekFrame] = useState(0);
     // const [previousFrameIndex, setPreviousFrameIndex] = useState(0);
@@ -11,12 +11,11 @@ function VideoSlider() {
     const videoRef = useRef(null);
     const canvasRef = useRef(null);
     // const framerate = 23.98;
-    const frameDuration = 1001 / 24000; // TODO Get this information from the backend
+    const frameDuration = 1001 / 24000;
 
     // Not using state here because 1) doesn't update properly with requestAnimationFrame, and 2) we don't want to re-render the view
     let previousFrameIndex = 0;
     let lastBoxIndex = 0;
-    let videoElement;
 
 
     // timestamps = timestamps.map((value) => value + frameDuration / 3);
@@ -33,8 +32,7 @@ function VideoSlider() {
             const file = event.target.files[0];
 
             // Transform file into blob URL
-            setVideoUrl(URL.createObjectURL(file));
-            console.log("Finished setting video url");
+            setSrc(URL.createObjectURL(file));
         } catch (error) {
             console.error(error);
         }
@@ -42,12 +40,18 @@ function VideoSlider() {
 
 
 
-    useEffect(() => {
-        videoElement = document.createElement('video');
-        videoElement.src = videoUrl;
-        // videoElement.autoplay = true;
-        videoElement.muted = true;
 
+    // useEffect(() => {
+    //     if (videoRef) {
+    //         console.log("Video framerate : ", videoRef.current.frameRate);
+    //     }
+    // }, [videoRef]);
+
+
+
+
+    useEffect(() => {
+        const videoElement = videoRef.current;
         const canvasElement = canvasRef.current;
         const context = canvasElement.getContext('2d');
         const horizontalScalingFactor = canvasElement.width / 3840;
@@ -99,16 +103,11 @@ function VideoSlider() {
         // };
 
         videoElement.addEventListener('play', () => {
-            console.log("Detected play : ", videoElement);
             requestAnimationFrame(updateCanvas);
         });
 
-        videoElement.addEventListener('canplay', () => {
-            context.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
-        })
-
         const updateCanvas = () => {
-            if (!videoElement || videoElement.paused || videoElement.ended)
+            if (!videoRef.current || videoRef.current.paused || videoRef.current.ended)
                 return;
             // TODO Return if video not loaded or not playing
             const currentFrameIndex = getCurrentTimestampFrame();
@@ -120,15 +119,12 @@ function VideoSlider() {
             requestAnimationFrame(updateCanvas);
         };
 
-        videoElement.currentTime = 0;
-
         return () => {
             videoElement.removeEventListener('play', () => {
                 requestAnimationFrame(updateCanvas);
             });
-            // videoElement.play();
         };
-    }, [videoUrl]);
+    }, [videoRef]);
 
 
 
@@ -136,7 +132,7 @@ function VideoSlider() {
 
     const getCurrentTimestampFrame = () => {
         // + 1 because 1st frame is at currentTime = 0
-        return Math.floor(videoElement.currentTime / frameDuration) + 1;
+        return Math.floor(videoRef.current.currentTime / frameDuration) + 1;
     }
 
     const getReferenceTimestampForFrame = (n) => {
@@ -144,58 +140,58 @@ function VideoSlider() {
     }
 
     // const handleNextFrame = () => {
-    //     if (videoElement) {
+    //     if (videoRef.current) {
     //         timestampIndex += 1
     //         const adjustedTimestamp = timestamps[timestampIndex] + frameDuration / 4;
     //         console.log("Frame number : " + (timestampIndex + 1) + ", timestamp : " + timestamps[timestampIndex] + ", adjusted timestamp : " + adjustedTimestamp);
-    //         videoElement.currentTime = adjustedTimestamp;
-    //         console.log("Timestamp : ", videoElement.currentTime);
+    //         videoRef.current.currentTime = adjustedTimestamp;
+    //         console.log("Timestamp : ", videoRef.current.currentTime);
     //     }
     // };
 
     // const handlePreviousFrame = () => {
-    //     if (videoElement && timestampIndex > 0) {
+    //     if (videoRef.current && timestampIndex > 0) {
     //         timestampIndex -= 1
     //         const adjustedTimestamp = timestamps[timestampIndex] + frameDuration / 4;
     //         console.log("Frame number : " + (timestampIndex + 1) + ", timestamp : " + timestamps[timestampIndex] + ", adjusted timestamp : " + adjustedTimestamp);
-    //         videoElement.currentTime = adjustedTimestamp;
-    //         console.log("Timestamp : ", videoElement.currentTime);
+    //         videoRef.current.currentTime = adjustedTimestamp;
+    //         console.log("Timestamp : ", videoRef.current.currentTime);
     //     }
     // };
 
     const handleNextFrame = () => {
-        if (videoElement) {
+        if (videoRef.current) {
             const nextFrame = seekFrame + 1;
-            videoElement.currentTime = getReferenceTimestampForFrame(nextFrame);
-            console.log("Next frame : ", nextFrame, ", Reference timestamp : ", videoElement.currentTime);
+            videoRef.current.currentTime = getReferenceTimestampForFrame(nextFrame);
+            console.log("Next frame : ", nextFrame, ", Reference timestamp : ", videoRef.current.currentTime);
             setSeekFrame(nextFrame);
         }
     };
 
     const handlePreviousFrame = () => {
-        if (videoElement && seekFrame > 0) {
+        if (videoRef.current && seekFrame > 0) {
             const previousFrame = seekFrame - 1;
-            videoElement.currentTime = getReferenceTimestampForFrame(previousFrame)
-            console.log("Previous frame : ", previousFrame, ", Reference timestamp : ", videoElement.currentTime);
+            videoRef.current.currentTime = getReferenceTimestampForFrame(previousFrame)
+            console.log("Previous frame : ", previousFrame, ", Reference timestamp : ", videoRef.current.currentTime);
             setSeekFrame(previousFrame);
         }
     };
 
     const setComputedFrame = () => {
-        if (videoElement) {
-            console.log("Current : ", videoElement.currentFrameTime);
+        if (videoRef.current) {
+            console.log("Current : ", videoRef.current.currentFrameTime);
             return;
 
             const previousFrame = seekFrame - 1;
-            videoElement.currentTime = getReferenceTimestampForFrame(previousFrame)
-            console.log("Previous frame : ", previousFrame, ", Reference timestamp : ", videoElement.currentTime);
+            videoRef.current.currentTime = getReferenceTimestampForFrame(previousFrame)
+            console.log("Previous frame : ", previousFrame, ", Reference timestamp : ", videoRef.current.currentTime);
             setSeekFrame(previousFrame);
         }
     }
 
     const handleVideoPause = () => {
-        if (videoElement) {
-            console.log("Current timestamp : ", videoElement.currentTime, ", frame duration : ", frameDuration);
+        if (videoRef.current) {
+            console.log("Current timestamp : ", videoRef.current.currentTime, ", frame duration : ", frameDuration);
             const frame = getCurrentTimestampFrame();
             const referenceTimestamp = getReferenceTimestampForFrame(frame);
             console.log("Computed frame : ", frame, ", reference timestamp : ", referenceTimestamp);
@@ -205,11 +201,11 @@ function VideoSlider() {
             console.log("Supposed frame start timestamp : ", ((frame - 1) * frameDuration), ", next : ", sNext);
             return;
 
-            videoElement.currentTime = referenceTimestamp
-            console.log("Set reference timestamp : ", videoElement.currentTime);
+            videoRef.current.currentTime = referenceTimestamp
+            console.log("Set reference timestamp : ", videoRef.current.currentTime);
             setSeekFrame(frame)
             setSeekTime(referenceTimestamp)
-            // = Math.floor(videoElement.currentTime / frameDuration) * frameDuration;
+            // = Math.floor(videoRef.current.currentTime / frameDuration) * frameDuration;
             // console.log("Frame reference timestamp : ", frameStartTimestamp);
         }
     };
@@ -235,9 +231,9 @@ function VideoSlider() {
     };
 
     const handleSeek = (event) => {
-        if (videoElement) {
-            videoElement.currentTime = seekTime;
-            console.log("Timestamp : ", videoElement.currentTime);
+        if (videoRef.current) {
+            videoRef.current.currentTime = seekTime;
+            console.log("Timestamp : ", videoRef.current.currentTime);
             const frame = getCurrentTimestampFrame()
             console.log("Seek computed frame : ", frame);
             setSeekFrame(frame)
@@ -245,30 +241,30 @@ function VideoSlider() {
     };
 
     const handleSeekFrame = (event) => {
-        if (videoElement) {
-            videoElement.currentTime = getReferenceTimestampForFrame(seekFrame);
-            console.log("Set reference timestamp : ", videoElement.currentTime, " for frame : ", seekFrame);
+        if (videoRef.current) {
+            videoRef.current.currentTime = getReferenceTimestampForFrame(seekFrame);
+            console.log("Set reference timestamp : ", videoRef.current.currentTime, " for frame : ", seekFrame);
         }
     };
+
+
+
+
+    const handlePlay = () => {
+        console.log(videoRef.current.currentTime);
+    }
 
     // https://stackoverflow.com/questions/33834724/draw-video-on-canvas-html5
     // TODO Add to doc : this works on the whole page, basically requests the next frame from the whole browser window
     // const update = () => {
     //     const ctx = canvasRef.current.getContext('2d');
-    //     ctx.drawImage(videoElement, 0, 0, 1280, 720);   
-    //     console.log("Frame : " + parseInt(videoElement.currentTime / frameDuration))
+    //     ctx.drawImage(videoRef.current, 0, 0, 1280, 720);   
+    //     console.log("Frame : " + parseInt(videoRef.current.currentTime / frameDuration))
     //     requestAnimationFrame(update); // wait for the browser to be ready to present another animation fram.       
     // }
 
-    const playPauseVideo = () => {
-        if (videoElement && !videoElement.ended) {
-            if (videoElement.paused) {
-                videoElement.play();
-            } else {
-                videoElement.pause();
-            }
-        }
-        
+    const videoLoadedData = () => {
+
     }
 
     return (
@@ -277,7 +273,6 @@ function VideoSlider() {
             <div>
                 <button onClick={handlePreviousFrame}>Previous Frame</button>
                 <button onClick={setComputedFrame}>Current Frame</button>
-                <button onClick={playPauseVideo}>Play/Pause</button>
                 <button onClick={handleNextFrame}>Next Frame</button>
             </div>
             <div>
@@ -300,7 +295,10 @@ function VideoSlider() {
                 />
                 <button onClick={handleSeekFrame}>Seek Frame</button>
             </div>
-            <canvas ref={canvasRef} width={1920} height={1080} style={{width: "1920px", height: "1080px"}}></canvas>
+            <video ref={videoRef} src={src} controls width={1280} height={720} onLoadedData={videoLoadedData} onPause={handleVideoPause}>
+                Sorry, your browser doesn't support embedded videos.
+            </video>
+            <canvas ref={canvasRef} width={1920} height={1080} style={{width: "1280px", height: "720px"}}></canvas>
         </div>
     );
 };
