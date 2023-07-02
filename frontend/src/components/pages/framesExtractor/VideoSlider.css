@@ -1,0 +1,52 @@
+.video-player {
+    position: relative;
+    width: 100%;
+}
+.controls {
+    display: block;
+    width: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    padding: 1rem 1rem;
+    color: rgb(220, 220, 220);
+}
+
+.controls span {
+    text-align: center;
+}
+
+#buttons-container {
+    height: 1.5rem;
+    display: flex;
+    align-items: center;
+}
+
+.icon-button {
+    cursor: pointer;
+    height: 100%;
+    width: auto;
+    background-color: transparent;
+    color: transparent;
+    border: none;
+    padding: 0;
+    margin-right: 0.3rem;
+}
+
+.icon-button:hover .icon {
+    fill: rgb(255, 255, 255);
+}
+
+.icon {
+    height: 100%;
+    width: auto;
+    fill: rgb(220, 220, 220);
+}
+
+#frame-number-display {
+    width: 7rem;
+}
+
+#timestamp-display {
+    margin-left: 0.3rem;
+}
+
