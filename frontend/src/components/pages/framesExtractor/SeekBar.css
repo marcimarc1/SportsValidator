@@ -1,0 +1,13 @@
+.seeker-container {
+    cursor: pointer;
+    width: 100%;
+    height: 0.35em;
+    background-color: black;
+    margin-bottom: 0.5rem;
+}
+
+.seeker {
+    background-color: #f00;
+    width: 10%;
+    height: 100%;
+}
