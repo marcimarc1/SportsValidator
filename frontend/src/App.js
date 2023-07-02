@@ -8,7 +8,6 @@ import FileOverview from "./components/pages/fileOverview/FileOverview";
 import TrackingEditor from "./components/pages/trackingEditor/TrackingEditor";
 import Analysis from "./components/pages/analysis/Analysis";
 import VideoSlider from './components/pages/framesExtractor/VideoSlider';
-import FrameSlider from './components/pages/framesExtractor/FrameSlider';
 // import TrackingEditor from './components/pages/trackingEditor/TrackingEditor';
 
 class App extends Component {
@@ -53,8 +52,8 @@ class App extends Component {
 
                 <Route exact path="/trackingEditor/:id" >
                     <Header/>
-                    {/* <VideoSlider/> */}
-                    <TrackingEditor demo={true} startFrame={1}/>
+                    <VideoSlider/>
+                    {/* <TrackingEditor demo={true} startFrame={1}/> */}
                 </Route>
 
                 <Route exact path="/analysis/:id" >
