@@ -10,54 +10,65 @@ use uuid::Uuid;
 use tower_http::cors::{CorsLayer};
 use std::{net::SocketAddr, io};
 
+use sqlx::postgres::PgPoolOptions;
+use sqlx::{Pool, Postgres};
+
 // Base : https://medium.com/@lindblomdev/beginning-rust-by-exploring-a-very-basic-axum-web-api-in-detail-1f4c87e422e0
-
 // Upload file streaming : https://github.com/tokio-rs/axum/blob/main/examples/stream-to-file/src/main.rs
-
 // http://127.0.0.1:3030/assets/form.html
 
 const UPLOADS_DIRECTORY: &str = "uploads";
 
+// Using anyhow::Result to be able to handle error that might be returned by `sqlx::migrate!` call
 #[tokio::main]
-async fn main() {
+async fn main() -> anyhow::Result<()> {
+    // TODO dotenv + ok
+
+    // let url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set.");
+
+    let url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set.");
+    println!("DATABASE_URL : {}", &url);
+
+    //// Connecting to the database
+    // let url = "postgres://postgres:IDP@db:5432";
+    let pool = PgPoolOptions::new()
+        .max_connections(5)
+        .connect(&url) // Switch to &url if url becomes a String
+        .await
+        .unwrap_or_else(|_| panic!("Failed to create Postgres connection pool! URL: {}", url));
+
+    //// Applying the migrations if not previously applied
+    // For each new migrationm create an sql file using `sqlx migrate add <description>` and then edit that file
+    // sqlx cli : https://github.com/launchbadge/sqlx/blob/main/sqlx-cli/README.md
+    // sqlx migrations doc : https://docs.rs/sqlx/latest/sqlx/migrate/trait.MigrationSource.html
+    sqlx::migrate!("./migrations").run(&pool).await?;
+    println!("Applied database migrations");
+
+
+    //// Creating the routes of the server
     let app = Router::new()
         .route("/foo", get(|| async { "Hi from /foo" })) // Simplest route for demonstration purposes
         .nest_service("/", get_service(ServeDir::new("./assets")))
         .route("/upload", post(upload))
         .layer(DefaultBodyLimit::max(1 << 30))
-        .layer(CorsLayer::permissive());
+        .layer(CorsLayer::permissive())
+        .layer(axum::Extension(pool));
 
-    let addr = SocketAddr::from(([127, 0, 0, 1], 3030));
+    //// Binding the routes to a http server
+    let addr = SocketAddr::from(([0, 0, 0, 0], 3030));
     println!("Server started, listening on {addr}");
     axum::Server::bind(&addr)
         .serve(app.into_make_service())
         .await
         .expect("Failed to start server");
+
+    Ok(())
 }
 
 #[derive(serde::Serialize)]
 struct Message {
     message: String,
 }
-
-// https://docs.rs/axum/latest/axum/extract/struct.Multipart.html#example
-// async fn upload(mut multipart: Multipart) {
-//     println!("Received multipart file");
-//     while let Some(field) = multipart.next_field().await.unwrap() {
-//         let name = field.name().unwrap().to_string();
-//         let filename = field.file_name().unwrap().to_string();
-//         println!("name : {}, filename : {}", name, filename);
-
-//         let data = field.bytes().await.unwrap();
-//         println!("Length of `{}` is {} bytes", name, data.len());
-//     }
-// }
-
-
-async fn download(Path(path): Path<Uuid>) {
-
-}
-
 
 // Why unwrap() after await ?
 async fn upload(mut multipart: Multipart) -> Result<Redirect, (StatusCode, String)> {
@@ -81,7 +92,7 @@ where
 {
     println!("Path : {}", path);
 
-    if !path_is_valid(path) {
+    if !is_path_valid(path) {
         println!("Invalid path");
         return Err((StatusCode::BAD_REQUEST, "Invalid path".to_owned()));
     }
@@ -111,7 +122,7 @@ where
 
 // to prevent directory traversal attacks we ensure the path consists of exactly one normal
 // component
-fn path_is_valid(path: &str) -> bool {
+fn is_path_valid(path: &str) -> bool {
     let path = std::path::Path::new(path);
     let mut components = path.components().peekable();
 
@@ -123,3 +134,7 @@ fn path_is_valid(path: &str) -> bool {
 
     components.count() == 1
 }
+
+
+
+
