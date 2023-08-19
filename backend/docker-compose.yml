@@ -1,0 +1,21 @@
+version: '3'
+services:
+  api:
+    image: rust_backend
+    environment:
+      DATABASE_URL: "postgres://user:pass@db:5432"
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3030:3030"
+    depends_on:
+      - db
+  db:
+    image: postgres:15.2-alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=pass
+    ports:
+      - "5432:5432"
