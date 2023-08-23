@@ -20,6 +20,7 @@ Useful links :
 - Keywork impl : https://doc.rust-lang.org/std/keyword.impl.html
 - Object orientation : https://stevedonovan.github.io/rust-gentle-intro/object-orientation.html
 - sqlx cli : https://github.com/launchbadge/sqlx/blob/main/sqlx-cli/README.md
+- csv crate tutorial : https://docs.rs/csv/latest/csv/tutorial/index.html
 
 
 Video

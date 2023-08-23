@@ -1,5 +1,6 @@
 # Use a base image with Rust pre-installed
 FROM rust:latest
+ENV SQLX_OFFLINE=true
 
 # Set the working directory inside the container
 WORKDIR /app
@@ -12,3 +13,4 @@ RUN cargo build --release
 
 # Specify the command to run when the container starts
 CMD ["./target/release/backend"]
+# CMD [ "/bin/ls", "-l" ]

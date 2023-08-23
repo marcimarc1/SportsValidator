@@ -1,17 +1,27 @@
+// use anyhow::Ok;
 use axum::{
-    routing::{get, post, get_service},
-    Json, Router, extract::{Multipart, DefaultBodyLimit, Path}, response::{IntoResponse, Redirect}, body::{StreamBody, Bytes}, http::StatusCode, BoxError,
+    body::{Bytes, StreamBody},
+    extract::{DefaultBodyLimit, Multipart, Path},
+    http::{StatusCode, header},
+    response::{IntoResponse, Redirect},
+    routing::{get, get_service, post},
+    BoxError, Json, Router, Extension
 };
+use csv::StringRecord;
 use futures::{Stream, TryStreamExt};
-use tokio::{io::BufWriter, fs::File};
+use std::{io, net::SocketAddr};
+use tokio::{fs::File, io::BufWriter};
 use tokio_util::io::{ReaderStream, StreamReader};
+use tower_http::cors::CorsLayer;
 use tower_http::services::ServeDir;
 use uuid::Uuid;
-use tower_http::cors::{CorsLayer};
-use std::{net::SocketAddr, io};
 
 use sqlx::postgres::PgPoolOptions;
 use sqlx::{Pool, Postgres};
+// use std::error::Error;
+use serde::de::Error;
+
+use dotenvy::dotenv;
 
 // Base : https://medium.com/@lindblomdev/beginning-rust-by-exploring-a-very-basic-axum-web-api-in-detail-1f4c87e422e0
 // Upload file streaming : https://github.com/tokio-rs/axum/blob/main/examples/stream-to-file/src/main.rs
@@ -19,12 +29,84 @@ use sqlx::{Pool, Postgres};
 
 const UPLOADS_DIRECTORY: &str = "uploads";
 
+#[derive(sqlx::FromRow)]
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+struct PlayerAnnotationRecord {
+    #[serde(rename = "FrameNo")]
+    #[serde(deserialize_with = "string_to_i32")]
+    frame_number: i32,
+
+    #[serde(rename = "PlayerKey")]
+    #[serde(deserialize_with = "string_to_i32")]
+    track_id: i32,
+
+    #[serde(deserialize_with = "string_to_f64")]
+    x: f64,
+
+    #[serde(deserialize_with = "string_to_f64")]
+    y: f64,
+
+    #[serde(deserialize_with = "string_to_f64")]
+    w: f64,
+
+    #[serde(deserialize_with = "string_to_f64")]
+    h: f64,
+
+    #[serde(deserialize_with = "string_to_f64")]
+    x_trans: f64,
+
+    #[serde(deserialize_with = "string_to_f64")]
+    y_trans: f64,
+}
+
+// https://stackoverflow.com/questions/66230715/make-my-own-error-for-serde-json-deserialize
+fn string_to_i32<'de, D>(deserializer: D) -> Result<i32, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let float_value = string_to_f64(deserializer)?;
+    // let res = str_value.parse::<i32>().map_err(D::Error::custom);
+    // return res;
+    return Ok(float_value as i32);
+}
+
+fn string_to_f64<'de, D>(deserializer: D) -> Result<f64, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let str_value: &str = serde::Deserialize::deserialize(deserializer)?;
+    return str_value.parse::<f64>().map_err(D::Error::custom);
+}
+
+
+
+// struct PlayerAnnotationRecord {
+//     frame_number: i32,
+//     player_key: i32,
+//     x: f32,
+//     y: f32,
+//     w: f32,
+//     h: f32,
+//     x2: f32,
+//     y2: f32,
+//     x1: f32,
+//     y1: f32,
+//     x_trans: f32,
+//     y_trans: f32,
+// }
+
+
+
 // Using anyhow::Result to be able to handle error that might be returned by `sqlx::migrate!` call
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    dotenv().ok();
     // TODO dotenv + ok
 
     // let url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set.");
+
+    // read_annotations("./assets/processed_players.csv");
+    // return (Ok(()));
 
     let url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set.");
     println!("DATABASE_URL : {}", &url);
@@ -44,15 +126,24 @@ async fn main() -> anyhow::Result<()> {
     sqlx::migrate!("./migrations").run(&pool).await?;
     println!("Applied database migrations");
 
+    match save_annotations_for_video(199, "./assets/processed_players.csv", &pool).await {
+        Ok(headers) => {
+            println!("Successfully saved annotations")
+        }
+        Err(err) => {
+            eprintln!("Error saving annotation: {}", err);
+        }
+    }
 
     //// Creating the routes of the server
     let app = Router::new()
         .route("/foo", get(|| async { "Hi from /foo" })) // Simplest route for demonstration purposes
+        .route("/annotations/:video_id", get(handle_annotations_request))
         .nest_service("/", get_service(ServeDir::new("./assets")))
         .route("/upload", post(upload))
         .layer(DefaultBodyLimit::max(1 << 30))
         .layer(CorsLayer::permissive())
-        .layer(axum::Extension(pool));
+        .layer(Extension(pool));
 
     //// Binding the routes to a http server
     let addr = SocketAddr::from(([0, 0, 0, 0], 3030));
@@ -64,6 +155,47 @@ async fn main() -> anyhow::Result<()> {
 
     Ok(())
 }
+
+async fn save_annotations_for_video(
+    video_id: i32,
+    annotations_file_path: &str,
+    pool: &Pool<Postgres>
+) -> Result<(), Box<dyn std::error::Error>> {
+    let file = std::fs::File::open(annotations_file_path)?;
+    let mut csv_reader = csv::ReaderBuilder::new()
+        .has_headers(true)
+        .from_reader(file);
+
+    let mut transaction = pool.begin().await?;
+
+    // Would probably be better to read all at once into a vector, and then write all the data
+    for result in csv_reader.deserialize() {
+        let record: PlayerAnnotationRecord = result?;
+        let _ = sqlx::query("INSERT INTO annotations (video_id, track_id, frame_number, x, y, w, h, x_trans, y_trans) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)")
+            .bind(video_id)
+            .bind(record.frame_number)
+            .bind(record.track_id)
+            .bind(record.x)
+            .bind(record.y)
+            .bind(record.w)
+            .bind(record.h)
+            .bind(record.x_trans)
+            .bind(record.y_trans)
+            .execute(&mut transaction)
+            .await?;
+
+        // println!("{:?}", record);
+    }
+
+    transaction.commit().await?;
+
+    println!("Batch insertion completed successfully");
+
+    // See also https://github.com/jmoiron/sqlx/blob/master/README.md
+
+    Ok(())
+}
+
 
 #[derive(serde::Serialize)]
 struct Message {
@@ -79,7 +211,7 @@ async fn upload(mut multipart: Multipart) -> Result<Redirect, (StatusCode, Strin
             println!("Field name : {}", field.name().unwrap().to_string());
             let file_name = file_name.to_owned();
             stream_to_file(&file_name, field).await?;
-        }        
+        }
     }
 
     Ok(Redirect::to("/"))
@@ -135,6 +267,15 @@ fn is_path_valid(path: &str) -> bool {
     components.count() == 1
 }
 
+// About obscure errors : https://docs.rs/axum/latest/axum/handler/index.html
+#[axum::debug_handler]
+async fn handle_annotations_request(state: Extension<Pool<Postgres>>, Path(video_id): Path<i32>) -> Json<Vec<PlayerAnnotationRecord>> {
+    let Extension(pool) = state;
 
-
-
+    let records = sqlx::query_as::<_, PlayerAnnotationRecord>("SELECT * FROM annotations WHERE video_id = $1")
+        .bind(video_id)
+        .fetch_all(&pool)
+        .await
+        .expect("failed to fetch users");
+    Json(records)
+}

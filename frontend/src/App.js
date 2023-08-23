@@ -52,8 +52,12 @@ class App extends Component {
 
                 <Route exact path="/trackingEditor/:id" >
                     <Header/>
+                    <TrackingEditor demo={true} startFrame={1}/>
+                </Route>
+
+                <Route exact path="/newTrackingEditor/:id" >
+                    <Header/>
                     <VideoSlider/>
-                    {/* <TrackingEditor demo={true} startFrame={1}/> */}
                 </Route>
 
                 <Route exact path="/analysis/:id" >

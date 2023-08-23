@@ -32,6 +32,7 @@ TODO Look into
 - `docker compose stop` : stops running containers
 - `docker compose rm -f` : removes container but also volumes ? Does it affect external volumes ?
 - Attaching to docker compose + each container individually
+- To attach to a docker compose container : `docker-compose exec api sh`
 
 
 

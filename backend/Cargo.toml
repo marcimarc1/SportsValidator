@@ -6,7 +6,8 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-axum = { version = "0.6.4", features = ["multipart"] }
+axum = { version = "0.6.4", features = ["multipart", "macros"] }
+axum-macros = "0.3.8"
 futures = "0.3"
 tower-http = { version = "0.4.0", features = ["fs", "trace", "cors"] }
 tokio = { version = "1.0", features = ["full"] }
@@ -15,3 +16,5 @@ serde = { version = "1.0", features = ["derive"] }
 uuid = { version = "1.3.3", features = ["serde"] } # TODO Remove, just for testing purposes
 anyhow = "1.0.74"
 sqlx = { version = "0.6", features = [ "runtime-tokio-rustls", "postgres", "offline"] }
+csv = "1.1"
+dotenvy = "0.15"
