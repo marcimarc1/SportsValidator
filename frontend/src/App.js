@@ -7,7 +7,7 @@ import Demo from "./components/pages/Demo";
 import FileOverview from "./components/pages/fileOverview/FileOverview";
 import TrackingEditor from "./components/pages/trackingEditor/TrackingEditor";
 import Analysis from "./components/pages/analysis/Analysis";
-import VideoSlider from './components/pages/framesExtractor/VideoSlider';
+import NewTrackingEditor from './components/pages/newTrackingEditor/NewTrackingEditor';
 import VideoUpload from './components/pages/VideoUpload';
 // import TrackingEditor from './components/pages/trackingEditor/TrackingEditor';
 
@@ -58,7 +58,7 @@ class App extends Component {
 
                 <Route exact path="/newTrackingEditor/:videoName" >
                     <Header/>
-                    <VideoSlider/>
+                    <NewTrackingEditor/>
                 </Route>
 
                 <Route exact path="/analysis/:id" >

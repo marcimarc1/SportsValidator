@@ -1,7 +1,4 @@
 import React, { Component, useState } from 'react';
-import { Link } from 'react-router-dom';
-import Header from '../layout/Header';
-
 
 const VideoUpload = () => {
     const [file, setFile] = useState(null);
@@ -12,14 +9,6 @@ const VideoUpload = () => {
         const selectedFile = event.target.files[0];
         setFile(selectedFile);
     };
-
-    const handleUploadResult = (wasSuccessful) => {
-        if (wasSuccessful) {
-            alert('File uploaded successfully!');
-        } else {
-            alert('File upload failed.');
-        }
-    }
 
     const handleUploadSuccessful = () => {
         alert('File uploaded successfully!');
@@ -64,39 +53,10 @@ const VideoUpload = () => {
         }
 
         request.send(formdata);
-
-        // const formData = new FormData();
-        // formData.append('file', file);
-
-        // setIsUploading(true);
-
-        // try {
-        //     const response = await fetch('/api/upload', {
-        //         method: 'POST',
-        //         body: formData,
-        //         onUploadProgress: (progressEvent) => {
-        //             const progress = Math.round((progressEvent.loaded / progressEvent.total) * 100);
-        //             console.log("Uploaded " + event.loaded + " bytes of " + event.total + " : " + progress);
-        //             setUploadProgress(progress);
-        //         },
-        //     });
-
-        //     if (response.ok) {
-        //         alert('File uploaded successfully!');
-        //     } else {
-        //         alert('File upload failed.');
-        //     }
-        // } catch (error) {
-        //     console.error('Error uploading file:', error);
-        // } finally {
-        //     setIsUploading(false);
-        //     setUploadProgress(0);
-        // }
     };
 
     return (
         <div>
-            {/* <Header shrinkAnimation={true} /> */}
             <h2>File Upload</h2>
             <form onSubmit={handleSubmit}>
                 <input type="file" onChange={handleFileChange} />

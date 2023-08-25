@@ -5,13 +5,12 @@ import { ReactComponent as PauseIcon } from '../../../icons/pause.svg';
 import { ReactComponent as ForwardStepIcon } from '../../../icons/forward-step.svg';
 import { ReactComponent as BackwardStepIcon } from '../../../icons/backward-step.svg';
 import tracking from "../../../data/tracking_data.json";
-import './VideoSlider.css'
+import './NewTrackingEditor.css'
 import SeekBar from './SeekBar';
 import { duration } from '@material-ui/core';
 
-// TODO Rename trackingViewer
-// TODO Take a video_id instead and have an endpoint where we supply a video_id and get the corresponding video
-const VideoSlider = () => {
+// TODO Take a video_id instead and have an endpoint on the server where we supply a video_id and get the corresponding video
+const NewTrackingEditor = () => {
   const [videoUrl, setVideoUrl] = useState("");
   const [frameNumber, setFrameNumber] = useState(0);
   const [timestamp, setTimestamp] = useState(0);
@@ -45,7 +44,6 @@ const VideoSlider = () => {
   const handleDownload = async () => {
     setIsDownloadingVideo(true);
 
-    // TODO : Include the video id
     console.log("Video name : ", videoName);
 
     try {
@@ -330,4 +328,4 @@ const VideoSlider = () => {
   );
 };
 
-export default VideoSlider;
+export default NewTrackingEditor;
