@@ -14,13 +14,19 @@ CREATE TABLE videos (
         REFERENCES users (username)
 );
 
-CREATE TABLE annotations (
-    annotation_id INT UNIQUE PRIMARY KEY,
-    frame_no INT,
-    x FLOAT8,
-    y FLOAT8,
-    w FLOAT8,
-    h FLOAT8,
-    confidence FLOAT,
-    class INT
+CREATE TABLE IF NOT EXISTS annotations (
+    id SERIAL PRIMARY KEY,
+    video_id INT NOT NULL,
+    track_id INT NOT NULL,
+    frame_number INT NOT NULL,
+    x FLOAT NOT NULL,
+    y FLOAT NOT NULL,
+    w FLOAT NOT NULL,
+    h FLOAT NOT NULL,
+    x2 FLOAT NOT NULL,
+    y2 FLOAT NOT NULL,
+    x1 FLOAT NOT NULL,
+    y1 FLOAT NOT NULL,
+    x_trans FLOAT NOT NULL,
+    y_trans FLOAT NOT NULL
 );

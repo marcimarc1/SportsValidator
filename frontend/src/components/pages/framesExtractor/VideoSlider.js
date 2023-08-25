@@ -1,4 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
+import { useParams } from 'react-router';
 import { ReactComponent as PlayIcon } from '../../../icons/play.svg';
 import { ReactComponent as PauseIcon } from '../../../icons/pause.svg';
 import { ReactComponent as ForwardStepIcon } from '../../../icons/forward-step.svg';
@@ -8,13 +9,19 @@ import './VideoSlider.css'
 import SeekBar from './SeekBar';
 import { duration } from '@material-ui/core';
 
-function VideoSlider() {
+// TODO Rename trackingViewer
+// TODO Take a video_id instead and have an endpoint where we supply a video_id and get the corresponding video
+const VideoSlider = () => {
   const [videoUrl, setVideoUrl] = useState("");
   const [frameNumber, setFrameNumber] = useState(0);
   const [timestamp, setTimestamp] = useState(0);
   const [videoElement, setVideoElement] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false)
   const [progress, setProgress] = useState(0);
+  const [isDownloadingVideo, setIsDownloadingVideo] = useState(false);
+  const [annotations, setAnnotations] = useState({});
+
+  let { videoName } = useParams();
 
   const canvasRef = useRef(null);
   const frameDuration = 1001 / 24000; // TODO Get this information from the backend
@@ -35,6 +42,35 @@ function VideoSlider() {
     }
   };
 
+  const handleDownload = async () => {
+    setIsDownloadingVideo(true);
+
+    // TODO : Include the video id
+    console.log("Video name : ", videoName);
+
+    try {
+      const videoResponse = await fetch("/uploads/" + videoName);
+      if (!videoResponse.ok) {
+        throw new Error('Failed to fetch video.');
+      }
+      const videoBlob = await videoResponse.blob();
+
+      const annotationsResponse = await fetch("/api/annotations/199");
+      if (!annotationsResponse.ok) {
+        throw new Error('Failed to fetch annotations for video');
+      }
+      const annotationsJson = await annotationsResponse.json();
+      console.log("Retrieved annotations : ", annotationsJson);
+      setAnnotations(annotationsJson);
+
+      setVideoUrl(URL.createObjectURL(videoBlob));
+    } catch (error) {
+      console.error('Error downloading video:', error);
+    } finally {
+      setIsDownloadingVideo(false);
+    }
+  }
+
 
   useEffect(() => {
     const localVideoElement = document.createElement('video');
@@ -52,7 +88,7 @@ function VideoSlider() {
     const horizontalScalingFactor = canvasElement.width / 3840;
     const verticalScalingFactor = canvasElement.height / 2160;
     let previousFrameNumber = 0;
-    const boxIndexesCount = tracking.annotations.length;
+    const boxIndexesCount = annotations.length;
 
     // https://stackoverflow.com/questions/33834724/draw-video-on-canvas-html5
     const drawVideo = () => {
@@ -64,16 +100,21 @@ function VideoSlider() {
     }
 
     const drawBoundingBoxes = (frameNumber) => {
-      let boxIndex = tracking.annotations.findIndex(element => element.image_id == frameNumber);
+      let boxIndex = annotations.findIndex(element => element.FrameNo == frameNumber);
       if (boxIndex == -1)
         return;
 
-      while (boxIndex < boxIndexesCount && tracking.annotations[boxIndex].image_id == frameNumber) {
-        const [x, y, width, height] = tracking.annotations[boxIndex].bbox
-        const scaledX = x * horizontalScalingFactor;
-        const scaledY = y * verticalScalingFactor;
-        const scaledWidth = width * horizontalScalingFactor;
-        const scaledHeight = height * verticalScalingFactor;
+      while (boxIndex < boxIndexesCount && annotations[boxIndex].FrameNo == frameNumber) {
+        // const scaledX = annotations[boxIndex].x * horizontalScalingFactor;
+        // const scaledY = annotations[boxIndex].y * verticalScalingFactor;
+        // const scaledWidth = annotations[boxIndex].w * horizontalScalingFactor;
+        // const scaledHeight = annotations[boxIndex].h * verticalScalingFactor;
+
+        // Computation should be avoidable with x1 or x2 etc but doesnt seem to work for now
+        const scaledX = (annotations[boxIndex].x - (annotations[boxIndex].w / 2)) * horizontalScalingFactor;
+        const scaledY = (annotations[boxIndex].y - (annotations[boxIndex].h / 2)) * verticalScalingFactor;
+        const scaledWidth = annotations[boxIndex].w * horizontalScalingFactor;
+        const scaledHeight = annotations[boxIndex].h * verticalScalingFactor;
 
         context.strokeStyle = 'red';
         context.lineWidth = 2;
@@ -87,7 +128,7 @@ function VideoSlider() {
     const updateCanvas = () => {
       const currentFrameNumber = getCurrentTimestampFrame();
       drawVideo();
-      drawBoundingBoxes(currentFrameNumber);
+      drawBoundingBoxes(Math.max(currentFrameNumber - 1, 0));
     };
 
     const handleAnimationFrame = () => {
@@ -149,14 +190,15 @@ function VideoSlider() {
 
   const handleKeyDown = (event) => {
     switch(event.keyCode) {
-      case 74 : // l
-        console.log("Video playing : ", videoElement.paused);
-        break; // TODO back 10 sec ?
+      case 74 : // j
+        handlePreviousChunk();
+        break;
       case 75 : // k
         handlePlayPause();
         break;
-      case 76 : // m
-        break; // TODO forward 10 sec ?
+      case 76 : // l
+        handleNextChunk();
+        break;
       case 188 : // ,
         handlePreviousFrame();
         break;
@@ -209,9 +251,20 @@ function VideoSlider() {
     }
   };
 
+  const handlePreviousChunk = () => {
+    const newTimestamp = Math.max(0, videoElement.currentTime - 6);
+    videoElement.currentTime = newTimestamp;
+    updateTimestamp(newTimestamp);
+  }
+
+  const handleNextChunk = () => {
+    const newTimestamp = Math.min(videoElement.duration, videoElement.currentTime + 6);
+    videoElement.currentTime = newTimestamp;
+    updateTimestamp(newTimestamp);
+  }
+
   const handlePlayPause = () => {
-    if (videoElement && !videoElement.ended) {
-      // console.log("Playing : ", videoElement.paused);
+    if (videoElement && videoElement.readyState != 0 && !videoElement.ended) {
       if (videoElement.paused) {
         setIsPlaying(true);
         videoElement.play();
@@ -259,6 +312,7 @@ function VideoSlider() {
   return (
     <div>
       <input type="file" onChange={handleChange} />
+      <button onClick={handleDownload} disabled={isDownloadingVideo}>Download video</button>
       <canvas ref={canvasRef} width={1920} height={1080} style={{ display: "block", width: "100%", height: "auto" }}></canvas>
       <div className="controls">
         <SeekBar onSeekStart={handleSeekStart} onSeekPercent={handleSeekPercent} onSeekEnd={handleSeekEnd} progress={progress} />

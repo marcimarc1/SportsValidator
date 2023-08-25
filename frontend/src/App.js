@@ -8,6 +8,7 @@ import FileOverview from "./components/pages/fileOverview/FileOverview";
 import TrackingEditor from "./components/pages/trackingEditor/TrackingEditor";
 import Analysis from "./components/pages/analysis/Analysis";
 import VideoSlider from './components/pages/framesExtractor/VideoSlider';
+import VideoUpload from './components/pages/VideoUpload';
 // import TrackingEditor from './components/pages/trackingEditor/TrackingEditor';
 
 class App extends Component {
@@ -52,8 +53,12 @@ class App extends Component {
 
                 <Route exact path="/trackingEditor/:id" >
                     <Header/>
+                    <TrackingEditor demo={true} startFrame={1}/>
+                </Route>
+
+                <Route exact path="/newTrackingEditor/:videoName" >
+                    <Header/>
                     <VideoSlider/>
-                    {/* <TrackingEditor demo={true} startFrame={1}/> */}
                 </Route>
 
                 <Route exact path="/analysis/:id" >
@@ -63,6 +68,11 @@ class App extends Component {
 
                 <Route exact path="/games">
                     <FileOverview/>
+                </Route>
+
+                <Route path="/upload-video" >
+                    <Header/>
+                    <VideoUpload/>
                 </Route>
 
             </div>
