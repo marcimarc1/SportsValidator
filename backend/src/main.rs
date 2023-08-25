@@ -179,7 +179,6 @@ async fn save_annotations_for_video(
 }
 
 
-// Why unwrap() after await ?
 async fn upload(mut multipart: Multipart) -> Result<Redirect, (StatusCode, String)> {
     println!("Received multipart file");
     while let Some(field) = multipart.next_field().await.unwrap() {
