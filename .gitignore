@@ -4,7 +4,7 @@
 **/.DS_Store
 **/package-lock.json
 
-backend/test_uploads/*
 backend/uploads/*
+backend/react-app
 
 /docs
