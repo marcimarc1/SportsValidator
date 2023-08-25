@@ -28,10 +28,18 @@ const NewTrackingEditor = () => {
   let wasVideoPlaying = false;
 
   // For changing video source file
-  const handleChange = (event) => {
+  const handleBrowse = async (event) => {
     try {
       // Get the uploaded file
       const file = event.target.files[0];
+
+      const annotationsResponse = await fetch("/api/annotations/199");
+      if (!annotationsResponse.ok) {
+        throw new Error('Failed to fetch annotations for video');
+      }
+      const annotationsJson = await annotationsResponse.json();
+      console.log("Retrieved annotations : ", annotationsJson);
+      setAnnotations(annotationsJson);
 
       // Transform file into blob URL
       setVideoUrl(URL.createObjectURL(file));
@@ -309,7 +317,7 @@ const NewTrackingEditor = () => {
 
   return (
     <div>
-      <input type="file" onChange={handleChange} />
+      <input type="file" onChange={handleBrowse} />
       <button onClick={handleDownload} disabled={isDownloadingVideo}>Download video</button>
       <canvas ref={canvasRef} width={1920} height={1080} style={{ display: "block", width: "100%", height: "auto" }}></canvas>
       <div className="controls">
