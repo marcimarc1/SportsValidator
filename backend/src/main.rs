@@ -1,29 +1,25 @@
-// use anyhow::Ok;
 use axum::{
-    body::{Bytes, StreamBody},
+    body::Bytes,
     extract::{DefaultBodyLimit, Multipart, Path},
-    http::{StatusCode, header},
-    response::{IntoResponse, Redirect},
+    http::StatusCode,
+    response::Redirect,
     routing::{get, get_service, post},
     BoxError, Json, Router, Extension
 };
-use csv::StringRecord;
 use futures::{Stream, TryStreamExt};
 use std::{io, net::SocketAddr};
 use tokio::{fs::File, io::BufWriter};
-use tokio_util::io::{ReaderStream, StreamReader};
+use tokio_util::io::StreamReader;
 use tower_http::cors::CorsLayer;
 use tower_http::services::ServeDir;
-use uuid::Uuid;
 
 use sqlx::postgres::PgPoolOptions;
 use sqlx::{Pool, Postgres};
-// use std::error::Error;
 use serde::de::Error;
 
 // Base : https://medium.com/@lindblomdev/beginning-rust-by-exploring-a-very-basic-axum-web-api-in-detail-1f4c87e422e0
 // Upload file streaming : https://github.com/tokio-rs/axum/blob/main/examples/stream-to-file/src/main.rs
-// http://127.0.0.1:3030/assets/form.html
+// Deployment and connection to database : https://github.com/letsgetrusty/api-deployment-example/tree/master
 
 const UPLOADS_DIRECTORY: &str = "uploads";
 
@@ -75,8 +71,6 @@ where
     D: serde::Deserializer<'de>,
 {
     let float_value = string_to_f64(deserializer)?;
-    // let res = str_value.parse::<i32>().map_err(D::Error::custom);
-    // return res;
     return Ok(float_value as i32);
 }
 
@@ -87,23 +81,6 @@ where
     let str_value: &str = serde::Deserialize::deserialize(deserializer)?;
     return str_value.parse::<f64>().map_err(D::Error::custom);
 }
-
-
-
-// struct PlayerAnnotationRecord {
-//     frame_number: i32,
-//     player_key: i32,
-//     x: f32,
-//     y: f32,
-//     w: f32,
-//     h: f32,
-//     x2: f32,
-//     y2: f32,
-//     x1: f32,
-//     y1: f32,
-//     x_trans: f32,
-//     y_trans: f32,
-// }
 
 
 
@@ -121,14 +98,14 @@ async fn main() -> anyhow::Result<()> {
         .unwrap_or_else(|_| panic!("Failed to create Postgres connection pool! URL: {}", url));
 
     //// Applying the migrations if not previously applied
-    // For each new migrationm create an sql file using `sqlx migrate add <description>` and then edit that file
+    // For each new migrationm, create a sql file using `sqlx migrate add <description>` and then edit that file
     // sqlx cli : https://github.com/launchbadge/sqlx/blob/main/sqlx-cli/README.md
     // sqlx migrations doc : https://docs.rs/sqlx/latest/sqlx/migrate/trait.MigrationSource.html
     sqlx::migrate!("./migrations").run(&pool).await?;
     println!("Applied database migrations");
 
     match save_annotations_for_video(199, "./assets/processed_players.csv", &pool).await {
-        Ok(headers) => {
+        Ok(_) => {
             println!("Successfully saved annotations")
         }
         Err(err) => {
@@ -137,11 +114,12 @@ async fn main() -> anyhow::Result<()> {
     }
 
     //// Creating the routes of the server
+    // Careful : doesn't handle client side routing, meaning if you manually type a url in the React app it will not work
     let app = Router::new()
         .route("/foo", get(|| async { "Hi from /foo" })) // Simplest route for demonstration purposes
         .route("/api/annotations/:video_id", get(handle_annotations_request))
         .route("/api/upload", post(upload))
-        .nest_service("/assets", get_service(ServeDir::new("./assets"))) // TODO remove
+        .nest_service("/assets", get_service(ServeDir::new("./assets"))) // If need be
         .nest_service("/uploads", get_service(ServeDir::new("./uploads")))
         .nest_service("/", get_service(ServeDir::new("./react-app")))
         .layer(DefaultBodyLimit::max(1 << 30))
@@ -171,7 +149,6 @@ async fn save_annotations_for_video(
 
     let mut transaction = pool.begin().await?;
 
-    // Would probably be better to read all at once into a vector, and then write all the data
     for result in csv_reader.deserialize() {
         let record: PlayerAnnotationRecord = result?;
         let _ = sqlx::query("INSERT INTO annotations (video_id, frame_number, track_id, x, y, w, h, x2, y2, x1, y1, x_trans, y_trans) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)")
@@ -190,8 +167,6 @@ async fn save_annotations_for_video(
             .bind(record.y_trans)
             .execute(&mut transaction)
             .await?;
-
-        // println!("{:?}", record);
     }
 
     transaction.commit().await?;
@@ -203,11 +178,6 @@ async fn save_annotations_for_video(
     Ok(())
 }
 
-
-#[derive(serde::Serialize)]
-struct Message {
-    message: String,
-}
 
 // Why unwrap() after await ?
 async fn upload(mut multipart: Multipart) -> Result<Redirect, (StatusCode, String)> {
