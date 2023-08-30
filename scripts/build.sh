@@ -1,3 +1,5 @@
+#!/bin/sh
+
 # This script is supposed to be executed from the top level of the repository
 
 npm run --prefix ./frontend build

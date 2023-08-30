@@ -134,7 +134,7 @@ const NewTrackingEditor = () => {
     const updateCanvas = () => {
       const currentFrameNumber = getCurrentTimestampFrame();
       drawVideo();
-      drawBoundingBoxes(Math.max(currentFrameNumber - 1, 0));
+      drawBoundingBoxes(currentFrameNumber);
     };
 
     const handleAnimationFrame = () => {
@@ -223,16 +223,16 @@ const NewTrackingEditor = () => {
 
 
   const getCurrentTimestampFrame = () => {
-    // + 1 because 1st frame is at currentTime = 0
-    return Math.floor(videoElement.currentTime / frameDuration) + 1;
+    // First frame is frame 0
+    return Math.floor(videoElement.currentTime / frameDuration);
   }
 
   const getReferenceTimestampForFrame = (n) => {
-    return (n - 1) * frameDuration + frameDuration / 3;
+    return (n * frameDuration) + (frameDuration / 3);
   }
 
   const updateTimestamp = (newTimestamp) => {
-    const newFrameNumber = Math.floor(newTimestamp / frameDuration) + 1;
+    const newFrameNumber = Math.floor(newTimestamp / frameDuration);
     setTimestamp(newTimestamp);
     setFrameNumber(newFrameNumber);
   }
