@@ -1,4 +1,5 @@
 #!/bin/sh
+set -e
 
 # This script is supposed to be executed from the top level of the repository
 

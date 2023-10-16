@@ -1,7 +1,8 @@
 #!/bin/sh
+set -e
 
 docker-compose down --rmi all -v --remove-orphans
 docker image prune --force
 docker builder prune --force
 
-rm -r backend/react-app
+rm -r backend/react-app || true
