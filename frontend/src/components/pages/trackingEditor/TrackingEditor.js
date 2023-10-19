@@ -156,15 +156,21 @@ class TrackingEditor extends Component {
         //     canvas.add(image);
         //     canvas.renderAll();
         // });
-        scalingFactor = canvas.getWidth() / img.width;
+        
+        scalingFactor = canvas.getWidth() / img.width;    //img.width is 0 before refreshing the page.
         img.onload = () => {
+            scalingFactor = canvas.getWidth() / img.width;
             canvas.setBackgroundImage(this.pic[currentFrameNumber], canvas.renderAll.bind(canvas), {scaleX: scalingFactor, scaleY: scalingFactor});
             // canvas.setHeight(img.height * scalingFactor);
+            
+            this.canvas = canvas;
+            this.setState({demo: this.props.demo, currentFrame: currentFrameNumber, scalingFactor: scalingFactor, categories: categories, playerColors},
+                () => {this.plotBBoxes(); this.plotCorners(); this.setState({dummy: !this.state.dummy})});
         }
 
-        this.canvas = canvas;
-        this.setState({demo: this.props.demo, currentFrame: currentFrameNumber, scalingFactor: scalingFactor, categories: categories, playerColors},
-            () => {this.plotBBoxes(); this.plotCorners(); this.setState({dummy: !this.state.dummy})});
+        // this.canvas = canvas;
+        // this.setState({demo: this.props.demo, currentFrame: currentFrameNumber, scalingFactor: scalingFactor, categories: categories, playerColors},
+        //     () => {this.plotBBoxes(); this.plotCorners(); this.setState({dummy: !this.state.dummy})});
         // calling setState twice is necessary here because the plotBBoxes function relies on some info about the state
         // the same is done in ComponentDidUpdate, causing rerenders; maybe plotBBoxes could be rewritten but then it would be easier to introduce bugs that violate data consistency with state?
         // The problem could be circumvented by following the functional paradigm of react better and making the canvas a separate component but I believe this does not work that well with fabric and leads to other problems/strange app design
