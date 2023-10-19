@@ -157,7 +157,7 @@ class TrackingEditor extends Component {
         //     canvas.renderAll();
         // });
         
-        scalingFactor = canvas.getWidth() / img.width;    //img.width is 0 before refreshing the page.
+        // scalingFactor = canvas.getWidth() / img.width;    //img.width is 0 before refreshing the page.
         img.onload = () => {
             scalingFactor = canvas.getWidth() / img.width;
             canvas.setBackgroundImage(this.pic[currentFrameNumber], canvas.renderAll.bind(canvas), {scaleX: scalingFactor, scaleY: scalingFactor});
