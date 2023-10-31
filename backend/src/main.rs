@@ -121,7 +121,7 @@ async fn main() -> anyhow::Result<()> {
         .route("/api/upload", post(upload))
         .nest_service("/assets", get_service(ServeDir::new("./assets"))) // If need be
         .nest_service("/uploads", get_service(ServeDir::new("./uploads")))
-        .nest_service("/", get_service(ServeDir::new("./react-app")))
+        .nest_service("/", get_service(ServeDir::new("/frontend/build")))
         .layer(DefaultBodyLimit::max(1 << 30))
         .layer(CorsLayer::permissive())
         .layer(Extension(pool));
@@ -225,7 +225,10 @@ where
         Ok::<_, io::Error>(())
     }
     .await
-    .map_err(|err| (StatusCode::INTERNAL_SERVER_ERROR, err.to_string()))
+    .map_err(|err| {
+        println!("Error occurred when trying to save file : {}", err.to_string());
+        (StatusCode::INTERNAL_SERVER_ERROR, err.to_string())
+    })
 }
 
 // to prevent directory traversal attacks we ensure the path consists of exactly one normal

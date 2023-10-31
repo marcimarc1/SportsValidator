@@ -1,8 +1,9 @@
 #!/bin/sh
 set -e
 
-docker-compose down --rmi all -v --remove-orphans
-docker image prune --force
-docker builder prune --force
+SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"
+cd $SCRIPT_DIR/..
+sudo docker compose down --rmi all -v --remove-orphans || true
 
-rm -r backend/react-app || true
+# Optional :
+# sudo docker system prune

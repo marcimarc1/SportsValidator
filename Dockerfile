@@ -1,18 +1,17 @@
-# Use a base image with Rust pre-installed
+# "Compiling" the frontend down to static html/css/js files
+FROM node:16-alpine as builder
+WORKDIR /frontend
+COPY frontend .
+RUN npm install
+RUN npm run build
+
+# Compiling the backend and importing the frontend static files
 FROM rust:latest
-
-# Should not be necessary but just in case
 ENV SQLX_OFFLINE=true
-
-# Set the working directory inside the container
-WORKDIR /app
-
-# Copy your Rust application files into the container
+WORKDIR /frontend
+COPY --from=builder /frontend/build ./build
+WORKDIR /backend
 COPY backend .
-
-# Build your Rust application
+RUN mkdir -p uploads
 RUN cargo build --release
-
-# Specify the command to run when the container starts
 CMD ["./target/release/backend"]
-# CMD [ "/bin/ls", "-l" ]

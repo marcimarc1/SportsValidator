@@ -1,10 +1,6 @@
 #!/bin/sh
 set -e
 
-# This script is supposed to be executed from the top level of the repository
-
-npm run --prefix ./frontend build
-rm -rf backend/react-app
-mv frontend/build backend/react-app
-
-docker compose up --build
+SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"
+cd $SCRIPT_DIR/..
+sudo docker compose up --build
