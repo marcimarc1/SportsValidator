@@ -21,6 +21,12 @@
     align-items: center;
 }
 
+#tools-container {
+    height: 1.5rem;
+    display: flex;
+    align-items: center;
+}
+
 .icon-button {
     cursor: pointer;
     height: 100%;

@@ -4,10 +4,13 @@ import { ReactComponent as PlayIcon } from '../../../icons/play.svg';
 import { ReactComponent as PauseIcon } from '../../../icons/pause.svg';
 import { ReactComponent as ForwardStepIcon } from '../../../icons/forward-step.svg';
 import { ReactComponent as BackwardStepIcon } from '../../../icons/backward-step.svg';
-import tracking from "../../../data/tracking_data.json";
+// import tracking from "../../../data/tracking_data.json";
+import tracking from "../../../data/tracking_data_test.json";
 import './NewTrackingEditor.css'
 import SeekBar from './SeekBar';
 import { duration } from '@material-ui/core';
+import { FormGroup, Switch, FormControlLabel } from '@mui/material';
+import { faThumbsDown } from '@fortawesome/free-solid-svg-icons';
 
 // TODO Take a video_id instead and have an endpoint on the server where we supply a video_id and get the corresponding video
 const NewTrackingEditor = () => {
@@ -24,6 +27,7 @@ const NewTrackingEditor = () => {
 
   const canvasRef = useRef(null);
   const frameDuration = 1001 / 24000; // TODO Get this information from the backend
+  const canvasBoxes = [];
 
   let wasVideoPlaying = false;
 
@@ -33,15 +37,17 @@ const NewTrackingEditor = () => {
       // Get the uploaded file
       const file = event.target.files[0];
 
-      const annotationsResponse = await fetch("/api/annotations/199");
-      if (!annotationsResponse.ok) {
-        throw new Error('Failed to fetch annotations for video');
-      }
-      const annotationsJson = await annotationsResponse.json();
-      console.log("Retrieved annotations : ", annotationsJson);
-      setAnnotations(annotationsJson);
+      // const annotationsResponse = await fetch("/api/annotations/199");
+      // if (!annotationsResponse.ok) {
+      //   throw new Error('Failed to fetch annotations for video');
+      // }
+      // const annotationsJson = await annotationsResponse.json();
+      // console.log("Retrieved annotations : ", annotationsJson);
+      // setAnnotations(annotationsJson);
 
       // Transform file into blob URL
+
+      setAnnotations(tracking);
       setVideoUrl(URL.createObjectURL(file));
       console.log("Finished setting video url");
     } catch (error) {
@@ -110,6 +116,8 @@ const NewTrackingEditor = () => {
       if (boxIndex == -1)
         return;
 
+      //five players in the tracking data, some are not displayed.
+      //maybe move annotations[boxIndex].FrameNo == frameNumber to the block content?
       while (boxIndex < boxIndexesCount && annotations[boxIndex].FrameNo == frameNumber) {
         // const scaledX = annotations[boxIndex].x * horizontalScalingFactor;
         // const scaledY = annotations[boxIndex].y * verticalScalingFactor;
@@ -124,12 +132,74 @@ const NewTrackingEditor = () => {
 
         context.strokeStyle = 'red';
         context.lineWidth = 2;
+        // context.beginPath();
+        // context.rect(scaledX, scaledY, scaledWidth, scaledHeight);
+
+        // create new box element first rather than directly plotting the rectangle
+        const box = new CanvasBox(
+          annotations[boxIndex].PlayerKey,
+          frameNumber,
+          scaledX,
+          scaledY,
+          scaledWidth,
+          scaledHeight
+        );
+        canvasBoxes.push(box);
+        //needs to be plotted manually.
+        context.strokeStyle = 'red';
+        context.lineWidth = 2;
         context.beginPath();
-        context.rect(scaledX, scaledY, scaledWidth, scaledHeight);
+        context.rect(box.x, box.y, box.width, box.height);
         context.stroke();
         boxIndex++;
       }
+
+      //create a box for test
+      context.strokeStyle = 'red';
+      context.lineWidth = 2;
+      const testBox = new CanvasBox(4, 1, 50, 50, 100, 100);
+      canvasBoxes.push(testBox);
+      context.beginPath();
+      context.rect(testBox.x, testBox.y, testBox.width, testBox.height);
+      context.stroke();
     };
+
+    function addClickListeners() {
+      const handler = function (event) {
+        const rectForMouseEvent = canvasElement.getBoundingClientRect();
+        const horizontalScaleRatio = canvasElement.width / rectForMouseEvent.width;
+        const verticalScalRatio = canvasElement.height / rectForMouseEvent.height;
+        const clickPointX = event.offsetX * horizontalScaleRatio;
+        const clickPointY = event.offsetY * verticalScalRatio;
+        console.log("ratio: " + horizontalScaleRatio, verticalScalRatio);
+        console.log("size of canvas: " + canvasElement.width, canvasElement.height);
+        console.log("original click point:" + event.offsetX, event.offsetY);
+        console.log("scaled click point:" + clickPointX, clickPointY);
+        canvasBoxes.forEach((box, index) => {
+          console.log("box position: ", box.x, box.y);
+          //maybe use context.isPointInPath(clickPointX, clickPointY)?
+          if (clickPointX >= box.x && clickPointX <= box.x + box.width 
+            && clickPointY >= box.y && clickPointY <= box.y + box.height
+            && box.frameNo == getCurrentTimestampFrame()) {
+            if (box.clicked) {
+              console.log("hide annotation.");
+              box.clicked = false;
+              context.clearRect(box.x + box.width + 10, box.y, 200, -50);
+            } else {
+              console.log("show annotation.");
+              box.clicked = true;
+              context.font = "30px Arial";
+              //calculate annotation block size.
+              context.fillText("Hello World", box.x + box.width + 10, box.y);
+            }
+          }
+        }
+        );
+      };
+      canvasElement.addEventListener('click', handler);
+    }
+
+    addClickListeners();
 
     const updateCanvas = () => {
       const currentFrameNumber = getCurrentTimestampFrame();
@@ -317,8 +387,20 @@ const NewTrackingEditor = () => {
 
   return (
     <div>
+      <div className='controls'>
+        <div id="tools-container">
+            <div>Annotation Mode: &nbsp;&nbsp;</div>
+            <FormGroup>
+              <FormControlLabel control={<Switch defaultChecked />} />
+            </FormGroup>
+            <div>Show Annotation: &nbsp;&nbsp;</div>
+            <FormGroup>
+              <FormControlLabel control={<Switch defaultChecked />} />
+            </FormGroup>
+        </div>
+      </div>
       <input type="file" onChange={handleBrowse} />
-      <button onClick={handleDownload} disabled={isDownloadingVideo}>Download video</button>
+      <button onClick={handleBrowse} disabled={isDownloadingVideo}>Download video</button>
       <canvas ref={canvasRef} width={1920} height={1080} style={{ display: "block", width: "100%", height: "auto" }}></canvas>
       <div className="controls">
         <SeekBar onSeekStart={handleSeekStart} onSeekPercent={handleSeekPercent} onSeekEnd={handleSeekEnd} progress={progress} />
@@ -335,5 +417,23 @@ const NewTrackingEditor = () => {
     </div>
   );
 };
+
+class CanvasBox {
+  constructor(playerKey, frameNo, scaledX, scaledY, scaledWidth, scaledHeight) {
+    this.playerKey = playerKey;
+    this.frameNo = frameNo;
+    this.x = scaledX;
+    this.y = scaledY;
+    this.width = scaledWidth;
+    this.height = scaledHeight;
+    this.clicked = false;
+  }
+
+  // create =(context) => {
+  //   const box = new Path2D();
+  //   box.rect(this.x, this.y, this.width, this.height);
+  //   this.box = box;
+  // }
+}
 
 export default NewTrackingEditor;
