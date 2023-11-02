@@ -22,6 +22,8 @@ const NewTrackingEditor = () => {
   const [progress, setProgress] = useState(0);
   const [isDownloadingVideo, setIsDownloadingVideo] = useState(false);
   const [annotations, setAnnotations] = useState({});
+  const [isShowingBox, setIsShowingBox] = useState(false);
+  const [isShowingAnnotation, setIsShowingAnnotation] = useState(true);
 
   let { videoName } = useParams();
 
@@ -101,6 +103,7 @@ const NewTrackingEditor = () => {
     const verticalScalingFactor = canvasElement.height / 2160;
     let previousFrameNumber = 0;
     const boxIndexesCount = annotations.length;
+    var playing = isShowingBox;
 
     // https://stackoverflow.com/questions/33834724/draw-video-on-canvas-html5
     const drawVideo = () => {
@@ -112,56 +115,58 @@ const NewTrackingEditor = () => {
     }
 
     const drawBoundingBoxes = (frameNumber) => {
-      let boxIndex = annotations.findIndex(element => element.FrameNo == frameNumber);
-      if (boxIndex == -1)
-        return;
-
-      //five players in the tracking data, some are not displayed.
-      //maybe move annotations[boxIndex].FrameNo == frameNumber to the block content?
-      while (boxIndex < boxIndexesCount && annotations[boxIndex].FrameNo == frameNumber) {
-        // const scaledX = annotations[boxIndex].x * horizontalScalingFactor;
-        // const scaledY = annotations[boxIndex].y * verticalScalingFactor;
-        // const scaledWidth = annotations[boxIndex].w * horizontalScalingFactor;
-        // const scaledHeight = annotations[boxIndex].h * verticalScalingFactor;
-
-        // Computation should be avoidable with x1 or x2 etc but doesnt seem to work for now
-        const scaledX = (annotations[boxIndex].x - (annotations[boxIndex].w / 2)) * horizontalScalingFactor;
-        const scaledY = (annotations[boxIndex].y - (annotations[boxIndex].h / 2)) * verticalScalingFactor;
-        const scaledWidth = annotations[boxIndex].w * horizontalScalingFactor;
-        const scaledHeight = annotations[boxIndex].h * verticalScalingFactor;
-
+      if(isShowingBox) {
+        let boxIndex = annotations.findIndex(element => element.FrameNo == frameNumber);
+        if (boxIndex == -1)
+          return;
+  
+        //five players in the tracking data, some are not displayed.
+        //maybe move annotations[boxIndex].FrameNo == frameNumber to the block content?
+        while (boxIndex < boxIndexesCount && annotations[boxIndex].FrameNo == frameNumber) {
+          // const scaledX = annotations[boxIndex].x * horizontalScalingFactor;
+          // const scaledY = annotations[boxIndex].y * verticalScalingFactor;
+          // const scaledWidth = annotations[boxIndex].w * horizontalScalingFactor;
+          // const scaledHeight = annotations[boxIndex].h * verticalScalingFactor;
+  
+          // Computation should be avoidable with x1 or x2 etc but doesnt seem to work for now
+          const scaledX = (annotations[boxIndex].x - (annotations[boxIndex].w / 2)) * horizontalScalingFactor;
+          const scaledY = (annotations[boxIndex].y - (annotations[boxIndex].h / 2)) * verticalScalingFactor;
+          const scaledWidth = annotations[boxIndex].w * horizontalScalingFactor;
+          const scaledHeight = annotations[boxIndex].h * verticalScalingFactor;
+  
+          context.strokeStyle = 'red';
+          context.lineWidth = 2;
+          // context.beginPath();
+          // context.rect(scaledX, scaledY, scaledWidth, scaledHeight);
+  
+          // create new box element first rather than directly plotting the rectangle
+          const box = new CanvasBox(
+            annotations[boxIndex].PlayerKey,
+            frameNumber,
+            scaledX,
+            scaledY,
+            scaledWidth,
+            scaledHeight
+          );
+          canvasBoxes.push(box);
+          //needs to be plotted manually.
+          context.strokeStyle = 'red';
+          context.lineWidth = 2;
+          context.beginPath();
+          context.rect(box.x, box.y, box.width, box.height);
+          context.stroke();
+          boxIndex++;
+        }
+  
+        //create a box for test
         context.strokeStyle = 'red';
         context.lineWidth = 2;
-        // context.beginPath();
-        // context.rect(scaledX, scaledY, scaledWidth, scaledHeight);
-
-        // create new box element first rather than directly plotting the rectangle
-        const box = new CanvasBox(
-          annotations[boxIndex].PlayerKey,
-          frameNumber,
-          scaledX,
-          scaledY,
-          scaledWidth,
-          scaledHeight
-        );
-        canvasBoxes.push(box);
-        //needs to be plotted manually.
-        context.strokeStyle = 'red';
-        context.lineWidth = 2;
+        const testBox = new CanvasBox(4, 1, 50, 50, 100, 100);
+        canvasBoxes.push(testBox);
         context.beginPath();
-        context.rect(box.x, box.y, box.width, box.height);
+        context.rect(testBox.x, testBox.y, testBox.width, testBox.height);
         context.stroke();
-        boxIndex++;
       }
-
-      //create a box for test
-      context.strokeStyle = 'red';
-      context.lineWidth = 2;
-      const testBox = new CanvasBox(4, 1, 50, 50, 100, 100);
-      canvasBoxes.push(testBox);
-      context.beginPath();
-      context.rect(testBox.x, testBox.y, testBox.width, testBox.height);
-      context.stroke();
     };
 
     function addClickListeners() {
@@ -204,7 +209,7 @@ const NewTrackingEditor = () => {
     const updateCanvas = () => {
       const currentFrameNumber = getCurrentTimestampFrame();
       drawVideo();
-      drawBoundingBoxes(currentFrameNumber);
+        drawBoundingBoxes(currentFrameNumber);
     };
 
     const handleAnimationFrame = () => {
@@ -261,7 +266,7 @@ const NewTrackingEditor = () => {
       videoElement.removeEventListener('canplay', onCanPlay);
       videoElement.removeEventListener('seeked', onSeek);
     };
-  }, [videoElement]);
+  }, [videoElement, isShowingBox]);
 
 
   const handleKeyDown = (event) => {
@@ -384,18 +389,37 @@ const NewTrackingEditor = () => {
     return `${minutes}:${seconds.toFixed(5).padStart(2, '0')}`;
   };
 
+  const handleDisplayingBox = () => {
+    console.log(isShowingBox);
+    if(isShowingBox) {
+      setIsShowingBox(false);
+      // if the box is hidden, the annotation shall be hidden too.
+      setIsShowingAnnotation(false);
+      
+    } else {
+      setIsShowingBox(true);
+    }
+  }
+  const handleDisplayingAnnotation = () => {
+    if(isShowingAnnotation) {
+      setIsShowingAnnotation(false);
+    } else {
+      setIsShowingAnnotation(true);
+    }
+  }
+
 
   return (
     <div>
       <div className='controls'>
         <div id="tools-container">
-            <div>Annotation Mode: &nbsp;&nbsp;</div>
-            <FormGroup>
-              <FormControlLabel control={<Switch defaultChecked />} />
-            </FormGroup>
             <div>Show Annotation: &nbsp;&nbsp;</div>
             <FormGroup>
-              <FormControlLabel control={<Switch defaultChecked />} />
+              <FormControlLabel control={<Switch checked={isShowingAnnotation} onChange={handleDisplayingAnnotation} />} />
+            </FormGroup>
+            <div>Show Player Box: &nbsp;&nbsp;</div>
+            <FormGroup>
+              <FormControlLabel control={<Switch checked={isShowingBox} onChange={handleDisplayingBox} />} />
             </FormGroup>
         </div>
       </div>
