@@ -39,17 +39,17 @@ const NewTrackingEditor = () => {
       // Get the uploaded file
       const file = event.target.files[0];
 
-      // const annotationsResponse = await fetch("/api/annotations/199");
-      // if (!annotationsResponse.ok) {
-      //   throw new Error('Failed to fetch annotations for video');
-      // }
-      // const annotationsJson = await annotationsResponse.json();
-      // console.log("Retrieved annotations : ", annotationsJson);
-      // setAnnotations(annotationsJson);
+      const annotationsResponse = await fetch("/api/annotations/199");
+      if (!annotationsResponse.ok) {
+        throw new Error('Failed to fetch annotations for video');
+      }
+      const annotationsJson = await annotationsResponse.json();
+      console.log("Retrieved annotations : ", annotationsJson);
+      setAnnotations(annotationsJson);
 
       // Transform file into blob URL
 
-      setAnnotations(tracking);
+      // setAnnotations(tracking);
       setVideoUrl(URL.createObjectURL(file));
       console.log("Finished setting video url");
     } catch (error) {
@@ -103,7 +103,6 @@ const NewTrackingEditor = () => {
     const verticalScalingFactor = canvasElement.height / 2160;
     let previousFrameNumber = 0;
     const boxIndexesCount = annotations.length;
-    var playing = isShowingBox;
 
     // https://stackoverflow.com/questions/33834724/draw-video-on-canvas-html5
     const drawVideo = () => {
@@ -425,7 +424,7 @@ const NewTrackingEditor = () => {
         </div>
       </div>
       <input type="file" onChange={handleBrowse} />
-      <button onClick={handleBrowse} disabled={isDownloadingVideo}>Download video</button>
+      <button onClick={handleDownload} disabled={isDownloadingVideo}>Download video</button>
       <canvas ref={canvasRef} width={1920} height={1080} style={{ display: "block", width: "100%", height: "auto" }}></canvas>
       <div className="controls">
         <SeekBar onSeekStart={handleSeekStart} onSeekPercent={handleSeekPercent} onSeekEnd={handleSeekEnd} progress={progress} />
@@ -454,11 +453,6 @@ class CanvasBox {
     this.clicked = false;
   }
 
-  // create =(context) => {
-  //   const box = new Path2D();
-  //   box.rect(this.x, this.y, this.width, this.height);
-  //   this.box = box;
-  // }
 }
 
 export default NewTrackingEditor;
