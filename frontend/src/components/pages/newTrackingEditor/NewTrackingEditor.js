@@ -49,7 +49,6 @@ const NewTrackingEditor = () => {
 
       // Transform file into blob URL
 
-      // setAnnotations(tracking);
       setVideoUrl(URL.createObjectURL(file));
       console.log("Finished setting video url");
     } catch (error) {
@@ -156,15 +155,7 @@ const NewTrackingEditor = () => {
           context.stroke();
           boxIndex++;
         }
-  
-        //create a box for test
-        context.strokeStyle = 'red';
-        context.lineWidth = 2;
-        const testBox = new CanvasBox(4, 1, 50, 50, 100, 100);
-        canvasBoxes.push(testBox);
-        context.beginPath();
-        context.rect(testBox.x, testBox.y, testBox.width, testBox.height);
-        context.stroke();
+
       }
     };
 
