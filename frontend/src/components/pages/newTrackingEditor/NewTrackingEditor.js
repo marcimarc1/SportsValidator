@@ -9,7 +9,7 @@ import tracking from "../../../data/tracking_data_test.json";
 import './NewTrackingEditor.css'
 import SeekBar from './SeekBar';
 import { duration } from '@material-ui/core';
-import { FormGroup, Switch, FormControlLabel } from '@mui/material';
+import { FormGroup, Switch, FormControlLabel, Button } from '@mui/material';
 import { faThumbsDown } from '@fortawesome/free-solid-svg-icons';
 
 // TODO Take a video_id instead and have an endpoint on the server where we supply a video_id and get the corresponding video
@@ -421,6 +421,7 @@ const NewTrackingEditor = () => {
             <FormGroup>
               <FormControlLabel control={<Switch checked={isShowingBox} onChange={handleDisplayingBox} />} />
             </FormGroup>
+            <Button variant="contained">Add player</Button>
         </div>
       </div>
       <input type="file" onChange={handleBrowse} />
