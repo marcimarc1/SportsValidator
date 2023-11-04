@@ -6,6 +6,7 @@ import { ReactComponent as ForwardStepIcon } from '../../../icons/forward-step.s
 import { ReactComponent as BackwardStepIcon } from '../../../icons/backward-step.svg';
 // import tracking from "../../../data/tracking_data.json";
 import tracking from "../../../data/tracking_data_test.json";
+import { fabric } from 'fabric';
 import './NewTrackingEditor.css'
 import SeekBar from './SeekBar';
 import { duration } from '@material-ui/core';
@@ -39,16 +40,16 @@ const NewTrackingEditor = () => {
       // Get the uploaded file
       const file = event.target.files[0];
 
-      const annotationsResponse = await fetch("/api/annotations/199");
-      if (!annotationsResponse.ok) {
-        throw new Error('Failed to fetch annotations for video');
-      }
-      const annotationsJson = await annotationsResponse.json();
-      console.log("Retrieved annotations : ", annotationsJson);
-      setAnnotations(annotationsJson);
+      // const annotationsResponse = await fetch("/api/annotations/199");
+      // if (!annotationsResponse.ok) {
+      //   throw new Error('Failed to fetch annotations for video');
+      // }
+      // const annotationsJson = await annotationsResponse.json();
+      // console.log("Retrieved annotations : ", annotationsJson);
+      // setAnnotations(annotationsJson);
 
       // Transform file into blob URL
-
+      setAnnotations(tracking);
       setVideoUrl(URL.createObjectURL(file));
       console.log("Finished setting video url");
     } catch (error) {
@@ -57,38 +58,39 @@ const NewTrackingEditor = () => {
   };
 
   const handleDownload = async () => {
-    setIsDownloadingVideo(true);
+    // setIsDownloadingVideo(true);
 
-    console.log("Video name : ", videoName);
+    // console.log("Video name : ", videoName);
 
-    try {
-      const videoResponse = await fetch("/uploads/" + videoName);
-      if (!videoResponse.ok) {
-        throw new Error('Failed to fetch video.');
-      }
-      const videoBlob = await videoResponse.blob();
+    // try {
+    //   const videoResponse = await fetch("/uploads/" + videoName);
+    //   if (!videoResponse.ok) {
+    //     throw new Error('Failed to fetch video.');
+    //   }
+    //   const videoBlob = await videoResponse.blob();
 
-      const annotationsResponse = await fetch("/api/annotations/199");
-      if (!annotationsResponse.ok) {
-        throw new Error('Failed to fetch annotations for video');
-      }
-      const annotationsJson = await annotationsResponse.json();
-      console.log("Retrieved annotations : ", annotationsJson);
-      setAnnotations(annotationsJson);
+    //   const annotationsResponse = await fetch("/api/annotations/199");
+    //   if (!annotationsResponse.ok) {
+    //     throw new Error('Failed to fetch annotations for video');
+    //   }
+    //   const annotationsJson = await annotationsResponse.json();
+    //   console.log("Retrieved annotations : ", annotationsJson);
+    //   setAnnotations(annotationsJson);
 
-      setVideoUrl(URL.createObjectURL(videoBlob));
-    } catch (error) {
-      console.error('Error downloading video:', error);
-    } finally {
-      setIsDownloadingVideo(false);
-    }
+    //   setVideoUrl(URL.createObjectURL(videoBlob));
+    // } catch (error) {
+    //   console.error('Error downloading video:', error);
+    // } finally {
+    //   setIsDownloadingVideo(false);
+    // }
   }
-
 
   useEffect(() => {
     const localVideoElement = document.createElement('video');
     localVideoElement.src = videoUrl;
     localVideoElement.muted = true;
+    localVideoElement.width = 1080;
+    localVideoElement.height = 1920;
     setVideoElement(localVideoElement);
   }, [videoUrl]);
 
@@ -96,105 +98,111 @@ const NewTrackingEditor = () => {
     if (!videoElement)
       return;
 
-    const canvasElement = canvasRef.current;
-    const context = canvasElement.getContext('2d');
-    const horizontalScalingFactor = canvasElement.width / 3840;
-    const verticalScalingFactor = canvasElement.height / 2160;
+    // const canvasElement = canvasRef.current;
+    // const context = canvasElement.getContext('2d');
+    let canvas = new fabric.Canvas('tracking-editor-canvas');
+    canvas.setHeight(1920);
+    canvas.setWidth(1080);
+    const horizontalScalingFactor = canvas.width / 3840;
+    const verticalScalingFactor = canvas.height / 2160;
     let previousFrameNumber = 0;
     const boxIndexesCount = annotations.length;
 
     // https://stackoverflow.com/questions/33834724/draw-video-on-canvas-html5
     const drawVideo = () => {
       // Clear canvas
-      context.clearRect(0, 0, canvasElement.width, canvasElement.height);
+      // context.clearRect(0, 0, canvasElement.width, canvasElement.height);
 
       // Drawing video
-      context.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
+      // context.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
+      var fabricVideo = new fabric.Image(videoElement, {left:0, top:0, width:canvas.width, height: canvas.height, selectable: false});
+      canvas.setBackgroundImage(fabricVideo);
+      canvas.renderAll();
     }
 
     const drawBoundingBoxes = (frameNumber) => {
-      if(isShowingBox) {
-        let boxIndex = annotations.findIndex(element => element.FrameNo == frameNumber);
-        if (boxIndex == -1)
-          return;
+      // if(isShowingBox) {
+      //   let boxIndex = annotations.findIndex(element => element.FrameNo == frameNumber);
+      //   if (boxIndex == -1)
+      //     return;
   
-        //five players in the tracking data, some are not displayed.
-        //maybe move annotations[boxIndex].FrameNo == frameNumber to the block content?
-        while (boxIndex < boxIndexesCount && annotations[boxIndex].FrameNo == frameNumber) {
-          // const scaledX = annotations[boxIndex].x * horizontalScalingFactor;
-          // const scaledY = annotations[boxIndex].y * verticalScalingFactor;
-          // const scaledWidth = annotations[boxIndex].w * horizontalScalingFactor;
-          // const scaledHeight = annotations[boxIndex].h * verticalScalingFactor;
+      //   //five players in the tracking data, some are not displayed.
+      //   //maybe move annotations[boxIndex].FrameNo == frameNumber to the block content?
+      //   while (boxIndex < boxIndexesCount && annotations[boxIndex].FrameNo == frameNumber) {
+      //     // const scaledX = annotations[boxIndex].x * horizontalScalingFactor;
+      //     // const scaledY = annotations[boxIndex].y * verticalScalingFactor;
+      //     // const scaledWidth = annotations[boxIndex].w * horizontalScalingFactor;
+      //     // const scaledHeight = annotations[boxIndex].h * verticalScalingFactor;
   
-          // Computation should be avoidable with x1 or x2 etc but doesnt seem to work for now
-          const scaledX = (annotations[boxIndex].x - (annotations[boxIndex].w / 2)) * horizontalScalingFactor;
-          const scaledY = (annotations[boxIndex].y - (annotations[boxIndex].h / 2)) * verticalScalingFactor;
-          const scaledWidth = annotations[boxIndex].w * horizontalScalingFactor;
-          const scaledHeight = annotations[boxIndex].h * verticalScalingFactor;
+      //     // Computation should be avoidable with x1 or x2 etc but doesnt seem to work for now
+      //     const scaledX = (annotations[boxIndex].x - (annotations[boxIndex].w / 2)) * horizontalScalingFactor;
+      //     const scaledY = (annotations[boxIndex].y - (annotations[boxIndex].h / 2)) * verticalScalingFactor;
+      //     const scaledWidth = annotations[boxIndex].w * horizontalScalingFactor;
+      //     const scaledHeight = annotations[boxIndex].h * verticalScalingFactor;
   
-          context.strokeStyle = 'red';
-          context.lineWidth = 2;
-          // context.beginPath();
-          // context.rect(scaledX, scaledY, scaledWidth, scaledHeight);
+      //     context.strokeStyle = 'red';
+      //     context.lineWidth = 2;
+      //     // context.beginPath();
+      //     // context.rect(scaledX, scaledY, scaledWidth, scaledHeight);
   
-          // create new box element first rather than directly plotting the rectangle
-          const box = new CanvasBox(
-            annotations[boxIndex].PlayerKey,
-            frameNumber,
-            scaledX,
-            scaledY,
-            scaledWidth,
-            scaledHeight
-          );
-          canvasBoxes.push(box);
-          //needs to be plotted manually.
-          context.strokeStyle = 'red';
-          context.lineWidth = 2;
-          context.beginPath();
-          context.rect(box.x, box.y, box.width, box.height);
-          context.stroke();
-          boxIndex++;
-        }
+      //     // create new box element first rather than directly plotting the rectangle
+      //     const box = new CanvasBox(
+      //       annotations[boxIndex].PlayerKey,
+      //       frameNumber,
+      //       scaledX,
+      //       scaledY,
+      //       scaledWidth,
+      //       scaledHeight
+      //     );
+      //     canvasBoxes.push(box);
+      //     //needs to be plotted manually.
+      //     context.strokeStyle = 'red';
+      //     context.lineWidth = 2;
+      //     context.beginPath();
+      //     context.rect(box.x, box.y, box.width, box.height);
+      //     context.stroke();
+      //     boxIndex++;
+      //   }
 
-      }
+      // }
     };
 
-    function addClickListeners() {
-      const handler = function (event) {
-        const rectForMouseEvent = canvasElement.getBoundingClientRect();
-        const horizontalScaleRatio = canvasElement.width / rectForMouseEvent.width;
-        const verticalScalRatio = canvasElement.height / rectForMouseEvent.height;
-        const clickPointX = event.offsetX * horizontalScaleRatio;
-        const clickPointY = event.offsetY * verticalScalRatio;
-        console.log("ratio: " + horizontalScaleRatio, verticalScalRatio);
-        console.log("size of canvas: " + canvasElement.width, canvasElement.height);
-        console.log("original click point:" + event.offsetX, event.offsetY);
-        console.log("scaled click point:" + clickPointX, clickPointY);
-        canvasBoxes.forEach((box, index) => {
-          console.log("box position: ", box.x, box.y);
-          //maybe use context.isPointInPath(clickPointX, clickPointY)?
-          if (clickPointX >= box.x && clickPointX <= box.x + box.width 
-            && clickPointY >= box.y && clickPointY <= box.y + box.height
-            && box.frameNo == getCurrentTimestampFrame()) {
-            if (box.clicked) {
-              console.log("hide annotation.");
-              box.clicked = false;
-              context.clearRect(box.x + box.width + 10, box.y, 200, -50);
-            } else {
-              console.log("show annotation.");
-              box.clicked = true;
-              context.font = "30px Arial";
-              //calculate annotation block size.
-              context.fillText("Hello World", box.x + box.width + 10, box.y);
-            }
-          }
-        }
-        );
-      };
-      canvasElement.addEventListener('click', handler);
-    }
+    // function addClickListeners() {
+    //   const handler = function (event) {
+    //     const rectForMouseEvent = canvasElement.getBoundingClientRect();
+    //     const horizontalScaleRatio = canvasElement.width / rectForMouseEvent.width;
+    //     const verticalScalRatio = canvasElement.height / rectForMouseEvent.height;
+    //     const clickPointX = event.offsetX * horizontalScaleRatio;
+    //     const clickPointY = event.offsetY * verticalScalRatio;
+    //     console.log("ratio: " + horizontalScaleRatio, verticalScalRatio);
+    //     console.log("size of canvas: " + canvasElement.width, canvasElement.height);
+    //     console.log("original click point:" + event.offsetX, event.offsetY);
+    //     console.log("scaled click point:" + clickPointX, clickPointY);
+    //     canvasBoxes.forEach((box, index) => {
+    //       console.log("box position: ", box.x, box.y);
+    //       //maybe use context.isPointInPath(clickPointX, clickPointY)?
+    //       if (clickPointX >= box.x && clickPointX <= box.x + box.width 
+    //         && clickPointY >= box.y && clickPointY <= box.y + box.height
+    //         && box.frameNo == getCurrentTimestampFrame()) {
+    //         if (box.clicked) {
+    //           console.log("hide annotation.");
+    //           box.clicked = false;
+    //           context.clearRect(box.x + box.width + 10, box.y, 200, -50);
+    //         } else {
+    //           console.log("show annotation.");
+    //           box.clicked = true;
+    //           context.font = "30px Arial";
+    //           //calculate annotation block size.
+    //           context.fillText("Hello World", box.x + box.width + 10, box.y);
+    //         }
+    //       }
+    //     }
+    //     );
+    //   };
+    //   canvasElement.addEventListener('click', handler);
+    // }
 
-    addClickListeners();
+    // addClickListeners();
 
     const updateCanvas = () => {
       const currentFrameNumber = getCurrentTimestampFrame();
@@ -256,7 +264,7 @@ const NewTrackingEditor = () => {
       videoElement.removeEventListener('canplay', onCanPlay);
       videoElement.removeEventListener('seeked', onSeek);
     };
-  }, [videoElement, isShowingBox]);
+  }, [videoElement]);
 
 
   const handleKeyDown = (event) => {
@@ -416,7 +424,8 @@ const NewTrackingEditor = () => {
       </div>
       <input type="file" onChange={handleBrowse} />
       <button onClick={handleDownload} disabled={isDownloadingVideo}>Download video</button>
-      <canvas ref={canvasRef} width={1920} height={1080} style={{ display: "block", width: "100%", height: "auto" }}></canvas>
+      {/* <canvas ref={canvasRef} width={1920} height={1080} style={{ display: "block", width: "100%", height: "auto" }}></canvas> */}
+      <canvas id="tracking-editor-canvas" width="1920" height="1080" style={{ display: "block", width: "100%", height: "auto" }}></canvas>
       <div className="controls">
         <SeekBar onSeekStart={handleSeekStart} onSeekPercent={handleSeekPercent} onSeekEnd={handleSeekEnd} progress={progress} />
         <div id="buttons-container">
