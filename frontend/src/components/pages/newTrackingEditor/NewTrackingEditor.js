@@ -90,6 +90,10 @@ const NewTrackingEditor = () => {
     localVideoElement.src = videoUrl;
     localVideoElement.muted = true;
 
+    //video size has to be anually set
+    localVideoElement.width = 3840;
+    localVideoElement.height = 2160;
+
     setVideoElement(localVideoElement);
   }, [videoUrl]);
 
