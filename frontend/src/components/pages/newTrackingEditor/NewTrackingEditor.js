@@ -89,8 +89,7 @@ const NewTrackingEditor = () => {
     const localVideoElement = document.createElement('video');
     localVideoElement.src = videoUrl;
     localVideoElement.muted = true;
-    localVideoElement.width = 1080;
-    localVideoElement.height = 1920;
+
     setVideoElement(localVideoElement);
   }, [videoUrl]);
 
@@ -101,8 +100,8 @@ const NewTrackingEditor = () => {
     // const canvasElement = canvasRef.current;
     // const context = canvasElement.getContext('2d');
     let canvas = new fabric.Canvas('tracking-editor-canvas');
-    canvas.setHeight(1920);
-    canvas.setWidth(1080);
+    canvas.setHeight(1080);
+    canvas.setWidth(1920);
     const horizontalScalingFactor = canvas.width / 3840;
     const verticalScalingFactor = canvas.height / 2160;
     let previousFrameNumber = 0;
@@ -115,8 +114,13 @@ const NewTrackingEditor = () => {
 
       // Drawing video
       // context.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
-      var fabricVideo = new fabric.Image(videoElement, {left:0, top:0, width:canvas.width, height: canvas.height, selectable: false});
-      canvas.setBackgroundImage(fabricVideo);
+      var fabricVideo = new fabric.Image(videoElement, {left:0, 
+                                                        top:0, 
+                                                        width:videoElement.width,
+                                                        height:videoElement.height,
+                                                        selectable: false});
+
+      canvas.setBackgroundImage(fabricVideo, canvas.renderAll.bind(canvas), {scaleX:horizontalScalingFactor, scaleY:verticalScalingFactor});
       canvas.renderAll();
     }
 
@@ -425,7 +429,7 @@ const NewTrackingEditor = () => {
       <input type="file" onChange={handleBrowse} />
       <button onClick={handleDownload} disabled={isDownloadingVideo}>Download video</button>
       {/* <canvas ref={canvasRef} width={1920} height={1080} style={{ display: "block", width: "100%", height: "auto" }}></canvas> */}
-      <canvas id="tracking-editor-canvas" width="1920" height="1080" style={{ display: "block", width: "100%", height: "auto" }}></canvas>
+      <canvas id="tracking-editor-canvas" width={1920} height={1080} style={{ display: "block", width: "100%", height: "auto" }}></canvas>
       <div className="controls">
         <SeekBar onSeekStart={handleSeekStart} onSeekPercent={handleSeekPercent} onSeekEnd={handleSeekEnd} progress={progress} />
         <div id="buttons-container">
