@@ -5,7 +5,7 @@ import { ReactComponent as PauseIcon } from '../../../icons/pause.svg';
 import { ReactComponent as ForwardStepIcon } from '../../../icons/forward-step.svg';
 import { ReactComponent as BackwardStepIcon } from '../../../icons/backward-step.svg';
 // import tracking from "../../../data/tracking_data.json";
-import tracking from "../../../data/tracking_data_test.json";
+import tracking from "../../../data/tracking-data-for-test.json";
 import { fabric } from 'fabric';
 import './NewTrackingEditor.css'
 import SeekBar from './SeekBar';
@@ -31,8 +31,17 @@ const NewTrackingEditor = () => {
   const canvasRef = useRef(null);
   const frameDuration = 1001 / 24000; // TODO Get this information from the backend
   const canvasBoxes = [];
+  const canvasAnnotations = [];
 
   let wasVideoPlaying = false;
+
+  const retrievePlayer = () => {
+    if (annotations.length > 0) {
+      return Math.max(...annotations.map(a => a.PlayerKey));
+    } else {
+      return 0;
+    }
+  }
 
   // For changing video source file
   const handleBrowse = async (event) => {
@@ -115,6 +124,7 @@ const NewTrackingEditor = () => {
     let previousFrameNumber = 0;
     console.log("canvas with: " + canvasHeight, canvasWidth);
     const boxIndexesCount = annotations.length;
+    const playerCount = retrievePlayer();
 
     // https://stackoverflow.com/questions/33834724/draw-video-on-canvas-html5
     const drawVideo = () => {
@@ -134,6 +144,72 @@ const NewTrackingEditor = () => {
     }
 
     const drawBoundingBoxes = (frameNumber) => {
+      canvas.remove(...canvas.getObjects());
+      let boxIndex = annotations.findIndex(element => element.FrameNo == frameNumber);
+      if (boxIndex == -1) {
+        return;
+      }
+
+      const playersToDraw = annotations.filter(a => a.FrameNo == frameNumber);
+      let playerIndex = 0;
+
+      if (playersToDraw.length > 0) {
+        //draw boxes
+        while (playerIndex < playersToDraw.length) {
+          const scaledX = (playersToDraw[playerIndex].x - (playersToDraw[playerIndex].w / 2)) * horizontalScalingFactor;
+          const scaledY = (playersToDraw[playerIndex].y - (playersToDraw[playerIndex].h / 2)) * verticalScalingFactor;
+          const scaledWidth = playersToDraw[playerIndex].w * horizontalScalingFactor;
+          const scaledHeight = playersToDraw[playerIndex].h * verticalScalingFactor;
+
+          let playerBox = new fabric.Rect({
+            left: scaledX,
+            top: scaledY,
+            fill: 'rgba(0,0,0,0)',
+            width: scaledWidth,
+            height: scaledHeight,
+            dirty: false,
+            selectable: true,
+            stroke: 'red',
+            hasBorders: false,              // disables the control borders (the lines connecting the controls the show up when object is selected
+            strokeWidth: 2,
+            strokeUniform: true,            // to keep the bounding box a consisten thickness, independent of its size
+            padding: 0,  // to make sure the pixel coordinates are correct
+            cornerStyle: 'rect',
+            lockRotation: true
+        });
+        playerBox.my = {
+          selected: false,
+          key: playerIndex
+          // also connect it to corresponding annotation
+        }
+        playerBox.on({
+          'selected': () => {
+            alert("player at" + scaledX, scaledY + "selected");
+          },
+          'mousedown': () => {
+            alert("player at" + scaledX, scaledY + "selected");
+          },
+          'mouseover': () => {
+            
+          }
+      });
+
+        playerBox.on({
+          'deselected': () => {
+            
+          },
+          'mouseout': () => {
+
+          }
+      });
+        canvasBoxes.push(playerBox);
+        canvas.add(playerBox);
+        playerIndex++;
+        }
+
+      
+        canvas.renderAll();
+      }
       // if(isShowingBox) {
       //   let boxIndex = annotations.findIndex(element => element.FrameNo == frameNumber);
       //   if (boxIndex == -1)
