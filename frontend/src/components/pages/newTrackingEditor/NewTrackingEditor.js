@@ -103,12 +103,17 @@ const NewTrackingEditor = () => {
 
     // const canvasElement = canvasRef.current;
     // const context = canvasElement.getContext('2d');
+
+    //retrieve screen width without scrollbar
+    let canvasWidth = document.body.clientWidth;
+    let canvasHeight = videoElement.height / videoElement.width * canvasWidth;
     let canvas = new fabric.Canvas('tracking-editor-canvas');
-    canvas.setHeight(1080);
-    canvas.setWidth(1920);
+    canvas.setHeight(canvasHeight);
+    canvas.setWidth(canvasWidth);
     const horizontalScalingFactor = canvas.width / 3840;
     const verticalScalingFactor = canvas.height / 2160;
     let previousFrameNumber = 0;
+    console.log("canvas with: " + canvasHeight, canvasWidth);
     const boxIndexesCount = annotations.length;
 
     // https://stackoverflow.com/questions/33834724/draw-video-on-canvas-html5
