@@ -15,6 +15,7 @@ import { faThumbsDown } from '@fortawesome/free-solid-svg-icons';
 
 // TODO Take a video_id instead and have an endpoint on the server where we supply a video_id and get the corresponding video
 const NewTrackingEditor = () => {
+  const [canvas, setCanvas] = useState('');
   const [videoUrl, setVideoUrl] = useState("");
   const [frameNumber, setFrameNumber] = useState(0);
   const [timestamp, setTimestamp] = useState(0);
@@ -95,6 +96,18 @@ const NewTrackingEditor = () => {
   }
 
   useEffect(() => {
+    let canvasWidth = document.body.clientWidth;
+    var canvasHeight = 800;
+    if (videoElement) {
+      canvasHeight  = videoElement.height / videoElement.width * canvasWidth;
+    }
+    let initCanvas = new fabric.Canvas('tracking-editor-canvas');
+    initCanvas.setHeight(canvasHeight);
+    initCanvas.setWidth(canvasWidth);
+    setCanvas(initCanvas);
+  }, [])
+
+  useEffect(() => {
     const localVideoElement = document.createElement('video');
     localVideoElement.src = videoUrl;
     localVideoElement.muted = true;
@@ -114,15 +127,14 @@ const NewTrackingEditor = () => {
     // const context = canvasElement.getContext('2d');
 
     //retrieve screen width without scrollbar
-    let canvasWidth = document.body.clientWidth;
-    let canvasHeight = videoElement.height / videoElement.width * canvasWidth;
-    let canvas = new fabric.Canvas('tracking-editor-canvas');
-    canvas.setHeight(canvasHeight);
-    canvas.setWidth(canvasWidth);
+    // let canvasWidth = document.body.clientWidth;
+    // let canvasHeight = videoElement.height / videoElement.width * canvasWidth;
+    // let canvas = new fabric.Canvas('tracking-editor-canvas');
+    // canvas.setHeight(canvasHeight);
+    // canvas.setWidth(canvasWidth);
     const horizontalScalingFactor = canvas.width / 3840;
     const verticalScalingFactor = canvas.height / 2160;
     let previousFrameNumber = 0;
-    console.log("canvas with: " + canvasHeight, canvasWidth);
     const boxIndexesCount = annotations.length;
     const playerCount = retrievePlayer();
 
@@ -137,10 +149,9 @@ const NewTrackingEditor = () => {
                                                         top:0, 
                                                         width:videoElement.width,
                                                         height:videoElement.height,
-                                                        selectable: false});
+                                                        selectable: true});
 
       canvas.setBackgroundImage(fabricVideo, canvas.renderAll.bind(canvas), {scaleX:horizontalScalingFactor, scaleY:verticalScalingFactor});
-      canvas.renderAll();
     }
 
     const drawBoundingBoxes = (frameNumber) => {
@@ -170,11 +181,12 @@ const NewTrackingEditor = () => {
             dirty: false,
             selectable: true,
             stroke: 'red',
-            hasBorders: false,              // disables the control borders (the lines connecting the controls the show up when object is selected
+            hasBorders: true,              // disables the control borders (the lines connecting the controls the show up when object is selected
+            hasControls: true,
             strokeWidth: 2,
             strokeUniform: true,            // to keep the bounding box a consisten thickness, independent of its size
             padding: 0,  // to make sure the pixel coordinates are correct
-            cornerStyle: 'rect',
+            cornerStyle: 'circle',
             lockRotation: true
         });
         playerBox.my = {
@@ -184,24 +196,24 @@ const NewTrackingEditor = () => {
         }
         playerBox.on({
           'selected': () => {
-            alert("player at" + scaledX, scaledY + "selected");
+            // alert("player at" + scaledX, scaledY + "selected");
           },
           'mousedown': () => {
-            alert("player at" + scaledX, scaledY + "selected");
+            // alert("player at" + scaledX, scaledY + "selected");
           },
           'mouseover': () => {
             
           }
-      });
+        });
 
         playerBox.on({
           'deselected': () => {
-            
+            // alert("player at" + scaledX, scaledY + "selected");
           },
           'mouseout': () => {
-
+            // alert("player at" + scaledX, scaledY + "selected");
           }
-      });
+        });
         canvasBoxes.push(playerBox);
         canvas.add(playerBox);
         playerIndex++;
@@ -296,7 +308,7 @@ const NewTrackingEditor = () => {
     const updateCanvas = () => {
       const currentFrameNumber = getCurrentTimestampFrame();
       drawVideo();
-        drawBoundingBoxes(currentFrameNumber);
+      drawBoundingBoxes(currentFrameNumber);
     };
 
     const handleAnimationFrame = () => {
@@ -513,8 +525,7 @@ const NewTrackingEditor = () => {
       </div>
       <input type="file" onChange={handleBrowse} />
       <button onClick={handleDownload} disabled={isDownloadingVideo}>Download video</button>
-      {/* <canvas ref={canvasRef} width={1920} height={1080} style={{ display: "block", width: "100%", height: "auto" }}></canvas> */}
-      <canvas id="tracking-editor-canvas" width={1920} height={1080} style={{ display: "block", width: "100%", height: "auto" }}></canvas>
+      <canvas id="tracking-editor-canvas" width='1920' height='1080' style={{ display: "block", width: "100%", height: "auto" }}></canvas>
       <div className="controls">
         <SeekBar onSeekStart={handleSeekStart} onSeekPercent={handleSeekPercent} onSeekEnd={handleSeekEnd} progress={progress} />
         <div id="buttons-container">
