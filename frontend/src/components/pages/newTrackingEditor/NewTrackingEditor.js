@@ -24,7 +24,7 @@ const NewTrackingEditor = () => {
   const [progress, setProgress] = useState(0);
   const [isDownloadingVideo, setIsDownloadingVideo] = useState(false);
   const [annotations, setAnnotations] = useState({});
-  const [isShowingBox, setIsShowingBox] = useState(false);
+  const [isShowingBox, setIsShowingBox] = useState(true);
   const [isShowingAnnotation, setIsShowingAnnotation] = useState(true);
 
   let { videoName } = useParams();
@@ -167,6 +167,7 @@ const NewTrackingEditor = () => {
       if (playersToDraw.length > 0) {
         //draw boxes
         while (playerIndex < playersToDraw.length) {
+          console.log(isShowingBox);
           const scaledX = (playersToDraw[playerIndex].x - (playersToDraw[playerIndex].w / 2)) * horizontalScalingFactor;
           const scaledY = (playersToDraw[playerIndex].y - (playersToDraw[playerIndex].h / 2)) * verticalScalingFactor;
           const scaledWidth = playersToDraw[playerIndex].w * horizontalScalingFactor;
@@ -178,25 +179,29 @@ const NewTrackingEditor = () => {
             fill: 'rgba(0,0,0,0)',
             width: scaledWidth,
             height: scaledHeight,
+            visible: isShowingBox,
             dirty: false,
-            selectable: true,
             stroke: 'red',
-            hasBorders: true,              // disables the control borders (the lines connecting the controls the show up when object is selected
-            hasControls: true,
+            hasBorders: false,              // disables the control borders (the lines connecting the controls the show up when object is selected
             strokeWidth: 2,
             strokeUniform: true,            // to keep the bounding box a consisten thickness, independent of its size
             padding: 0,  // to make sure the pixel coordinates are correct
-            cornerStyle: 'circle',
+            cornerStyle: 'rect',
             lockRotation: true
         });
         playerBox.my = {
           selected: false,
-          key: playerIndex
+          key: playerIndex,
+          frame: frameNumber,
+          //scaling factor when modifying the box
+          scaleX: 1,
+          scaleY: 1
           // also connect it to corresponding annotation
         }
         playerBox.on({
           'selected': () => {
             // alert("player at" + scaledX, scaledY + "selected");
+            console.log("player position: %d  %d  %d  %d", playerBox.left, playerBox.top, playerBox.width, playerBox.height);
           },
           'mousedown': () => {
             // alert("player at" + scaledX, scaledY + "selected");
@@ -212,6 +217,21 @@ const NewTrackingEditor = () => {
           },
           'mouseout': () => {
             // alert("player at" + scaledX, scaledY + "selected");
+          }
+        });
+
+        playerBox.on({
+          'modified': (event) => {
+            let targetRect = event.target;
+            playerBox.left = targetRect.left;
+            playerBox.top = targetRect.top;
+            playerBox.width = playerBox.width * targetRect.scaleX / playerBox.my.scaleX;
+            playerBox.height = targetRect.height * targetRect.scaleY / playerBox.my.scaleY;
+            playerBox.dirty = true;
+            playerBox.my.scaleX = targetRect.scaleX;
+            playerBox.my.scaleY = targetRect.scaleY;
+            console.log("scaling factor: %f %f", targetRect.scaleX, targetRect.scaleY);
+            console.log("player position: %d  %d  %d  %d", targetRect.left, targetRect.top, targetRect.width, targetRect.height);
           }
         });
         canvasBoxes.push(playerBox);
@@ -365,7 +385,11 @@ const NewTrackingEditor = () => {
       videoElement.removeEventListener('canplay', onCanPlay);
       videoElement.removeEventListener('seeked', onSeek);
     };
-  }, [videoElement]);
+  }, [videoElement, isShowingBox]);
+
+  useEffect(() => {
+    console.log(isShowingBox);
+  }, [isShowingBox]);
 
 
   const handleKeyDown = (event) => {
@@ -488,23 +512,96 @@ const NewTrackingEditor = () => {
     return `${minutes}:${seconds.toFixed(5).padStart(2, '0')}`;
   };
 
-  const handleDisplayingBox = () => {
-    console.log(isShowingBox);
+  function handleDisplayingBox() {
     if(isShowingBox) {
       setIsShowingBox(false);
       // if the box is hidden, the annotation shall be hidden too.
       setIsShowingAnnotation(false);
-      
+      if (!videoElement.paused) {
+        videoElement.pause();
+        videoElement.play();
+      }
     } else {
       setIsShowingBox(true);
+      if (!videoElement.paused) {
+        videoElement.pause();
+        videoElement.play();
+      }
     }
   }
-  const handleDisplayingAnnotation = () => {
+
+  function handleDisplayingAnnotation() {
     if(isShowingAnnotation) {
       setIsShowingAnnotation(false);
     } else {
       setIsShowingAnnotation(true);
     }
+  }
+
+  function handleAddPlayer() {
+    let playerBox = new fabric.Rect({
+      left: 500,
+      top: 100,
+      fill: 'rgba(0,0,0,0)',
+      width: 100,
+      height: 100,
+      visible: isShowingBox,
+      dirty: false,
+      stroke: 'red',
+      hasBorders: false,              // disables the control borders (the lines connecting the controls the show up when object is selected
+      strokeWidth: 2,
+      strokeUniform: true,            // to keep the bounding box a consisten thickness, independent of its size
+      padding: 0,  // to make sure the pixel coordinates are correct
+      cornerStyle: 'rect',
+      lockRotation: true
+  });
+  playerBox.my = {
+    selected: false,
+    key: 1,
+    frame: getCurrentTimestampFrame(),
+    //scaling factor when modifying the box
+    scaleX: 1,
+    scaleY: 1
+    // also connect it to corresponding annotation
+  }
+  playerBox.on({
+    'selected': () => {
+      // alert("player at" + scaledX, scaledY + "selected");
+      console.log("player position: %d  %d  %d  %d", playerBox.left, playerBox.top, playerBox.width, playerBox.height);
+    },
+    'mousedown': () => {
+      // alert("player at" + scaledX, scaledY + "selected");
+    },
+    'mouseover': () => {
+      
+    }
+  });
+
+  playerBox.on({
+    'deselected': () => {
+      // alert("player at" + scaledX, scaledY + "selected");
+    },
+    'mouseout': () => {
+      // alert("player at" + scaledX, scaledY + "selected");
+    }
+  });
+
+  playerBox.on({
+    'modified': (event) => {
+      let targetRect = event.target;
+      playerBox.left = targetRect.left;
+      playerBox.top = targetRect.top;
+      playerBox.width = playerBox.width * targetRect.scaleX / playerBox.my.scaleX;
+      playerBox.height = targetRect.height * targetRect.scaleY / playerBox.my.scaleY;
+      playerBox.dirty = true;
+      playerBox.my.scaleX = targetRect.scaleX;
+      playerBox.my.scaleY = targetRect.scaleY;
+      console.log("scaling factor: %f %f", targetRect.scaleX, targetRect.scaleY);
+      console.log("player position: %d  %d  %d  %d", targetRect.left, targetRect.top, targetRect.width, targetRect.height);
+    }
+  });
+    canvasBoxes.push(playerBox);
+    canvas.add(playerBox);
   }
 
 
@@ -520,7 +617,7 @@ const NewTrackingEditor = () => {
             <FormGroup>
               <FormControlLabel control={<Switch checked={isShowingBox} onChange={handleDisplayingBox} />} />
             </FormGroup>
-            <Button variant="contained">Add player</Button>
+            <Button variant="contained" onClick={handleAddPlayer}>Add player</Button>
         </div>
       </div>
       <input type="file" onChange={handleBrowse} />
