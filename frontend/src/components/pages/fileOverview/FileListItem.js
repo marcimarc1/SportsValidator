@@ -88,7 +88,7 @@ class FileListItem extends Component {
                     </div>
                 </div>
                 <div className="FileOverviewListItemButtonContainer">
-                    <Link to={`trackingEditor/${this.props.id}`} >
+                    <Link to={`newTrackingEditor/${this.props.videoName}`} >
                         <IconButton size="large" variant="contained" className={"FileOverviewListItemButton"} aria-label="edit annotations">
                             <FontAwesomeIcon icon={faEdit} />
                         </IconButton>
@@ -111,6 +111,7 @@ class FileListItem extends Component {
 FileListItem.propTypes = {
     id: PropTypes.number.isRequired,
     name: PropTypes.string.isRequired,
+    videoName: PropTypes.string.isRequired,
     duration: PropTypes.number.isRequired,      //video duration in minutes
     notes: PropTypes.string,
     changeName: PropTypes.func.isRequired,

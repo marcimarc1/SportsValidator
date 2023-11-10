@@ -30,7 +30,7 @@ class FileOverview extends Component {
         let files = videofiles.files;
         let fileListItems = [];
         for(const f of files) {
-            fileListItems[f.id] = {name: f.name, duration: f.duration, notes: f.notes};
+            fileListItems[f.id] = {name: f.name, videoName: f.videoName, duration: f.duration, notes: f.notes};
         }
         this.setState({fileListItems});
     }
@@ -90,7 +90,7 @@ class FileOverview extends Component {
 
         let fileListItemComponents = this.state.fileListItems.map(
             // ternary operator to catch case where e is undefined
-            (e, id) => e ? <FileListItem key={id} id={id} name={e.name} duration={e.duration} notes={e.notes} changeName={this.changeName} changeNotes={this.changeNotes} delete={this.delete}/> : undefined);
+            (e, id) => e ? <FileListItem key={id} id={id} name={e.name} videoName={e.videoName} duration={e.duration} notes={e.notes} changeName={this.changeName} changeNotes={this.changeNotes} delete={this.delete}/> : undefined);
         // let test = this.fileListItems[1];
         // console.log("****************");
         // console.log(test);
