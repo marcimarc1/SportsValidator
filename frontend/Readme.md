@@ -10,7 +10,7 @@ See for example https://docs.npmjs.com/downloading-and-installing-node-js-and-np
 2. Clone this repository.
 
 3. Navigate into the frontend folder of this repo (where this file is located) and run the following commands:
-    - `npm install` to install all dependencies.  
+    - `npm install` to install all dependencies. If it doesn't work, one can try `npm install --legacy-peer-deps`
     In case that does not work you can try deleting frontend/package-lock.json and try again.  
     If there are any dependency issues you can try running `npm audit fix`.  
     

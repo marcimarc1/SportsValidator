@@ -30,8 +30,10 @@ class Header extends Component {
             case path.split("/")[1] === "account":
             case path.split("/")[1] === "about":
             case path.split("/")[1] === "feedback":
+            case path.split("/")[1] === "upload-video":
                 headerLinks.push(<Link key={runningIndex++} className="HeaderText turn-light-gray-on-hover" to="/about"> About </Link>);
                 headerLinks.push(<Link key={runningIndex++} className="HeaderText turn-light-gray-on-hover" to="/feedback"> Feedback </Link>);
+                headerLinks.push(<Link key={runningIndex++} className="HeaderText turn-light-gray-on-hover" to="/upload-video"> Upload </Link>);
                 break;
             case path.split("/")[1] === "trackingEditor":
                 headerLinks.push(<Link key={runningIndex++} className="HeaderText turn-light-gray-on-hover" to={"/games"} > File Overview </Link>);
@@ -55,6 +57,8 @@ class Header extends Component {
                         <HomeLogo id="home-logo" className="HeaderIcon turn-light-gray-on-hover"/>
                     </Link>
                     <div id="header-spacer"></div>
+
+                    
 
                     {headerLinks}
 

@@ -117,8 +117,8 @@ class TrackingEditor extends Component {
         let annotations = tracking.annotations;
         // console.log("annotations: ");
         // console.log(annotations);
-        // console.log("currentFrameNumber: " + currentFrameNumber);
-        // console.log("cacheSizeBefore: " + cacheSizeBefore);
+        console.log("currentFrameNumber: " + currentFrameNumber);
+        console.log("cacheSizeBefore: " + cacheSizeBefore);
         let firstCachedFrame = currentFrameNumber - cacheSizeBefore;
         let lastCachedFrame = currentFrameNumber + cacheSizeBehind;
         this.annotationsCache = this.getAnnotationsForFrames(annotations, firstCachedFrame, lastCachedFrame);
@@ -193,6 +193,8 @@ class TrackingEditor extends Component {
         // TODO BACKEND
         // return BACKEND.getAnnotations(gameId, firstFrame, lastFrame);
 
+        console.log("getAnnotationsForFrames() annotations : ", annotations);
+
         let firstAnnotation = annotations.findIndex(element => element.image_id == firstFrame);
         let lastAnnotation = annotations.findIndex(element => element.image_id == lastFrame + 1);
 
@@ -206,8 +208,9 @@ class TrackingEditor extends Component {
 
     plotBBoxes = () => {
         let annotationsCurrentFrame = this.getAnnotationsForFrames(tracking.annotations, this.state.currentFrame, this.state.currentFrame);
-        // console.log("ANNOTATIONS");
-        // console.log(annotationsCurrentFrame);
+        console.log("plotBBoxes() received annotations : ", annotationsCurrentFrame);
+        console.log(tracking.annotations)
+        console.log(annotationsCurrentFrame);
         let newCanvasElements = [];
         for(let i = 0; i < annotationsCurrentFrame.length; i++) {
             newCanvasElements.push(this.createNewBBox(annotationsCurrentFrame[i]));
@@ -413,6 +416,7 @@ class TrackingEditor extends Component {
     setLabelVisibility = (visibility) => {
 
         let hideOrShowLabels = () => {
+            console.log("Entered function hideOrShowLabels")
             this.canvasElementsPlayers.forEach((bBox) => {
                 let vis = (visibility==="always" ? true : false);
                 if(visibility==="selected" && bBox.my.selected) {
@@ -507,6 +511,10 @@ class TrackingEditor extends Component {
             </div>
         );
     };
+
+    testButton = () => {
+        this.selectBBox(20);
+    }
 
     hideLabels = (bBox) => {
         bBox.my.setLabelVisibility(false);
@@ -664,9 +672,6 @@ class TrackingEditor extends Component {
     };
 
     createNewBBox = (args) => {
-        // console.log("Adding new Bounding Box! Args:");
-        // console.log(args);
-
         //get values for BBox position and color
         let left = args.bbox[0] * this.state.scalingFactor;
         let top = args.bbox[1] * this.state.scalingFactor;
@@ -813,8 +818,10 @@ class TrackingEditor extends Component {
         // this.setState({canvas: this.state.canvas.add(bBox, id, team, player)});
         // this.setState({canvas: this.state.canvas.add(group)});
 
-        this.canvas.add(bBox.my.playerIdOrNameObject, bBox.my.teamObject, bBox.my.bBoxIdObject, bBox);
+        console.log("BBox : ", bBox);
 
+        this.canvas.add(bBox.my.playerIdOrNameObject, bBox.my.teamObject, bBox.my.bBoxIdObject, bBox);
+        this.canvas.renderAll();
         return bBox;
     }
 

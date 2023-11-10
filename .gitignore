@@ -1,0 +1,10 @@
+**/build
+**/target
+
+**/.DS_Store
+**/package-lock.json
+
+backend/uploads/*
+backend/react-app
+
+/docs
