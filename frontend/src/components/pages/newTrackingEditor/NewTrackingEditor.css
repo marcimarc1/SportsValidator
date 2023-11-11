@@ -27,6 +27,12 @@
     align-items: center;
 }
 
+#canvas-container {
+    display: grid;
+    grid-template-columns: min-content auto;
+    grid-template-areas:"canvas sidebar";
+}
+
 .icon-button {
     cursor: pointer;
     height: 100%;
@@ -56,3 +62,12 @@
     margin-left: 0.3rem;
 }
 
+.canvas {
+    grid-area: canvas;
+}
+
+.sidebar {
+    position: relative;
+    grid-area: sidebar;
+    width: 280px;
+}

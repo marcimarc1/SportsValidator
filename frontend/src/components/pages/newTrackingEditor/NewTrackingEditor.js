@@ -96,7 +96,7 @@ const NewTrackingEditor = () => {
   }
 
   useEffect(() => {
-    let canvasWidth = document.body.clientWidth;
+    let canvasWidth = document.body.clientWidth - 300;
     var canvasHeight = 800;
     if (videoElement) {
       canvasHeight  = videoElement.height / videoElement.width * canvasWidth;
@@ -155,14 +155,21 @@ const NewTrackingEditor = () => {
     }
 
     const drawBoundingBoxes = (frameNumber) => {
-      canvas.remove(...canvas.getObjects());
-      let boxIndex = annotations.findIndex(element => element.FrameNo == frameNumber);
-      if (boxIndex == -1) {
-        return;
-      }
-
-      const playersToDraw = annotations.filter(a => a.FrameNo == frameNumber);
       let playerIndex = 0;
+      canvas.remove(...canvas.getObjects());
+      // let boxIndex = annotations.findIndex(element => element.FrameNo == frameNumber);
+      // if (boxIndex == -1) {
+      //   return;
+      // }
+      var playersToDraw = canvasBoxes.filter(a => a.my.frame == frameNumber);
+      console.log("players: " + playersToDraw);
+      if(playersToDraw.length > 0) {
+        while (playerIndex < playersToDraw.length) {
+          canvas.add(playersToDraw[playerIndex]);
+          playerIndex++;
+        }
+      } else {
+        playersToDraw = annotations.filter(a => a.FrameNo == frameNumber);
 
       if (playersToDraw.length > 0) {
         //draw boxes
@@ -238,92 +245,10 @@ const NewTrackingEditor = () => {
         canvas.add(playerBox);
         playerIndex++;
         }
-
-      
-        canvas.renderAll();
       }
-      // if(isShowingBox) {
-      //   let boxIndex = annotations.findIndex(element => element.FrameNo == frameNumber);
-      //   if (boxIndex == -1)
-      //     return;
-  
-      //   //five players in the tracking data, some are not displayed.
-      //   //maybe move annotations[boxIndex].FrameNo == frameNumber to the block content?
-      //   while (boxIndex < boxIndexesCount && annotations[boxIndex].FrameNo == frameNumber) {
-      //     // const scaledX = annotations[boxIndex].x * horizontalScalingFactor;
-      //     // const scaledY = annotations[boxIndex].y * verticalScalingFactor;
-      //     // const scaledWidth = annotations[boxIndex].w * horizontalScalingFactor;
-      //     // const scaledHeight = annotations[boxIndex].h * verticalScalingFactor;
-  
-      //     // Computation should be avoidable with x1 or x2 etc but doesnt seem to work for now
-      //     const scaledX = (annotations[boxIndex].x - (annotations[boxIndex].w / 2)) * horizontalScalingFactor;
-      //     const scaledY = (annotations[boxIndex].y - (annotations[boxIndex].h / 2)) * verticalScalingFactor;
-      //     const scaledWidth = annotations[boxIndex].w * horizontalScalingFactor;
-      //     const scaledHeight = annotations[boxIndex].h * verticalScalingFactor;
-  
-      //     context.strokeStyle = 'red';
-      //     context.lineWidth = 2;
-      //     // context.beginPath();
-      //     // context.rect(scaledX, scaledY, scaledWidth, scaledHeight);
-  
-      //     // create new box element first rather than directly plotting the rectangle
-      //     const box = new CanvasBox(
-      //       annotations[boxIndex].PlayerKey,
-      //       frameNumber,
-      //       scaledX,
-      //       scaledY,
-      //       scaledWidth,
-      //       scaledHeight
-      //     );
-      //     canvasBoxes.push(box);
-      //     //needs to be plotted manually.
-      //     context.strokeStyle = 'red';
-      //     context.lineWidth = 2;
-      //     context.beginPath();
-      //     context.rect(box.x, box.y, box.width, box.height);
-      //     context.stroke();
-      //     boxIndex++;
-      //   }
-
-      // }
+      }
+      canvas.renderAll();
     };
-
-    // function addClickListeners() {
-    //   const handler = function (event) {
-    //     const rectForMouseEvent = canvasElement.getBoundingClientRect();
-    //     const horizontalScaleRatio = canvasElement.width / rectForMouseEvent.width;
-    //     const verticalScalRatio = canvasElement.height / rectForMouseEvent.height;
-    //     const clickPointX = event.offsetX * horizontalScaleRatio;
-    //     const clickPointY = event.offsetY * verticalScalRatio;
-    //     console.log("ratio: " + horizontalScaleRatio, verticalScalRatio);
-    //     console.log("size of canvas: " + canvasElement.width, canvasElement.height);
-    //     console.log("original click point:" + event.offsetX, event.offsetY);
-    //     console.log("scaled click point:" + clickPointX, clickPointY);
-    //     canvasBoxes.forEach((box, index) => {
-    //       console.log("box position: ", box.x, box.y);
-    //       //maybe use context.isPointInPath(clickPointX, clickPointY)?
-    //       if (clickPointX >= box.x && clickPointX <= box.x + box.width 
-    //         && clickPointY >= box.y && clickPointY <= box.y + box.height
-    //         && box.frameNo == getCurrentTimestampFrame()) {
-    //         if (box.clicked) {
-    //           console.log("hide annotation.");
-    //           box.clicked = false;
-    //           context.clearRect(box.x + box.width + 10, box.y, 200, -50);
-    //         } else {
-    //           console.log("show annotation.");
-    //           box.clicked = true;
-    //           context.font = "30px Arial";
-    //           //calculate annotation block size.
-    //           context.fillText("Hello World", box.x + box.width + 10, box.y);
-    //         }
-    //       }
-    //     }
-    //     );
-    //   };
-    //   canvasElement.addEventListener('click', handler);
-    // }
-
-    // addClickListeners();
 
     const updateCanvas = () => {
       const currentFrameNumber = getCurrentTimestampFrame();
@@ -622,7 +547,10 @@ const NewTrackingEditor = () => {
       </div>
       <input type="file" onChange={handleBrowse} />
       <button onClick={handleDownload} disabled={isDownloadingVideo}>Download video</button>
-      <canvas id="tracking-editor-canvas" width='1920' height='1080' style={{ display: "block", width: "100%", height: "auto" }}></canvas>
+      <div id='canvas-container'>
+        <canvas className='canvas' id="tracking-editor-canvas" width='1920' height='1080' style={{ display: "block", width: "100%", height: "auto" }}></canvas>
+        <div className="sidebar">sidebar is here</div>
+      </div>
       <div className="controls">
         <SeekBar onSeekStart={handleSeekStart} onSeekPercent={handleSeekPercent} onSeekEnd={handleSeekEnd} progress={progress} />
         <div id="buttons-container">
