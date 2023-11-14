@@ -12,6 +12,7 @@ import SeekBar from './SeekBar';
 import { duration } from '@material-ui/core';
 import { FormGroup, Switch, FormControlLabel, Button } from '@mui/material';
 import { faThumbsDown } from '@fortawesome/free-solid-svg-icons';
+import TrackList from '../newTrackingEditor/TrackList';
 
 // TODO Take a video_id instead and have an endpoint on the server where we supply a video_id and get the corresponding video
 const NewTrackingEditor = () => {
@@ -35,6 +36,47 @@ const NewTrackingEditor = () => {
   const canvasAnnotations = [];
 
   let wasVideoPlaying = false;
+
+  function defineBoxBehavior(playerBox) {
+    playerBox.on({
+      'selected': () => {
+        // alert("player at" + scaledX, scaledY + "selected");
+        console.log("player position: %d  %d  %d  %d", playerBox.left, playerBox.top, playerBox.width, playerBox.height);
+      },
+      'mousedown': () => {
+        // alert("player at" + scaledX, scaledY + "selected");
+      },
+      'mouseover': () => {
+        // alert("player at" + scaledX, scaledY + "selected");
+      }
+    });
+
+    playerBox.on({
+      'deselected': () => {
+        // alert("player at" + scaledX, scaledY + "selected");
+      },
+      'mouseout': () => {
+        // alert("player at" + scaledX, scaledY + "selected");
+      }
+    });
+
+    playerBox.on({
+      'modified': (event) => {
+        let targetRect = event.target;
+        playerBox.left = targetRect.left;
+        playerBox.top = targetRect.top;
+        playerBox.width = playerBox.width * targetRect.scaleX / playerBox.my.scaleX;
+        playerBox.height = targetRect.height * targetRect.scaleY / playerBox.my.scaleY;
+        playerBox.dirty = true;
+        playerBox.my.scaleX = targetRect.scaleX;
+        playerBox.my.scaleY = targetRect.scaleY;
+        console.log("scaling factor: %f %f", targetRect.scaleX, targetRect.scaleY);
+        console.log("player position: %d  %d  %d  %d", targetRect.left, targetRect.top, targetRect.width, targetRect.height);
+      }
+    });
+
+    return playerBox;
+  }
 
   const retrievePlayer = () => {
     if (annotations.length > 0) {
@@ -205,42 +247,7 @@ const NewTrackingEditor = () => {
           scaleY: 1
           // also connect it to corresponding annotation
         }
-        playerBox.on({
-          'selected': () => {
-            // alert("player at" + scaledX, scaledY + "selected");
-            console.log("player position: %d  %d  %d  %d", playerBox.left, playerBox.top, playerBox.width, playerBox.height);
-          },
-          'mousedown': () => {
-            // alert("player at" + scaledX, scaledY + "selected");
-          },
-          'mouseover': () => {
-            
-          }
-        });
-
-        playerBox.on({
-          'deselected': () => {
-            // alert("player at" + scaledX, scaledY + "selected");
-          },
-          'mouseout': () => {
-            // alert("player at" + scaledX, scaledY + "selected");
-          }
-        });
-
-        playerBox.on({
-          'modified': (event) => {
-            let targetRect = event.target;
-            playerBox.left = targetRect.left;
-            playerBox.top = targetRect.top;
-            playerBox.width = playerBox.width * targetRect.scaleX / playerBox.my.scaleX;
-            playerBox.height = targetRect.height * targetRect.scaleY / playerBox.my.scaleY;
-            playerBox.dirty = true;
-            playerBox.my.scaleX = targetRect.scaleX;
-            playerBox.my.scaleY = targetRect.scaleY;
-            console.log("scaling factor: %f %f", targetRect.scaleX, targetRect.scaleY);
-            console.log("player position: %d  %d  %d  %d", targetRect.left, targetRect.top, targetRect.width, targetRect.height);
-          }
-        });
+        playerBox = defineBoxBehavior(playerBox);
         canvasBoxes.push(playerBox);
         canvas.add(playerBox);
         playerIndex++;
@@ -489,44 +496,9 @@ const NewTrackingEditor = () => {
     scaleY: 1
     // also connect it to corresponding annotation
   }
-  playerBox.on({
-    'selected': () => {
-      // alert("player at" + scaledX, scaledY + "selected");
-      console.log("player position: %d  %d  %d  %d", playerBox.left, playerBox.top, playerBox.width, playerBox.height);
-    },
-    'mousedown': () => {
-      // alert("player at" + scaledX, scaledY + "selected");
-    },
-    'mouseover': () => {
-      
-    }
-  });
-
-  playerBox.on({
-    'deselected': () => {
-      // alert("player at" + scaledX, scaledY + "selected");
-    },
-    'mouseout': () => {
-      // alert("player at" + scaledX, scaledY + "selected");
-    }
-  });
-
-  playerBox.on({
-    'modified': (event) => {
-      let targetRect = event.target;
-      playerBox.left = targetRect.left;
-      playerBox.top = targetRect.top;
-      playerBox.width = playerBox.width * targetRect.scaleX / playerBox.my.scaleX;
-      playerBox.height = targetRect.height * targetRect.scaleY / playerBox.my.scaleY;
-      playerBox.dirty = true;
-      playerBox.my.scaleX = targetRect.scaleX;
-      playerBox.my.scaleY = targetRect.scaleY;
-      console.log("scaling factor: %f %f", targetRect.scaleX, targetRect.scaleY);
-      console.log("player position: %d  %d  %d  %d", targetRect.left, targetRect.top, targetRect.width, targetRect.height);
-    }
-  });
-    canvasBoxes.push(playerBox);
-    canvas.add(playerBox);
+  playerBox = defineBoxBehavior(playerBox);
+  canvasBoxes.push(playerBox);
+  canvas.add(playerBox);
   }
 
 
@@ -549,7 +521,9 @@ const NewTrackingEditor = () => {
       <button onClick={handleDownload} disabled={isDownloadingVideo}>Download video</button>
       <div id='canvas-container'>
         <canvas className='canvas' id="tracking-editor-canvas" width='1920' height='1080' style={{ display: "block", width: "100%", height: "auto" }}></canvas>
-        <div className="sidebar">sidebar is here</div>
+        {/* <div className="sidebar">sidebar is here</div> */}
+        <TrackList>
+        </TrackList>
       </div>
       <div className="controls">
         <SeekBar onSeekStart={handleSeekStart} onSeekPercent={handleSeekPercent} onSeekEnd={handleSeekEnd} progress={progress} />
@@ -566,18 +540,5 @@ const NewTrackingEditor = () => {
     </div>
   );
 };
-
-class CanvasBox {
-  constructor(playerKey, frameNo, scaledX, scaledY, scaledWidth, scaledHeight) {
-    this.playerKey = playerKey;
-    this.frameNo = frameNo;
-    this.x = scaledX;
-    this.y = scaledY;
-    this.width = scaledWidth;
-    this.height = scaledHeight;
-    this.clicked = false;
-  }
-
-}
 
 export default NewTrackingEditor;
