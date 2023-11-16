@@ -25,8 +25,7 @@ class TrackList extends Component {
 
                 <div className="TrackListList" style={{backgroundColor: 'rgba(0, 0, 0, 0.7)'}}>
                     <div className={(this.state.activeTab == 0 ? "" : "inactive")}>
-                        {/* {this.props.children.players} */}
-                        place players here.
+                        {this.props.children}
                     </div>
                     <div className={(this.state.activeTab == 1 ? "" : "inactive")}>
                         {/* {this.props.children.corners} */}

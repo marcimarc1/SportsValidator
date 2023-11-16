@@ -13,6 +13,7 @@ import { duration } from '@material-ui/core';
 import { FormGroup, Switch, FormControlLabel, Button } from '@mui/material';
 import { faThumbsDown } from '@fortawesome/free-solid-svg-icons';
 import TrackList from '../newTrackingEditor/TrackList';
+import TrackListItemPlayer from './TrackListItemPlayer';
 
 // TODO Take a video_id instead and have an endpoint on the server where we supply a video_id and get the corresponding video
 const NewTrackingEditor = () => {
@@ -27,6 +28,8 @@ const NewTrackingEditor = () => {
   const [annotations, setAnnotations] = useState({});
   const [isShowingBox, setIsShowingBox] = useState(true);
   const [isShowingAnnotation, setIsShowingAnnotation] = useState(true);
+  const [playerList, setPlayerList] = useState([]);
+  const [playerNameMap, setPlayerNameMap] = useState(new Map());
 
   let { videoName } = useParams();
 
@@ -36,6 +39,90 @@ const NewTrackingEditor = () => {
   const canvasAnnotations = [];
 
   let wasVideoPlaying = false;
+
+  function blink(playerBox) {
+    let originalColor = playerBox.stroke;
+    let originalFillColor = playerBox.fill;
+    let repeats = 3;
+    let time = 0;
+    let interval = 400;
+    let blinkColor = 'rgb(255, 255, 255, 0.6)';
+
+    if(originalColor !== blinkColor) {  // necessary because otherwise bBox could permanently be set to blinkColor
+        for (let i = repeats; i > 0; i--) {
+            setTimeout(() => {
+                playerBox.set({
+                    fill: blinkColor,
+                    cornerColor: originalColor,
+                    stroke: originalColor
+                });
+                canvas.renderAll();
+            }, time);
+
+            time += interval;
+            setTimeout(() => {
+                playerBox.set({
+                    fill: originalFillColor,
+                    cornerColor: originalColor,
+                    stroke: originalColor
+                });
+                canvas.renderAll();
+            }, time);
+            time += interval;
+        }
+    }
+  }
+
+  function deletePlayer(playerBox) {
+    let boxIndex = canvasBoxes.indexOf(playerBox);
+    let annotationIndex = annotations.indexOf(playerBox);
+    canvasBoxes.splice(boxIndex, 1); // remove bBox
+    annotations.splice(annotationIndex, 1);
+    canvas.remove(playerBox);
+    canvas.requestRenderAll();
+  }
+
+  function setName(playerBox, name) {
+    fabric.Object.prototype.objectCaching = false;
+    // console.log("setting name of " + playerBox.my.player + " to " + name);
+    let playerIndex = playerBox.my.key;
+    playerNameMap.set(playerIndex, name);
+    console.log("player" + playerIndex + " got name " + name);
+    canvas.requestRenderAll();
+    //playerBox.my.playerIdOrNameObject.visible = false;
+    // TODO BACKEND call backend to update name
+    // let updatedIdToName = {...this.state.idToName};
+  }
+  function selectBBox(key) {
+    canvasBoxes.forEach(box => {
+      box.my.selected = false;
+        if (box.my.key == key) {
+            canvas.discardActiveObject();
+            canvas.setActiveObject(box);
+            box.my.selected = true;
+            return box;
+        }
+    });
+  };
+
+  function deselectBBox(key) {
+    canvasBoxes.forEach(box => {
+        if (box.my.key == key) {
+            //comments from selectBBox about deep clone also apply here!
+            box.my.selected = false;
+            canvas.discardActiveObject();
+            //this.setState({dummy: !this.state.dummy});
+        }
+    });
+  };
+
+  function changeSelection(key, deselect) {
+            if(deselect) {
+                deselectBBox(key);
+            } else {
+                selectBBox(key);
+            }
+  };    
 
   function defineBoxBehavior(playerBox) {
     playerBox.on({
@@ -138,6 +225,16 @@ const NewTrackingEditor = () => {
   }
 
   useEffect(() => {
+    // as player name is not contained in the tracking data, set "test player" as default name.
+    let playerNumber = retrievePlayer();
+    let tempMap = new Map();
+    for (var i = 0; i<= playerNumber; i++) {
+      tempMap.set(i, "test player");
+    }
+    setPlayerNameMap(tempMap);
+  }, [annotations]);
+
+  useEffect(() => {
     let canvasWidth = document.body.clientWidth - 300;
     var canvasHeight = 800;
     if (videoElement) {
@@ -147,7 +244,7 @@ const NewTrackingEditor = () => {
     initCanvas.setHeight(canvasHeight);
     initCanvas.setWidth(canvasWidth);
     setCanvas(initCanvas);
-  }, [])
+  }, []);
 
   useEffect(() => {
     const localVideoElement = document.createElement('video');
@@ -204,7 +301,8 @@ const NewTrackingEditor = () => {
       //   return;
       // }
       var playersToDraw = canvasBoxes.filter(a => a.my.frame == frameNumber);
-      console.log("players: " + playersToDraw);
+      var tempList = [];
+      let runningIndex = 0;
       if(playersToDraw.length > 0) {
         while (playerIndex < playersToDraw.length) {
           canvas.add(playersToDraw[playerIndex]);
@@ -216,7 +314,6 @@ const NewTrackingEditor = () => {
       if (playersToDraw.length > 0) {
         //draw boxes
         while (playerIndex < playersToDraw.length) {
-          console.log(isShowingBox);
           const scaledX = (playersToDraw[playerIndex].x - (playersToDraw[playerIndex].w / 2)) * horizontalScalingFactor;
           const scaledY = (playersToDraw[playerIndex].y - (playersToDraw[playerIndex].h / 2)) * verticalScalingFactor;
           const scaledWidth = playersToDraw[playerIndex].w * horizontalScalingFactor;
@@ -250,8 +347,17 @@ const NewTrackingEditor = () => {
         playerBox = defineBoxBehavior(playerBox);
         canvasBoxes.push(playerBox);
         canvas.add(playerBox);
-        playerIndex++;
+        playerIndex++; 
+
+        tempList = tempList.concat([<TrackListItemPlayer  key={runningIndex++}
+          playerBox={playerBox}
+          name={playerNameMap.get(playerIndex)}
+          changeSelection={changeSelection}
+          setName={setName}
+          blink={blink}
+          delete={deletePlayer} />]);
         }
+        setPlayerList(tempList);
       }
       }
       canvas.renderAll();
@@ -318,10 +424,6 @@ const NewTrackingEditor = () => {
       videoElement.removeEventListener('seeked', onSeek);
     };
   }, [videoElement, isShowingBox]);
-
-  useEffect(() => {
-    console.log(isShowingBox);
-  }, [isShowingBox]);
 
 
   const handleKeyDown = (event) => {
@@ -506,11 +608,11 @@ const NewTrackingEditor = () => {
     <div>
       <div className='controls'>
         <div id="tools-container">
-            <div>Show Annotation: &nbsp;&nbsp;</div>
+            <div>&nbsp;&nbsp;Show Annotation: &nbsp;</div>
             <FormGroup>
               <FormControlLabel control={<Switch checked={isShowingAnnotation} onChange={handleDisplayingAnnotation} />} />
             </FormGroup>
-            <div>Show Player Box: &nbsp;&nbsp;</div>
+            <div>&nbsp;&nbsp;Show Player Box: &nbsp;</div>
             <FormGroup>
               <FormControlLabel control={<Switch checked={isShowingBox} onChange={handleDisplayingBox} />} />
             </FormGroup>
@@ -523,6 +625,7 @@ const NewTrackingEditor = () => {
         <canvas className='canvas' id="tracking-editor-canvas" width='1920' height='1080' style={{ display: "block", width: "100%", height: "auto" }}></canvas>
         {/* <div className="sidebar">sidebar is here</div> */}
         <TrackList>
+          {playerList}
         </TrackList>
       </div>
       <div className="controls">
