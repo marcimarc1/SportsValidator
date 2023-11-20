@@ -9,9 +9,7 @@ import tracking from "../../../data/tracking-data-for-test.json";
 import { fabric } from 'fabric';
 import './NewTrackingEditor.css'
 import SeekBar from './SeekBar';
-import { duration } from '@material-ui/core';
 import { FormGroup, Switch, FormControlLabel, Button } from '@mui/material';
-import { faThumbsDown } from '@fortawesome/free-solid-svg-icons';
 import TrackList from '../newTrackingEditor/TrackList';
 import TrackListItemPlayer from './TrackListItemPlayer';
 
@@ -29,32 +27,34 @@ const NewTrackingEditor = () => {
   const [isShowingBox, setIsShowingBox] = useState(true);
   const [isShowingAnnotation, setIsShowingAnnotation] = useState(true);
   const [playerList, setPlayerList] = useState([]);
+  const [canvasBoxes, setCanvasBoxes] = useState([]);
   const [playerNameMap, setPlayerNameMap] = useState(new Map());
 
   let { videoName } = useParams();
 
   const canvasRef = useRef(null);
   const frameDuration = 1001 / 24000; // TODO Get this information from the backend
-  const canvasBoxes = [];
+  // could be used to display annotations in canvas
   const canvasAnnotations = [];
 
   let wasVideoPlaying = false;
 
   function blink(playerBox) {
-    let originalColor = playerBox.stroke;
+    let originalStrokeColor = playerBox.stroke;
+    let originalCornerColor = playerBox.cornerColor;
     let originalFillColor = playerBox.fill;
     let repeats = 3;
     let time = 0;
     let interval = 400;
     let blinkColor = 'rgb(255, 255, 255, 0.6)';
 
-    if(originalColor !== blinkColor) {  // necessary because otherwise bBox could permanently be set to blinkColor
+    if(originalStrokeColor !== blinkColor) {  // necessary because otherwise bBox could permanently be set to blinkColor
         for (let i = repeats; i > 0; i--) {
             setTimeout(() => {
                 playerBox.set({
                     fill: blinkColor,
-                    cornerColor: originalColor,
-                    stroke: originalColor
+                    cornerColor: blinkColor,
+                    stroke: blinkColor
                 });
                 canvas.renderAll();
             }, time);
@@ -63,14 +63,19 @@ const NewTrackingEditor = () => {
             setTimeout(() => {
                 playerBox.set({
                     fill: originalFillColor,
-                    cornerColor: originalColor,
-                    stroke: originalColor
+                    cornerColor: originalCornerColor,
+                    stroke: originalStrokeColor
                 });
                 canvas.renderAll();
             }, time);
             time += interval;
         }
     }
+    playerBox.set({
+      fill: originalFillColor,
+      cornerColor: originalCornerColor,
+      stroke: originalStrokeColor
+  });
   }
 
   function deletePlayer(playerBox) {
@@ -179,16 +184,16 @@ const NewTrackingEditor = () => {
       // Get the uploaded file
       const file = event.target.files[0];
 
-      // const annotationsResponse = await fetch("/api/annotations/199");
-      // if (!annotationsResponse.ok) {
-      //   throw new Error('Failed to fetch annotations for video');
-      // }
-      // const annotationsJson = await annotationsResponse.json();
-      // console.log("Retrieved annotations : ", annotationsJson);
-      // setAnnotations(annotationsJson);
+      const annotationsResponse = await fetch("/api/annotations/199");
+      if (!annotationsResponse.ok) {
+        throw new Error('Failed to fetch annotations for video');
+      }
+      const annotationsJson = await annotationsResponse.json();
+      console.log("Retrieved annotations : ", annotationsJson);
+      setAnnotations(annotationsJson);
 
       // Transform file into blob URL
-      setAnnotations(tracking);
+      // setAnnotations(tracking);
       setVideoUrl(URL.createObjectURL(file));
       console.log("Finished setting video url");
     } catch (error) {
@@ -197,31 +202,31 @@ const NewTrackingEditor = () => {
   };
 
   const handleDownload = async () => {
-    // setIsDownloadingVideo(true);
+    setIsDownloadingVideo(true);
 
-    // console.log("Video name : ", videoName);
+    console.log("Video name : ", videoName);
 
-    // try {
-    //   const videoResponse = await fetch("/uploads/" + videoName);
-    //   if (!videoResponse.ok) {
-    //     throw new Error('Failed to fetch video.');
-    //   }
-    //   const videoBlob = await videoResponse.blob();
+    try {
+      const videoResponse = await fetch("/uploads/" + videoName);
+      if (!videoResponse.ok) {
+        throw new Error('Failed to fetch video.');
+      }
+      const videoBlob = await videoResponse.blob();
 
-    //   const annotationsResponse = await fetch("/api/annotations/199");
-    //   if (!annotationsResponse.ok) {
-    //     throw new Error('Failed to fetch annotations for video');
-    //   }
-    //   const annotationsJson = await annotationsResponse.json();
-    //   console.log("Retrieved annotations : ", annotationsJson);
-    //   setAnnotations(annotationsJson);
+      const annotationsResponse = await fetch("/api/annotations/199");
+      if (!annotationsResponse.ok) {
+        throw new Error('Failed to fetch annotations for video');
+      }
+      const annotationsJson = await annotationsResponse.json();
+      console.log("Retrieved annotations : ", annotationsJson);
+      setAnnotations(annotationsJson);
 
-    //   setVideoUrl(URL.createObjectURL(videoBlob));
-    // } catch (error) {
-    //   console.error('Error downloading video:', error);
-    // } finally {
-    //   setIsDownloadingVideo(false);
-    // }
+      setVideoUrl(URL.createObjectURL(videoBlob));
+    } catch (error) {
+      console.error('Error downloading video:', error);
+    } finally {
+      setIsDownloadingVideo(false);
+    }
   }
 
   useEffect(() => {
@@ -274,8 +279,6 @@ const NewTrackingEditor = () => {
     const horizontalScalingFactor = canvas.width / 3840;
     const verticalScalingFactor = canvas.height / 2160;
     let previousFrameNumber = 0;
-    const boxIndexesCount = annotations.length;
-    const playerCount = retrievePlayer();
 
     // https://stackoverflow.com/questions/33834724/draw-video-on-canvas-html5
     const drawVideo = () => {
@@ -423,7 +426,7 @@ const NewTrackingEditor = () => {
       videoElement.removeEventListener('canplay', onCanPlay);
       videoElement.removeEventListener('seeked', onSeek);
     };
-  }, [videoElement, isShowingBox]);
+  }, [videoElement, isShowingBox, frameNumber, playerList]);
 
 
   const handleKeyDown = (event) => {
@@ -600,6 +603,15 @@ const NewTrackingEditor = () => {
   }
   playerBox = defineBoxBehavior(playerBox);
   canvasBoxes.push(playerBox);
+  let tempList = playerList;
+  tempList = tempList.concat([<TrackListItemPlayer  key={canvasBoxes.filter(a => a.my.frame == frameNumber).length + 1}
+    playerBox={playerBox}
+    name={playerNameMap.get(1)}
+    changeSelection={changeSelection}
+    setName={setName}
+    blink={blink}
+    delete={deletePlayer} />]);
+  setPlayerList(tempList);
   canvas.add(playerBox);
   }
 

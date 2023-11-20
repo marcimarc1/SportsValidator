@@ -208,3 +208,9 @@ for now just using style property of EditText component in JS code*/
 .selected.expanded {    /* prevents selected item to change color so that only changes color by sliding animation of SwapOverlay */
     background-color: #727272;
 }
+
+.staticText {
+    font-size: small;
+    color: black;
+    opacity: 0.8;
+}

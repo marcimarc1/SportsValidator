@@ -124,8 +124,7 @@ class TrackListItemPlayer extends Component {
         // selects or deselects (if its already selected) the clicked item (e.g. player)
         let clickItem = () => {
             let deselect = this.props.playerBox.my.selected;
-            if(!deselect)
-                this.props.changeSelection("player", playerBox.my.key, deselect);
+            this.props.changeSelection(playerBox.my.key, deselect);
         }
 
         return (
@@ -166,12 +165,6 @@ class TrackListItemPlayer extends Component {
                 </div> */}
 
                 {/*<h1 className={"TrackListItemName" + (playerBox.my.selected ? " selected" : "")}> {name} </h1>*/}
-                <EditText
-                    className={"TrackListItemName" + (playerBox.my.selected ? " selected" : "")}
-                    defaultValue={name.toString()}
-                    onSave={this.handleChangeName}
-                    style={{marginLeft: '5px', width: '70px'}}
-                />
                 <IconButton size="small" className={"TrackListItemBlink"} onClick={this.props.blink.bind(this, playerBox)} aria-label="blink item">
                     <Highlight/>
                 </IconButton>
@@ -179,6 +172,15 @@ class TrackListItemPlayer extends Component {
                 <IconButton size="small" className={"TrackListItemDelete"} onClick={this.delete} aria-label="delete item">
                     <Delete/>
                 </IconButton>
+                
+                <div className='staticText'>Player name: </div>
+                <EditText
+                    className={"TrackListItemName" + (playerBox.my.selected ? " selected" : "")}
+                    defaultValue={name.toString()}
+                    onSave={this.handleChangeName}
+                    style={{marginLeft: '5px', width: '100px'}}
+                />
+
 
                 {/* <IconButton size="small" className={"TrackListItemSwap"} onClick={this.openSwap} aria-label="swap item">
                     <Swap/>
