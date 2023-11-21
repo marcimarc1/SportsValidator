@@ -89,14 +89,14 @@ const NewTrackingEditor = () => {
 
   function setName(playerBox, name) {
     fabric.Object.prototype.objectCaching = false;
-    // console.log("setting name of " + playerBox.my.player + " to " + name);
     let playerIndex = playerBox.my.key;
     playerNameMap.set(playerIndex, name);
-    console.log("player" + playerIndex + " got name " + name);
     canvas.requestRenderAll();
     //playerBox.my.playerIdOrNameObject.visible = false;
-    // TODO BACKEND call backend to update name
-    // let updatedIdToName = {...this.state.idToName};
+    // TODO BACKEND 
+    // update data when leaving the page
+    // the modified data is stored in canvasBoxes array
+    
   }
   function selectBBox(key) {
     canvasBoxes.forEach(box => {
@@ -132,23 +132,17 @@ const NewTrackingEditor = () => {
   function defineBoxBehavior(playerBox) {
     playerBox.on({
       'selected': () => {
-        // alert("player at" + scaledX, scaledY + "selected");
-        console.log("player position: %d  %d  %d  %d", playerBox.left, playerBox.top, playerBox.width, playerBox.height);
       },
       'mousedown': () => {
-        // alert("player at" + scaledX, scaledY + "selected");
       },
       'mouseover': () => {
-        // alert("player at" + scaledX, scaledY + "selected");
       }
     });
 
     playerBox.on({
       'deselected': () => {
-        // alert("player at" + scaledX, scaledY + "selected");
       },
       'mouseout': () => {
-        // alert("player at" + scaledX, scaledY + "selected");
       }
     });
 
@@ -162,8 +156,9 @@ const NewTrackingEditor = () => {
         playerBox.dirty = true;
         playerBox.my.scaleX = targetRect.scaleX;
         playerBox.my.scaleY = targetRect.scaleY;
-        console.log("scaling factor: %f %f", targetRect.scaleX, targetRect.scaleY);
-        console.log("player position: %d  %d  %d  %d", targetRect.left, targetRect.top, targetRect.width, targetRect.height);
+        // could be used to debug scaling function
+        // console.log("scaling factor: %f %f", targetRect.scaleX, targetRect.scaleY);
+        // console.log("player position: %d  %d  %d  %d", targetRect.left, targetRect.top, targetRect.width, targetRect.height);
       }
     });
 
@@ -234,7 +229,8 @@ const NewTrackingEditor = () => {
     let playerNumber = retrievePlayer();
     let tempMap = new Map();
     for (var i = 0; i<= playerNumber; i++) {
-      tempMap.set(i, "test player");
+      let playerName = "player" + i;
+      tempMap.set(i, playerName);
     }
     setPlayerNameMap(tempMap);
   }, [annotations]);
@@ -605,12 +601,12 @@ const NewTrackingEditor = () => {
   canvasBoxes.push(playerBox);
   let tempList = playerList;
   tempList = tempList.concat([<TrackListItemPlayer  key={canvasBoxes.filter(a => a.my.frame == frameNumber).length + 1}
-    playerBox={playerBox}
-    name={playerNameMap.get(1)}
-    changeSelection={changeSelection}
-    setName={setName}
-    blink={blink}
-    delete={deletePlayer} />]);
+                                                    playerBox={playerBox}
+                                                    name={playerNameMap.get(1)}
+                                                    changeSelection={changeSelection}
+                                                    setName={setName}
+                                                    blink={blink}
+                                                    delete={deletePlayer} />]);
   setPlayerList(tempList);
   canvas.add(playerBox);
   }
