@@ -5,7 +5,7 @@ import { ReactComponent as PauseIcon } from '../../../icons/pause.svg';
 import { ReactComponent as ForwardStepIcon } from '../../../icons/forward-step.svg';
 import { ReactComponent as BackwardStepIcon } from '../../../icons/backward-step.svg';
 // import tracking from "../../../data/tracking_data.json";
-import tracking from "../../../data/tracking-data-for-test.json";
+// import tracking from "../../../data/tracking-data-for-test.json";
 import { fabric } from 'fabric';
 import './NewTrackingEditor.css'
 import SeekBar from './SeekBar';
@@ -225,7 +225,7 @@ const NewTrackingEditor = () => {
   }
 
   useEffect(() => {
-    // as player name is not contained in the tracking data, set "test player" as default name.
+    // as player name is not contained in the tracking data, set "player{id}" as default name.
     let playerNumber = retrievePlayer();
     let tempMap = new Map();
     for (var i = 0; i<= playerNumber; i++) {
