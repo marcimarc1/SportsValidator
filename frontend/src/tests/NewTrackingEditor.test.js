@@ -1,6 +1,8 @@
 import { fabric } from 'fabric';
 
-const editor = require('../pages/newTrackingEditor/NewTrackingEditor');
+
+
+const editor = require('../components/pages/newTrackingEditor/NewTrackingEditor');
 
 test('update player name', () => {
     //given
