@@ -1,0 +1,8 @@
+# Compiling the backend and importing the frontend static files
+FROM rust:latest
+ENV SQLX_OFFLINE=true
+WORKDIR /backend
+COPY backend .
+RUN mkdir -p uploads
+RUN cargo build --release
+CMD ["./target/release/backend"]
