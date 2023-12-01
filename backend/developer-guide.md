@@ -1,6 +1,7 @@
 # Developer guide for the backend
+For easier development, run 'docker-compose -f docker-compose.dev.yml up --build' in order to run the backend separately. This way you can run the frontend on your local and have live reload in the React application. After you run this, you can send requests to the backend using fetch with base url localhost:80 like this: fetch("http://localhost:80/api/annotations/199");. Requests like fetch("/api/annotations/199") won't be valid while using this setup.
 
-
+If you would like to run frontend and backend in the container to check final functionality, simply use 'docker compose up --build' to run the 'docker-compose.yml' instead of 'docker-compose.dev.yml'. This way, request endpoints can be like fetch("/api/annotations/199") without needing the host url, since backend and frontend run on the same port with this setup. With this setup, live reload will not work.
 
 ## Deployment on an instance
 To launch the ENTIRE stack :
