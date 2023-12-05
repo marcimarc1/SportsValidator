@@ -3,6 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@emotion/react": "^11.11.1",
+    "@emotion/styled": "^11.11.0",
     "@ffmpeg/core": "^0.8.3",
     "@ffmpeg/ffmpeg": "^0.9.4",
     "@fortawesome/fontawesome-svg-core": "^1.2.35",
@@ -73,8 +75,7 @@
     "@babel/core": "^7.23.3",
     "@babel/preset-env": "^7.23.3",
     "@babel/preset-typescript": "^7.23.3",
-    "babel-jest": "^29.7.0",
-    "jest": "^26.6.3",
-    "jest-canvas-mock": "^2.5.2"
+    "jest-canvas-mock": "^2.5.2",
+    "@babel/plugin-proposal-private-property-in-object": "7.21.11"
   }
 }
