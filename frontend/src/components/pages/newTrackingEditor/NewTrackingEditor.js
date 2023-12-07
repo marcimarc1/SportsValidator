@@ -292,6 +292,30 @@ const NewTrackingEditor = () => {
       canvas.setBackgroundImage(fabricVideo, canvas.renderAll.bind(canvas), {scaleX:horizontalScalingFactor, scaleY:verticalScalingFactor});
     }
 
+    function seededRandom(seed) {
+      var x = Math.sin(seed++) * 10000;
+      return x - Math.floor(x);
+    }
+  
+    function generateColor(value) {
+        var r = Math.floor(seededRandom(value) * 256);
+        var g = Math.floor(seededRandom(value + 1) * 256);
+        var b = Math.floor(seededRandom(value + 2) * 256);
+        return { r, g, b };
+    }
+
+    function boundingBoxColorSet() {
+      let uniquePlayerKeys = new Set(annotations.map(item => item.PlayerKey));
+      let colorSet = new Map();
+  
+      uniquePlayerKeys.forEach(key => {
+        let color = generateColor(key);
+        colorSet.set(key, color);
+      });
+      return colorSet;
+    }
+
+
     const drawBoundingBoxes = (frameNumber) => {
       let playerIndex = 0;
       canvas.remove(...canvas.getObjects());
@@ -302,6 +326,8 @@ const NewTrackingEditor = () => {
       var playersToDraw = canvasBoxes.filter(a => a.my.frame == frameNumber);
       var tempList = [];
       let runningIndex = 0;
+      let colorSet = boundingBoxColorSet();
+
       if(playersToDraw.length > 0) {
         while (playerIndex < playersToDraw.length) {
           canvas.add(playersToDraw[playerIndex]);
@@ -317,7 +343,7 @@ const NewTrackingEditor = () => {
           const scaledY = (playersToDraw[playerIndex].y - (playersToDraw[playerIndex].h / 2)) * verticalScalingFactor;
           const scaledWidth = playersToDraw[playerIndex].w * horizontalScalingFactor;
           const scaledHeight = playersToDraw[playerIndex].h * verticalScalingFactor;
-
+          const boxColor = colorSet.get(playersToDraw[playerIndex].PlayerKey); //used in 'stroke' property of playerBox
           let playerBox = new fabric.Rect({
             left: scaledX,
             top: scaledY,
@@ -326,7 +352,8 @@ const NewTrackingEditor = () => {
             height: scaledHeight,
             visible: isShowingBox,
             dirty: false,
-            stroke: 'red',
+            stroke: `rgb(${boxColor.r}, ${boxColor.g}, ${boxColor.b})`,
+
             hasBorders: false,              // disables the control borders (the lines connecting the controls the show up when object is selected
             strokeWidth: 2,
             strokeUniform: true,            // to keep the bounding box a consisten thickness, independent of its size
