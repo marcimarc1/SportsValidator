@@ -149,6 +149,11 @@ async fn save_annotations_for_video(
 
     let mut transaction = pool.begin().await?;
 
+    //delete all annotations before to avoid duplicates
+    sqlx::query("DELETE FROM annotations")
+        .execute(pool)
+        .await?;
+
     for result in csv_reader.deserialize() {
         let record: PlayerAnnotationRecord = result?;
         let _ = sqlx::query("INSERT INTO annotations (video_id, frame_number, track_id, x, y, w, h, x2, y2, x1, y1, x_trans, y_trans) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)")
