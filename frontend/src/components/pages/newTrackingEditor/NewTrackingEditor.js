@@ -19,7 +19,6 @@ import MergeAndSwapModal from './MergeAndSwapModal';
 const NewTrackingEditor = () => {
   const location = useLocation();
   const csvData = location.state?.csvData;
-  // console.log("Received CSV Data:", csvData); // Check if CSV data is received
   const [annotations, setAnnotations] = useState([]);
   const [canvas, setCanvas] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
@@ -137,23 +136,48 @@ const NewTrackingEditor = () => {
 
 
   const parseCSV = (csvData) => {
-    const lines = csvData.split("\n");
+    const lines = csvData.trim().split("\n");
     const result = [];
+
+    const expectedOrder = ["FrameNo", "PlayerKey", "h", "w", "x", "x1", "x2", "x_trans", "y", "y1", "y2", "y_trans"];
     const headers = lines[0].split(",");
 
+    // Map for header index
+    let headerIndexMap = {};
+    headers.forEach((header, index) => {
+        headerIndexMap[header.trim()] = index;
+    });
+
     for (let i = 1; i < lines.length; i++) {
-      let obj = {};
-      let currentline = lines[i].split(",");
+        const currentline = lines[i].split(",");
+        if (currentline.length === 1 && currentline[0].trim() === "") continue; // Skip empty rows
 
-      for (let j = 0; j < headers.length; j++) {
-        obj[headers[j]] = currentline[j];
-      }
+        let obj = {};
+        expectedOrder.forEach((header) => {
+            const value = currentline[headerIndexMap[header]].trim();
 
-      result.push(obj);
+            // Convert data type
+            if (header === "FrameNo" || header === "PlayerKey") {
+                obj[header] = parseInt(value, 10);
+            } else {
+                obj[header] = parseFloat(value);
+            }
+        });
+        result.push(obj);
     }
 
-    return result; // Returns an array of objects
+    // Sorting by FrameNo and then by PlayerKey
+    result.sort((a, b) => {
+        if (a.FrameNo === b.FrameNo) {
+            return a.PlayerKey - b.PlayerKey;
+        }
+        return a.FrameNo - b.FrameNo;
+    });
+
+    return result; 
   };
+
+
 
   useEffect(() => {
     if (csvData) {
@@ -342,7 +366,7 @@ const NewTrackingEditor = () => {
       // Get the uploaded file
       const file = event.target.files[0];
 
-      const annotationsResponse = await fetch("http://localhost:80/api/annotations/199");
+      const annotationsResponse = await fetch("/api/annotations/199");
       if (!annotationsResponse.ok) {
         throw new Error('Failed to fetch annotations for video');
       }
@@ -372,7 +396,7 @@ const NewTrackingEditor = () => {
       }
       const videoBlob = await videoResponse.blob();
 
-      const annotationsResponse = await fetch("http://localhost:80/api/annotations/199");
+      const annotationsResponse = await fetch("/api/annotations/199");
       if (!annotationsResponse.ok) {
         throw new Error('Failed to fetch annotations for video');
       }
