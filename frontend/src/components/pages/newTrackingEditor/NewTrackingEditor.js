@@ -16,7 +16,7 @@ import MergeAndSwapModal from './MergeAndSwapModal';
 
 // TODO Take a video_id instead and have an endpoint on the server where we supply a video_id and get the corresponding video
 const NewTrackingEditor = () => {
-  const [canvas, setCanvas] = useState('');
+  const [canvas, setCanvas] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
   const [frameNumber, setFrameNumber] = useState(0);
   const [timestamp, setTimestamp] = useState(0);
@@ -30,6 +30,99 @@ const NewTrackingEditor = () => {
   const [playerList, setPlayerList] = useState([]);
   const [canvasBoxes, setCanvasBoxes] = useState([]);
   const [playerNameMap, setPlayerNameMap] = useState(new Map());
+  const [activeObject, setActiveObject] = useState(null);
+
+  const [mergeModalState, setMergeModalState] = useState(false);
+  const [playerChosenInList, setPlayerChosenInList] = useState('')
+
+  const handleModalOpen = (playerInList) => {
+    setPlayerChosenInList(playerInList)
+    setMergeModalState(true)
+  }
+
+  const handleModalClose = () => {
+    setMergeModalState(false)
+  }
+
+  const mergePlayerData = (mainPlayerName) => {
+    const nameToKeyMap = new Map();
+    playerNameMap.forEach((value, key) => {
+      nameToKeyMap.set(value, key);
+    });
+    const firstPlayerKey = nameToKeyMap.get(mainPlayerName);
+    const secondPlayerKey = nameToKeyMap.get(playerChosenInList);
+    if(firstPlayerKey == undefined || secondPlayerKey == undefined ) {
+      console.log('players are not mapped')
+      return
+    }
+
+
+    //by default, the player with the higher playerkey is the merged player
+    //and the player with the lower playerkey is the main player, which will be kept
+    const firstPlayerMaxFrame = Math.max(...annotations.filter(a => a.PlayerKey == firstPlayerKey).map(a => a.FrameNo))
+    const secondPlayerMaxFrame = Math.max(...annotations.filter(a => a.PlayerKey == secondPlayerKey).map(a => a.FrameNo))
+    console.log(firstPlayerKey)
+    console.log(secondPlayerKey)
+    console.log('firstPlayerMaxFrame: ', firstPlayerMaxFrame)
+    console.log('secondPlayerMaxFrame: ', secondPlayerMaxFrame)
+
+    let mergedPlayerKey;
+    let mainPlayerKey;
+    let mainPlayerMaxFrame;
+
+    if(firstPlayerMaxFrame > secondPlayerMaxFrame) {
+      mergedPlayerKey = firstPlayerKey;
+      mainPlayerKey = secondPlayerKey;
+      mainPlayerMaxFrame = secondPlayerMaxFrame;
+    } else {
+      mergedPlayerKey = secondPlayerKey;
+      mainPlayerKey = firstPlayerKey;
+      mainPlayerMaxFrame = firstPlayerMaxFrame;
+    }
+    console.log('mergedPlayerKey: ', mergedPlayerKey)
+    console.log('mainPlayerKey: ', mainPlayerKey)
+
+    //filter out duplicate annotations between main and merged player that has the same frame number
+    let filteredAnnotations = annotations.filter(a => a.playerKey != mergedPlayerKey)
+    const mainPlayerAnnotations = annotations.filter(a => a.playerKey == mainPlayerKey)
+    const mergedPlayerAnnotations = annotations.filter(a => a.playerKey == mergedPlayerKey)
+    filteredAnnotations = filteredAnnotations.concat( mergedPlayerAnnotations.filter( a => mainPlayerAnnotations.every( b => b.FrameNo != a.FrameNo)))
+
+    const mergedAnnotations = filteredAnnotations.map( annotation => {  
+      if(annotation.PlayerKey == mergedPlayerKey){
+        return {...annotation, PlayerKey: mainPlayerKey}
+      }
+      return annotation;
+    }
+    )
+    setAnnotations(mergedAnnotations)
+    
+  }
+
+  const swapPlayerData = (secondPlayerName) => {
+    const nameToKeyMap = new Map();
+    playerNameMap.forEach((value, key) => {
+      nameToKeyMap.set(value, key);
+    });
+    const firstPlayerKey = nameToKeyMap.get(playerChosenInList);
+    const secondPlayerKey = nameToKeyMap.get(secondPlayerName);
+
+    if(firstPlayerKey == undefined || secondPlayerKey == undefined ) {
+      console.log('players are not mapped')
+      return
+    }
+
+    const swappedAnnotations = annotations.map( annotation => {
+      if(annotation.PlayerKey == firstPlayerKey && annotation.FrameNo >= frameNumber){
+        return {...annotation, PlayerKey: secondPlayerKey}
+      }
+      if(annotation.PlayerKey == secondPlayerKey && annotation.FrameNo >= frameNumber){
+        return {...annotation, PlayerKey: firstPlayerKey}
+      }
+      return annotation;
+    })
+    setAnnotations(swappedAnnotations)
+  }
 
   const [mergeModalState, setMergeModalState] = useState(false);
   const [playerChosenInList, setPlayerChosenInList] = useState('')
@@ -132,9 +225,31 @@ const NewTrackingEditor = () => {
 
   let wasVideoPlaying = false;
 
+  function updateSidebar() {
+    let tempList = [];
+    let runningIndex = 0;
+    let boxes = canvasBoxes.filter(box => box.my.frame ==getCurrentTimestampFrame());
+    boxes.forEach(box => {
+      tempList = tempList.concat([<TrackListItemPlayer  key={runningIndex++}
+        playerBox={box}
+        name={playerNameMap.get(box.my.key)}
+        changeSelection={changeSelection}
+        setName={setName}
+        blink={blink}
+        delete={deletePlayer} 
+        handleModalOpen={handleModalOpen}
+        />]);
+      runningIndex++;
+    });
+    setPlayerList(tempList);
+  }
+
   function blink(playerBox) {
+    canvas.discardActiveObject();
+    canvas.setActiveObject(playerBox);
+    setActiveObject(playerBox);
+    playerBox.my.selected = true;
     let originalStrokeColor = playerBox.stroke;
-    let originalCornerColor = playerBox.cornerColor;
     let originalFillColor = playerBox.fill;
     let repeats = 3;
     let time = 0;
@@ -146,9 +261,9 @@ const NewTrackingEditor = () => {
             setTimeout(() => {
                 playerBox.set({
                     fill: blinkColor,
-                    cornerColor: blinkColor,
                     stroke: blinkColor
                 });
+                playerBox.setCoords();
                 canvas.renderAll();
             }, time);
 
@@ -156,9 +271,9 @@ const NewTrackingEditor = () => {
             setTimeout(() => {
                 playerBox.set({
                     fill: originalFillColor,
-                    cornerColor: originalCornerColor,
                     stroke: originalStrokeColor
                 });
+                playerBox.setCoords();
                 canvas.renderAll();
             }, time);
             time += interval;
@@ -166,16 +281,23 @@ const NewTrackingEditor = () => {
     }
     playerBox.set({
       fill: originalFillColor,
-      cornerColor: originalCornerColor,
       stroke: originalStrokeColor
   });
+  playerBox.setCoords();
+  canvas.discardActiveObject();
   }
 
   function deletePlayer(playerBox) {
-    let boxIndex = canvasBoxes.indexOf(playerBox);
+    canvas.setActiveObject(playerBox);
+    setActiveObject(playerBox);
+    let playerBoxesCopy = canvasBoxes;
+    let boxIndex = playerBoxesCopy.indexOf(playerBox);
     let annotationIndex = annotations.indexOf(playerBox);
-    canvasBoxes.splice(boxIndex, 1); // remove bBox
+    playerBoxesCopy.splice(boxIndex, 1); // remove bBox
     annotations.splice(annotationIndex, 1);
+    setCanvasBoxes(playerBoxesCopy);
+    updateSidebar();
+    canvas.discardActiveObject();
     canvas.remove(playerBox);
     canvas.requestRenderAll();
   }
@@ -185,41 +307,45 @@ const NewTrackingEditor = () => {
     let playerIndex = playerBox.my.key;
     playerNameMap.set(playerIndex, name);
     canvas.requestRenderAll();
-    //playerBox.my.playerIdOrNameObject.visible = false;
     // TODO BACKEND 
     // update data when leaving the page
     // the modified data is stored in canvasBoxes array
     
   }
-  function selectBBox(key) {
-    canvasBoxes.forEach(box => {
-      box.my.selected = false;
-        if (box.my.key == key) {
-            canvas.discardActiveObject();
-            canvas.setActiveObject(box);
-            box.my.selected = true;
-            return box;
-        }
-    });
-  };
 
-  function deselectBBox(key) {
+  function boxInCanvas(playerBox) {
+    //check if the box is in the canvas
+    canvasBoxes.forEach( box => {
+      if (box == playerBox) {
+        return true;
+      }
+    });
+    return false;
+  }
+
+  function deselectAllBox() {
+    canvas.discardActiveObject();
     canvasBoxes.forEach(box => {
-        if (box.my.key == key) {
             //comments from selectBBox about deep clone also apply here!
             box.my.selected = false;
-            canvas.discardActiveObject();
             //this.setState({dummy: !this.state.dummy});
-        }
     });
   };
 
-  function changeSelection(key, deselect) {
-            if(deselect) {
-                deselectBBox(key);
-            } else {
-                selectBBox(key);
-            }
+  function selectBBox(playerBox) {
+      canvas.setActiveObject(playerBox);
+      setActiveObject(playerBox);
+      playerBox.my.selected = true;
+  };
+
+
+  function changeSelection(playerBox) {
+    if(boxInCanvas(playerBox)) {
+      //deselect all active boxes
+      deselectAllBox();
+      //set the new active box
+      selectBBox(playerBox);
+    }
   };    
 
   function defineBoxBehavior(playerBox) {
@@ -249,6 +375,8 @@ const NewTrackingEditor = () => {
         playerBox.dirty = true;
         playerBox.my.scaleX = targetRect.scaleX;
         playerBox.my.scaleY = targetRect.scaleY;
+        playerBox.setCoords();
+        canvas.requestRenderAll();
         // could be used to debug scaling function
         // console.log("scaling factor: %f %f", targetRect.scaleX, targetRect.scaleY);
         // console.log("player position: %d  %d  %d  %d", targetRect.left, targetRect.top, targetRect.width, targetRect.height);
@@ -318,6 +446,40 @@ const NewTrackingEditor = () => {
       setIsDownloadingVideo(false);
     }
   }
+
+  useEffect(() => {
+    //rerender the sidebar when another player is chosen
+    if (activeObject) {
+      let tempList = [];
+      
+      playerList.forEach(item => {
+        if (item.props.playerBox.my.key == activeObject.my.key) {
+          tempList = tempList.concat([<TrackListItemPlayer  key={item.key}
+                                                            playerBox={activeObject}
+                                                            name={playerNameMap.get(activeObject.my.key)}
+                                                            changeSelection={changeSelection}
+                                                            setName={setName}
+                                                            blink={blink}
+                                                            delete={deletePlayer} 
+                                                            handleModalOpen={handleModalOpen}
+                                                            />]);
+        } else {
+          let tempBox = item.props.playerBox;
+          tempBox.my.selected = false;
+          tempList = tempList.concat([<TrackListItemPlayer  key={item.key}
+                                                            playerBox={tempBox}
+                                                            name={playerNameMap.get(tempBox.my.key)}
+                                                            changeSelection={changeSelection}
+                                                            setName={setName}
+                                                            blink={blink}
+                                                            delete={deletePlayer} 
+                                                            handleModalOpen={handleModalOpen}
+                                                            />]);
+        }
+      });
+      setPlayerList(tempList);
+    }
+  }, [activeObject]);
 
   useEffect(() => {
     // as player name is not contained in the tracking data, set "player{id}" as default name.
@@ -412,12 +574,14 @@ const NewTrackingEditor = () => {
 
     const drawBoundingBoxes = (frameNumber) => {
       let playerIndex = 0;
+      let playerBoxesCopy = canvasBoxes;
+      deselectAllBox();
       canvas.remove(...canvas.getObjects());
       // let boxIndex = annotations.findIndex(element => element.FrameNo == frameNumber);
       // if (boxIndex == -1) {
       //   return;
       // }
-      var playersToDraw = canvasBoxes.filter(a => a.my.frame == frameNumber);
+      var playersToDraw = playerBoxesCopy.filter(a => a.my.frame == frameNumber);
       var tempList = [];
       let runningIndex = 0;
       let colorSet = boundingBoxColorSet();
@@ -425,6 +589,15 @@ const NewTrackingEditor = () => {
       if(playersToDraw.length > 0) {
         while (playerIndex < playersToDraw.length) {
           canvas.add(playersToDraw[playerIndex]);
+          tempList = tempList.concat([<TrackListItemPlayer  key={runningIndex++}
+                                                            playerBox={playersToDraw[playerIndex]}
+                                                            name={playerNameMap.get(playersToDraw[playerIndex].my.key)}
+                                                            changeSelection={changeSelection}
+                                                            setName={setName}
+                                                            blink={blink}
+                                                            delete={deletePlayer} 
+                                                            handleModalOpen={handleModalOpen}
+                                                            />]);
           playerIndex++;
         }
       } else {
@@ -452,12 +625,13 @@ const NewTrackingEditor = () => {
             strokeWidth: 2,
             strokeUniform: true,            // to keep the bounding box a consisten thickness, independent of its size
             padding: 0,  // to make sure the pixel coordinates are correct
+            cornerSize: 10,
             cornerStyle: 'rect',
             lockRotation: true
         });
         playerBox.my = {
           selected: false,
-          key: playerIndex,
+          key: playersToDraw[playerIndex].PlayerKey,
           frame: frameNumber,
           //scaling factor when modifying the box
           scaleX: 1,
@@ -465,7 +639,7 @@ const NewTrackingEditor = () => {
           // also connect it to corresponding annotation
         }
         playerBox = defineBoxBehavior(playerBox);
-        canvasBoxes.push(playerBox);
+        playerBoxesCopy.push(playerBox);
         canvas.add(playerBox);
 
         tempList = tempList.concat([<TrackListItemPlayer  key={runningIndex++}
@@ -477,11 +651,12 @@ const NewTrackingEditor = () => {
           delete={deletePlayer}
           handleModalOpen={handleModalOpen}
           />]);
-          playerIndex++; 
+        playerIndex++; 
         }
-        setPlayerList(tempList);
       }
       }
+      setPlayerList(tempList);
+      setCanvasBoxes(playerBoxesCopy);
       canvas.renderAll();
     };
 
@@ -499,15 +674,15 @@ const NewTrackingEditor = () => {
 
       const currentFrameNumber = getCurrentTimestampFrame();
       if (currentFrameNumber != previousFrameNumber) {
-        updateCanvas();
         setFrameNumber(currentFrameNumber);
         setTimestamp(videoElement.currentTime);
 
         const currentProgress = videoElement.currentTime / videoElement.duration * 100;
         setProgress(currentProgress);
         previousFrameNumber = currentFrameNumber;
+        updateCanvas();
       }
- 
+      
       requestAnimationFrame(handleAnimationFrame);
     }
 
@@ -521,7 +696,7 @@ const NewTrackingEditor = () => {
 
     const onSeek = () => {
       console.log("Seeked");
-      updateCanvas();
+      // updateCanvas();
     }
 
     videoElement.addEventListener('play', onPlay);
@@ -699,6 +874,7 @@ const NewTrackingEditor = () => {
       } else {
         setIsPlaying(false);
         videoElement.pause();
+        updateSidebar();
       }
     }
   }
@@ -723,6 +899,7 @@ const NewTrackingEditor = () => {
   }
 
   const handleSeekEnd = () => {
+    updateSidebar();
     if (wasVideoPlaying) {
       videoElement.play();
     }
@@ -763,6 +940,7 @@ const NewTrackingEditor = () => {
   }
 
   function handleAddPlayer() {
+    let playerBoxesCopy = canvasBoxes;
     let playerBox = new fabric.Rect({
       left: 500,
       top: 100,
@@ -776,6 +954,7 @@ const NewTrackingEditor = () => {
       strokeWidth: 2,
       strokeUniform: true,            // to keep the bounding box a consisten thickness, independent of its size
       padding: 0,  // to make sure the pixel coordinates are correct
+      cornerSize: 10,
       cornerStyle: 'rect',
       lockRotation: true
   });
@@ -789,8 +968,8 @@ const NewTrackingEditor = () => {
     // also connect it to corresponding annotation
   }
   playerBox = defineBoxBehavior(playerBox);
-  canvasBoxes.push(playerBox);
-  let tempList = playerList;
+  playerBoxesCopy.push(playerBox);
+  var tempList = playerList;
   tempList = tempList.concat([<TrackListItemPlayer  key={canvasBoxes.filter(a => a.my.frame == frameNumber).length + 1}
                                                     playerBox={playerBox}
                                                     name={playerNameMap.get(1)}
@@ -801,6 +980,7 @@ const NewTrackingEditor = () => {
                                                     handleModalOpen={handleModalOpen}
                                                     />]);
   setPlayerList(tempList);
+  setCanvasBoxes(playerBoxesCopy);
   canvas.add(playerBox);
   }
 
@@ -823,7 +1003,7 @@ const NewTrackingEditor = () => {
       <input type="file" onChange={handleBrowse} />
       <button onClick={handleDownload} disabled={isDownloadingVideo}>Download video</button>
       <div id='canvas-container'>
-        <canvas className='canvas' id="tracking-editor-canvas" width='1920' height='1080' style={{ display: "block", width: "100%", height: "auto" }}></canvas>
+        <canvas ref={canvasRef} className='canvas' id="tracking-editor-canvas" width='1920' height='1080' style={{ display: "block", width: "100%", height: "auto" }}></canvas>
         {/* <div className="sidebar">sidebar is here</div> */}
         <TrackList>
           {playerList}

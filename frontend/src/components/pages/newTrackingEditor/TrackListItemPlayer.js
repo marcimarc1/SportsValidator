@@ -127,8 +127,8 @@ class TrackListItemPlayer extends Component {
 
         // selects or deselects (if its already selected) the clicked item (e.g. player)
         let clickItem = () => {
-            let deselect = this.props.playerBox.my.selected;
-            this.props.changeSelection(playerBox.my.key, deselect);
+            // let deselect = this.props.playerBox.my.selected;
+            this.props.changeSelection(playerBox);
         }
 
         return (
