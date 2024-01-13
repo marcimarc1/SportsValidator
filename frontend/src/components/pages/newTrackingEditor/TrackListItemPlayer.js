@@ -9,6 +9,7 @@ import IconButton from '@material-ui/core/IconButton';
 import { EditText } from 'react-edit-text';
 import 'react-edit-text/dist/index.css';
 
+
 import './NewTrackingEditor.css';
 import {ReactComponent as Highlight} from "../../../icons/highlight.svg";
 import {ReactComponent as Delete} from "../../../icons/delete.svg";
@@ -16,8 +17,7 @@ import {ReactComponent as Swap} from "../../../icons/swap.svg";
 
 // using fontawesome version of these icons because they are already used in FileOverview (and look imho a little bit better when using the solid variant)
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faPlus, faCheck, faSpinner} from "@fortawesome/free-solid-svg-icons";
-
+import {faPlus, faCheck, faSpinner, faMerge} from "@fortawesome/free-solid-svg-icons";
 
 class TrackListItemPlayer extends Component {
 
@@ -55,6 +55,10 @@ class TrackListItemPlayer extends Component {
         if(window.confirm("Do you really want to delete this player ?")) {
             this.props.delete(this.props.playerBox);
         }
+    }
+
+    handleClickMerge = () => {
+        this.props.handleModalOpen(this.props.name)
     }
 
     // openSwap = () => {
@@ -129,7 +133,6 @@ class TrackListItemPlayer extends Component {
 
         return (
             <div className={"TrackListItem" + (playerBox.my.selected ? " selected" : "") + classNameExpansionPostfix} style={style} onClick={clickItem}>
-
                 {/* <div className={"TrackListItemSwapOverlay" + classNameExpansionPostfix}>
                     <div className={"TrackListItemSwapOverlayContent" + classNameSwapMenuVisibility}>
                         <div className={"TrackListItemSwapOverlayContentText"}>Swap {playerBox.my.name?playerBox.my.name:("Player " + playerBox.my.player)} with </div>
@@ -171,6 +174,10 @@ class TrackListItemPlayer extends Component {
 
                 <IconButton size="small" className={"TrackListItemDelete"} onClick={this.delete} aria-label="delete item">
                     <Delete/>
+                </IconButton>
+
+                <IconButton size="small" className={"TrackListItemMerge"} onClick={this.handleClickMerge} aria-label="merge item">
+                    <Swap/>
                 </IconButton>
                 
                 <div className='staticText'>Player name: </div>
