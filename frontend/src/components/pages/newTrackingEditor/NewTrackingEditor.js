@@ -31,104 +31,11 @@ const NewTrackingEditor = () => {
   const [canvasBoxes, setCanvasBoxes] = useState([]);
   const [playerNameMap, setPlayerNameMap] = useState(new Map());
 
-  const [mergeModalState, setMergeModalState] = useState(false);
-  const [playerChosenInList, setPlayerChosenInList] = useState('')
-
-  const handleModalOpen = (playerInList) => {
-    setPlayerChosenInList(playerInList)
-    setMergeModalState(true)
-  }
-
-  const handleModalClose = () => {
-    setMergeModalState(false)
-  }
-
-  const mergePlayerData = (mainPlayerName) => {
-    const nameToKeyMap = new Map();
-    playerNameMap.forEach((value, key) => {
-      nameToKeyMap.set(value, key);
-    });
-    const firstPlayerKey = nameToKeyMap.get(mainPlayerName);
-    const secondPlayerKey = nameToKeyMap.get(playerChosenInList);
-    if(firstPlayerKey == undefined || secondPlayerKey == undefined ) {
-      console.log('players are not mapped')
-      return
-    }
-
-
-    //by default, the player with the higher playerkey is the merged player
-    //and the player with the lower playerkey is the main player, which will be kept
-    const firstPlayerMaxFrame = Math.max(...annotations.filter(a => a.PlayerKey == firstPlayerKey).map(a => a.FrameNo))
-    const secondPlayerMaxFrame = Math.max(...annotations.filter(a => a.PlayerKey == secondPlayerKey).map(a => a.FrameNo))
-    console.log(firstPlayerKey)
-    console.log(secondPlayerKey)
-    console.log('firstPlayerMaxFrame: ', firstPlayerMaxFrame)
-    console.log('secondPlayerMaxFrame: ', secondPlayerMaxFrame)
-
-    let mergedPlayerKey;
-    let mainPlayerKey;
-    let mainPlayerMaxFrame;
-
-    if(firstPlayerMaxFrame > secondPlayerMaxFrame) {
-      mergedPlayerKey = firstPlayerKey;
-      mainPlayerKey = secondPlayerKey;
-      mainPlayerMaxFrame = secondPlayerMaxFrame;
-    } else {
-      mergedPlayerKey = secondPlayerKey;
-      mainPlayerKey = firstPlayerKey;
-      mainPlayerMaxFrame = firstPlayerMaxFrame;
-    }
-    console.log('mergedPlayerKey: ', mergedPlayerKey)
-    console.log('mainPlayerKey: ', mainPlayerKey)
-
-    //filter out duplicate annotations between main and merged player that has the same frame number
-    let filteredAnnotations = annotations.filter(a => a.playerKey != mergedPlayerKey)
-    const mainPlayerAnnotations = annotations.filter(a => a.playerKey == mainPlayerKey)
-    const mergedPlayerAnnotations = annotations.filter(a => a.playerKey == mergedPlayerKey)
-    filteredAnnotations = filteredAnnotations.concat( mergedPlayerAnnotations.filter( a => mainPlayerAnnotations.every( b => b.FrameNo != a.FrameNo)))
-
-    const mergedAnnotations = filteredAnnotations.map( annotation => {  
-      if(annotation.PlayerKey == mergedPlayerKey){
-        return {...annotation, PlayerKey: mainPlayerKey}
-      }
-      return annotation;
-    }
-    )
-    setAnnotations(mergedAnnotations)
-    
-  }
-
-  const swapPlayerData = (secondPlayerName) => {
-    const nameToKeyMap = new Map();
-    playerNameMap.forEach((value, key) => {
-      nameToKeyMap.set(value, key);
-    });
-    const firstPlayerKey = nameToKeyMap.get(playerChosenInList);
-    const secondPlayerKey = nameToKeyMap.get(secondPlayerName);
-
-    if(firstPlayerKey == undefined || secondPlayerKey == undefined ) {
-      console.log('players are not mapped')
-      return
-    }
-
-    const swappedAnnotations = annotations.map( annotation => {
-      if(annotation.PlayerKey == firstPlayerKey && annotation.FrameNo >= frameNumber){
-        return {...annotation, PlayerKey: secondPlayerKey}
-      }
-      if(annotation.PlayerKey == secondPlayerKey && annotation.FrameNo >= frameNumber){
-        return {...annotation, PlayerKey: firstPlayerKey}
-      }
-      return annotation;
-    })
-    setAnnotations(swappedAnnotations)
-  }
-
   let { videoName } = useParams();
 
   const canvasRef = useRef(null);
   const frameDuration = 1001 / 24000; // TODO Get this information from the backend
   // could be used to display annotations in canvas
-  const canvasAnnotations = [];
 
   let wasVideoPlaying = false;
 
