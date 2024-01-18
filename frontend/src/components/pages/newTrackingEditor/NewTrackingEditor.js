@@ -18,7 +18,11 @@ import MergeAndSwapModal from './MergeAndSwapModal';
 // TODO Take a video_id instead and have an endpoint on the server where we supply a video_id and get the corresponding video
 const NewTrackingEditor = () => {
   const location = useLocation();
-  const csvData = location.state?.csvData;
+  const processedPlayers = location.state?.processedPlayers; 
+  const videoFile = location.state?.videoFile;
+  const ballTracksFile = location.state?.ballTracksFile; // ballTracksFile, homographiesFile and logFile are not being used. Logic will be implemented in the future.
+  const homographiesFile = location.state?.homographiesFile; 
+  const logFile = location.state?.logFile; 
   const [annotations, setAnnotations] = useState([]);
   const [canvas, setCanvas] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
@@ -135,8 +139,8 @@ const NewTrackingEditor = () => {
   // could be used to display annotations in canvas
 
 
-  const parseCSV = (csvData) => {
-    const lines = csvData.trim().split("\n");
+  const parseCSV = (processedPlayers) => {
+    const lines = processedPlayers.trim().split("\n");
     const result = [];
 
     const expectedOrder = ["FrameNo", "PlayerKey", "h", "w", "x", "x1", "x2", "x_trans", "y", "y1", "y2", "y_trans"];
@@ -178,13 +182,16 @@ const NewTrackingEditor = () => {
   };
 
 
-
   useEffect(() => {
-    if (csvData) {
-      const parsedData = parseCSV(csvData);
+    if (videoFile) {
+      setVideoUrl(URL.createObjectURL(videoFile)); // Set the video URL
+    }
+  
+    if (processedPlayers) {
+      const parsedData = parseCSV(processedPlayers);
       setAnnotations(parsedData);
     }
-  }, [csvData]);
+  }, [processedPlayers, location.state]);
 
 
 
@@ -364,20 +371,20 @@ const NewTrackingEditor = () => {
   const handleBrowse = async (event) => {
     try {
       // Get the uploaded file
-      const file = event.target.files[0];
+      // const file = event.target.files[0];
 
-      const annotationsResponse = await fetch("/api/annotations/199");
-      if (!annotationsResponse.ok) {
-        throw new Error('Failed to fetch annotations for video');
-      }
-      const annotationsJson = await annotationsResponse.json();
+      // const annotationsResponse = await fetch("http://localhost:80/api/annotations/199");
+      // if (!annotationsResponse.ok) {
+      //   throw new Error('Failed to fetch annotations for video');
+      // }
+      // const annotationsJson = await annotationsResponse.json();
       // console.log("Retrieved annotations from DB : ", annotationsJson);
       // console.log("Retrieved annotations from frontend : ", annotations);
       // setAnnotations(annotationsJson);
 
       // Transform file into blob URL
       // setAnnotations(tracking);
-      setVideoUrl(URL.createObjectURL(file));
+      // setVideoUrl(URL.createObjectURL(file));
       console.log("Finished setting video url");
     } catch (error) {
       console.error(error);
