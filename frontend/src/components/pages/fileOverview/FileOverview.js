@@ -20,7 +20,9 @@ class FileOverview extends Component {
         fileListItems: [],
         uploadExpanded: false,
         firstTime: true,     // used to not trigger any animations when component is mounted
-        fileSelectionVisible: false
+        fileSelectionVisible: false,
+        csvData: null,
+        runCounter: 0
     }
 
     fileInput;
@@ -77,10 +79,21 @@ class FileOverview extends Component {
 
     fileHandler = (event) => {
         event.preventDefault();
-        if(this.fileInput.current.files[0]) {
-            // TODO BACKEND.upload(file); plus maybe add some checks for file size, type, etc?
-            alert(
-                `Selected file - ${this.fileInput.current.files[0].name}`);
+        const file = this.fileInput.current.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const content = e.target.result;
+                // console.log("CSV Data:", content); // Debugging log
+                this.setState(prevState => ({
+                    csvData: content,
+                    runCounter: prevState.runCounter + 1,
+                    fileListItems: [...prevState.fileListItems, { name: `run${prevState.runCounter}`, csvData: content }]
+                }), () => {
+                    // console.log("Updated fileListItems with CSV Data:", this.state.fileListItems);
+                });
+            };  
+            reader.readAsText(file);
         }
     }
 
@@ -90,7 +103,7 @@ class FileOverview extends Component {
 
         let fileListItemComponents = this.state.fileListItems.map(
             // ternary operator to catch case where e is undefined
-            (e, id) => e ? <FileListItem key={id} id={id} name={e.name} videoName={e.videoName} duration={e.duration} notes={e.notes} changeName={this.changeName} changeNotes={this.changeNotes} delete={this.delete}/> : undefined);
+            (e, id) => e ? <FileListItem key={id} id={id} name={e.name} videoName={e.videoName} duration={e.duration} notes={e.notes} csvData={e.csvData} changeName={this.changeName} changeNotes={this.changeNotes} delete={this.delete}/> : undefined);
         // let test = this.fileListItems[1];
         // console.log("****************");
         // console.log(test);

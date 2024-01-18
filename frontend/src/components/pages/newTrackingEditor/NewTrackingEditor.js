@@ -4,6 +4,7 @@ import { ReactComponent as PlayIcon } from '../../../icons/play.svg';
 import { ReactComponent as PauseIcon } from '../../../icons/pause.svg';
 import { ReactComponent as ForwardStepIcon } from '../../../icons/forward-step.svg';
 import { ReactComponent as BackwardStepIcon } from '../../../icons/backward-step.svg';
+import { useLocation } from 'react-router-dom';
 // import tracking from "../../../data/tracking_data.json";
 // import tracking from "../../../data/tracking-data-for-test.json";
 import { fabric } from 'fabric';
@@ -16,6 +17,10 @@ import MergeAndSwapModal from './MergeAndSwapModal';
 
 // TODO Take a video_id instead and have an endpoint on the server where we supply a video_id and get the corresponding video
 const NewTrackingEditor = () => {
+  const location = useLocation();
+  const csvData = location.state?.csvData;
+  // console.log("Received CSV Data:", csvData); // Check if CSV data is received
+  const [annotations, setAnnotations] = useState([]);
   const [canvas, setCanvas] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
   const [frameNumber, setFrameNumber] = useState(0);
@@ -24,7 +29,7 @@ const NewTrackingEditor = () => {
   const [isPlaying, setIsPlaying] = useState(false)
   const [progress, setProgress] = useState(0);
   const [isDownloadingVideo, setIsDownloadingVideo] = useState(false);
-  const [annotations, setAnnotations] = useState({});
+  // const [annotations, setAnnotations] = useState({});
   const [isShowingBox, setIsShowingBox] = useState(true);
   const [isShowingAnnotation, setIsShowingAnnotation] = useState(true);
   const [playerList, setPlayerList] = useState([]);
@@ -129,6 +134,36 @@ const NewTrackingEditor = () => {
   const canvasRef = useRef(null);
   const frameDuration = 1001 / 24000; // TODO Get this information from the backend
   // could be used to display annotations in canvas
+
+
+  const parseCSV = (csvData) => {
+    const lines = csvData.split("\n");
+    const result = [];
+    const headers = lines[0].split(",");
+
+    for (let i = 1; i < lines.length; i++) {
+      let obj = {};
+      let currentline = lines[i].split(",");
+
+      for (let j = 0; j < headers.length; j++) {
+        obj[headers[j]] = currentline[j];
+      }
+
+      result.push(obj);
+    }
+
+    return result; // Returns an array of objects
+  };
+
+  useEffect(() => {
+    if (csvData) {
+      const parsedData = parseCSV(csvData);
+      setAnnotations(parsedData);
+    }
+  }, [csvData]);
+
+
+
 
   let wasVideoPlaying = false;
 
@@ -307,16 +342,15 @@ const NewTrackingEditor = () => {
       // Get the uploaded file
       const file = event.target.files[0];
 
-      const annotationsResponse = await fetch("/api/annotations/199");
+      const annotationsResponse = await fetch("http://localhost:80/api/annotations/199");
       if (!annotationsResponse.ok) {
         throw new Error('Failed to fetch annotations for video');
       }
       const annotationsJson = await annotationsResponse.json();
-      console.log("Retrieved annotations : ", annotationsJson);
-      // get rid of duplicates in case database has duplicate values
-      const uniqueAnnotations = Array.from(new Set(annotationsJson.map(obj => JSON.stringify(obj))), JSON.parse);
-      console.log("Unique annotations : ", uniqueAnnotations);
-      setAnnotations(uniqueAnnotations);
+      // console.log("Retrieved annotations from DB : ", annotationsJson);
+      // console.log("Retrieved annotations from frontend : ", annotations);
+      // setAnnotations(annotationsJson);
+
       // Transform file into blob URL
       // setAnnotations(tracking);
       setVideoUrl(URL.createObjectURL(file));
@@ -338,13 +372,13 @@ const NewTrackingEditor = () => {
       }
       const videoBlob = await videoResponse.blob();
 
-      const annotationsResponse = await fetch("/api/annotations/199");
+      const annotationsResponse = await fetch("http://localhost:80/api/annotations/199");
       if (!annotationsResponse.ok) {
         throw new Error('Failed to fetch annotations for video');
       }
       const annotationsJson = await annotationsResponse.json();
-      console.log("Retrieved annotations : ", annotationsJson);
-      setAnnotations(annotationsJson);
+      // console.log("Retrieved annotations : ", annotationsJson);
+      // setAnnotations(annotationsJson);
 
       setVideoUrl(URL.createObjectURL(videoBlob));
     } catch (error) {
