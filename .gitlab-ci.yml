@@ -51,7 +51,8 @@ deploy:
 # run unit tests in test stage
 # https://about.gitlab.com/blog/2022/11/01/how-to-automate-testing-for-a-react-application-with-gitlab/
 stages:
-  test
+  - test
+  - deploy
 
 unit-test:
   image: node:latest
