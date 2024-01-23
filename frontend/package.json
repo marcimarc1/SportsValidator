@@ -35,7 +35,8 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "jest",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "test:ci": "npm run test -- --testResultsProcessor=\"jest-junit\" --watchAll=false --ci --coverage"
   },
   "jest": {
     "transform": {
@@ -79,6 +80,7 @@
     "jest-canvas-mock": "^2.5.2",
     "@babel/plugin-proposal-private-property-in-object": "7.21.11",
     "react-test-renderer": "17.0.2",
-    "@types/react-edit-text": "^4.4.1"
+    "@types/react-edit-text": "^4.4.1",
+    "jest-junit": "16.0.0"
   }
 }
