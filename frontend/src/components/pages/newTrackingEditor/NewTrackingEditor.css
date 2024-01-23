@@ -266,3 +266,6 @@ for now just using style property of EditText component in JS code*/
     margin-left: 0.3rem;
 }
 
+.tests {
+    display: none;
+}
