@@ -30,3 +30,18 @@ CREATE TABLE IF NOT EXISTS annotations (
     x_trans FLOAT NOT NULL,
     y_trans FLOAT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS ballTracks(
+    id SERIAL PRIMARY KEY,
+    video_id INT NOT NULL,
+    track_id INT NOT NULL,
+    frame_number INT NOT NULL,
+    x FLOAT NOT NULL,
+    y FLOAT NOT NULL,
+    x2 FLOAT NOT NULL,
+    y2 FLOAT NOT NULL,
+    x1 FLOAT NOT NULL,
+    y1 FLOAT NOT NULL,
+    x_trans FLOAT NOT NULL,
+    y_trans FLOAT NOT NULL
+);
