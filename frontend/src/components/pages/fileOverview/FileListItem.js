@@ -41,6 +41,7 @@ class FileListItem extends Component {
         else
             duration = `${Math.floor(duration / 60)}h ${duration % 60}min`;
         let borderStyle = {borderRadius: `5px ${thumbnailHeight/2}px ${thumbnailHeight/2}px 5px`};
+        // console.log("CSV Data on filelistitem is:", this.props.csvData); // Debugging log
 
         // // Playing around with custom button styles, not used.
         // const CustomButton = withStyles({
@@ -88,7 +89,10 @@ class FileListItem extends Component {
                     </div>
                 </div>
                 <div className="FileOverviewListItemButtonContainer">
-                    <Link to={`newTrackingEditor/${this.props.videoName}`} >
+                    <Link to={{ 
+                    pathname: `newTrackingEditor/${this.props.videoName}`,
+                    state: { csvData: this.props.csvData }
+                    }}>
                         <IconButton size="large" variant="contained" className={"FileOverviewListItemButton"} aria-label="edit annotations">
                             <FontAwesomeIcon icon={faEdit} />
                         </IconButton>
