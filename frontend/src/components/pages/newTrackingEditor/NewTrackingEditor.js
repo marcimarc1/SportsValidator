@@ -31,6 +31,7 @@ const NewTrackingEditor = () => {
   const [canvasBoxes, setCanvasBoxes] = useState([]);
   const [playerNameMap, setPlayerNameMap] = useState(new Map());
   const [activeObject, setActiveObject] = useState(null);
+  const [colorSet, setColorSet] = useState(new Map()); //map of playerkey to color
 
   const [mergeModalState, setMergeModalState] = useState(false);
   const [playerChosenInList, setPlayerChosenInList] = useState('')
@@ -61,10 +62,6 @@ const NewTrackingEditor = () => {
     //and the player with the lower playerkey is the main player, which will be kept
     const firstPlayerMaxFrame = Math.max(...annotations.filter(a => a.PlayerKey == firstPlayerKey).map(a => a.FrameNo))
     const secondPlayerMaxFrame = Math.max(...annotations.filter(a => a.PlayerKey == secondPlayerKey).map(a => a.FrameNo))
-    console.log(firstPlayerKey)
-    console.log(secondPlayerKey)
-    console.log('firstPlayerMaxFrame: ', firstPlayerMaxFrame)
-    console.log('secondPlayerMaxFrame: ', secondPlayerMaxFrame)
 
     let mergedPlayerKey;
     let mainPlayerKey;
@@ -79,8 +76,6 @@ const NewTrackingEditor = () => {
       mainPlayerKey = firstPlayerKey;
       mainPlayerMaxFrame = firstPlayerMaxFrame;
     }
-    console.log('mergedPlayerKey: ', mergedPlayerKey)
-    console.log('mainPlayerKey: ', mainPlayerKey)
 
     //filter out duplicate annotations between main and merged player that has the same frame number
     let filteredAnnotations = annotations.filter(a => a.playerKey != mergedPlayerKey)
@@ -96,7 +91,6 @@ const NewTrackingEditor = () => {
     }
     )
     setAnnotations(mergedAnnotations)
-    
   }
 
   const swapPlayerData = (secondPlayerName) => {
@@ -135,15 +129,18 @@ const NewTrackingEditor = () => {
   function updateSidebar() {
     let tempList = [];
     let runningIndex = 0;
-    let boxes = canvasBoxes.filter(box => box.my.frame ==getCurrentTimestampFrame());
+    let boxes = canvasBoxes.filter(box => box.my.frame == getCurrentTimestampFrame());
     boxes.forEach(box => {
+      const boxColor = colorSet.get(box.my.key);
+
       tempList = tempList.concat([<TrackListItemPlayer  key={runningIndex++}
         playerBox={box}
         name={playerNameMap.get(box.my.key)}
         changeSelection={changeSelection}
         setName={setName}
         blink={blink}
-        delete={deletePlayer} 
+        delete={deletePlayer}
+        color={boxColor}
         handleModalOpen={handleModalOpen}
         />]);
       runningIndex++;
@@ -197,12 +194,10 @@ const NewTrackingEditor = () => {
   function deletePlayer(playerBox) {
     canvas.setActiveObject(playerBox);
     setActiveObject(playerBox);
-    let playerBoxesCopy = canvasBoxes;
-    let boxIndex = playerBoxesCopy.indexOf(playerBox);
+    let boxIndex = canvasBoxes.indexOf(playerBox);
     let annotationIndex = annotations.indexOf(playerBox);
-    playerBoxesCopy.splice(boxIndex, 1); // remove bBox
-    annotations.splice(annotationIndex, 1);
-    setCanvasBoxes(playerBoxesCopy);
+    setAnnotations(annotations.toSpliced(annotationIndex, 1));
+    setCanvasBoxes(canvasBoxes.toSpliced(boxIndex, 1));
     updateSidebar();
     canvas.discardActiveObject();
     canvas.remove(playerBox);
@@ -317,6 +312,8 @@ const NewTrackingEditor = () => {
       const uniqueAnnotations = Array.from(new Set(annotationsJson.map(obj => JSON.stringify(obj))), JSON.parse);
       console.log("Unique annotations : ", uniqueAnnotations);
       setAnnotations(uniqueAnnotations);
+      //i want to set the color set here
+      setColorSet(boundingBoxColorSet(uniqueAnnotations));
       // Transform file into blob URL
       // setAnnotations(tracking);
       setVideoUrl(URL.createObjectURL(file));
@@ -361,24 +358,30 @@ const NewTrackingEditor = () => {
       
       playerList.forEach(item => {
         if (item.props.playerBox.my.key == activeObject.my.key) {
+          const boxColor = colorSet.get(activeObject.my.key); //used in 'stroke' property of playerBox
+
           tempList = tempList.concat([<TrackListItemPlayer  key={item.key}
                                                             playerBox={activeObject}
                                                             name={playerNameMap.get(activeObject.my.key)}
                                                             changeSelection={changeSelection}
                                                             setName={setName}
                                                             blink={blink}
+                                                            color={boxColor}
                                                             delete={deletePlayer} 
                                                             handleModalOpen={handleModalOpen}
                                                             />]);
         } else {
           let tempBox = item.props.playerBox;
           tempBox.my.selected = false;
+          const boxColor = colorSet.get(tempBox.my.key);
+
           tempList = tempList.concat([<TrackListItemPlayer  key={item.key}
                                                             playerBox={tempBox}
                                                             name={playerNameMap.get(tempBox.my.key)}
                                                             changeSelection={changeSelection}
                                                             setName={setName}
                                                             blink={blink}
+                                                            color={boxColor}
                                                             delete={deletePlayer} 
                                                             handleModalOpen={handleModalOpen}
                                                             />]);
@@ -435,8 +438,8 @@ const NewTrackingEditor = () => {
       return { r, g, b };
   }
 
-  function boundingBoxColorSet() {
-    let uniquePlayerKeys = new Set(annotations.map(item => item.PlayerKey));
+  function boundingBoxColorSet(annotationList) {
+    let uniquePlayerKeys = new Set(annotationList.map(item => item.PlayerKey));
     let colorSet = new Map();
 
     uniquePlayerKeys.forEach(key => {
@@ -491,17 +494,19 @@ const NewTrackingEditor = () => {
       var playersToDraw = playerBoxesCopy.filter(a => a.my.frame == frameNumber);
       var tempList = [];
       let runningIndex = 0;
-      let colorSet = boundingBoxColorSet();
 
       if(playersToDraw.length > 0) {
         while (playerIndex < playersToDraw.length) {
           canvas.add(playersToDraw[playerIndex]);
+          const boxColor = colorSet.get(playersToDraw[playerIndex].my.key) //used in 'stroke' property of playerBox
+
           tempList = tempList.concat([<TrackListItemPlayer  key={runningIndex++}
                                                             playerBox={playersToDraw[playerIndex]}
                                                             name={playerNameMap.get(playersToDraw[playerIndex].my.key)}
                                                             changeSelection={changeSelection}
                                                             setName={setName}
                                                             blink={blink}
+                                                            color={boxColor}
                                                             delete={deletePlayer} 
                                                             handleModalOpen={handleModalOpen}
                                                             />]);
@@ -511,6 +516,7 @@ const NewTrackingEditor = () => {
         playersToDraw = annotations.filter(a => a.FrameNo == frameNumber);
 
       if (playersToDraw.length > 0) {
+
         //draw boxes
         while (playerIndex < playersToDraw.length) {
           const scaledX = (playersToDraw[playerIndex].x - (playersToDraw[playerIndex].w / 2)) * horizontalScalingFactor;
@@ -551,6 +557,7 @@ const NewTrackingEditor = () => {
 
         tempList = tempList.concat([<TrackListItemPlayer  key={runningIndex++}
           playerBox={playerBox}
+          color={boxColor}
           name={playerNameMap.get(playersToDraw[playerIndex].PlayerKey)}
           changeSelection={changeSelection}
           setName={setName}
@@ -629,17 +636,27 @@ const NewTrackingEditor = () => {
     };
   }, [videoElement, isShowingBox, frameNumber, playerList, playerNameMap]);
 
-  //this useeffect is simply for updating the playerlist immediately after swap or merge
+  //triggered when new player is added, or when merge or swap happens
   useEffect(() => {
+
+    const hasMatchingObject = canvasBoxes.some(a => a.my.frame === frameNumber);
+    if (!hasMatchingObject) { //no need to run this function if there is no matching object
+      return;
+    }
+
     const horizontalScalingFactor = canvas.width / 3840;
     const verticalScalingFactor = canvas.height / 2160;
     let playerIndex = 0;
     var tempList = [];
     let runningIndex = 0;
 
-  
+    //invalidate the boxes in current frame, we should do this because we are going to draw fresh boxes, and we don't want duplicate boxes
+    const invalidatedCanvasBoxes = canvasBoxes.filter(a => a.my.frame !== frameNumber);
+    canvasBoxes.length = 0;
+    canvasBoxes.push(...invalidatedCanvasBoxes);
+ 
+    //same thing we do in drawBoundingBoxes..
     if(annotations.length > 0) {
-      let colorSet = boundingBoxColorSet();
       var playersToDraw = annotations.filter(a => a.FrameNo == frameNumber);
 
       if (playersToDraw.length > 0) {
@@ -669,7 +686,7 @@ const NewTrackingEditor = () => {
         });
         playerBox.my = {
           selected: false,
-          key: playerIndex,
+          key: playersToDraw[playerIndex].PlayerKey,
           frame: frameNumber,
           //scaling factor when modifying the box
           scaleX: 1,
@@ -679,7 +696,7 @@ const NewTrackingEditor = () => {
         playerBox = defineBoxBehavior(playerBox);
         canvasBoxes.push(playerBox);
         canvas.add(playerBox);
-  
+
         tempList = tempList.concat([<TrackListItemPlayer  key={runningIndex++}
           playerBox={playerBox}
           name={playerNameMap.get(playersToDraw[playerIndex].PlayerKey)}
@@ -687,6 +704,7 @@ const NewTrackingEditor = () => {
           setName={setName}
           blink={blink}
           delete={deletePlayer}
+          color={boxColor}
           handleModalOpen={handleModalOpen}
           />]);
           playerIndex++; 
@@ -847,48 +865,13 @@ const NewTrackingEditor = () => {
   }
 
   function handleAddPlayer() {
-    let playerBoxesCopy = canvasBoxes;
-    let playerBox = new fabric.Rect({
-      left: 500,
-      top: 100,
-      fill: 'rgba(0,0,0,0)',
-      width: 100,
-      height: 100,
-      visible: isShowingBox,
-      dirty: false,
-      stroke: 'red',
-      hasBorders: false,              // disables the control borders (the lines connecting the controls the show up when object is selected
-      strokeWidth: 2,
-      strokeUniform: true,            // to keep the bounding box a consisten thickness, independent of its size
-      padding: 0,  // to make sure the pixel coordinates are correct
-      cornerSize: 10,
-      cornerStyle: 'rect',
-      lockRotation: true
-  });
-  playerBox.my = {
-    selected: false,
-    key: 1,
-    frame: getCurrentTimestampFrame(),
-    //scaling factor when modifying the box
-    scaleX: 1,
-    scaleY: 1
-    // also connect it to corresponding annotation
-  }
-  playerBox = defineBoxBehavior(playerBox);
-  playerBoxesCopy.push(playerBox);
-  var tempList = playerList;
-  tempList = tempList.concat([<TrackListItemPlayer  key={canvasBoxes.filter(a => a.my.frame == frameNumber).length + 1}
-                                                    playerBox={playerBox}
-                                                    name={playerNameMap.get(1)}
-                                                    changeSelection={changeSelection}
-                                                    setName={setName}
-                                                    blink={blink}
-                                                    delete={deletePlayer}
-                                                    handleModalOpen={handleModalOpen}
-                                                    />]);
-  setPlayerList(tempList);
-  setCanvasBoxes(playerBoxesCopy);
-  canvas.add(playerBox);
+    const newPlayerKey = playerNameMap.size;
+    const boxColor = generateColor(newPlayerKey);
+    setColorSet(colorSet.set(newPlayerKey, boxColor));
+
+    setAnnotations(annotations.concat(
+      {FrameNo: frameNumber, PlayerKey: newPlayerKey, h: 100, w: 100, x: 500, x1: 0, x2: 0, x_trans: 0, y: 100, y1: 0, y2: 0, y_trans: 0 }
+    ));
   }
 
   return (
