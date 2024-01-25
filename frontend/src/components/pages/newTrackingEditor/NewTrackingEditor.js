@@ -307,7 +307,7 @@ const NewTrackingEditor = () => {
       // Get the uploaded file
       const file = event.target.files[0];
 
-      const annotationsResponse = await fetch("http://localhost:80/api/annotations/199");
+      const annotationsResponse = await fetch("/api/annotations/199");
       if (!annotationsResponse.ok) {
         throw new Error('Failed to fetch annotations for video');
       }
