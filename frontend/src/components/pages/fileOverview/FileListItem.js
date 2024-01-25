@@ -99,7 +99,7 @@ class FileListItem extends Component {
                 name="Notes:"
                 rows={2}
                 style={{ paddingTop: 0 }}
-                defaultValue={this.props.logFile || ""}
+                defaultValue={this.props.log || ""}
                 placeholder="Enter your notes here"
                 onSave={this.handleChangeNotes}
               />
@@ -112,10 +112,10 @@ class FileListItem extends Component {
               pathname: `newTrackingEditor/${this.props.videoName}`,
               state: {
                 processedPlayers: this.props.processedPlayers,
-                videoFile: this.props.videoFile,
-                ballTracksFile: this.props.ballTracksFile,
-                homographiesFile: this.props.homographiesFile,
-                logFile: this.props.logFile,
+                video: this.props.video,
+                ballTracks: this.props.ballTracks,
+                homographies: this.props.homographies,
+                log: this.props.log,
               },
             }}
           >
@@ -161,7 +161,7 @@ FileListItem.propTypes = {
   changeName: PropTypes.func.isRequired,
   changeNotes: PropTypes.func.isRequired,
   delete: PropTypes.func.isRequired,
-  logFile: PropTypes.string,
+  log: PropTypes.string,
 };
 
 export default FileListItem;

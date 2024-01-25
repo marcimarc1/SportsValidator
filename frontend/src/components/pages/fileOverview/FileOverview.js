@@ -23,11 +23,11 @@ class FileOverview extends Component {
     uploadExpanded: false,
     firstTime: true, // used to not trigger any animations when component is mounted
     fileSelectionVisible: false,
-    processedPlayersFile: null, // State variable for processed_players.csv
-    ballTracksFile: null, // State variable for ball_tracks.csv
-    homographiesFile: null, // State variable for homographies.csv
-    logFile: null, // State variable for log.txt
-    videoFile: null, // State variable for the video file
+    processedPlayers: null, // State variable for processed_players.csv
+    ballTracks: null, // State variable for ball_tracks.csv
+    homographies: null, // State variable for homographies.csv
+    log: null, // State variable for log.txt
+    video: null, // State variable for the video file
     errorMessage: "", // To store error messages
     infoMessage:
       "Please upload the mandatory video file and processed players file. Ball tracks, homographies, and log files are optional.", // Updated informational message
@@ -98,37 +98,37 @@ class FileOverview extends Component {
     event.preventDefault();
     const files = Array.from(this.fileInput.current.files);
 
-    let tempProcessedPlayersFile = null;
-    let tempBallTracksFile = null;
-    let tempHomographiesFile = null;
-    let tempLogFile = null;
-    let tempVideoFile = null;
+    let tempProcessedPlayers = null;
+    let tempBallTracks = null;
+    let tempHomographies = null;
+    let tempLog = null;
+    let tempVideo = null;
 
     // Determine the type of each file
     files.forEach((file) => {
       switch (file.name) {
         case "processed_players.csv":
-          tempProcessedPlayersFile = file;
+          tempProcessedPlayers = file;
           break;
         case "ball_tracks.csv":
-          tempBallTracksFile = file;
+          tempBallTracks = file;
           break;
         case "homographies.csv":
-          tempHomographiesFile = file;
+          tempHomographies = file;
           break;
         case "log.txt":
-          tempLogFile = file;
+          tempLog = file;
           break;
         default:
-          if (file.name.match(/^DJI_[0-9]{4}\.MP4$/)) {
-            tempVideoFile = file;
+          if (file.name.match(/\.(mp4|avi|mov|wmv)$/i)) {
+            tempVideo = file;
           }
           break;
       }
     });
 
     // Check if the required files are present, and set an error message if not
-    if (!tempProcessedPlayersFile || !tempVideoFile) {
+    if (!tempProcessedPlayers || !tempVideo) {
       this.setState({
         errorMessage:
           "Error: Missing required files. Please make sure to upload at least the video file and processed_players.csv.",
@@ -154,25 +154,25 @@ class FileOverview extends Component {
     };
 
     Promise.all([
-      readCSV(tempProcessedPlayersFile, "processedPlayersFile"),
-      tempBallTracksFile
-        ? readCSV(tempBallTracksFile, "ballTracksFile")
+      readCSV(tempProcessedPlayers, "processedPlayers"),
+      tempBallTracks
+        ? readCSV(tempBallTracks, "ballTracks")
         : Promise.resolve(null),
-      tempHomographiesFile
-        ? readCSV(tempHomographiesFile, "homographiesFile")
+      tempHomographies
+        ? readCSV(tempHomographies, "homographies")
         : Promise.resolve(null),
-      tempLogFile ? readCSV(tempLogFile, "logFile") : Promise.resolve(null),
+      tempLog ? readCSV(tempLog, "log") : Promise.resolve(null),
     ])
       .then((results) => {
         this.setState((prevState) => {
           // Create a new object for the fileListItems array
           const newFileListItem = {
-            videoName: tempVideoFile.name,
-            processedPlayersFile: tempProcessedPlayersFile,
-            ballTracksFile: tempBallTracksFile,
-            homographiesFile: tempHomographiesFile,
-            logFile: tempLogFile,
-            videoFile: tempVideoFile,
+            videoName: tempVideo.name,
+            processedPlayers: tempProcessedPlayers,
+            ballTracks: tempBallTracks,
+            homographies: tempHomographies,
+            log: tempLog,
+            video: tempVideo,
           };
 
           // Add CSV content to the new object
@@ -214,12 +214,12 @@ class FileOverview extends Component {
             id={id}
             videoName={e.videoName}
             duration={e.duration}
-            notes={e.logFile}
-            processedPlayers={e.processedPlayersFile}
-            videoFile={e.videoFile}
-            ballTracksFile={e.ballTracksFile}
-            homographiesFile={e.homographiesFile}
-            logFile={e.logFile}
+            notes={e.log}
+            processedPlayers={e.processedPlayers}
+            video={e.video}
+            ballTracks={e.ballTracks}
+            homographies={e.homographies}
+            log={e.log}
             changeName={this.changeName}
             changeNotes={this.changeNotes}
             delete={this.delete}

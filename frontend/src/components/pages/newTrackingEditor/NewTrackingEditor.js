@@ -5,6 +5,7 @@ import { ReactComponent as PauseIcon } from '../../../icons/pause.svg';
 import { ReactComponent as ForwardStepIcon } from '../../../icons/forward-step.svg';
 import { ReactComponent as BackwardStepIcon } from '../../../icons/backward-step.svg';
 import { useLocation } from 'react-router-dom';
+import { parseProcessedPlayers } from '../../../utils/csvParser';
 // import tracking from "../../../data/tracking_data.json";
 // import tracking from "../../../data/tracking-data-for-test.json";
 import { fabric } from 'fabric';
@@ -18,11 +19,8 @@ import MergeAndSwapModal from './MergeAndSwapModal';
 // TODO Take a video_id instead and have an endpoint on the server where we supply a video_id and get the corresponding video
 const NewTrackingEditor = () => {
   const location = useLocation();
-  const processedPlayers = location.state?.processedPlayers; 
-  const videoFile = location.state?.videoFile;
-  const ballTracksFile = location.state?.ballTracksFile; // ballTracksFile, homographiesFile and logFile are not being used. Logic will be implemented in the future.
-  const homographiesFile = location.state?.homographiesFile; 
-  const logFile = location.state?.logFile; 
+  const { processedPlayers, video, ballTracks, homographies, log } = location.state || {};
+  // ballTracks, homographies and log are not being used. Logic will be implemented in the future.
   const [annotations, setAnnotations] = useState([]);
   const [canvas, setCanvas] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
@@ -133,62 +131,18 @@ const NewTrackingEditor = () => {
   // could be used to display annotations in canvas
 
 
-  const parseCSV = (processedPlayers) => {
-    const lines = processedPlayers.trim().split("\n");
-    const result = [];
-
-    const expectedOrder = ["FrameNo", "PlayerKey", "h", "w", "x", "x1", "x2", "x_trans", "y", "y1", "y2", "y_trans"];
-    const headers = lines[0].split(",");
-
-    // Map for header index
-    let headerIndexMap = {};
-    headers.forEach((header, index) => {
-        headerIndexMap[header.trim()] = index;
-    });
-
-    for (let i = 1; i < lines.length; i++) {
-        const currentline = lines[i].split(",");
-        if (currentline.length === 1 && currentline[0].trim() === "") continue; // Skip empty rows
-
-        let obj = {};
-        expectedOrder.forEach((header) => {
-            const value = currentline[headerIndexMap[header]].trim();
-
-            // Convert data type
-            if (header === "FrameNo" || header === "PlayerKey") {
-                obj[header] = parseInt(value, 10);
-            } else {
-                obj[header] = parseFloat(value);
-            }
-        });
-        result.push(obj);
-    }
-
-    // Sorting by FrameNo and then by PlayerKey
-    result.sort((a, b) => {
-        if (a.FrameNo === b.FrameNo) {
-            return a.PlayerKey - b.PlayerKey;
-        }
-        return a.FrameNo - b.FrameNo;
-    });
-
-    return result; 
-  };
-
-
   useEffect(() => {
-    if (videoFile) {
-      setVideoUrl(URL.createObjectURL(videoFile)); // Set the video URL
+    if (video) {
+      setVideoUrl(URL.createObjectURL(video));
     }
   
     if (processedPlayers) {
-      const parsedData = parseCSV(processedPlayers);
+      const parsedData = parseProcessedPlayers(processedPlayers);
       setAnnotations(parsedData);
       // Setting the color set based on the parsed data
       setColorSet(boundingBoxColorSet(parsedData));
     }
   }, [processedPlayers, location.state]);
-
 
 
 
