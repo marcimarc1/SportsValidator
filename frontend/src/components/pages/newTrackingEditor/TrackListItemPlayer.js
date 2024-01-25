@@ -2,10 +2,11 @@ import React, {Component} from 'react';
 import PropTypes from 'prop-types';
 import InputLabel from '@material-ui/core/InputLabel';
 import MenuItem from '@material-ui/core/MenuItem';
+import { Avatar } from '@material-ui/core';
 import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
 import IconButton from '@material-ui/core/IconButton';
-
+import { green, pink } from '@mui/material/colors';
 import { EditText } from 'react-edit-text';
 import 'react-edit-text/dist/index.css';
 
@@ -131,6 +132,16 @@ class TrackListItemPlayer extends Component {
             this.props.changeSelection(playerBox);
         }
 
+        console.log(this.props)
+        const dotStyle = {
+            width: '12px',
+            height: '12px',
+            borderRadius: '50%',
+            backgroundColor: 'rgb(' + this.props.color.r + ',' + this.props.color.g + ',' + this.props.color.b + ')',
+            display: 'inline-block',
+            marginRight: '8px', // Adjust spacing as needed
+          };
+
         return (
             <div className={"TrackListItem" + (playerBox.my.selected ? " selected" : "") + classNameExpansionPostfix} style={style} onClick={clickItem}>
                 {/* <div className={"TrackListItemSwapOverlay" + classNameExpansionPostfix}>
@@ -187,6 +198,10 @@ class TrackListItemPlayer extends Component {
                     onSave={this.handleChangeName}
                     style={{marginLeft: '5px', width: '100px'}}
                 />
+                <div>
+                    <div style={dotStyle}></div>
+                </div>
+
 
 
                 {/* <IconButton size="small" className={"TrackListItemSwap"} onClick={this.openSwap} aria-label="swap item">
@@ -216,6 +231,7 @@ TrackListItemPlayer.propTypes = {
     changeSelection: PropTypes.func.isRequired,
     blink: PropTypes.func.isRequired,
     delete: PropTypes.func.isRequired,
+    color: PropTypes.object.isRequired,
     // getTeams: PropTypes.func.isRequired,
     // setTeam: PropTypes.func.isRequired,
     setName: PropTypes.func.isRequired,
