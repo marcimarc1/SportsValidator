@@ -113,6 +113,15 @@ async fn main() -> anyhow::Result<()> {
         }
     }
 
+    match save_ballTracks_for_video(198, "./assets/processed_ball.csv", &pool).await {
+        Ok(_) => {
+            println!("Successfully saved ball Tracks")
+        }
+        Err(err) => {
+            eprintln!("Error saving ball tracks: {}", err);
+        }
+    }
+
     //// Creating the routes of the server
     // Careful : doesn't handle client side routing, meaning if you manually type a url in the React app it will not work
     let app = Router::new()
@@ -164,6 +173,50 @@ async fn save_annotations_for_video(
             .bind(record.y)
             .bind(record.w)
             .bind(record.h)
+            .bind(record.x2)
+            .bind(record.y2)
+            .bind(record.x1)
+            .bind(record.y1)
+            .bind(record.x_trans)
+            .bind(record.y_trans)
+            .execute(&mut transaction)
+            .await?;
+    }
+
+    transaction.commit().await?;
+
+    println!("Batch insertion completed successfully");
+
+    // See also https://github.com/jmoiron/sqlx/blob/master/README.md
+
+    Ok(())
+}
+
+async fn save_ballTracks_for_video(
+    video_id: i32,
+    ballTracks_file_path: &str,
+    pool: &Pool<Postgres>
+) -> Result<(), Box<dyn std::error::Error>> {
+    let file = std::fs::File::open(ballTracks_file_path)?;
+    let mut csv_reader = csv::ReaderBuilder::new()
+        .has_headers(true)
+        .from_reader(file);
+
+    let mut transaction = pool.begin().await?;
+
+    //delete all annotations before to avoid duplicates
+    sqlx::query("DELETE FROM ballTracks")
+        .execute(pool)
+        .await?;
+
+    for result in csv_reader.deserialize() {
+        let record: PlayerAnnotationRecord = result?;
+        let _ = sqlx::query("INSERT INTO ballTracks (video_id, frame_number, track_id, x, y, x2, y2, x1, y1, x_trans, y_trans) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)")
+            .bind(video_id)
+            .bind(record.frame_number)
+            .bind(record.track_id)
+            .bind(record.x)
+            .bind(record.y)
             .bind(record.x2)
             .bind(record.y2)
             .bind(record.x1)
