@@ -1,0 +1,25 @@
+name: Lint Codebase
+
+on: [pull_request]
+
+jobs: 
+    lint:
+        name: Lint JS codebase
+
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              id: checkout
+              uses: actions/checkout@v4
+            
+            - name: Setup Node.js
+              id: setup-node
+              uses: actions/setup-node@v4
+              with:
+               node-version: .node-version
+               cache: npm
+            
+            - name: Install dependencies
+              id: install
+              run: npm install
+                
