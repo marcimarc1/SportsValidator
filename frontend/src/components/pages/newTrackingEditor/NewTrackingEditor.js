@@ -904,13 +904,14 @@ const NewTrackingEditor = () => {
             <FormGroup>
               <FormControlLabel control={<Switch checked={isShowingBox} onChange={handleDisplayingBox} />} />
             </FormGroup>
-            <Button variant="contained" onClick={handleAddPlayer}>Add player</Button>
+            <Button data-testid='add-player-button' variant="contained" onClick={handleAddPlayer}>Add player</Button>
+            <div data-testid='player-number' className='tests'>player number: {canvasBoxes.length}</div>
         </div>
       </div>
       <input type="file" onChange={handleBrowse} />
       <button onClick={handleDownload} disabled={isDownloadingVideo}>Download video</button>
       <div id='canvas-container'>
-        <canvas ref={canvasRef} className='canvas' id="tracking-editor-canvas" width='1920' height='1080' style={{ display: "block", width: "100%", height: "auto" }}></canvas>
+        <canvas data-testid='canvas' ref={canvasRef} className='canvas' id="tracking-editor-canvas" width='1920' height='1080' style={{ display: "block", width: "100%", height: "auto" }}></canvas>
         {/* <div className="sidebar">sidebar is here</div> */}
         <TrackList>
           {playerList}
