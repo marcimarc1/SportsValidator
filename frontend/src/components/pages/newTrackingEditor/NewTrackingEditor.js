@@ -487,6 +487,29 @@ const NewTrackingEditor = () => {
       let playerBoxesCopy = canvasBoxes;
       deselectAllBox();
       canvas.remove(...canvas.getObjects());
+
+      const numOfTrails = 80;
+      const pastTrailsToDraw = annotations.filter(a => { return a.FrameNo > frameNumber - numOfTrails && a.FrameNo < frameNumber});
+
+      pastTrailsToDraw.forEach( a => {
+        const scaledX = a.x1  * horizontalScalingFactor;
+        const scaledY = a.y1  * verticalScalingFactor;
+        const trailRadius = a.w * horizontalScalingFactor / 8;
+
+        const trailColor = colorSet.get(a.PlayerKey)
+        let trail = new fabric.Circle({
+          left: scaledX,
+          top: scaledY,
+          stroke:`rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
+          strokeWidth:3,
+          fill: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
+          radius: trailRadius / numOfTrails * (numOfTrails - (frameNumber - a.FrameNo)),
+          visible: isShowingAnnotation,
+        });
+
+        canvas.add(trail);
+      })
+
       // let boxIndex = annotations.findIndex(element => element.FrameNo == frameNumber);
       // if (boxIndex == -1) {
       //   return;
@@ -519,8 +542,8 @@ const NewTrackingEditor = () => {
 
         //draw boxes
         while (playerIndex < playersToDraw.length) {
-          const scaledX = (playersToDraw[playerIndex].x - (playersToDraw[playerIndex].w / 2)) * horizontalScalingFactor;
-          const scaledY = (playersToDraw[playerIndex].y - (playersToDraw[playerIndex].h / 2)) * verticalScalingFactor;
+          const scaledX = playersToDraw[playerIndex].x1 * horizontalScalingFactor;
+          const scaledY = playersToDraw[playerIndex].y1 * verticalScalingFactor;
           const scaledWidth = playersToDraw[playerIndex].w * horizontalScalingFactor;
           const scaledHeight = playersToDraw[playerIndex].h * verticalScalingFactor;
           const boxColor = colorSet.get(playersToDraw[playerIndex].PlayerKey); //used in 'stroke' property of playerBox
@@ -650,6 +673,28 @@ const NewTrackingEditor = () => {
     var tempList = [];
     let runningIndex = 0;
 
+    const numOfTrails = 80;
+    const pastTrailsToDraw = annotations.filter(a => { return a.FrameNo > frameNumber - numOfTrails && a.FrameNo < frameNumber});
+
+    pastTrailsToDraw.forEach( a => {
+      const scaledX = a.x1  * horizontalScalingFactor;
+      const scaledY = a.y1  * verticalScalingFactor;
+      const trailRadius = a.w * horizontalScalingFactor / 8;
+
+      const trailColor = colorSet.get(a.PlayerKey)
+      let trail = new fabric.Circle({
+        left: scaledX,
+        top: scaledY,
+        stroke:`rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
+        strokeWidth:3,
+        fill: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
+        radius: trailRadius / numOfTrails * (numOfTrails - (frameNumber - a.FrameNo)),
+        visible: isShowingAnnotation,
+      });
+
+      canvas.add(trail);
+    })
+
     //invalidate the boxes in current frame, we should do this because we are going to draw fresh boxes, and we don't want duplicate boxes
     const invalidatedCanvasBoxes = canvasBoxes.filter(a => a.my.frame !== frameNumber);
     canvasBoxes.length = 0;
@@ -662,8 +707,8 @@ const NewTrackingEditor = () => {
       if (playersToDraw.length > 0) {
         //draw boxes
         while (playerIndex < playersToDraw.length) {
-          const scaledX = (playersToDraw[playerIndex].x - (playersToDraw[playerIndex].w / 2)) * horizontalScalingFactor;
-          const scaledY = (playersToDraw[playerIndex].y - (playersToDraw[playerIndex].h / 2)) * verticalScalingFactor;
+          const scaledX = playersToDraw[playerIndex].x1  * horizontalScalingFactor;
+          const scaledY = playersToDraw[playerIndex].y1 * verticalScalingFactor;
           const scaledWidth = playersToDraw[playerIndex].w * horizontalScalingFactor;
           const scaledHeight = playersToDraw[playerIndex].h * verticalScalingFactor;
           const boxColor = colorSet.get(playersToDraw[playerIndex].PlayerKey); //used in 'stroke' property of playerBox
