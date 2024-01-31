@@ -302,7 +302,7 @@ const NewTrackingEditor = () => {
       // Get the uploaded file
       const file = event.target.files[0];
 
-      const annotationsResponse = await fetch("/api/annotations/199");
+      const annotationsResponse = await fetch("http://localhost:80/api/annotations/199");
       if (!annotationsResponse.ok) {
         throw new Error('Failed to fetch annotations for video');
       }
@@ -519,8 +519,8 @@ const NewTrackingEditor = () => {
 
         //draw boxes
         while (playerIndex < playersToDraw.length) {
-          const scaledX = (playersToDraw[playerIndex].x - (playersToDraw[playerIndex].w / 2)) * horizontalScalingFactor;
-          const scaledY = (playersToDraw[playerIndex].y - (playersToDraw[playerIndex].h / 2)) * verticalScalingFactor;
+          const scaledX = playersToDraw[playerIndex].x1  * horizontalScalingFactor;
+          const scaledY = playersToDraw[playerIndex].y1 * verticalScalingFactor;
           const scaledWidth = playersToDraw[playerIndex].w * horizontalScalingFactor;
           const scaledHeight = playersToDraw[playerIndex].h * verticalScalingFactor;
           const boxColor = colorSet.get(playersToDraw[playerIndex].PlayerKey); //used in 'stroke' property of playerBox
@@ -662,8 +662,8 @@ const NewTrackingEditor = () => {
       if (playersToDraw.length > 0) {
         //draw boxes
         while (playerIndex < playersToDraw.length) {
-          const scaledX = (playersToDraw[playerIndex].x - (playersToDraw[playerIndex].w / 2)) * horizontalScalingFactor;
-          const scaledY = (playersToDraw[playerIndex].y - (playersToDraw[playerIndex].h / 2)) * verticalScalingFactor;
+          const scaledX = playersToDraw[playerIndex].x1  * horizontalScalingFactor;
+          const scaledY = playersToDraw[playerIndex].y1 * verticalScalingFactor;
           const scaledWidth = playersToDraw[playerIndex].w * horizontalScalingFactor;
           const scaledHeight = playersToDraw[playerIndex].h * verticalScalingFactor;
           const boxColor = colorSet.get(playersToDraw[playerIndex].PlayerKey); //used in 'stroke' property of playerBox
