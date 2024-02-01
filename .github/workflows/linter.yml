@@ -25,7 +25,7 @@ jobs:
               id: install
               run: npm install
               working-directory: ./frontend
-                
+              
     test:
         name: unit test
         runs-on: ubuntu-latest
