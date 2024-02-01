@@ -1,6 +1,6 @@
 name: Lint Codebase
 
-on: [pull_request]
+on: [push, pull_request]
 
 jobs: 
     lint:
@@ -16,10 +16,32 @@ jobs:
               id: setup-node
               uses: actions/setup-node@v4
               with:
-               node-version: .node-version
+               node-version-file: .node_version
                cache: npm
             
             - name: Install dependencies
               id: install
               run: npm install
                 
+    test:
+        name: unit test
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              id: checkout
+              uses: actions/checkout@v4
+            
+            - name: Setup Node.js
+              id: setup-node
+              uses: actions/setup-node@v4
+              with:
+               node-version-file: .node_version
+               cache: npm
+            
+            - name: Install dependencies
+              id: install
+              run: npm install
+
+            - name: Run tests
+              id: test
+              run: npm test
