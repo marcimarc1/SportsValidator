@@ -1,14 +1,15 @@
 name: Lint Codebase
 
-on: [push, pull_request]
+on: [pull_request]
 
 jobs: 
     lint:
         name: Lint JS codebase
 
         runs-on: ubuntu-latest
+
         steps:
-            - name: Checkout
+            - name: Checkout            
               id: checkout
               uses: actions/checkout@v4
             
@@ -18,10 +19,12 @@ jobs:
               with:
                node-version-file: .node_version
                cache: npm
+               cache-dependency-path: './frontend'
             
             - name: Install dependencies
               id: install
               run: npm install
+              working-directory: ./frontend
                 
     test:
         name: unit test
