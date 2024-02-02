@@ -1,61 +1,67 @@
-import React, {Component} from 'react';
-import PropTypes from 'prop-types';
-import IconButton from '@material-ui/core/IconButton';
+import React, { Component } from "react";
+import PropTypes from "prop-types";
+import IconButton from "@material-ui/core/IconButton";
 
-import { EditText } from 'react-edit-text';
-import 'react-edit-text/dist/index.css';
+import { EditText } from "react-edit-text";
+import "react-edit-text/dist/index.css";
 
-import './TrackingEditor.css';
-import {ReactComponent as Delete} from "../../../icons/delete.svg";
-
+import "./TrackingEditor.css";
+import { ReactComponent as Delete } from "../../../icons/delete.svg";
 
 class TrackListItemCorner extends Component {
+  delete = () => {
+    if (window.confirm("Do you really want to delete this corner?")) {
+      this.props.delete(this.props.id);
+    }
+  };
 
-    delete = () => {
-        if(window.confirm("Do you really want to delete this corner?")) {
-            this.props.delete(this.props.id);
-        }
+  render() {
+    let style = { borderColor: "black" };
+    let selected = this.props.activeCorner === this.props.id; // === so that no type conversion takes place and undefined != 0
+    if (selected) {
+      style["color"] = "FFF";
     }
 
-    render() {
-        let style = {borderColor: 'black'};
-        let selected = this.props.activeCorner === this.props.id;    // === so that no type conversion takes place and undefined != 0
-        if(selected) {
-            style['color'] = 'FFF';
-        }
+    let name = this.props.id;
 
-        let name = this.props.id;
+    // selects or deselects (if its already selected) the clicked item (e.g. player)
+    let clickItem = () => {
+      if (!selected)
+        this.props.changeSelection("corner", this.props.id, selected);
+    };
 
-        // selects or deselects (if its already selected) the clicked item (e.g. player)
-        let clickItem = () => {
-            if(!selected)
-                this.props.changeSelection("corner", this.props.id, selected);
+    return (
+      <div
+        className={"TrackListItem" + (selected ? " selected" : "")}
+        style={style}
+        onClick={clickItem}
+      >
+        {/*<h1 className={"TrackListItemName" + (bBox.my.selected ? " selected" : "")}> {name} </h1>*/}
+        <EditText
+          className={"TrackListItemName" + (selected ? " selected" : "")}
+          defaultValue={name.toString()}
+          readonly={true}
+          style={{ marginLeft: "5px", width: "50px" }}
+        />
 
-        }
-
-        return (
-            <div className={"TrackListItem" + (selected ? " selected" : "")} style={style} onClick={clickItem}>
-                {/*<h1 className={"TrackListItemName" + (bBox.my.selected ? " selected" : "")}> {name} </h1>*/}
-                <EditText
-                    className={"TrackListItemName" + (selected ? " selected" : "")}
-                    defaultValue={name.toString()}
-                    readonly={true}
-                    style={{marginLeft: '5px', width: '50px'}}
-                />
-
-                <IconButton size="small" className={"TrackListItemDelete"} onClick={this.delete} aria-label="delete item">
-                    <Delete/>
-                </IconButton>
-            </div>
-        );
-    }
+        <IconButton
+          size="small"
+          className={"TrackListItemDelete"}
+          onClick={this.delete}
+          aria-label="delete item"
+        >
+          <Delete />
+        </IconButton>
+      </div>
+    );
+  }
 }
 
 TrackListItemCorner.propTypes = {
-    id: PropTypes.number.isRequired,
-    activeCorner: PropTypes.number,          // can be undefined if no corner is active
-    changeSelection: PropTypes.func.isRequired,
-    delete: PropTypes.func.isRequired
+  id: PropTypes.number.isRequired,
+  activeCorner: PropTypes.number, // can be undefined if no corner is active
+  changeSelection: PropTypes.func.isRequired,
+  delete: PropTypes.func.isRequired,
 };
 
 export default TrackListItemCorner;
