@@ -1,18 +1,18 @@
-import React, { useRef, useState, useEffect } from 'react';
-import { useParams } from 'react-router';
-import { ReactComponent as PlayIcon } from '../../../icons/play.svg';
-import { ReactComponent as PauseIcon } from '../../../icons/pause.svg';
-import { ReactComponent as ForwardStepIcon } from '../../../icons/forward-step.svg';
-import { ReactComponent as BackwardStepIcon } from '../../../icons/backward-step.svg';
+import React, { useRef, useState, useEffect } from "react";
+import { useParams } from "react-router";
+import { ReactComponent as PlayIcon } from "../../../icons/play.svg";
+import { ReactComponent as PauseIcon } from "../../../icons/pause.svg";
+import { ReactComponent as ForwardStepIcon } from "../../../icons/forward-step.svg";
+import { ReactComponent as BackwardStepIcon } from "../../../icons/backward-step.svg";
 // import tracking from "../../../data/tracking_data.json";
 // import tracking from "../../../data/tracking-data-for-test.json";
-import { fabric } from 'fabric';
-import './NewTrackingEditor.css'
-import SeekBar from './SeekBar';
-import { FormGroup, Switch, FormControlLabel, Button } from '@mui/material';
-import TrackList from '../newTrackingEditor/TrackList';
-import TrackListItemPlayer from './TrackListItemPlayer';
-import MergeAndSwapModal from './MergeAndSwapModal';
+import { fabric } from "fabric";
+import "./NewTrackingEditor.css";
+import SeekBar from "./SeekBar";
+import { FormGroup, Switch, FormControlLabel, Button } from "@mui/material";
+import TrackList from "../newTrackingEditor/TrackList";
+import TrackListItemPlayer from "./TrackListItemPlayer";
+import MergeAndSwapModal from "./MergeAndSwapModal";
 
 // TODO Take a video_id instead and have an endpoint on the server where we supply a video_id and get the corresponding video
 const NewTrackingEditor = () => {
@@ -21,7 +21,7 @@ const NewTrackingEditor = () => {
   const [frameNumber, setFrameNumber] = useState(0);
   const [timestamp, setTimestamp] = useState(0);
   const [videoElement, setVideoElement] = useState(null);
-  const [isPlaying, setIsPlaying] = useState(false)
+  const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [isDownloadingVideo, setIsDownloadingVideo] = useState(false);
   const [annotations, setAnnotations] = useState({});
@@ -34,16 +34,16 @@ const NewTrackingEditor = () => {
   const [colorSet, setColorSet] = useState(new Map()); //map of playerkey to color
 
   const [mergeModalState, setMergeModalState] = useState(false);
-  const [playerChosenInList, setPlayerChosenInList] = useState('')
+  const [playerChosenInList, setPlayerChosenInList] = useState("");
 
   const handleModalOpen = (playerInList) => {
-    setPlayerChosenInList(playerInList)
-    setMergeModalState(true)
-  }
+    setPlayerChosenInList(playerInList);
+    setMergeModalState(true);
+  };
 
   const handleModalClose = () => {
-    setMergeModalState(false)
-  }
+    setMergeModalState(false);
+  };
 
   const mergePlayerData = (mainPlayerName) => {
     const nameToKeyMap = new Map();
@@ -52,22 +52,29 @@ const NewTrackingEditor = () => {
     });
     const firstPlayerKey = nameToKeyMap.get(mainPlayerName);
     const secondPlayerKey = nameToKeyMap.get(playerChosenInList);
-    if(firstPlayerKey == undefined || secondPlayerKey == undefined ) {
-      console.log('players are not mapped')
-      return
+    if (firstPlayerKey == undefined || secondPlayerKey == undefined) {
+      console.log("players are not mapped");
+      return;
     }
-
 
     //by default, the player with the higher playerkey is the merged player
     //and the player with the lower playerkey is the main player, which will be kept
-    const firstPlayerMaxFrame = Math.max(...annotations.filter(a => a.PlayerKey == firstPlayerKey).map(a => a.FrameNo))
-    const secondPlayerMaxFrame = Math.max(...annotations.filter(a => a.PlayerKey == secondPlayerKey).map(a => a.FrameNo))
+    const firstPlayerMaxFrame = Math.max(
+      ...annotations
+        .filter((a) => a.PlayerKey == firstPlayerKey)
+        .map((a) => a.FrameNo),
+    );
+    const secondPlayerMaxFrame = Math.max(
+      ...annotations
+        .filter((a) => a.PlayerKey == secondPlayerKey)
+        .map((a) => a.FrameNo),
+    );
 
     let mergedPlayerKey;
     let mainPlayerKey;
     let mainPlayerMaxFrame;
 
-    if(firstPlayerMaxFrame > secondPlayerMaxFrame) {
+    if (firstPlayerMaxFrame > secondPlayerMaxFrame) {
       mergedPlayerKey = firstPlayerKey;
       mainPlayerKey = secondPlayerKey;
       mainPlayerMaxFrame = secondPlayerMaxFrame;
@@ -78,20 +85,29 @@ const NewTrackingEditor = () => {
     }
 
     //filter out duplicate annotations between main and merged player that has the same frame number
-    let filteredAnnotations = annotations.filter(a => a.playerKey != mergedPlayerKey)
-    const mainPlayerAnnotations = annotations.filter(a => a.playerKey == mainPlayerKey)
-    const mergedPlayerAnnotations = annotations.filter(a => a.playerKey == mergedPlayerKey)
-    filteredAnnotations = filteredAnnotations.concat( mergedPlayerAnnotations.filter( a => mainPlayerAnnotations.every( b => b.FrameNo != a.FrameNo)))
+    let filteredAnnotations = annotations.filter(
+      (a) => a.playerKey != mergedPlayerKey,
+    );
+    const mainPlayerAnnotations = annotations.filter(
+      (a) => a.playerKey == mainPlayerKey,
+    );
+    const mergedPlayerAnnotations = annotations.filter(
+      (a) => a.playerKey == mergedPlayerKey,
+    );
+    filteredAnnotations = filteredAnnotations.concat(
+      mergedPlayerAnnotations.filter((a) =>
+        mainPlayerAnnotations.every((b) => b.FrameNo != a.FrameNo),
+      ),
+    );
 
-    const mergedAnnotations = filteredAnnotations.map( annotation => {  
-      if(annotation.PlayerKey == mergedPlayerKey){
-        return {...annotation, PlayerKey: mainPlayerKey}
+    const mergedAnnotations = filteredAnnotations.map((annotation) => {
+      if (annotation.PlayerKey == mergedPlayerKey) {
+        return { ...annotation, PlayerKey: mainPlayerKey };
       }
       return annotation;
-    }
-    )
-    setAnnotations(mergedAnnotations)
-  }
+    });
+    setAnnotations(mergedAnnotations);
+  };
 
   const swapPlayerData = (secondPlayerName) => {
     const nameToKeyMap = new Map();
@@ -101,22 +117,28 @@ const NewTrackingEditor = () => {
     const firstPlayerKey = nameToKeyMap.get(playerChosenInList);
     const secondPlayerKey = nameToKeyMap.get(secondPlayerName);
 
-    if(firstPlayerKey == undefined || secondPlayerKey == undefined ) {
-      console.log('players are not mapped')
-      return
+    if (firstPlayerKey == undefined || secondPlayerKey == undefined) {
+      console.log("players are not mapped");
+      return;
     }
 
-    const swappedAnnotations = annotations.map( annotation => {
-      if(annotation.PlayerKey == firstPlayerKey && annotation.FrameNo >= frameNumber){
-        return {...annotation, PlayerKey: secondPlayerKey}
+    const swappedAnnotations = annotations.map((annotation) => {
+      if (
+        annotation.PlayerKey == firstPlayerKey &&
+        annotation.FrameNo >= frameNumber
+      ) {
+        return { ...annotation, PlayerKey: secondPlayerKey };
       }
-      if(annotation.PlayerKey == secondPlayerKey && annotation.FrameNo >= frameNumber){
-        return {...annotation, PlayerKey: firstPlayerKey}
+      if (
+        annotation.PlayerKey == secondPlayerKey &&
+        annotation.FrameNo >= frameNumber
+      ) {
+        return { ...annotation, PlayerKey: firstPlayerKey };
       }
       return annotation;
-    })
-    setAnnotations(swappedAnnotations)
-  }
+    });
+    setAnnotations(swappedAnnotations);
+  };
 
   let { videoName } = useParams();
 
@@ -129,20 +151,25 @@ const NewTrackingEditor = () => {
   function updateSidebar() {
     let tempList = [];
     let runningIndex = 0;
-    let boxes = canvasBoxes.filter(box => box.my.frame == getCurrentTimestampFrame());
-    boxes.forEach(box => {
+    let boxes = canvasBoxes.filter(
+      (box) => box.my.frame == getCurrentTimestampFrame(),
+    );
+    boxes.forEach((box) => {
       const boxColor = colorSet.get(box.my.key);
 
-      tempList = tempList.concat([<TrackListItemPlayer  key={runningIndex++}
-        playerBox={box}
-        name={playerNameMap.get(box.my.key)}
-        changeSelection={changeSelection}
-        setName={setName}
-        blink={blink}
-        delete={deletePlayer}
-        color={boxColor}
-        handleModalOpen={handleModalOpen}
-        />]);
+      tempList = tempList.concat([
+        <TrackListItemPlayer
+          key={runningIndex++}
+          playerBox={box}
+          name={playerNameMap.get(box.my.key)}
+          changeSelection={changeSelection}
+          setName={setName}
+          blink={blink}
+          delete={deletePlayer}
+          color={boxColor}
+          handleModalOpen={handleModalOpen}
+        />,
+      ]);
       runningIndex++;
     });
     setPlayerList(tempList);
@@ -158,37 +185,38 @@ const NewTrackingEditor = () => {
     let repeats = 3;
     let time = 0;
     let interval = 400;
-    let blinkColor = 'rgb(255, 255, 255, 0.6)';
+    let blinkColor = "rgb(255, 255, 255, 0.6)";
 
-    if(originalStrokeColor !== blinkColor) {  // necessary because otherwise bBox could permanently be set to blinkColor
-        for (let i = repeats; i > 0; i--) {
-            setTimeout(() => {
-                playerBox.set({
-                    fill: blinkColor,
-                    stroke: blinkColor
-                });
-                playerBox.setCoords();
-                canvas.renderAll();
-            }, time);
+    if (originalStrokeColor !== blinkColor) {
+      // necessary because otherwise bBox could permanently be set to blinkColor
+      for (let i = repeats; i > 0; i--) {
+        setTimeout(() => {
+          playerBox.set({
+            fill: blinkColor,
+            stroke: blinkColor,
+          });
+          playerBox.setCoords();
+          canvas.renderAll();
+        }, time);
 
-            time += interval;
-            setTimeout(() => {
-                playerBox.set({
-                    fill: originalFillColor,
-                    stroke: originalStrokeColor
-                });
-                playerBox.setCoords();
-                canvas.renderAll();
-            }, time);
-            time += interval;
-        }
+        time += interval;
+        setTimeout(() => {
+          playerBox.set({
+            fill: originalFillColor,
+            stroke: originalStrokeColor,
+          });
+          playerBox.setCoords();
+          canvas.renderAll();
+        }, time);
+        time += interval;
+      }
     }
     playerBox.set({
       fill: originalFillColor,
-      stroke: originalStrokeColor
-  });
-  playerBox.setCoords();
-  canvas.discardActiveObject();
+      stroke: originalStrokeColor,
+    });
+    playerBox.setCoords();
+    canvas.discardActiveObject();
   }
 
   function deletePlayer(playerBox) {
@@ -209,15 +237,14 @@ const NewTrackingEditor = () => {
     let playerIndex = playerBox.my.key;
     playerNameMap.set(playerIndex, name);
     canvas.requestRenderAll();
-    // TODO BACKEND 
+    // TODO BACKEND
     // update data when leaving the page
     // the modified data is stored in canvasBoxes array
-    
   }
 
   function boxInCanvas(playerBox) {
     //check if the box is in the canvas
-    canvasBoxes.forEach( box => {
+    canvasBoxes.forEach((box) => {
       if (box == playerBox) {
         return true;
       }
@@ -227,53 +254,49 @@ const NewTrackingEditor = () => {
 
   function deselectAllBox() {
     canvas.discardActiveObject();
-    canvasBoxes.forEach(box => {
-            //comments from selectBBox about deep clone also apply here!
-            box.my.selected = false;
-            //this.setState({dummy: !this.state.dummy});
+    canvasBoxes.forEach((box) => {
+      //comments from selectBBox about deep clone also apply here!
+      box.my.selected = false;
+      //this.setState({dummy: !this.state.dummy});
     });
-  };
+  }
 
   function selectBBox(playerBox) {
-      canvas.setActiveObject(playerBox);
-      setActiveObject(playerBox);
-      playerBox.my.selected = true;
-  };
-
+    canvas.setActiveObject(playerBox);
+    setActiveObject(playerBox);
+    playerBox.my.selected = true;
+  }
 
   function changeSelection(playerBox) {
-    if(boxInCanvas(playerBox)) {
+    if (boxInCanvas(playerBox)) {
       //deselect all active boxes
       deselectAllBox();
       //set the new active box
       selectBBox(playerBox);
     }
-  };    
+  }
 
   function defineBoxBehavior(playerBox) {
     playerBox.on({
-      'selected': () => {
-      },
-      'mousedown': () => {
-      },
-      'mouseover': () => {
-      }
+      selected: () => {},
+      mousedown: () => {},
+      mouseover: () => {},
     });
 
     playerBox.on({
-      'deselected': () => {
-      },
-      'mouseout': () => {
-      }
+      deselected: () => {},
+      mouseout: () => {},
     });
 
     playerBox.on({
-      'modified': (event) => {
+      modified: (event) => {
         let targetRect = event.target;
         playerBox.left = targetRect.left;
         playerBox.top = targetRect.top;
-        playerBox.width = playerBox.width * targetRect.scaleX / playerBox.my.scaleX;
-        playerBox.height = targetRect.height * targetRect.scaleY / playerBox.my.scaleY;
+        playerBox.width =
+          (playerBox.width * targetRect.scaleX) / playerBox.my.scaleX;
+        playerBox.height =
+          (targetRect.height * targetRect.scaleY) / playerBox.my.scaleY;
         playerBox.dirty = true;
         playerBox.my.scaleX = targetRect.scaleX;
         playerBox.my.scaleY = targetRect.scaleY;
@@ -282,7 +305,7 @@ const NewTrackingEditor = () => {
         // could be used to debug scaling function
         // console.log("scaling factor: %f %f", targetRect.scaleX, targetRect.scaleY);
         // console.log("player position: %d  %d  %d  %d", targetRect.left, targetRect.top, targetRect.width, targetRect.height);
-      }
+      },
     });
 
     return playerBox;
@@ -290,11 +313,11 @@ const NewTrackingEditor = () => {
 
   const retrievePlayerKeys = () => {
     if (annotations.length > 0) {
-      return annotations.map(a => a.PlayerKey);
+      return annotations.map((a) => a.PlayerKey);
     } else {
       return 0;
     }
-  }
+  };
 
   // For changing video source file
   const handleBrowse = async (event) => {
@@ -304,12 +327,15 @@ const NewTrackingEditor = () => {
 
       const annotationsResponse = await fetch("/api/annotations/199");
       if (!annotationsResponse.ok) {
-        throw new Error('Failed to fetch annotations for video');
+        throw new Error("Failed to fetch annotations for video");
       }
       const annotationsJson = await annotationsResponse.json();
       console.log("Retrieved annotations : ", annotationsJson);
       // get rid of duplicates in case database has duplicate values
-      const uniqueAnnotations = Array.from(new Set(annotationsJson.map(obj => JSON.stringify(obj))), JSON.parse);
+      const uniqueAnnotations = Array.from(
+        new Set(annotationsJson.map((obj) => JSON.stringify(obj))),
+        JSON.parse,
+      );
       console.log("Unique annotations : ", uniqueAnnotations);
       setAnnotations(uniqueAnnotations);
       //i want to set the color set here
@@ -331,13 +357,13 @@ const NewTrackingEditor = () => {
     try {
       const videoResponse = await fetch("/uploads/" + videoName);
       if (!videoResponse.ok) {
-        throw new Error('Failed to fetch video.');
+        throw new Error("Failed to fetch video.");
       }
       const videoBlob = await videoResponse.blob();
 
       const annotationsResponse = await fetch("/api/annotations/199");
       if (!annotationsResponse.ok) {
-        throw new Error('Failed to fetch annotations for video');
+        throw new Error("Failed to fetch annotations for video");
       }
       const annotationsJson = await annotationsResponse.json();
       console.log("Retrieved annotations : ", annotationsJson);
@@ -345,46 +371,52 @@ const NewTrackingEditor = () => {
 
       setVideoUrl(URL.createObjectURL(videoBlob));
     } catch (error) {
-      console.error('Error downloading video:', error);
+      console.error("Error downloading video:", error);
     } finally {
       setIsDownloadingVideo(false);
     }
-  }
+  };
 
   useEffect(() => {
     //rerender the sidebar when another player is chosen
     if (activeObject) {
       let tempList = [];
-      
-      playerList.forEach(item => {
+
+      playerList.forEach((item) => {
         if (item.props.playerBox.my.key == activeObject.my.key) {
           const boxColor = colorSet.get(activeObject.my.key); //used in 'stroke' property of playerBox
 
-          tempList = tempList.concat([<TrackListItemPlayer  key={item.key}
-                                                            playerBox={activeObject}
-                                                            name={playerNameMap.get(activeObject.my.key)}
-                                                            changeSelection={changeSelection}
-                                                            setName={setName}
-                                                            blink={blink}
-                                                            color={boxColor}
-                                                            delete={deletePlayer} 
-                                                            handleModalOpen={handleModalOpen}
-                                                            />]);
+          tempList = tempList.concat([
+            <TrackListItemPlayer
+              key={item.key}
+              playerBox={activeObject}
+              name={playerNameMap.get(activeObject.my.key)}
+              changeSelection={changeSelection}
+              setName={setName}
+              blink={blink}
+              color={boxColor}
+              delete={deletePlayer}
+              handleModalOpen={handleModalOpen}
+            />,
+          ]);
         } else {
           let tempBox = item.props.playerBox;
           tempBox.my.selected = false;
           const boxColor = colorSet.get(tempBox.my.key);
 
-          tempList = tempList.concat([<TrackListItemPlayer  key={item.key}
-                                                            playerBox={tempBox}
-                                                            name={playerNameMap.get(tempBox.my.key)}
-                                                            changeSelection={changeSelection}
-                                                            setName={setName}
-                                                            blink={blink}
-                                                            color={boxColor}
-                                                            delete={deletePlayer} 
-                                                            handleModalOpen={handleModalOpen}
-                                                            />]);
+          tempList = tempList.concat([
+            <TrackListItemPlayer
+              key={item.key}
+              playerBox={tempBox}
+              name={playerNameMap.get(tempBox.my.key)}
+              changeSelection={changeSelection}
+              setName={setName}
+              blink={blink}
+              color={boxColor}
+              delete={deletePlayer}
+              handleModalOpen={handleModalOpen}
+            />,
+          ]);
         }
       });
       setPlayerList(tempList);
@@ -395,7 +427,7 @@ const NewTrackingEditor = () => {
     // as player name is not contained in the tracking data, set "player{id}" as default name.
     let playerKeys = retrievePlayerKeys();
     let tempMap = new Map();
-    for (var i = 0; i< playerKeys.length; i++) {
+    for (var i = 0; i < playerKeys.length; i++) {
       let playerName = "player" + playerKeys[i];
       tempMap.set(playerKeys[i], playerName);
     }
@@ -406,16 +438,16 @@ const NewTrackingEditor = () => {
     let canvasWidth = document.body.clientWidth - 300;
     var canvasHeight = 800;
     if (videoElement) {
-      canvasHeight  = videoElement.height / videoElement.width * canvasWidth;
+      canvasHeight = (videoElement.height / videoElement.width) * canvasWidth;
     }
-    let initCanvas = new fabric.Canvas('tracking-editor-canvas');
+    let initCanvas = new fabric.Canvas("tracking-editor-canvas");
     initCanvas.setHeight(canvasHeight);
     initCanvas.setWidth(canvasWidth);
     setCanvas(initCanvas);
   }, []);
 
   useEffect(() => {
-    const localVideoElement = document.createElement('video');
+    const localVideoElement = document.createElement("video");
     localVideoElement.src = videoUrl;
     localVideoElement.muted = true;
 
@@ -432,17 +464,19 @@ const NewTrackingEditor = () => {
   }
 
   function generateColor(value) {
-      var r = Math.floor(seededRandom(value) * 256);
-      var g = Math.floor(seededRandom(value + 1) * 256);
-      var b = Math.floor(seededRandom(value + 2) * 256);
-      return { r, g, b };
+    var r = Math.floor(seededRandom(value) * 256);
+    var g = Math.floor(seededRandom(value + 1) * 256);
+    var b = Math.floor(seededRandom(value + 2) * 256);
+    return { r, g, b };
   }
 
   function boundingBoxColorSet(annotationList) {
-    let uniquePlayerKeys = new Set(annotationList.map(item => item.PlayerKey));
+    let uniquePlayerKeys = new Set(
+      annotationList.map((item) => item.PlayerKey),
+    );
     let colorSet = new Map();
 
-    uniquePlayerKeys.forEach(key => {
+    uniquePlayerKeys.forEach((key) => {
       let color = generateColor(key);
       colorSet.set(key, color);
     });
@@ -450,8 +484,7 @@ const NewTrackingEditor = () => {
   }
 
   useEffect(() => {
-    if (!videoElement)
-      return;
+    if (!videoElement) return;
 
     // const canvasElement = canvasRef.current;
     // const context = canvasElement.getContext('2d');
@@ -473,14 +506,19 @@ const NewTrackingEditor = () => {
 
       // Drawing video
       // context.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
-      var fabricVideo = new fabric.Image(videoElement, {left:0, 
-                                                        top:0, 
-                                                        width:videoElement.width,
-                                                        height:videoElement.height,
-                                                        selectable: true});
+      var fabricVideo = new fabric.Image(videoElement, {
+        left: 0,
+        top: 0,
+        width: videoElement.width,
+        height: videoElement.height,
+        selectable: true,
+      });
 
-      canvas.setBackgroundImage(fabricVideo, canvas.renderAll.bind(canvas), {scaleX:horizontalScalingFactor, scaleY:verticalScalingFactor});
-    }
+      canvas.setBackgroundImage(fabricVideo, canvas.renderAll.bind(canvas), {
+        scaleX: horizontalScalingFactor,
+        scaleY: verticalScalingFactor,
+      });
+    };
 
     const drawBoundingBoxes = (frameNumber) => {
       let playerIndex = 0;
@@ -491,83 +529,98 @@ const NewTrackingEditor = () => {
       // if (boxIndex == -1) {
       //   return;
       // }
-      var playersToDraw = playerBoxesCopy.filter(a => a.my.frame == frameNumber);
+      var playersToDraw = playerBoxesCopy.filter(
+        (a) => a.my.frame == frameNumber,
+      );
       var tempList = [];
       let runningIndex = 0;
 
-      if(playersToDraw.length > 0) {
+      if (playersToDraw.length > 0) {
         while (playerIndex < playersToDraw.length) {
           canvas.add(playersToDraw[playerIndex]);
-          const boxColor = colorSet.get(playersToDraw[playerIndex].my.key) //used in 'stroke' property of playerBox
+          const boxColor = colorSet.get(playersToDraw[playerIndex].my.key); //used in 'stroke' property of playerBox
 
-          tempList = tempList.concat([<TrackListItemPlayer  key={runningIndex++}
-                                                            playerBox={playersToDraw[playerIndex]}
-                                                            name={playerNameMap.get(playersToDraw[playerIndex].my.key)}
-                                                            changeSelection={changeSelection}
-                                                            setName={setName}
-                                                            blink={blink}
-                                                            color={boxColor}
-                                                            delete={deletePlayer} 
-                                                            handleModalOpen={handleModalOpen}
-                                                            />]);
+          tempList = tempList.concat([
+            <TrackListItemPlayer
+              key={runningIndex++}
+              playerBox={playersToDraw[playerIndex]}
+              name={playerNameMap.get(playersToDraw[playerIndex].my.key)}
+              changeSelection={changeSelection}
+              setName={setName}
+              blink={blink}
+              color={boxColor}
+              delete={deletePlayer}
+              handleModalOpen={handleModalOpen}
+            />,
+          ]);
           playerIndex++;
         }
       } else {
-        playersToDraw = annotations.filter(a => a.FrameNo == frameNumber);
+        playersToDraw = annotations.filter((a) => a.FrameNo == frameNumber);
 
-      if (playersToDraw.length > 0) {
+        if (playersToDraw.length > 0) {
+          //draw boxes
+          while (playerIndex < playersToDraw.length) {
+            const scaledX =
+              (playersToDraw[playerIndex].x -
+                playersToDraw[playerIndex].w / 2) *
+              horizontalScalingFactor;
+            const scaledY =
+              (playersToDraw[playerIndex].y -
+                playersToDraw[playerIndex].h / 2) *
+              verticalScalingFactor;
+            const scaledWidth =
+              playersToDraw[playerIndex].w * horizontalScalingFactor;
+            const scaledHeight =
+              playersToDraw[playerIndex].h * verticalScalingFactor;
+            const boxColor = colorSet.get(playersToDraw[playerIndex].PlayerKey); //used in 'stroke' property of playerBox
+            let playerBox = new fabric.Rect({
+              left: scaledX,
+              top: scaledY,
+              fill: "rgba(0,0,0,0)",
+              width: scaledWidth,
+              height: scaledHeight,
+              visible: isShowingBox,
+              dirty: false,
+              stroke: `rgb(${boxColor.r}, ${boxColor.g}, ${boxColor.b})`,
 
-        //draw boxes
-        while (playerIndex < playersToDraw.length) {
-          const scaledX = (playersToDraw[playerIndex].x - (playersToDraw[playerIndex].w / 2)) * horizontalScalingFactor;
-          const scaledY = (playersToDraw[playerIndex].y - (playersToDraw[playerIndex].h / 2)) * verticalScalingFactor;
-          const scaledWidth = playersToDraw[playerIndex].w * horizontalScalingFactor;
-          const scaledHeight = playersToDraw[playerIndex].h * verticalScalingFactor;
-          const boxColor = colorSet.get(playersToDraw[playerIndex].PlayerKey); //used in 'stroke' property of playerBox
-          let playerBox = new fabric.Rect({
-            left: scaledX,
-            top: scaledY,
-            fill: 'rgba(0,0,0,0)',
-            width: scaledWidth,
-            height: scaledHeight,
-            visible: isShowingBox,
-            dirty: false,
-            stroke: `rgb(${boxColor.r}, ${boxColor.g}, ${boxColor.b})`,
+              hasBorders: false, // disables the control borders (the lines connecting the controls the show up when object is selected
+              strokeWidth: 2,
+              strokeUniform: true, // to keep the bounding box a consisten thickness, independent of its size
+              padding: 0, // to make sure the pixel coordinates are correct
+              cornerSize: 10,
+              cornerStyle: "rect",
+              lockRotation: true,
+            });
+            playerBox.my = {
+              selected: false,
+              key: playersToDraw[playerIndex].PlayerKey,
+              frame: frameNumber,
+              //scaling factor when modifying the box
+              scaleX: 1,
+              scaleY: 1,
+              // also connect it to corresponding annotation
+            };
+            playerBox = defineBoxBehavior(playerBox);
+            playerBoxesCopy.push(playerBox);
+            canvas.add(playerBox);
 
-            hasBorders: false,              // disables the control borders (the lines connecting the controls the show up when object is selected
-            strokeWidth: 2,
-            strokeUniform: true,            // to keep the bounding box a consisten thickness, independent of its size
-            padding: 0,  // to make sure the pixel coordinates are correct
-            cornerSize: 10,
-            cornerStyle: 'rect',
-            lockRotation: true
-        });
-        playerBox.my = {
-          selected: false,
-          key: playersToDraw[playerIndex].PlayerKey,
-          frame: frameNumber,
-          //scaling factor when modifying the box
-          scaleX: 1,
-          scaleY: 1
-          // also connect it to corresponding annotation
+            tempList = tempList.concat([
+              <TrackListItemPlayer
+                key={runningIndex++}
+                playerBox={playerBox}
+                color={boxColor}
+                name={playerNameMap.get(playersToDraw[playerIndex].PlayerKey)}
+                changeSelection={changeSelection}
+                setName={setName}
+                blink={blink}
+                delete={deletePlayer}
+                handleModalOpen={handleModalOpen}
+              />,
+            ]);
+            playerIndex++;
+          }
         }
-        playerBox = defineBoxBehavior(playerBox);
-        playerBoxesCopy.push(playerBox);
-        canvas.add(playerBox);
-
-        tempList = tempList.concat([<TrackListItemPlayer  key={runningIndex++}
-          playerBox={playerBox}
-          color={boxColor}
-          name={playerNameMap.get(playersToDraw[playerIndex].PlayerKey)}
-          changeSelection={changeSelection}
-          setName={setName}
-          blink={blink}
-          delete={deletePlayer}
-          handleModalOpen={handleModalOpen}
-          />]);
-        playerIndex++; 
-        }
-      }
       }
       setPlayerList(tempList);
       setCanvasBoxes(playerBoxesCopy);
@@ -582,7 +635,12 @@ const NewTrackingEditor = () => {
 
     const handleAnimationFrame = () => {
       if (!videoElement || videoElement.paused || videoElement.ended) {
-        console.log("Video element either null, paused : ", videoElement.paused, " or ended : ", videoElement.ended);
+        console.log(
+          "Video element either null, paused : ",
+          videoElement.paused,
+          " or ended : ",
+          videoElement.ended,
+        );
         return;
       }
 
@@ -591,56 +649,59 @@ const NewTrackingEditor = () => {
         setFrameNumber(currentFrameNumber);
         setTimestamp(videoElement.currentTime);
 
-        const currentProgress = videoElement.currentTime / videoElement.duration * 100;
+        const currentProgress =
+          (videoElement.currentTime / videoElement.duration) * 100;
         setProgress(currentProgress);
         previousFrameNumber = currentFrameNumber;
         updateCanvas();
       }
-      
+
       requestAnimationFrame(handleAnimationFrame);
-    }
+    };
 
     const onPlay = () => {
       requestAnimationFrame(handleAnimationFrame);
-    }
-    
+    };
+
     const onCanPlay = () => {
       updateCanvas();
-    }
+    };
 
     const onSeek = () => {
       console.log("Seeked");
       // updateCanvas();
-    }
+    };
 
-    videoElement.addEventListener('play', onPlay);
-    videoElement.addEventListener('canplay', onCanPlay);
-    videoElement.addEventListener('seeked', onSeek);
-    videoElement.addEventListener('seeking', () => {
+    videoElement.addEventListener("play", onPlay);
+    videoElement.addEventListener("canplay", onCanPlay);
+    videoElement.addEventListener("seeked", onSeek);
+    videoElement.addEventListener("seeking", () => {
       console.log("Seeking");
     });
-    videoElement.addEventListener('stalled', () => {
+    videoElement.addEventListener("stalled", () => {
       console.log("Stalled");
     });
-    videoElement.addEventListener('loadeddata', () => {
+    videoElement.addEventListener("loadeddata", () => {
       console.log("Loaded data");
     });
-    videoElement.addEventListener('waiting', () => {
+    videoElement.addEventListener("waiting", () => {
       console.log("Waiting");
     });
 
     return () => {
-      videoElement.removeEventListener('play', onPlay);
-      videoElement.removeEventListener('canplay', onCanPlay);
-      videoElement.removeEventListener('seeked', onSeek);
+      videoElement.removeEventListener("play", onPlay);
+      videoElement.removeEventListener("canplay", onCanPlay);
+      videoElement.removeEventListener("seeked", onSeek);
     };
   }, [videoElement, isShowingBox, frameNumber, playerList, playerNameMap]);
 
   //triggered when new player is added, or when merge or swap happens
   useEffect(() => {
-
-    const hasMatchingObject = canvasBoxes.some(a => a.my.frame === frameNumber);
-    if (!hasMatchingObject) { //no need to run this function if there is no matching object
+    const hasMatchingObject = canvasBoxes.some(
+      (a) => a.my.frame === frameNumber,
+    );
+    if (!hasMatchingObject) {
+      //no need to run this function if there is no matching object
       return;
     }
 
@@ -651,113 +712,121 @@ const NewTrackingEditor = () => {
     let runningIndex = 0;
 
     //invalidate the boxes in current frame, we should do this because we are going to draw fresh boxes, and we don't want duplicate boxes
-    const invalidatedCanvasBoxes = canvasBoxes.filter(a => a.my.frame !== frameNumber);
+    const invalidatedCanvasBoxes = canvasBoxes.filter(
+      (a) => a.my.frame !== frameNumber,
+    );
     canvasBoxes.length = 0;
     canvasBoxes.push(...invalidatedCanvasBoxes);
- 
+
     //same thing we do in drawBoundingBoxes..
-    if(annotations.length > 0) {
-      var playersToDraw = annotations.filter(a => a.FrameNo == frameNumber);
+    if (annotations.length > 0) {
+      var playersToDraw = annotations.filter((a) => a.FrameNo == frameNumber);
 
       if (playersToDraw.length > 0) {
         //draw boxes
         while (playerIndex < playersToDraw.length) {
-          const scaledX = (playersToDraw[playerIndex].x - (playersToDraw[playerIndex].w / 2)) * horizontalScalingFactor;
-          const scaledY = (playersToDraw[playerIndex].y - (playersToDraw[playerIndex].h / 2)) * verticalScalingFactor;
-          const scaledWidth = playersToDraw[playerIndex].w * horizontalScalingFactor;
-          const scaledHeight = playersToDraw[playerIndex].h * verticalScalingFactor;
+          const scaledX =
+            (playersToDraw[playerIndex].x - playersToDraw[playerIndex].w / 2) *
+            horizontalScalingFactor;
+          const scaledY =
+            (playersToDraw[playerIndex].y - playersToDraw[playerIndex].h / 2) *
+            verticalScalingFactor;
+          const scaledWidth =
+            playersToDraw[playerIndex].w * horizontalScalingFactor;
+          const scaledHeight =
+            playersToDraw[playerIndex].h * verticalScalingFactor;
           const boxColor = colorSet.get(playersToDraw[playerIndex].PlayerKey); //used in 'stroke' property of playerBox
 
           let playerBox = new fabric.Rect({
             left: scaledX,
             top: scaledY,
-            fill: 'rgba(0,0,0,0)',
+            fill: "rgba(0,0,0,0)",
             width: scaledWidth,
             height: scaledHeight,
             visible: isShowingBox,
             dirty: false,
             stroke: `rgb(${boxColor.r}, ${boxColor.g}, ${boxColor.b})`,
-            hasBorders: false,              // disables the control borders (the lines connecting the controls the show up when object is selected
+            hasBorders: false, // disables the control borders (the lines connecting the controls the show up when object is selected
             strokeWidth: 2,
-            strokeUniform: true,            // to keep the bounding box a consisten thickness, independent of its size
-            padding: 0,  // to make sure the pixel coordinates are correct
-            cornerStyle: 'rect',
-            lockRotation: true
-        });
-        playerBox.my = {
-          selected: false,
-          key: playersToDraw[playerIndex].PlayerKey,
-          frame: frameNumber,
-          //scaling factor when modifying the box
-          scaleX: 1,
-          scaleY: 1
-          // also connect it to corresponding annotation
-        }
-        playerBox = defineBoxBehavior(playerBox);
-        canvasBoxes.push(playerBox);
-        canvas.add(playerBox);
+            strokeUniform: true, // to keep the bounding box a consisten thickness, independent of its size
+            padding: 0, // to make sure the pixel coordinates are correct
+            cornerStyle: "rect",
+            lockRotation: true,
+          });
+          playerBox.my = {
+            selected: false,
+            key: playersToDraw[playerIndex].PlayerKey,
+            frame: frameNumber,
+            //scaling factor when modifying the box
+            scaleX: 1,
+            scaleY: 1,
+            // also connect it to corresponding annotation
+          };
+          playerBox = defineBoxBehavior(playerBox);
+          canvasBoxes.push(playerBox);
+          canvas.add(playerBox);
 
-        tempList = tempList.concat([<TrackListItemPlayer  key={runningIndex++}
-          playerBox={playerBox}
-          name={playerNameMap.get(playersToDraw[playerIndex].PlayerKey)}
-          changeSelection={changeSelection}
-          setName={setName}
-          blink={blink}
-          delete={deletePlayer}
-          color={boxColor}
-          handleModalOpen={handleModalOpen}
-          />]);
-          playerIndex++; 
+          tempList = tempList.concat([
+            <TrackListItemPlayer
+              key={runningIndex++}
+              playerBox={playerBox}
+              name={playerNameMap.get(playersToDraw[playerIndex].PlayerKey)}
+              changeSelection={changeSelection}
+              setName={setName}
+              blink={blink}
+              delete={deletePlayer}
+              color={boxColor}
+              handleModalOpen={handleModalOpen}
+            />,
+          ]);
+          playerIndex++;
         }
         setPlayerList(tempList);
       }
-  
-    } 
+    }
   }, [playerNameMap]);
 
-
   const handleKeyDown = (event) => {
-    switch(event.keyCode) {
-      case 74 : // j
+    switch (event.keyCode) {
+      case 74: // j
         handlePreviousChunk();
         break;
-      case 75 : // k
+      case 75: // k
         handlePlayPause();
         break;
-      case 76 : // l
+      case 76: // l
         handleNextChunk();
         break;
-      case 188 : // ,
+      case 188: // ,
         handlePreviousFrame();
         break;
-      case 190 : // .
+      case 190: // .
         handleNextFrame();
         break;
     }
-  }; 
+  };
 
   useEffect(() => {
-    document.addEventListener('keydown', handleKeyDown); 
+    document.addEventListener("keydown", handleKeyDown);
     return () => {
-      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener("keydown", handleKeyDown);
     };
   }, [handleKeyDown]);
-
 
   const getCurrentTimestampFrame = () => {
     // First frame is frame 0
     return Math.floor(videoElement.currentTime / frameDuration);
-  }
+  };
 
   const getReferenceTimestampForFrame = (n) => {
-    return (n * frameDuration) + (frameDuration / 3);
-  }
+    return n * frameDuration + frameDuration / 3;
+  };
 
   const updateTimestamp = (newTimestamp) => {
     const newFrameNumber = Math.floor(newTimestamp / frameDuration);
     setTimestamp(newTimestamp);
     setFrameNumber(newFrameNumber);
-  }
+  };
 
   const handleNextFrame = () => {
     if (videoElement) {
@@ -783,13 +852,16 @@ const NewTrackingEditor = () => {
     const newTimestamp = Math.max(0, videoElement.currentTime - 6);
     videoElement.currentTime = newTimestamp;
     updateTimestamp(newTimestamp);
-  }
+  };
 
   const handleNextChunk = () => {
-    const newTimestamp = Math.min(videoElement.duration, videoElement.currentTime + 6);
+    const newTimestamp = Math.min(
+      videoElement.duration,
+      videoElement.currentTime + 6,
+    );
     videoElement.currentTime = newTimestamp;
     updateTimestamp(newTimestamp);
-  }
+  };
 
   const handlePlayPause = () => {
     if (videoElement && videoElement.readyState != 0 && !videoElement.ended) {
@@ -802,8 +874,7 @@ const NewTrackingEditor = () => {
         updateSidebar();
       }
     }
-  }
-
+  };
 
   // Seeking
 
@@ -814,32 +885,30 @@ const NewTrackingEditor = () => {
     } else {
       wasVideoPlaying = false;
     }
-  }
+  };
 
   const handleSeekPercent = (value) => {
     setProgress(value);
-    const newTimestamp = value / 100 * videoElement.duration;
+    const newTimestamp = (value / 100) * videoElement.duration;
     videoElement.currentTime = newTimestamp;
     updateTimestamp(newTimestamp);
-  }
+  };
 
   const handleSeekEnd = () => {
     updateSidebar();
     if (wasVideoPlaying) {
       videoElement.play();
     }
-  }
-
-
+  };
 
   const formatTime = (time) => {
     const minutes = Math.floor(time / 60);
     const seconds = time % 60;
-    return `${minutes}:${seconds.toFixed(5).padStart(2, '0')}`;
+    return `${minutes}:${seconds.toFixed(5).padStart(2, "0")}`;
   };
 
   function handleDisplayingBox() {
-    if(isShowingBox) {
+    if (isShowingBox) {
       setIsShowingBox(false);
       // if the box is hidden, the annotation shall be hidden too.
       setIsShowingAnnotation(false);
@@ -857,7 +926,7 @@ const NewTrackingEditor = () => {
   }
 
   function handleDisplayingAnnotation() {
-    if(isShowingAnnotation) {
+    if (isShowingAnnotation) {
       setIsShowingAnnotation(false);
     } else {
       setIsShowingAnnotation(true);
@@ -869,46 +938,101 @@ const NewTrackingEditor = () => {
     const boxColor = generateColor(newPlayerKey);
     setColorSet(colorSet.set(newPlayerKey, boxColor));
 
-    setAnnotations(annotations.concat(
-      {FrameNo: frameNumber, PlayerKey: newPlayerKey, h: 100, w: 100, x: 500, x1: 0, x2: 0, x_trans: 0, y: 100, y1: 0, y2: 0, y_trans: 0 }
-    ));
+    setAnnotations(
+      annotations.concat({
+        FrameNo: frameNumber,
+        PlayerKey: newPlayerKey,
+        h: 100,
+        w: 100,
+        x: 500,
+        x1: 0,
+        x2: 0,
+        x_trans: 0,
+        y: 100,
+        y1: 0,
+        y2: 0,
+        y_trans: 0,
+      }),
+    );
   }
 
   return (
     <div>
-      <MergeAndSwapModal playerChosenInList={playerChosenInList} playerNameMap={playerNameMap} mergeModalState={mergeModalState} handleClose={handleModalClose} swapPlayerData={swapPlayerData} mergePlayerData={mergePlayerData}/>
-      <div className='controls'>
+      <MergeAndSwapModal
+        playerChosenInList={playerChosenInList}
+        playerNameMap={playerNameMap}
+        mergeModalState={mergeModalState}
+        handleClose={handleModalClose}
+        swapPlayerData={swapPlayerData}
+        mergePlayerData={mergePlayerData}
+      />
+      <div className="controls">
         <div id="tools-container">
-            <div>&nbsp;&nbsp;Show Annotation: &nbsp;</div>
-            <FormGroup>
-              <FormControlLabel control={<Switch checked={isShowingAnnotation} onChange={handleDisplayingAnnotation} />} />
-            </FormGroup>
-            <div>&nbsp;&nbsp;Show Player Box: &nbsp;</div>
-            <FormGroup>
-              <FormControlLabel control={<Switch checked={isShowingBox} onChange={handleDisplayingBox} />} />
-            </FormGroup>
-            <Button variant="contained" onClick={handleAddPlayer}>Add player</Button>
+          <div>&nbsp;&nbsp;Show Annotation: &nbsp;</div>
+          <FormGroup>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={isShowingAnnotation}
+                  onChange={handleDisplayingAnnotation}
+                />
+              }
+            />
+          </FormGroup>
+          <div>&nbsp;&nbsp;Show Player Box: &nbsp;</div>
+          <FormGroup>
+            <FormControlLabel
+              control={
+                <Switch checked={isShowingBox} onChange={handleDisplayingBox} />
+              }
+            />
+          </FormGroup>
+          <Button variant="contained" onClick={handleAddPlayer}>
+            Add player
+          </Button>
         </div>
       </div>
       <input type="file" onChange={handleBrowse} />
-      <button onClick={handleDownload} disabled={isDownloadingVideo}>Download video</button>
-      <div id='canvas-container'>
-        <canvas ref={canvasRef} className='canvas' id="tracking-editor-canvas" width='1920' height='1080' style={{ display: "block", width: "100%", height: "auto" }}></canvas>
+      <button onClick={handleDownload} disabled={isDownloadingVideo}>
+        Download video
+      </button>
+      <div id="canvas-container">
+        <canvas
+          ref={canvasRef}
+          className="canvas"
+          id="tracking-editor-canvas"
+          width="1920"
+          height="1080"
+          style={{ display: "block", width: "100%", height: "auto" }}
+        ></canvas>
         {/* <div className="sidebar">sidebar is here</div> */}
-        <TrackList>
-          {playerList}
-        </TrackList>
+        <TrackList>{playerList}</TrackList>
       </div>
       <div className="controls">
-        <SeekBar onSeekStart={handleSeekStart} onSeekPercent={handleSeekPercent} onSeekEnd={handleSeekEnd} progress={progress} />
+        <SeekBar
+          onSeekStart={handleSeekStart}
+          onSeekPercent={handleSeekPercent}
+          onSeekEnd={handleSeekEnd}
+          progress={progress}
+        />
         <div id="buttons-container">
-          <button className="icon-button" onClick={handlePreviousFrame}><BackwardStepIcon className="icon" /></button>
-          <span id="frame-number-display">Frame {frameNumber}</span>
-          <button className="icon-button" onClick={handleNextFrame}><ForwardStepIcon className="icon" /></button>
-          <button className="icon-button" onClick={handlePlayPause}>
-            {isPlaying ? <PauseIcon className="icon" /> : <PlayIcon className="icon" />}
+          <button className="icon-button" onClick={handlePreviousFrame}>
+            <BackwardStepIcon className="icon" />
           </button>
-          <span id="timestamp-display">{formatTime(timestamp)} / {formatTime(videoElement?.duration)}</span>
+          <span id="frame-number-display">Frame {frameNumber}</span>
+          <button className="icon-button" onClick={handleNextFrame}>
+            <ForwardStepIcon className="icon" />
+          </button>
+          <button className="icon-button" onClick={handlePlayPause}>
+            {isPlaying ? (
+              <PauseIcon className="icon" />
+            ) : (
+              <PlayIcon className="icon" />
+            )}
+          </button>
+          <span id="timestamp-display">
+            {formatTime(timestamp)} / {formatTime(videoElement?.duration)}
+          </span>
         </div>
       </div>
     </div>

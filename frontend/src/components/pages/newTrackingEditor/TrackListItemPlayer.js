@@ -1,150 +1,172 @@
-import React, {Component} from 'react';
-import PropTypes from 'prop-types';
-import InputLabel from '@material-ui/core/InputLabel';
-import MenuItem from '@material-ui/core/MenuItem';
-import { Avatar } from '@material-ui/core';
-import FormControl from '@material-ui/core/FormControl';
-import Select from '@material-ui/core/Select';
-import IconButton from '@material-ui/core/IconButton';
-import { green, pink } from '@mui/material/colors';
-import { EditText } from 'react-edit-text';
-import 'react-edit-text/dist/index.css';
+import React, { Component } from "react";
+import PropTypes from "prop-types";
+import InputLabel from "@material-ui/core/InputLabel";
+import MenuItem from "@material-ui/core/MenuItem";
+import { Avatar } from "@material-ui/core";
+import FormControl from "@material-ui/core/FormControl";
+import Select from "@material-ui/core/Select";
+import IconButton from "@material-ui/core/IconButton";
+import { green, pink } from "@mui/material/colors";
+import { EditText } from "react-edit-text";
+import "react-edit-text/dist/index.css";
 
-
-import './NewTrackingEditor.css';
-import {ReactComponent as Highlight} from "../../../icons/highlight.svg";
-import {ReactComponent as Delete} from "../../../icons/delete.svg";
-import {ReactComponent as Swap} from "../../../icons/swap.svg";
+import "./NewTrackingEditor.css";
+import { ReactComponent as Highlight } from "../../../icons/highlight.svg";
+import { ReactComponent as Delete } from "../../../icons/delete.svg";
+import { ReactComponent as Swap } from "../../../icons/swap.svg";
 
 // using fontawesome version of these icons because they are already used in FileOverview (and look imho a little bit better when using the solid variant)
-import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faPlus, faCheck, faSpinner, faMerge} from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faPlus,
+  faCheck,
+  faSpinner,
+  faMerge,
+} from "@fortawesome/free-solid-svg-icons";
 
 class TrackListItemPlayer extends Component {
+  state = {
+    swapExpanded: false,
+    firstTime: true, // used to not trigger any animations when component is mounted
+    swapSelectionVisible: false,
+    swapPartner: "",
+    swapPartnerDropdownOpen: false,
+    processingSwap: false,
+  };
 
-    state = {
-        swapExpanded: false,
-        firstTime: true,     // used to not trigger any animations when component is mounted
-        swapSelectionVisible: false,
-        swapPartner: "",
-        swapPartnerDropdownOpen: false,
-        processingSwap: false
+  prevPlayerId = -1;
+
+  // componentDidUpdate(prevProps, prevState, snapshot) {
+  //     // saving the previous playerId is necessary for detecting a swap of 2 players;
+  //     // since the playerBox are not deep-copied, prevProps.playerBox and this.props.playerBox will point to the same object
+  //     if(this.prevPlayerId >= 0) {
+  //         if(this.prevPlayerId !== this.props.playerBox.my.player) {
+  //             this.setState({processingSwap: false, swapPartner: ""}, () => this.closeSwap());
+  //         }
+  //     }
+  //     this.prevPlayerId = this.props.playerBox.my.player;
+  // }
+
+  // handleChangeTeam = (event) => {
+  //     this.props.setTeam(this.props.playerBox, event.target.value);
+  // }
+
+  handleChangeName = (obj) => {
+    this.props.setName(this.props.playerBox, obj.value);
+  };
+
+  delete = () => {
+    if (window.confirm("Do you really want to delete this player ?")) {
+      this.props.delete(this.props.playerBox);
+    }
+  };
+
+  handleClickMerge = () => {
+    this.props.handleModalOpen(this.props.name);
+  };
+
+  // openSwap = () => {
+  //     this.setState((prevState) => ({swapExpanded: !prevState.swapExpanded, firstTime: false, swapSelectionVisible: false}),
+  //         () => setTimeout(() => {
+  //             if(this.state.swapExpanded)
+  //                 this.setState({swapSelectionVisible: true});
+  //         }, 400));
+  // }
+
+  // closeSwap = () => {
+  //     this.setState({swapExpanded: false},
+  //         () => setTimeout(() => {
+  //                 this.setState({swapSelectionVisible: false});
+  //         }, 400));
+  // }
+
+  // handleChangeSwapPartner = (event) => {
+  //     this.setState({swapPartner: event.target.value});
+  // }
+
+  // handleSwapPartnerDropdownOpen = () => {
+  //     this.setState({swapPartnerDropdownOpen: true});
+  // }
+
+  // handleSwapPartnerDropdownClose = () => {
+  //     this.setState({swapPartnerDropdownOpen: false});
+  // }
+
+  // cancelSwap = () => {
+  //     this.closeSwap();
+  // }
+
+  // confirmSwap = () => {
+  //     // open dropdown menu if no swapPartner is chosen yet
+  //     if(!this.state.swapPartner) {
+  //         this.handleSwapPartnerDropdownOpen();
+  //     }
+
+  //     else {
+  //         // setting this component to a waiting/loading state until it will be rerendered with swapped players once backend call in parent is finished and updated player data from backend is passed
+  //         this.setState({processingSwap: true});
+  //         this.props.swap(this.props.playerBox.my.player, this.state.swapPartner);
+  //     }
+  // }
+
+  render() {
+    let classNameExpansionPostfix = this.state.swapExpanded
+      ? " expanded"
+      : this.state.firstTime
+        ? ""
+        : " unexpanded";
+    // let classNameSwapMenuVisibility = (this.state.swapSelectionVisible?"":" hide");
+
+    // let playersMenuEntries;
+    // if(this.state.swapSelectionVisible) {
+    //     playersMenuEntries = this.props.getSwapMenuEntries().map((player) => <MenuItem key={player.id} value={player.id}>{player.name?player.name:("Player " + player.id)}</MenuItem>);
+    // }
+    let playerBox = this.props.playerBox;
+    // let currentTeam = this.props.playerBox.my.team;
+    // let allTeams = this.props.getTeams();
+    let style = { borderColor: this.props.playerBox.cornerColor };
+
+    // let teamMenuItems = allTeams.map(team => <MenuItem key={team.id} value={team.id}>{team.name}</MenuItem>)
+    if (this.props.playerBox.my.selected) {
+      style["color"] = "FFF";
     }
 
-    prevPlayerId = -1;
+    let name = this.props.name ? this.props.name : "test1";
 
-    // componentDidUpdate(prevProps, prevState, snapshot) {
-    //     // saving the previous playerId is necessary for detecting a swap of 2 players;
-    //     // since the playerBox are not deep-copied, prevProps.playerBox and this.props.playerBox will point to the same object
-    //     if(this.prevPlayerId >= 0) {
-    //         if(this.prevPlayerId !== this.props.playerBox.my.player) {
-    //             this.setState({processingSwap: false, swapPartner: ""}, () => this.closeSwap());
-    //         }
-    //     }
-    //     this.prevPlayerId = this.props.playerBox.my.player;
-    // }
+    // selects or deselects (if its already selected) the clicked item (e.g. player)
+    let clickItem = () => {
+      // let deselect = this.props.playerBox.my.selected;
+      this.props.changeSelection(playerBox);
+    };
 
-    // handleChangeTeam = (event) => {
-    //     this.props.setTeam(this.props.playerBox, event.target.value);
-    // }
+    console.log(this.props);
+    const dotStyle = {
+      width: "12px",
+      height: "12px",
+      borderRadius: "50%",
+      backgroundColor:
+        "rgb(" +
+        this.props.color.r +
+        "," +
+        this.props.color.g +
+        "," +
+        this.props.color.b +
+        ")",
+      display: "inline-block",
+      marginRight: "8px", // Adjust spacing as needed
+    };
 
-    handleChangeName = (obj) => {
-        this.props.setName(this.props.playerBox, obj.value);
-    }
-
-    delete = () => {
-        if(window.confirm("Do you really want to delete this player ?")) {
-            this.props.delete(this.props.playerBox);
+    return (
+      <div
+        className={
+          "TrackListItem" +
+          (playerBox.my.selected ? " selected" : "") +
+          classNameExpansionPostfix
         }
-    }
-
-    handleClickMerge = () => {
-        this.props.handleModalOpen(this.props.name)
-    }
-
-    // openSwap = () => {
-    //     this.setState((prevState) => ({swapExpanded: !prevState.swapExpanded, firstTime: false, swapSelectionVisible: false}),
-    //         () => setTimeout(() => {
-    //             if(this.state.swapExpanded)
-    //                 this.setState({swapSelectionVisible: true});
-    //         }, 400));
-    // }
-
-    // closeSwap = () => {
-    //     this.setState({swapExpanded: false},
-    //         () => setTimeout(() => {
-    //                 this.setState({swapSelectionVisible: false});
-    //         }, 400));
-    // }
-
-    // handleChangeSwapPartner = (event) => {
-    //     this.setState({swapPartner: event.target.value});
-    // }
-
-    // handleSwapPartnerDropdownOpen = () => {
-    //     this.setState({swapPartnerDropdownOpen: true});
-    // }
-
-    // handleSwapPartnerDropdownClose = () => {
-    //     this.setState({swapPartnerDropdownOpen: false});
-    // }
-
-    // cancelSwap = () => {
-    //     this.closeSwap();
-    // }
-
-    // confirmSwap = () => {
-    //     // open dropdown menu if no swapPartner is chosen yet
-    //     if(!this.state.swapPartner) {
-    //         this.handleSwapPartnerDropdownOpen();
-    //     }
-
-    //     else {
-    //         // setting this component to a waiting/loading state until it will be rerendered with swapped players once backend call in parent is finished and updated player data from backend is passed
-    //         this.setState({processingSwap: true});
-    //         this.props.swap(this.props.playerBox.my.player, this.state.swapPartner);
-    //     }
-    // }
-
-    render() {
-        let classNameExpansionPostfix = (this.state.swapExpanded?" expanded":(this.state.firstTime?"":" unexpanded"));
-        // let classNameSwapMenuVisibility = (this.state.swapSelectionVisible?"":" hide");
-
-        // let playersMenuEntries;
-        // if(this.state.swapSelectionVisible) {
-        //     playersMenuEntries = this.props.getSwapMenuEntries().map((player) => <MenuItem key={player.id} value={player.id}>{player.name?player.name:("Player " + player.id)}</MenuItem>);
-        // }
-        let playerBox = this.props.playerBox;
-        // let currentTeam = this.props.playerBox.my.team;
-        // let allTeams = this.props.getTeams();
-        let style = {borderColor: this.props.playerBox.cornerColor};
-
-        // let teamMenuItems = allTeams.map(team => <MenuItem key={team.id} value={team.id}>{team.name}</MenuItem>)
-        if(this.props.playerBox.my.selected) {
-            style['color'] = 'FFF';
-        }
-
-        let name = this.props.name ? this.props.name : "test1";
-
-        // selects or deselects (if its already selected) the clicked item (e.g. player)
-        let clickItem = () => {
-            // let deselect = this.props.playerBox.my.selected;
-            this.props.changeSelection(playerBox);
-        }
-
-        console.log(this.props)
-        const dotStyle = {
-            width: '12px',
-            height: '12px',
-            borderRadius: '50%',
-            backgroundColor: 'rgb(' + this.props.color.r + ',' + this.props.color.g + ',' + this.props.color.b + ')',
-            display: 'inline-block',
-            marginRight: '8px', // Adjust spacing as needed
-          };
-
-        return (
-            <div className={"TrackListItem" + (playerBox.my.selected ? " selected" : "") + classNameExpansionPostfix} style={style} onClick={clickItem}>
-                {/* <div className={"TrackListItemSwapOverlay" + classNameExpansionPostfix}>
+        style={style}
+        onClick={clickItem}
+      >
+        {/* <div className={"TrackListItemSwapOverlay" + classNameExpansionPostfix}>
                     <div className={"TrackListItemSwapOverlayContent" + classNameSwapMenuVisibility}>
                         <div className={"TrackListItemSwapOverlayContentText"}>Swap {playerBox.my.name?playerBox.my.name:("Player " + playerBox.my.player)} with </div>
 
@@ -178,38 +200,53 @@ class TrackListItemPlayer extends Component {
                     </div>
                 </div> */}
 
-                {/*<h1 className={"TrackListItemName" + (playerBox.my.selected ? " selected" : "")}> {name} </h1>*/}
-                <IconButton size="small" className={"TrackListItemBlink"} onClick={this.props.blink.bind(this, playerBox)} aria-label="blink item">
-                    <Highlight/>
-                </IconButton>
+        {/*<h1 className={"TrackListItemName" + (playerBox.my.selected ? " selected" : "")}> {name} </h1>*/}
+        <IconButton
+          size="small"
+          className={"TrackListItemBlink"}
+          onClick={this.props.blink.bind(this, playerBox)}
+          aria-label="blink item"
+        >
+          <Highlight />
+        </IconButton>
 
-                <IconButton size="small" className={"TrackListItemDelete"} onClick={this.delete} aria-label="delete item">
-                    <Delete/>
-                </IconButton>
+        <IconButton
+          size="small"
+          className={"TrackListItemDelete"}
+          onClick={this.delete}
+          aria-label="delete item"
+        >
+          <Delete />
+        </IconButton>
 
-                <IconButton size="small" className={"TrackListItemMerge"} onClick={this.handleClickMerge} aria-label="merge item">
-                    <Swap/>
-                </IconButton>
-                
-                <div className='staticText'>Player name: </div>
-                <EditText
-                    className={"TrackListItemName" + (playerBox.my.selected ? " selected" : "")}
-                    defaultValue={name.toString()}
-                    onSave={this.handleChangeName}
-                    style={{marginLeft: '5px', width: '100px'}}
-                />
-                <div>
-                    <div style={dotStyle}></div>
-                </div>
+        <IconButton
+          size="small"
+          className={"TrackListItemMerge"}
+          onClick={this.handleClickMerge}
+          aria-label="merge item"
+        >
+          <Swap />
+        </IconButton>
 
+        <div className="staticText">Player name: </div>
+        <EditText
+          className={
+            "TrackListItemName" + (playerBox.my.selected ? " selected" : "")
+          }
+          defaultValue={name.toString()}
+          onSave={this.handleChangeName}
+          style={{ marginLeft: "5px", width: "100px" }}
+        />
+        <div>
+          <div style={dotStyle}></div>
+        </div>
 
-
-                {/* <IconButton size="small" className={"TrackListItemSwap"} onClick={this.openSwap} aria-label="swap item">
+        {/* <IconButton size="small" className={"TrackListItemSwap"} onClick={this.openSwap} aria-label="swap item">
                     <Swap/>
                 </IconButton> */}
 
-                {/*Material UI Dropdown Select*/}
-                {/* <FormControl className={"TrackListItemTeamDropdown"}>
+        {/*Material UI Dropdown Select*/}
+        {/* <FormControl className={"TrackListItemTeamDropdown"}>
                     <InputLabel id="demo-simple-select-label">Team</InputLabel>
                     <Select
                         labelId="demo-simple-select-label"
@@ -220,23 +257,23 @@ class TrackListItemPlayer extends Component {
                         {teamMenuItems}
                     </Select>
                 </FormControl> */}
-            </div>
-        );
-    }
+      </div>
+    );
+  }
 }
 
 TrackListItemPlayer.propTypes = {
-    playerBox: PropTypes.object.isRequired,
-    name: PropTypes.string.isRequired,
-    changeSelection: PropTypes.func.isRequired,
-    blink: PropTypes.func.isRequired,
-    delete: PropTypes.func.isRequired,
-    color: PropTypes.object.isRequired,
-    // getTeams: PropTypes.func.isRequired,
-    // setTeam: PropTypes.func.isRequired,
-    setName: PropTypes.func.isRequired,
-    // getSwapMenuEntries: PropTypes.func.isRequired,
-    // swap: PropTypes.func.isRequired,
+  playerBox: PropTypes.object.isRequired,
+  name: PropTypes.string.isRequired,
+  changeSelection: PropTypes.func.isRequired,
+  blink: PropTypes.func.isRequired,
+  delete: PropTypes.func.isRequired,
+  color: PropTypes.object.isRequired,
+  // getTeams: PropTypes.func.isRequired,
+  // setTeam: PropTypes.func.isRequired,
+  setName: PropTypes.func.isRequired,
+  // getSwapMenuEntries: PropTypes.func.isRequired,
+  // swap: PropTypes.func.isRequired,
 };
 
 export default TrackListItemPlayer;

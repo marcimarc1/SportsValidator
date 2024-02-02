@@ -1,14 +1,16 @@
 name: Lint Codebase
 
-on: [pull_request]
+on: 
+  pull_request:
 
 jobs: 
     lint:
         name: Lint JS codebase
 
         runs-on: ubuntu-latest
+
         steps:
-            - name: Checkout
+            - name: Checkout            
               id: checkout
               uses: actions/checkout@v4
             
@@ -16,10 +18,19 @@ jobs:
               id: setup-node
               uses: actions/setup-node@v4
               with:
-               node-version: .node-version
+               node-version-file: .node_version
                cache: npm
+               cache-dependency-path: './frontend'
             
             - name: Install dependencies
               id: install
               run: npm install
+              working-directory: ./frontend
+
+            - name: Prettier linting
+              id: linting  
+              run: npm run check
+              working-directory: ./frontend
+              env:
+                GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
                 
