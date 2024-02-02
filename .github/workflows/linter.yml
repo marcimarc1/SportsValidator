@@ -1,7 +1,6 @@
 name: Lint Codebase
 
 on: 
-  push:
   pull_request:
 
 jobs: 
@@ -34,10 +33,4 @@ jobs:
               working-directory: ./frontend
               env:
                 GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-            - name: Auto commit
-              uses: stefanzweifel/git-auto-commit-action@v4
-              if: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
-              with:
-                commit_message: "reformat .js file with Prettier"
                 
