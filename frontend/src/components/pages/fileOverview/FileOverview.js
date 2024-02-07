@@ -90,7 +90,7 @@ class FileOverview extends Component {
         setTimeout(() => {
           if (this.state.uploadExpanded)
             this.setState({ fileSelectionVisible: true });
-        }, 400)
+        }, 400),
     );
   };
 
@@ -224,7 +224,7 @@ class FileOverview extends Component {
             changeNotes={this.changeNotes}
             delete={this.delete}
           />
-        ) : undefined
+        ) : undefined,
     );
 
     return (

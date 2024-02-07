@@ -29,7 +29,7 @@ class FileListItem extends Component {
   delete = () => {
     if (
       window.confirm(
-        "Do you really want to delete the file " + this.props.videoName + "?"
+        "Do you really want to delete the file " + this.props.videoName + "?",
       )
     )
       this.props.delete(this.props.id);
@@ -37,10 +37,10 @@ class FileListItem extends Component {
 
   render() {
     let thumbnailWidth = Math.floor(
-      this.thumbnailImageWidth * this.thumbnailRescale
+      this.thumbnailImageWidth * this.thumbnailRescale,
     );
     let thumbnailHeight = Math.floor(
-      this.thumbnailImageHeight * this.thumbnailRescale
+      this.thumbnailImageHeight * this.thumbnailRescale,
     );
     let duration = this.props.duration;
     if (duration < 60) duration = duration.toString() + "min";

@@ -1,11 +1,11 @@
-import React, { useRef, useState, useEffect } from 'react';
-import { useParams } from 'react-router';
-import { ReactComponent as PlayIcon } from '../../../icons/play.svg';
-import { ReactComponent as PauseIcon } from '../../../icons/pause.svg';
-import { ReactComponent as ForwardStepIcon } from '../../../icons/forward-step.svg';
-import { ReactComponent as BackwardStepIcon } from '../../../icons/backward-step.svg';
-import { useLocation } from 'react-router-dom';
-import { parseProcessedPlayers } from '../../../utils/csvParser';
+import React, { useRef, useState, useEffect } from "react";
+import { useParams } from "react-router";
+import { ReactComponent as PlayIcon } from "../../../icons/play.svg";
+import { ReactComponent as PauseIcon } from "../../../icons/pause.svg";
+import { ReactComponent as ForwardStepIcon } from "../../../icons/forward-step.svg";
+import { ReactComponent as BackwardStepIcon } from "../../../icons/backward-step.svg";
+import { useLocation } from "react-router-dom";
+import { parseProcessedPlayers } from "../../../utils/csvParser";
 // import tracking from "../../../data/tracking_data.json";
 // import tracking from "../../../data/tracking-data-for-test.json";
 import { fabric } from "fabric";
@@ -19,7 +19,8 @@ import MergeAndSwapModal from "./MergeAndSwapModal";
 // TODO Take a video_id instead and have an endpoint on the server where we supply a video_id and get the corresponding video
 const NewTrackingEditor = () => {
   const location = useLocation();
-  const { processedPlayers, video, ballTracks, homographies, log } = location.state || {};
+  const { processedPlayers, video, ballTracks, homographies, log } =
+    location.state || {};
   // ballTracks, homographies and log are not being used. Logic will be implemented in the future.
   const [annotations, setAnnotations] = useState([]);
   const [canvas, setCanvas] = useState("");
@@ -151,12 +152,11 @@ const NewTrackingEditor = () => {
   const frameDuration = 1001 / 24000; // TODO Get this information from the backend
   // could be used to display annotations in canvas
 
-
   useEffect(() => {
     if (video) {
       setVideoUrl(URL.createObjectURL(video));
     }
-  
+
     if (processedPlayers) {
       const parsedData = parseProcessedPlayers(processedPlayers);
       setAnnotations(parsedData);
@@ -164,8 +164,6 @@ const NewTrackingEditor = () => {
       setColorSet(boundingBoxColorSet(parsedData));
     }
   }, [processedPlayers, location.state]);
-
-
 
   let wasVideoPlaying = false;
 
