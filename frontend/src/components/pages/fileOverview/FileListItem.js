@@ -128,7 +128,6 @@ class FileListItem extends Component {
               <FontAwesomeIcon icon={faEdit} />
             </IconButton>
           </Link>
-
           <Link to={`analysis/${this.props.id}`}>
             <IconButton
               size="large"
