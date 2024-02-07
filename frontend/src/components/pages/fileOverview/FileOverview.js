@@ -141,8 +141,6 @@ class FileOverview extends Component {
         infoMessage: "Files uploaded successfully!",
       });
     }
-    this.setState({ fileListItems });
-  }
 
     const readCSV = (file, key) => {
       return new Promise((resolve, reject) => {
@@ -202,8 +200,8 @@ class FileOverview extends Component {
     let classNameExpansionPostfix = this.state.uploadExpanded
       ? " expanded"
       : this.state.firstTime
-      ? ""
-      : " unexpanded";
+        ? ""
+        : " unexpanded";
     let classNameFileUploadPostfix = this.state.fileSelectionVisible
       ? ""
       : " hide";
