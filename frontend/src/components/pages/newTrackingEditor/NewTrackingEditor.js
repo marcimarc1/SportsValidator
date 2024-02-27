@@ -32,7 +32,6 @@ const NewTrackingEditor = () => {
   const [playerNameMap, setPlayerNameMap] = useState(new Map());
   const [activeObject, setActiveObject] = useState(null);
   const [colorSet, setColorSet] = useState(new Map()); //map of playerkey to color
-  const [colorSet, setColorSet] = useState(new Map()); //map of playerkey to color
 
   const [mergeModalState, setMergeModalState] = useState(false);
   const [playerChosenInList, setPlayerChosenInList] = useState("");
@@ -223,7 +222,6 @@ const NewTrackingEditor = () => {
   function deletePlayer(playerBox) {
     canvas.setActiveObject(playerBox);
     setActiveObject(playerBox);
-    let boxIndex = canvasBoxes.indexOf(playerBox);
     let boxIndex = canvasBoxes.indexOf(playerBox);
     let annotationIndex = annotations.indexOf(playerBox);
     setAnnotations(annotations.toSpliced(annotationIndex, 1));
@@ -994,7 +992,7 @@ const NewTrackingEditor = () => {
               }
             />
           </FormGroup>
-          <Button variant="contained" onClick={handleAddPlayer}>
+          <Button data-testid='add-player-button' variant="contained" onClick={handleAddPlayer}>
             Add player
           </Button>
           <div data-testid='player-number' className='tests'>player number: {annotations.length}</div>
