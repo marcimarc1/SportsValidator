@@ -24,7 +24,7 @@ const NewTrackingEditor = () => {
   const [isPlaying, setIsPlaying] = useState(false)
   const [progress, setProgress] = useState(0);
   const [isDownloadingVideo, setIsDownloadingVideo] = useState(false);
-  const [annotations, setAnnotations] = useState({});
+  const [annotations, setAnnotations] = useState([]);
   const [isShowingBox, setIsShowingBox] = useState(true);
   const [isShowingAnnotation, setIsShowingAnnotation] = useState(true);
   const [playerList, setPlayerList] = useState([]);
@@ -888,7 +888,7 @@ const NewTrackingEditor = () => {
               <FormControlLabel control={<Switch checked={isShowingBox} onChange={handleDisplayingBox} />} />
             </FormGroup>
             <Button data-testid='add-player-button' variant="contained" onClick={handleAddPlayer}>Add player</Button>
-            <div data-testid='player-number' className='tests'>player number: {canvasBoxes.length}</div>
+            <div data-testid='player-number' className='tests'>player number: {annotations.length}</div>
         </div>
       </div>
       <input type="file" onChange={handleBrowse} />

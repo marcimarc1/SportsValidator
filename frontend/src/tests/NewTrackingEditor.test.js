@@ -1,14 +1,23 @@
 import React from 'react';
 import {fireEvent, getNodeText, screen, render, cleanup} from "@testing-library/react"
 import { fabric } from 'fabric';
+import Router from 'react-router';
 import '@testing-library/jest-dom/extend-expect'
 import NewTrackingEditor from '../components/pages/newTrackingEditor/NewTrackingEditor'
 
 afterEach(cleanup);
 
+//create mock for react-router, in order to mock useParams()
+jest.mock('react-router', () => ({
+    ...jest.requireActual('react-router'),
+    useParams: jest.fn(),
+}));
+
 describe('add player button', () => {
 
     it('increases number of players by 1', () => {
+        //mock useParams()
+        jest.spyOn(Router, 'useParams').mockReturnValue({videoName: 'mockVideo'});
         render(<NewTrackingEditor/>);
     
         //given
