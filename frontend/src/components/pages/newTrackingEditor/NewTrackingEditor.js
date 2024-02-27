@@ -24,13 +24,14 @@ const NewTrackingEditor = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [isDownloadingVideo, setIsDownloadingVideo] = useState(false);
-  const [annotations, setAnnotations] = useState({});
+  const [annotations, setAnnotations] = useState([]);
   const [isShowingBox, setIsShowingBox] = useState(true);
   const [isShowingAnnotation, setIsShowingAnnotation] = useState(true);
   const [playerList, setPlayerList] = useState([]);
   const [canvasBoxes, setCanvasBoxes] = useState([]);
   const [playerNameMap, setPlayerNameMap] = useState(new Map());
   const [activeObject, setActiveObject] = useState(null);
+  const [colorSet, setColorSet] = useState(new Map()); //map of playerkey to color
   const [colorSet, setColorSet] = useState(new Map()); //map of playerkey to color
 
   const [mergeModalState, setMergeModalState] = useState(false);
@@ -223,7 +224,10 @@ const NewTrackingEditor = () => {
     canvas.setActiveObject(playerBox);
     setActiveObject(playerBox);
     let boxIndex = canvasBoxes.indexOf(playerBox);
+    let boxIndex = canvasBoxes.indexOf(playerBox);
     let annotationIndex = annotations.indexOf(playerBox);
+    setAnnotations(annotations.toSpliced(annotationIndex, 1));
+    setCanvasBoxes(canvasBoxes.toSpliced(boxIndex, 1));
     setAnnotations(annotations.toSpliced(annotationIndex, 1));
     setCanvasBoxes(canvasBoxes.toSpliced(boxIndex, 1));
     updateSidebar();
@@ -338,6 +342,8 @@ const NewTrackingEditor = () => {
       );
       console.log("Unique annotations : ", uniqueAnnotations);
       setAnnotations(uniqueAnnotations);
+      //i want to set the color set here
+      setColorSet(boundingBoxColorSet(uniqueAnnotations));
       //i want to set the color set here
       setColorSet(boundingBoxColorSet(uniqueAnnotations));
       // Transform file into blob URL
@@ -696,6 +702,7 @@ const NewTrackingEditor = () => {
   }, [videoElement, isShowingBox, frameNumber, playerList, playerNameMap]);
 
   //triggered when new player is added, or when merge or swap happens
+  //triggered when new player is added, or when merge or swap happens
   useEffect(() => {
     const hasMatchingObject = canvasBoxes.some(
       (a) => a.my.frame === frameNumber,
@@ -990,6 +997,7 @@ const NewTrackingEditor = () => {
           <Button variant="contained" onClick={handleAddPlayer}>
             Add player
           </Button>
+          <div data-testid='player-number' className='tests'>player number: {annotations.length}</div>
         </div>
       </div>
       <input type="file" onChange={handleBrowse} />

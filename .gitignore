@@ -8,3 +8,5 @@ backend/uploads/*
 backend/react-app
 
 /docs
+
+/frontend/junit.xml

@@ -33,4 +33,25 @@ jobs:
               working-directory: ./frontend
               env:
                 GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-                
+    test:
+      name: unit test
+      runs-on: ubuntu-latest
+      steps:
+          - name: Checkout
+            id: checkout
+            uses: actions/checkout@v4
+          
+          - name: Setup Node.js
+            id: setup-node
+            uses: actions/setup-node@v4
+            with:
+              node-version-file: .node_version
+              cache: npm
+          
+          - name: Install dependencies
+            id: install
+            run: npm install
+
+          - name: Run tests
+            id: test
+            run: npm test
