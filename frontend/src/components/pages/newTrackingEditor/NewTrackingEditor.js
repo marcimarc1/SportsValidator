@@ -562,13 +562,9 @@ const NewTrackingEditor = () => {
           //draw boxes
           while (playerIndex < playersToDraw.length) {
             const scaledX =
-              (playersToDraw[playerIndex].x -
-                playersToDraw[playerIndex].w / 2) *
-              horizontalScalingFactor;
+              playersToDraw[playerIndex].x1 * horizontalScalingFactor;
             const scaledY =
-              (playersToDraw[playerIndex].y -
-                playersToDraw[playerIndex].h / 2) *
-              verticalScalingFactor;
+              playersToDraw[playerIndex].y1 * verticalScalingFactor;
             const scaledWidth =
               playersToDraw[playerIndex].w * horizontalScalingFactor;
             const scaledHeight =
@@ -726,11 +722,8 @@ const NewTrackingEditor = () => {
         //draw boxes
         while (playerIndex < playersToDraw.length) {
           const scaledX =
-            (playersToDraw[playerIndex].x - playersToDraw[playerIndex].w / 2) *
-            horizontalScalingFactor;
-          const scaledY =
-            (playersToDraw[playerIndex].y - playersToDraw[playerIndex].h / 2) *
-            verticalScalingFactor;
+            playersToDraw[playerIndex].x1 * horizontalScalingFactor;
+          const scaledY = playersToDraw[playerIndex].y1 * verticalScalingFactor;
           const scaledWidth =
             playersToDraw[playerIndex].w * horizontalScalingFactor;
           const scaledHeight =
