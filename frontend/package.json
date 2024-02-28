@@ -61,7 +61,7 @@
     ]
   },
   "devDependencies": {
-    "@babel/plugin-proposal-private-property-in-object": "7.21.11",
-    "@types/react-edit-text": "^4.4.1"
+    "@types/react-edit-text": "^4.4.1",
+    "@babel/plugin-proposal-private-property-in-object": "7.21.11"
   }
 }
