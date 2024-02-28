@@ -15,9 +15,10 @@ jest.mock('react-router', () => ({
 
 describe('add player button', () => {
 
+    //mock useParams()
+    jest.spyOn(Router, 'useParams').mockReturnValue({videoName: 'mockVideo'});
+
     it('increases number of players by 1', () => {
-        //mock useParams()
-        jest.spyOn(Router, 'useParams').mockReturnValue({videoName: 'mockVideo'});
         render(<NewTrackingEditor/>);
     
         //given
@@ -34,5 +35,18 @@ describe('add player button', () => {
         expect(updatedText).toEqual("player number: 1");
     });
 
+    it('creates a bounding box in the canvas', () => {
+        render(<NewTrackingEditor/>);
+        const button = screen.getByTestId('add-player-button');
+        fireEvent.click(button);
+        const canvasElement = screen.getByTestId('fabric-canvas');
+        const canvas = new fabric.Canvas(canvasElement);
+        console.log(canvas);
+    });
+});
 
+describe('sidebar of player list', () => {
+    it('displays all players in current frame', () => {
+
+    });
 });

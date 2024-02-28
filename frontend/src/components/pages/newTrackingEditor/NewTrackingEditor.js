@@ -992,10 +992,16 @@ const NewTrackingEditor = () => {
               }
             />
           </FormGroup>
-          <Button data-testid='add-player-button' variant="contained" onClick={handleAddPlayer}>
+          <Button
+            data-testid="add-player-button"
+            variant="contained"
+            onClick={handleAddPlayer}
+          >
             Add player
           </Button>
-          <div data-testid='player-number' className='tests'>player number: {annotations.length}</div>
+          <div data-testid="player-number" className="tests">
+            player number: {annotations.length}
+          </div>
         </div>
       </div>
       <input type="file" onChange={handleBrowse} />
@@ -1004,6 +1010,7 @@ const NewTrackingEditor = () => {
       </button>
       <div id="canvas-container">
         <canvas
+          data-testid="fabric-canvas"
           ref={canvasRef}
           className="canvas"
           id="tracking-editor-canvas"
