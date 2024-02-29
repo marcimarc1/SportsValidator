@@ -211,7 +211,7 @@ class FileOverview extends Component {
       (e, id) =>
         e ? (
           <FileListItem
-            id={id}
+            key={id}
             videoName={e.videoName}
             duration={e.duration}
             notes={e.log}

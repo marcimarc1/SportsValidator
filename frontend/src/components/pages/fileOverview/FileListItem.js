@@ -120,7 +120,7 @@ class FileListItem extends Component {
             }}
           >
             <IconButton
-              size="large"
+              size="medium"
               variant="contained"
               className={"FileOverviewListItemButton"}
               aria-label="edit annotations"
@@ -130,7 +130,7 @@ class FileListItem extends Component {
           </Link>
           <Link to={`analysis/${this.props.id}`}>
             <IconButton
-              size="large"
+              size="medium"
               variant="contained"
               className={"FileOverviewListItemButton"}
               aria-label="show analysis"
@@ -139,7 +139,7 @@ class FileListItem extends Component {
             </IconButton>
           </Link>
           <IconButton
-            size="large"
+            size="medium"
             variant="contained"
             className={"FileOverviewListItemButton"}
             onClick={this.delete}
@@ -154,9 +154,8 @@ class FileListItem extends Component {
 }
 
 FileListItem.propTypes = {
-  id: PropTypes.number.isRequired,
   videoName: PropTypes.string.isRequired,
-  duration: PropTypes.number.isRequired, //video duration in minutes
+  duration: PropTypes.number, //video duration in minutes
   changeName: PropTypes.func.isRequired,
   changeNotes: PropTypes.func.isRequired,
   delete: PropTypes.func.isRequired,
