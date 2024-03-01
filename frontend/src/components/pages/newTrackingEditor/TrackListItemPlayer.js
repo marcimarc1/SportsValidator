@@ -139,6 +139,7 @@ class TrackListItemPlayer extends Component {
       this.props.changeSelection(playerBox);
     };
 
+    console.log(this.props);
     const dotStyle = {
       width: "12px",
       height: "12px",
