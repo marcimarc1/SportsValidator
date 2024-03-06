@@ -16,6 +16,30 @@ element {
     100% {opacity: 1}
 }
 
+.message-container {
+    margin: 10px 0;
+    padding: 10px;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+}
+
+.error-message {
+    color: #fff; 
+    background-color: #db3d44; 
+    border-radius: 4px;
+}
+
+.info-message {
+    color: #fff; 
+    background-color: #31708f; 
+    border-radius: 4px;
+}
+
+.message-icon {
+    margin-right: 10px;
+}
+
 .FileOverview {
     width: 100%;
     min-height: 100%;
