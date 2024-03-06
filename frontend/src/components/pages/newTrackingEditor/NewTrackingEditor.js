@@ -9,14 +9,16 @@ import { ReactComponent as BackwardStepIcon } from "../../../icons/backward-step
 import { fabric } from "fabric";
 import "./NewTrackingEditor.css";
 import SeekBar from "./SeekBar";
-import { FormGroup, Switch, FormControlLabel, Button } from "@mui/material";
+import { FormGroup, Switch, FormControlLabel, Button, Typography } from "@mui/material";
+import TextField from '@mui/material/TextField';
+
 import TrackList from "../newTrackingEditor/TrackList";
 import TrackListItemPlayer from "./TrackListItemPlayer";
 import MergeAndSwapModal from "./MergeAndSwapModal";
 
 // TODO Take a video_id instead and have an endpoint on the server where we supply a video_id and get the corresponding video
 const NewTrackingEditor = () => {
-  const [canvas, setCanvas] = useState("");
+  const [canvas, setCanvas] = useState(new fabric.Canvas());
   const [videoUrl, setVideoUrl] = useState("");
   const [frameNumber, setFrameNumber] = useState(0);
   const [timestamp, setTimestamp] = useState(0);
@@ -32,6 +34,8 @@ const NewTrackingEditor = () => {
   const [playerNameMap, setPlayerNameMap] = useState(new Map());
   const [activeObject, setActiveObject] = useState(null);
   const [colorSet, setColorSet] = useState(new Map()); //map of playerkey to color
+  const [trailsEnabled, setTrailsEnabled] = useState(true);
+  const [trailFrameNumber, setTrailFrameNumber] = useState(50);
 
   const [mergeModalState, setMergeModalState] = useState(false);
   const [playerChosenInList, setPlayerChosenInList] = useState("");
@@ -325,7 +329,7 @@ const NewTrackingEditor = () => {
       // Get the uploaded file
       const file = event.target.files[0];
 
-      const annotationsResponse = await fetch("/api/annotations/199");
+      const annotationsResponse = await fetch("http://localhost:80/api/annotations/199");
       if (!annotationsResponse.ok) {
         throw new Error("Failed to fetch annotations for video");
       }
@@ -526,31 +530,32 @@ const NewTrackingEditor = () => {
       deselectAllBox();
       canvas.remove(...canvas.getObjects());
 
-      const numOfTrails = 80;
-      const pastTrailsToDraw = annotations.filter((a) => {
-        return a.FrameNo > frameNumber - numOfTrails && a.FrameNo < frameNumber;
-      });
-
-      pastTrailsToDraw.forEach((a) => {
-        const scaledX = a.x1 * horizontalScalingFactor;
-        const scaledY = a.y1 * verticalScalingFactor;
-        const trailRadius = (a.w * horizontalScalingFactor) / 8;
-
-        const trailColor = colorSet.get(a.PlayerKey);
-        let trail = new fabric.Circle({
-          left: scaledX,
-          top: scaledY,
-          stroke: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
-          strokeWidth: 3,
-          fill: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
-          radius:
-            (trailRadius / numOfTrails) *
-            (numOfTrails - (frameNumber - a.FrameNo)),
-          visible: isShowingAnnotation,
+      if(trailsEnabled) {
+        const pastTrailsToDraw = annotations.filter((a) => {
+          return a.FrameNo > frameNumber - trailFrameNumber && a.FrameNo < frameNumber;
         });
-
-        canvas.add(trail);
-      });
+  
+        pastTrailsToDraw.forEach((a) => {
+          const scaledX = a.x1 * horizontalScalingFactor;
+          const scaledY = a.y1 * verticalScalingFactor;
+          const trailRadius = (a.w * horizontalScalingFactor) / 8;
+  
+          const trailColor = colorSet.get(a.PlayerKey);
+          let trail = new fabric.Circle({
+            left: scaledX,
+            top: scaledY,
+            stroke: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
+            strokeWidth: 3,
+            fill: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
+            radius:
+              (trailRadius / trailFrameNumber) *
+              (trailFrameNumber - (frameNumber - a.FrameNo)),
+            visible: isShowingAnnotation,
+          });
+  
+          canvas.add(trail);
+        });
+      }
 
       // let boxIndex = annotations.findIndex(element => element.FrameNo == frameNumber);
       // if (boxIndex == -1) {
@@ -716,10 +721,13 @@ const NewTrackingEditor = () => {
       videoElement.removeEventListener("canplay", onCanPlay);
       videoElement.removeEventListener("seeked", onSeek);
     };
-  }, [videoElement, isShowingBox, frameNumber, playerList, playerNameMap]);
+  }, [videoElement, isShowingBox, frameNumber, playerList, playerNameMap, trailFrameNumber, trailsEnabled]);
 
   //triggered when new player is added, or when merge or swap happens
   useEffect(() => {
+    //remove old canvas objects
+    canvas.remove(...canvas.getObjects());
+
     const hasMatchingObject = canvasBoxes.some(
       (a) => a.my.frame === frameNumber,
     );
@@ -734,38 +742,33 @@ const NewTrackingEditor = () => {
     var tempList = [];
     let runningIndex = 0;
 
-    const numOfTrails = 80;
-    const pastTrailsToDraw = annotations.filter((a) => {
-      return a.FrameNo > frameNumber - numOfTrails && a.FrameNo < frameNumber;
-    });
-
-    pastTrailsToDraw.forEach((a) => {
-      const scaledX = a.x1 * horizontalScalingFactor;
-      const scaledY = a.y1 * verticalScalingFactor;
-      const trailRadius = (a.w * horizontalScalingFactor) / 8;
-
-      const trailColor = colorSet.get(a.PlayerKey);
-      let trail = new fabric.Circle({
-        left: scaledX,
-        top: scaledY,
-        stroke: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
-        strokeWidth: 3,
-        fill: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
-        radius:
-          (trailRadius / numOfTrails) *
-          (numOfTrails - (frameNumber - a.FrameNo)),
-        visible: isShowingAnnotation,
+    if(trailsEnabled) {
+      const pastTrailsToDraw = annotations.filter((a) => {
+        return a.FrameNo > frameNumber - trailFrameNumber && a.FrameNo < frameNumber;
       });
+  
+      pastTrailsToDraw.forEach((a) => {
+        const scaledX = a.x1 * horizontalScalingFactor;
+        const scaledY = a.y1 * verticalScalingFactor;
+        const trailRadius = (a.w * horizontalScalingFactor) / 8;
+  
+        const trailColor = colorSet.get(a.PlayerKey);
+        let trail = new fabric.Circle({
+          left: scaledX,
+          top: scaledY,
+          stroke: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
+          strokeWidth: 3,
+          fill: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
+          radius:
+            (trailRadius / trailFrameNumber) *
+            (trailFrameNumber - (frameNumber - a.FrameNo)),
+          visible: isShowingAnnotation,
+        });
+  
+        canvas.add(trail);
+      });
+    }
 
-      canvas.add(trail);
-    });
-
-    //invalidate the boxes in current frame, we should do this because we are going to draw fresh boxes, and we don't want duplicate boxes
-    const invalidatedCanvasBoxes = canvasBoxes.filter(
-      (a) => a.my.frame !== frameNumber,
-    );
-    canvasBoxes.length = 0;
-    canvasBoxes.push(...invalidatedCanvasBoxes);
 
     //same thing we do in drawBoundingBoxes..
     if (annotations.length > 0) {
@@ -830,7 +833,7 @@ const NewTrackingEditor = () => {
         setPlayerList(tempList);
       }
     }
-  }, [playerNameMap]);
+  }, [playerNameMap, trailsEnabled, trailFrameNumber]);
 
   const handleKeyDown = (event) => {
     switch (event.keyCode) {
@@ -917,7 +920,7 @@ const NewTrackingEditor = () => {
       } else {
         setIsPlaying(false);
         videoElement.pause();
-        updateSidebar();
+        //updateSidebar();
       }
     }
   };
@@ -1002,6 +1005,14 @@ const NewTrackingEditor = () => {
     );
   }
 
+  const handleEnablingTrails = () => {
+    if (trailsEnabled) {
+      setTrailsEnabled(false);
+    } else {
+      setTrailsEnabled(true);
+    }
+  }
+
   return (
     <div>
       <MergeAndSwapModal
@@ -1036,6 +1047,22 @@ const NewTrackingEditor = () => {
           <Button variant="contained" onClick={handleAddPlayer}>
             Add player
           </Button>
+          <Typography sx={{marginLeft: '10px'}}>Trails </Typography>
+          <FormGroup>
+            <FormControlLabel
+              control={
+                <Switch checked={trailsEnabled} onChange={handleEnablingTrails} />
+              }
+            />
+          </FormGroup>
+          <Typography sx={{marginLeft: '10px'}}>Trail frames: </Typography>
+
+          <TextField
+            sx={{ bgcolor: 'white', marginLeft: '10px', width: '80px'}}
+            value={trailFrameNumber}
+            type="number"
+            onChange={(event, val) => setTrailFrameNumber(event.target.value)}
+          />
         </div>
       </div>
       <input type="file" onChange={handleBrowse} />
