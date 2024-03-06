@@ -9,8 +9,14 @@ import { ReactComponent as BackwardStepIcon } from "../../../icons/backward-step
 import { fabric } from "fabric";
 import "./NewTrackingEditor.css";
 import SeekBar from "./SeekBar";
-import { FormGroup, Switch, FormControlLabel, Button, Typography } from "@mui/material";
-import TextField from '@mui/material/TextField';
+import {
+  FormGroup,
+  Switch,
+  FormControlLabel,
+  Button,
+  Typography,
+} from "@mui/material";
+import TextField from "@mui/material/TextField";
 
 import TrackList from "../newTrackingEditor/TrackList";
 import TrackListItemPlayer from "./TrackListItemPlayer";
@@ -329,7 +335,9 @@ const NewTrackingEditor = () => {
       // Get the uploaded file
       const file = event.target.files[0];
 
-      const annotationsResponse = await fetch("http://localhost:80/api/annotations/199");
+      const annotationsResponse = await fetch(
+        "http://localhost:80/api/annotations/199",
+      );
       if (!annotationsResponse.ok) {
         throw new Error("Failed to fetch annotations for video");
       }
@@ -530,16 +538,19 @@ const NewTrackingEditor = () => {
       deselectAllBox();
       canvas.remove(...canvas.getObjects());
 
-      if(trailsEnabled) {
+      if (trailsEnabled) {
         const pastTrailsToDraw = annotations.filter((a) => {
-          return a.FrameNo > frameNumber - trailFrameNumber && a.FrameNo < frameNumber;
+          return (
+            a.FrameNo > frameNumber - trailFrameNumber &&
+            a.FrameNo < frameNumber
+          );
         });
-  
+
         pastTrailsToDraw.forEach((a) => {
           const scaledX = a.x1 * horizontalScalingFactor;
           const scaledY = a.y1 * verticalScalingFactor;
           const trailRadius = (a.w * horizontalScalingFactor) / 8;
-  
+
           const trailColor = colorSet.get(a.PlayerKey);
           let trail = new fabric.Circle({
             left: scaledX,
@@ -552,7 +563,7 @@ const NewTrackingEditor = () => {
               (trailFrameNumber - (frameNumber - a.FrameNo)),
             visible: isShowingAnnotation,
           });
-  
+
           canvas.add(trail);
         });
       }
@@ -721,7 +732,15 @@ const NewTrackingEditor = () => {
       videoElement.removeEventListener("canplay", onCanPlay);
       videoElement.removeEventListener("seeked", onSeek);
     };
-  }, [videoElement, isShowingBox, frameNumber, playerList, playerNameMap, trailFrameNumber, trailsEnabled]);
+  }, [
+    videoElement,
+    isShowingBox,
+    frameNumber,
+    playerList,
+    playerNameMap,
+    trailFrameNumber,
+    trailsEnabled,
+  ]);
 
   //triggered when new player is added, or when merge or swap happens
   useEffect(() => {
@@ -742,16 +761,18 @@ const NewTrackingEditor = () => {
     var tempList = [];
     let runningIndex = 0;
 
-    if(trailsEnabled) {
+    if (trailsEnabled) {
       const pastTrailsToDraw = annotations.filter((a) => {
-        return a.FrameNo > frameNumber - trailFrameNumber && a.FrameNo < frameNumber;
+        return (
+          a.FrameNo > frameNumber - trailFrameNumber && a.FrameNo < frameNumber
+        );
       });
-  
+
       pastTrailsToDraw.forEach((a) => {
         const scaledX = a.x1 * horizontalScalingFactor;
         const scaledY = a.y1 * verticalScalingFactor;
         const trailRadius = (a.w * horizontalScalingFactor) / 8;
-  
+
         const trailColor = colorSet.get(a.PlayerKey);
         let trail = new fabric.Circle({
           left: scaledX,
@@ -764,11 +785,10 @@ const NewTrackingEditor = () => {
             (trailFrameNumber - (frameNumber - a.FrameNo)),
           visible: isShowingAnnotation,
         });
-  
+
         canvas.add(trail);
       });
     }
-
 
     //same thing we do in drawBoundingBoxes..
     if (annotations.length > 0) {
@@ -1011,7 +1031,7 @@ const NewTrackingEditor = () => {
     } else {
       setTrailsEnabled(true);
     }
-  }
+  };
 
   return (
     <div>
@@ -1047,18 +1067,21 @@ const NewTrackingEditor = () => {
           <Button variant="contained" onClick={handleAddPlayer}>
             Add player
           </Button>
-          <Typography sx={{marginLeft: '10px'}}>Trails </Typography>
+          <Typography sx={{ marginLeft: "10px" }}>Trails </Typography>
           <FormGroup>
             <FormControlLabel
               control={
-                <Switch checked={trailsEnabled} onChange={handleEnablingTrails} />
+                <Switch
+                  checked={trailsEnabled}
+                  onChange={handleEnablingTrails}
+                />
               }
             />
           </FormGroup>
-          <Typography sx={{marginLeft: '10px'}}>Trail frames: </Typography>
+          <Typography sx={{ marginLeft: "10px" }}>Trail frames: </Typography>
 
           <TextField
-            sx={{ bgcolor: 'white', marginLeft: '10px', width: '80px'}}
+            sx={{ bgcolor: "white", marginLeft: "10px", width: "80px" }}
             value={trailFrameNumber}
             type="number"
             onChange={(event, val) => setTrailFrameNumber(event.target.value)}
