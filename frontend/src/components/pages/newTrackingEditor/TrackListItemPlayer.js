@@ -124,7 +124,9 @@ class TrackListItemPlayer extends Component {
     let playerBox = this.props.playerBox;
     // let currentTeam = this.props.playerBox.my.team;
     // let allTeams = this.props.getTeams();
-    let style = { borderColor: this.props.playerBox.cornerColor };
+    let style = { 
+      borderColor: this.props.playerBox.cornerColor,
+    };
 
     // let teamMenuItems = allTeams.map(team => <MenuItem key={team.id} value={team.id}>{team.name}</MenuItem>)
     if (this.props.playerBox.my.selected) {

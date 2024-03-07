@@ -1000,12 +1000,14 @@ const NewTrackingEditor = () => {
           <Button variant="contained" onClick={handleAddPlayer}>
             Add player
           </Button>
+          <input style={{ marginLeft: '20px' }} type="file" onChange={handleBrowse} />
+          <button onClick={handleDownload} disabled={isDownloadingVideo}>
+            Download video
+          </button>
         </div>
+
       </div>
-      <input type="file" onChange={handleBrowse} />
-      <button onClick={handleDownload} disabled={isDownloadingVideo}>
-        Download video
-      </button>
+
       <div id="canvas-container">
         <canvas
           ref={canvasRef}
