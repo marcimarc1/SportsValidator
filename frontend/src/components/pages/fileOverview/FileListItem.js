@@ -29,7 +29,7 @@ class FileListItem extends Component {
   delete = () => {
     if (
       window.confirm(
-        "Do you really want to delete the file " + this.props.name + "?",
+        "Do you really want to delete the file " + this.props.videoName + "?",
       )
     )
       this.props.delete(this.props.id);
@@ -83,7 +83,7 @@ class FileListItem extends Component {
           <div className="FileOverviewListItemMetadata">
             <EditText
               className="FileOverviewListItemMetadataName"
-              defaultValue={this.props.name}
+              defaultValue={this.props.videoName}
               onSave={this.handleChangeName}
             />
             <div className="FileOverviewListItemMetadataDuration AlignWithMetaDataName">
@@ -99,7 +99,7 @@ class FileListItem extends Component {
                 name="Notes:"
                 rows={2}
                 style={{ paddingTop: 0 }}
-                defaultValue={this.props?.notes}
+                defaultValue={this.props.log || ""}
                 placeholder="Enter your notes here"
                 onSave={this.handleChangeNotes}
               />
@@ -107,9 +107,20 @@ class FileListItem extends Component {
           </div>
         </div>
         <div className="FileOverviewListItemButtonContainer">
-          <Link to={`newTrackingEditor/${this.props.videoName}`}>
+          <Link
+            to={{
+              pathname: `newTrackingEditor/${this.props.videoName}`,
+              state: {
+                processedPlayers: this.props.processedPlayers,
+                video: this.props.video,
+                ballTracks: this.props.ballTracks,
+                homographies: this.props.homographies,
+                log: this.props.log,
+              },
+            }}
+          >
             <IconButton
-              size="large"
+              size="medium"
               variant="contained"
               className={"FileOverviewListItemButton"}
               aria-label="edit annotations"
@@ -119,7 +130,7 @@ class FileListItem extends Component {
           </Link>
           <Link to={`analysis/${this.props.id}`}>
             <IconButton
-              size="large"
+              size="medium"
               variant="contained"
               className={"FileOverviewListItemButton"}
               aria-label="show analysis"
@@ -128,7 +139,7 @@ class FileListItem extends Component {
             </IconButton>
           </Link>
           <IconButton
-            size="large"
+            size="medium"
             variant="contained"
             className={"FileOverviewListItemButton"}
             onClick={this.delete}
@@ -143,14 +154,12 @@ class FileListItem extends Component {
 }
 
 FileListItem.propTypes = {
-  id: PropTypes.number.isRequired,
-  name: PropTypes.string.isRequired,
   videoName: PropTypes.string.isRequired,
-  duration: PropTypes.number.isRequired, //video duration in minutes
-  notes: PropTypes.string,
+  duration: PropTypes.number, //video duration in minutes
   changeName: PropTypes.func.isRequired,
   changeNotes: PropTypes.func.isRequired,
   delete: PropTypes.func.isRequired,
+  log: PropTypes.string,
 };
 
 export default FileListItem;
