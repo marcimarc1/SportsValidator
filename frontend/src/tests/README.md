@@ -6,3 +6,5 @@
 2. in /transforms folder, there are mocks of files with different extensions, which are referenced in package.json/jest/moduleNameMapper section.
 
 3. in the root folder(/tests) there are tests of different components.
+
+4. in the parent folder(i.e. /frontend), jestConfig.js contains global rules for the test.

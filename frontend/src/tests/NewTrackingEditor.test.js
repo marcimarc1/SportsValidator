@@ -3,19 +3,56 @@ import {fireEvent, getNodeText, screen, render, cleanup, waitFor} from "@testing
 import { fabric } from 'fabric';
 import Router from 'react-router';
 import '@testing-library/jest-dom/extend-expect'
+import fetchMock from 'jest-fetch-mock';
 import NewTrackingEditor from '../components/pages/newTrackingEditor/NewTrackingEditor'
 
+beforeEach(() => {
+    fetchMock.resetMocks();
+})
 afterEach(cleanup);
 
-//mock react-router, in order to mock useParams()
+//mock useParams()
 jest.mock('react-router', () => ({
     ...jest.requireActual('react-router'),
     useParams: jest.fn(),
 }));
-
-//mock useParams()
 jest.spyOn(Router, 'useParams').mockReturnValue({videoName: 'mockVideo'});
 
+
+describe('data fetching', () => {
+
+    it('receives correct annotation', async () => {
+
+        //given
+        const logSpy = jest.spyOn(global.console, 'log');
+        const mockFile = new File(['mock video'], 'video.mp4', { type: 'video/mp4' });
+        const mockAnnotation = [{
+            FrameNo: 10,
+            PlayerKey: 1,
+            h: 100,
+            w: 100,
+            x: 500,
+            x1: 0,
+            x2: 0,
+            x_trans: 0,
+            y: 100,
+            y1: 0,
+            y2: 0,
+            y_trans: 0,
+        }];
+        fetchMock.mockResponse(JSON.stringify(mockAnnotation));
+        URL.createObjectURL = jest.fn();
+        render(<NewTrackingEditor/>);
+
+        //when
+        fireEvent.change(screen.getByTestId('video-upload'), { target: { files: [mockFile] } });
+
+        //then
+        await waitFor(() => {
+            expect(logSpy).toHaveBeenCalledWith("Unique annotations : ", mockAnnotation);
+        });
+    });
+});
 
 describe('add player button', () => {
 
@@ -60,7 +97,7 @@ describe('add player button', () => {
     });
 });
 
-describe('sidebar of player list', () => {
+describe('player sidebar', () => {
     it('displays all players in current frame', () => {
 
     });
