@@ -31,7 +31,7 @@ const NewTrackingEditor = () => {
     location.state || {};
   // ballTracks, homographies and log are not being used. Logic will be implemented in the future.
   const [annotations, setAnnotations] = useState([]);
-  const [canvas, setCanvas] = useState(new fabric.Canvas());
+  const [canvas, setCanvas] = useState(new fabric.Canvas('myCanvas', {renderOnAddRemove: false}));
   const [videoUrl, setVideoUrl] = useState("");
   const [frameNumber, setFrameNumber] = useState(0);
   const [timestamp, setTimestamp] = useState(0);
@@ -48,6 +48,7 @@ const NewTrackingEditor = () => {
   const [colorSet, setColorSet] = useState(new Map()); //map of playerkey to color
   const [trailsEnabled, setTrailsEnabled] = useState(true);
   const [trailFrameNumber, setTrailFrameNumber] = useState(50);
+  const [trails, setTrails] = useState([]);
 
   const [mergeModalState, setMergeModalState] = useState(false);
   const [playerChosenInList, setPlayerChosenInList] = useState("");
@@ -564,8 +565,6 @@ const NewTrackingEditor = () => {
         pastTrailsToDraw.forEach((a) => {
           const scaledX = a.x1 * horizontalScalingFactor;
           const scaledY = a.y1 * verticalScalingFactor;
-          const trailRadius = (a.w * horizontalScalingFactor) / 8;
-
           const trailColor = colorSet.get(a.PlayerKey);
           let trail = new fabric.Circle({
             left: scaledX,
@@ -573,9 +572,7 @@ const NewTrackingEditor = () => {
             stroke: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
             strokeWidth: 3,
             fill: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
-            radius:
-              (trailRadius / trailFrameNumber) *
-              (trailFrameNumber - (frameNumber - a.FrameNo)),
+            radius: 5,
             visible: isShowingAnnotation,
           });
 
