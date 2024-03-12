@@ -330,9 +330,6 @@ const NewTrackingEditor = () => {
         playerBox.my.scaleY = targetRect.scaleY;
         playerBox.setCoords();
         canvas.requestRenderAll();
-        // could be used to debug scaling function
-        // console.log("scaling factor: %f %f", targetRect.scaleX, targetRect.scaleY);
-        // console.log("player position: %d  %d  %d  %d", targetRect.left, targetRect.top, targetRect.width, targetRect.height);
       },
     });
 
@@ -731,7 +728,7 @@ const NewTrackingEditor = () => {
     videoElement.addEventListener("canplay", onCanPlay);
     videoElement.addEventListener("seeked", onSeek);
     videoElement.addEventListener("seeking", () => {
-      //console.log("Seeking");
+      console.log("Seeking");
     });
     videoElement.addEventListener("stalled", () => {
       console.log("Stalled");
@@ -787,8 +784,6 @@ const NewTrackingEditor = () => {
       pastTrailsToDraw.forEach((a) => {
         const scaledX = a.x1 * horizontalScalingFactor;
         const scaledY = a.y1 * verticalScalingFactor;
-        const trailRadius = (a.w * horizontalScalingFactor) / 8;
-
         const trailColor = colorSet.get(a.PlayerKey);
         let trail = new fabric.Circle({
           left: scaledX,
