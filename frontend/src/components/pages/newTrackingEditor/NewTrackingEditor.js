@@ -547,17 +547,24 @@ const NewTrackingEditor = () => {
       let playerIndex = 0;
       deselectAllBox();
 
-      if(!trailsEnabled) {
+      if (!trailsEnabled) {
         canvas.remove(...canvas.getObjects());
-      }
-      else{
+      } else {
         //remove everything except the past trails
-        canvas.remove(...canvas.getObjects().filter((obj) => (obj.type !== "circle") ) );
-        canvas.remove(...canvas.getObjects().filter((obj) => (frameNumber - obj.properties.frame >= trailFrameNumber ) ));
+        canvas.remove(
+          ...canvas.getObjects().filter((obj) => obj.type !== "circle"),
+        );
+        canvas.remove(
+          ...canvas
+            .getObjects()
+            .filter(
+              (obj) => frameNumber - obj.properties.frame >= trailFrameNumber,
+            ),
+        );
         const currentTrailsToDraw = annotations.filter(
           (a) => a.FrameNo == frameNumber,
         );
-  
+
         currentTrailsToDraw.forEach((a) => {
           const scaledX = a.x1 * horizontalScalingFactor;
           const scaledY = a.y1 * verticalScalingFactor;
@@ -572,7 +579,7 @@ const NewTrackingEditor = () => {
             visible: isShowingAnnotation,
           });
           trail.properties = {
-            frame: frameNumber
+            frame: frameNumber,
           };
           trail.selectable = false;
           trail.hasControls = false;
@@ -586,9 +593,7 @@ const NewTrackingEditor = () => {
       // if (boxIndex == -1) {
       //   return;
       // }
-      var playersToDraw = canvasBoxes.filter(
-        (a) => a.my.frame == frameNumber,
-      );
+      var playersToDraw = canvasBoxes.filter((a) => a.my.frame == frameNumber);
       var tempList = [];
       let runningIndex = 0;
 
@@ -795,7 +800,7 @@ const NewTrackingEditor = () => {
           visible: isShowingAnnotation,
         });
         trail.properties = {
-          frame: frameNumber
+          frame: frameNumber,
         };
         //turn off properties that are not needed to increase performance
         trail.selectable = false;
