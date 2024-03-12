@@ -31,7 +31,7 @@ const NewTrackingEditor = () => {
     location.state || {};
   // ballTracks, homographies and log are not being used. Logic will be implemented in the future.
   const [annotations, setAnnotations] = useState([]);
-  const [canvas, setCanvas] = useState(new fabric.Canvas('myCanvas', {renderOnAddRemove: false}));
+  const [canvas, setCanvas] = useState(new fabric.Canvas());
   const [videoUrl, setVideoUrl] = useState("");
   const [frameNumber, setFrameNumber] = useState(0);
   const [timestamp, setTimestamp] = useState(0);
@@ -48,8 +48,6 @@ const NewTrackingEditor = () => {
   const [colorSet, setColorSet] = useState(new Map()); //map of playerkey to color
   const [trailsEnabled, setTrailsEnabled] = useState(true);
   const [trailFrameNumber, setTrailFrameNumber] = useState(50);
-  const [trails, setTrails] = useState([]);
-
   const [mergeModalState, setMergeModalState] = useState(false);
   const [playerChosenInList, setPlayerChosenInList] = useState("");
 
@@ -552,17 +550,14 @@ const NewTrackingEditor = () => {
       let playerIndex = 0;
       let playerBoxesCopy = canvasBoxes;
       deselectAllBox();
-      canvas.remove(...canvas.getObjects());
-
-      if (trailsEnabled) {
-        const pastTrailsToDraw = annotations.filter((a) => {
-          return (
-            a.FrameNo > frameNumber - trailFrameNumber &&
-            a.FrameNo < frameNumber
-          );
-        });
-
-        pastTrailsToDraw.forEach((a) => {
+      canvas.remove(...canvas.getObjects().filter((obj) => (obj.type !== "circle") ) );
+      canvas.remove(...canvas.getObjects().filter((obj) => (frameNumber - obj.properties.frame >= trailFrameNumber ) ));
+      if(trailsEnabled) {
+        const currentTrailsToDraw = annotations.filter(
+          (a) => a.FrameNo == frameNumber,
+        );
+  
+        currentTrailsToDraw.forEach((a) => {
           const scaledX = a.x1 * horizontalScalingFactor;
           const scaledY = a.y1 * verticalScalingFactor;
           const trailColor = colorSet.get(a.PlayerKey);
@@ -575,7 +570,13 @@ const NewTrackingEditor = () => {
             radius: 5,
             visible: isShowingAnnotation,
           });
-
+          trail.properties = {
+            frame: frameNumber
+          };
+          trail.selectable = false;
+          trail.hasControls = false;
+          trail.hasBorders = false;
+          trail.hasRotatingPoint = false;
           canvas.add(trail);
         });
       }
@@ -727,7 +728,7 @@ const NewTrackingEditor = () => {
     videoElement.addEventListener("canplay", onCanPlay);
     videoElement.addEventListener("seeked", onSeek);
     videoElement.addEventListener("seeking", () => {
-      console.log("Seeking");
+      //console.log("Seeking");
     });
     videoElement.addEventListener("stalled", () => {
       console.log("Stalled");
