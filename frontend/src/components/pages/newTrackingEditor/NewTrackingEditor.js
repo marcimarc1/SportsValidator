@@ -548,11 +548,15 @@ const NewTrackingEditor = () => {
 
     const drawBoundingBoxes = (frameNumber) => {
       let playerIndex = 0;
-      let playerBoxesCopy = canvasBoxes;
       deselectAllBox();
-      canvas.remove(...canvas.getObjects().filter((obj) => (obj.type !== "circle") ) );
-      canvas.remove(...canvas.getObjects().filter((obj) => (frameNumber - obj.properties.frame >= trailFrameNumber ) ));
-      if(trailsEnabled) {
+
+      if(!trailsEnabled) {
+        canvas.remove(...canvas.getObjects());
+      }
+      else{
+        //remove everything except the past trails
+        canvas.remove(...canvas.getObjects().filter((obj) => (obj.type !== "circle") ) );
+        canvas.remove(...canvas.getObjects().filter((obj) => (frameNumber - obj.properties.frame >= trailFrameNumber ) ));
         const currentTrailsToDraw = annotations.filter(
           (a) => a.FrameNo == frameNumber,
         );
@@ -585,7 +589,7 @@ const NewTrackingEditor = () => {
       // if (boxIndex == -1) {
       //   return;
       // }
-      var playersToDraw = playerBoxesCopy.filter(
+      var playersToDraw = canvasBoxes.filter(
         (a) => a.my.frame == frameNumber,
       );
       var tempList = [];
@@ -654,7 +658,7 @@ const NewTrackingEditor = () => {
               // also connect it to corresponding annotation
             };
             playerBox = defineBoxBehavior(playerBox);
-            playerBoxesCopy.push(playerBox);
+            canvasBoxes.push(playerBox);
             canvas.add(playerBox);
 
             tempList = tempList.concat([
@@ -675,7 +679,6 @@ const NewTrackingEditor = () => {
         }
       }
       setPlayerList(tempList);
-      setCanvasBoxes(playerBoxesCopy);
       canvas.renderAll();
     };
 
@@ -793,12 +796,17 @@ const NewTrackingEditor = () => {
           stroke: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
           strokeWidth: 3,
           fill: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
-          radius:
-            (trailRadius / trailFrameNumber) *
-            (trailFrameNumber - (frameNumber - a.FrameNo)),
+          radius: 5,
           visible: isShowingAnnotation,
         });
-
+        trail.properties = {
+          frame: frameNumber
+        };
+        //turn off properties that are not needed to increase performance
+        trail.selectable = false;
+        trail.hasControls = false;
+        trail.hasBorders = false;
+        trail.hasRotatingPoint = false;
         canvas.add(trail);
       });
     }
