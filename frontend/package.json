@@ -3,6 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@emotion/react": "^11.11.3",
+    "@emotion/styled": "^11.11.0",
     "@ffmpeg/core": "^0.8.3",
     "@ffmpeg/ffmpeg": "^0.9.4",
     "@fortawesome/fontawesome-svg-core": "^1.2.36",
@@ -57,7 +59,7 @@
     ]
   },
   "devDependencies": {
-    "@types/react-edit-text": "^4.4.1",
-    "@babel/plugin-proposal-private-property-in-object": "7.21.11"
+    "@babel/plugin-proposal-private-property-in-object": "7.21.11",
+    "@types/react-edit-text": "^4.4.1"
   }
 }
