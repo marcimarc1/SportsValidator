@@ -26,7 +26,7 @@ describe('data fetching', () => {
         //given
         const logSpy = jest.spyOn(global.console, 'log');
         const mockFile = new File(['mock video'], 'video.mp4', { type: 'video/mp4' });
-        const mockAnnotation = [{
+        const mockAnnotation = {
             FrameNo: 10,
             PlayerKey: 1,
             h: 100,
@@ -39,9 +39,8 @@ describe('data fetching', () => {
             y1: 0,
             y2: 0,
             y_trans: 0,
-        }];
-        fetchMock.mockResponse(JSON.stringify(mockAnnotation));
-        URL.createObjectURL = jest.fn();
+        };
+        fetchMock.mockResponse(JSON.stringify([mockAnnotation]));
         render(<NewTrackingEditor/>);
 
         //when
@@ -49,7 +48,7 @@ describe('data fetching', () => {
 
         //then
         await waitFor(() => {
-            expect(logSpy).toHaveBeenCalledWith("Unique annotations : ", mockAnnotation);
+            expect(logSpy).toHaveBeenCalledWith("Unique annotations : ", [mockAnnotation]);
         });
     });
 });
@@ -98,7 +97,70 @@ describe('add player button', () => {
 });
 
 describe('player sidebar', () => {
-    it('displays all players in current frame', () => {
+    it('displays all players in current frame', async ()  => {
 
+        //given
+        const mockFile = new File(['mock video'], 'video.mp4', { type: 'video/mp4' });
+        //should draw: mockAnnotation1 and 2
+        //should ignore: mockAnnotation3
+        const mockAnnotation1 = {
+            FrameNo: 0,
+            PlayerKey: 1,
+            h: 100,
+            w: 100,
+            x: 500,
+            x1: 0,
+            x2: 0,
+            x_trans: 0,
+            y: 100,
+            y1: 0,
+            y2: 0,
+            y_trans: 0,
+        };
+        const mockAnnotation2 = {
+            FrameNo: 0,
+            PlayerKey: 2,
+            h: 200,
+            w: 50,
+            x: 500,
+            x1: 0,
+            x2: 0,
+            x_trans: 0,
+            y: 500,
+            y1: 0,
+            y2: 0,
+            y_trans: 0,
+        };
+        const mockAnnotation3 = {
+            FrameNo: 1,
+            PlayerKey: 2,
+            h: 200,
+            w: 50,
+            x: 500,
+            x1: 0,
+            x2: 0,
+            x_trans: 0,
+            y: 500,
+            y1: 0,
+            y2: 0,
+            y_trans: 0,
+        };
+        fetchMock.mockResponse(JSON.stringify([mockAnnotation1, mockAnnotation2, mockAnnotation3]));
+        const {container} = render(<NewTrackingEditor/>);
+        const button = screen.getByTestId('from-annotation');
+
+        //when
+        fireEvent.change(screen.getByTestId('video-upload'), { target: { files: [mockFile] } });
+        await waitFor(() => {
+            expect(fetchMock).toHaveBeenCalled();
+        });
+        fireEvent.click(button);
+
+        //then
+        //as the sidebar contains 3 lists(player, team, ball), the playerList is chosen.
+        const playerList = container.querySelector('.TrackListList').children[0];
+        expect(playerList.childElementCount).toEqual(2);
+        expect(getNodeText(playerList.children[0].querySelector('.TrackListItemName'))).toEqual("player1");
+        expect(getNodeText(playerList.children[1].querySelector('.TrackListItemName'))).toEqual("player2");
     });
 });
