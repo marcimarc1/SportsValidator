@@ -55,7 +55,7 @@ describe('data fetching', () => {
 
 describe('add player button', () => {
 
-    it('increases number of players by 1', () => {
+    it('increases length of annotations by 1', () => {
         render(<NewTrackingEditor/>);
     
         //given
@@ -93,6 +93,24 @@ describe('add player button', () => {
         updatedCanvas.loadFromJSON(JSONCanvas, updatedCanvas.renderAll.bind(updatedCanvas));
         expect(initialCanvas.getObjects().length).toEqual(0);
         expect(updatedCanvas.getObjects().length).toEqual(1);
+    });
+
+    it('adds a new row in the player sidebar', () => {
+        
+        //given
+        const {container} = render(<NewTrackingEditor/>);
+        const button = screen.getByTestId('add-player-button');
+        const playerList = container.querySelector('.TrackListList').children[0];
+        const initialRowNumber = playerList.childElementCount;
+
+        //when
+        fireEvent.click(button);
+
+        //then
+        //as the sidebar contains 3 lists(player, team, ball), the playerList is chosen.
+        const updatedRowNumber = playerList.childElementCount;
+        expect(initialRowNumber).toEqual(0);
+        expect(updatedRowNumber).toEqual(1);
     });
 });
 
