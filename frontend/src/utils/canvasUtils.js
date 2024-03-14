@@ -1,6 +1,15 @@
 import { fabric } from "fabric";
 
-export const trailsFullRedraw = (canvas, annotations, frameNumber, trailFrameNumber, isShowingAnnotation, colorSet, horizontalScalingFactor, verticalScalingFactor) => {
+export const trailsFullRedraw = (
+  canvas,
+  annotations,
+  frameNumber,
+  trailFrameNumber,
+  isShowingAnnotation,
+  colorSet,
+  horizontalScalingFactor,
+  verticalScalingFactor,
+) => {
   const pastTrailsToDraw = annotations.filter((a) => {
     return (
       a.FrameNo > frameNumber - trailFrameNumber && a.FrameNo < frameNumber
@@ -30,4 +39,4 @@ export const trailsFullRedraw = (canvas, annotations, frameNumber, trailFrameNum
     trail.hasRotatingPoint = false;
     canvas.add(trail);
   });
-}
+};

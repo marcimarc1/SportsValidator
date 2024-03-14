@@ -559,7 +559,9 @@ const NewTrackingEditor = () => {
           ...canvas
             .getObjects()
             .filter(
-              (obj) => frameNumber - obj.properties.frame >= trailFrameNumber || frameNumber - obj.properties.frame < 0,
+              (obj) =>
+                frameNumber - obj.properties.frame >= trailFrameNumber ||
+                frameNumber - obj.properties.frame < 0,
             ),
         );
         const currentTrailsToDraw = annotations.filter(
@@ -772,7 +774,16 @@ const NewTrackingEditor = () => {
 
     if (trailsEnabled) {
       //all trails have to be redrawn in this case
-      trailsFullRedraw(canvas, annotations, frameNumber, trailFrameNumber, isShowingAnnotation, colorSet, horizontalScalingFactor, verticalScalingFactor);
+      trailsFullRedraw(
+        canvas,
+        annotations,
+        frameNumber,
+        trailFrameNumber,
+        isShowingAnnotation,
+        colorSet,
+        horizontalScalingFactor,
+        verticalScalingFactor,
+      );
     }
 
     //same thing we do in drawBoundingBoxes..
