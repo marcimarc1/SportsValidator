@@ -1058,6 +1058,7 @@ const NewTrackingEditor = () => {
               control={
                 <Switch
                   checked={trailsEnabled}
+                  disabled={!videoElement?.paused}
                   onChange={handleEnablingTrails}
                 />
               }
