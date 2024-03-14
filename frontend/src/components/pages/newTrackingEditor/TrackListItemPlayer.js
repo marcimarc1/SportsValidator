@@ -124,7 +124,7 @@ class TrackListItemPlayer extends Component {
     let playerBox = this.props.playerBox;
     // let currentTeam = this.props.playerBox.my.team;
     // let allTeams = this.props.getTeams();
-    let style = { 
+    let style = {
       borderColor: this.props.playerBox.cornerColor,
     };
 
