@@ -23,6 +23,7 @@ import TextField from "@mui/material/TextField";
 import TrackList from "../newTrackingEditor/TrackList";
 import TrackListItemPlayer from "./TrackListItemPlayer";
 import MergeAndSwapModal from "./MergeAndSwapModal";
+import { trailsFullRedraw } from "../../../utils/canvasUtils";
 
 // TODO Take a video_id instead and have an endpoint on the server where we supply a video_id and get the corresponding video
 const NewTrackingEditor = () => {
@@ -753,8 +754,6 @@ const NewTrackingEditor = () => {
   }, [
     videoElement,
     isShowingBox,
-    frameNumber,
-    playerList,
     playerNameMap,
     trailFrameNumber,
     trailsEnabled,
@@ -772,35 +771,8 @@ const NewTrackingEditor = () => {
     let runningIndex = 0;
 
     if (trailsEnabled) {
-      const pastTrailsToDraw = annotations.filter((a) => {
-        return (
-          a.FrameNo > frameNumber - trailFrameNumber && a.FrameNo < frameNumber
-        );
-      });
-
-      pastTrailsToDraw.forEach((a) => {
-        const scaledX = a.x1 * horizontalScalingFactor;
-        const scaledY = a.y1 * verticalScalingFactor;
-        const trailColor = colorSet.get(a.PlayerKey);
-        let trail = new fabric.Circle({
-          left: scaledX,
-          top: scaledY,
-          stroke: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
-          strokeWidth: 3,
-          fill: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
-          radius: 5,
-          visible: isShowingAnnotation,
-        });
-        trail.properties = {
-          frame: frameNumber,
-        };
-        //turn off properties that are not needed to increase performance
-        trail.selectable = false;
-        trail.hasControls = false;
-        trail.hasBorders = false;
-        trail.hasRotatingPoint = false;
-        canvas.add(trail);
-      });
+      //all trails have to be redrawn in this case
+      trailsFullRedraw(canvas, annotations, frameNumber, trailFrameNumber, isShowingAnnotation, colorSet, horizontalScalingFactor, verticalScalingFactor);
     }
 
     //same thing we do in drawBoundingBoxes..
