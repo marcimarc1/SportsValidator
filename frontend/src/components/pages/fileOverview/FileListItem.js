@@ -29,7 +29,7 @@ class FileListItem extends Component {
   delete = () => {
     if (
       window.confirm(
-        "Do you really want to delete the file " + this.props.videoName + "?"
+        "Do you really want to delete the file " + this.props.videoName + "?",
       )
     )
       this.props.delete(this.props.id);
@@ -37,10 +37,10 @@ class FileListItem extends Component {
 
   render() {
     let thumbnailWidth = Math.floor(
-      this.thumbnailImageWidth * this.thumbnailRescale
+      this.thumbnailImageWidth * this.thumbnailRescale,
     );
     let thumbnailHeight = Math.floor(
-      this.thumbnailImageHeight * this.thumbnailRescale
+      this.thumbnailImageHeight * this.thumbnailRescale,
     );
     let duration = this.props.duration;
     if (duration < 60) duration = duration.toString() + "min";
@@ -99,7 +99,7 @@ class FileListItem extends Component {
                 name="Notes:"
                 rows={2}
                 style={{ paddingTop: 0 }}
-                defaultValue={this.props.logFile || ""}
+                defaultValue={this.props.log || ""}
                 placeholder="Enter your notes here"
                 onSave={this.handleChangeNotes}
               />
@@ -112,15 +112,15 @@ class FileListItem extends Component {
               pathname: `newTrackingEditor/${this.props.videoName}`,
               state: {
                 processedPlayers: this.props.processedPlayers,
-                videoFile: this.props.videoFile,
-                ballTracksFile: this.props.ballTracksFile,
-                homographiesFile: this.props.homographiesFile,
-                logFile: this.props.logFile,
+                video: this.props.video,
+                ballTracks: this.props.ballTracks,
+                homographies: this.props.homographies,
+                log: this.props.log,
               },
             }}
           >
             <IconButton
-              size="large"
+              size="medium"
               variant="contained"
               className={"FileOverviewListItemButton"}
               aria-label="edit annotations"
@@ -128,10 +128,9 @@ class FileListItem extends Component {
               <FontAwesomeIcon icon={faEdit} />
             </IconButton>
           </Link>
-
           <Link to={`analysis/${this.props.id}`}>
             <IconButton
-              size="large"
+              size="medium"
               variant="contained"
               className={"FileOverviewListItemButton"}
               aria-label="show analysis"
@@ -140,7 +139,7 @@ class FileListItem extends Component {
             </IconButton>
           </Link>
           <IconButton
-            size="large"
+            size="medium"
             variant="contained"
             className={"FileOverviewListItemButton"}
             onClick={this.delete}
@@ -155,13 +154,12 @@ class FileListItem extends Component {
 }
 
 FileListItem.propTypes = {
-  id: PropTypes.number.isRequired,
   videoName: PropTypes.string.isRequired,
-  duration: PropTypes.number.isRequired, //video duration in minutes
+  duration: PropTypes.number, //video duration in minutes
   changeName: PropTypes.func.isRequired,
   changeNotes: PropTypes.func.isRequired,
   delete: PropTypes.func.isRequired,
-  logFile: PropTypes.string,
+  log: PropTypes.string,
 };
 
 export default FileListItem;
