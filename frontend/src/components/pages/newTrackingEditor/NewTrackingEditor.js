@@ -11,10 +11,17 @@ import { parseProcessedPlayers } from "../../../utils/csvParser";
 import { fabric } from "fabric";
 import "./NewTrackingEditor.css";
 import SeekBar from "./SeekBar";
-import { FormGroup, Switch, FormControlLabel, Button } from "@mui/material";
+import {
+  FormGroup,
+  Switch,
+  FormControlLabel,
+  Button,
+  Box,
+} from "@mui/material";
 import TrackList from "../newTrackingEditor/TrackList";
 import TrackListItemPlayer from "./TrackListItemPlayer";
 import MergeAndSwapModal from "./MergeAndSwapModal";
+import { DownloadButton } from "./DownloadButton";
 
 // TODO Take a video_id instead and have an endpoint on the server where we supply a video_id and get the corresponding video
 const NewTrackingEditor = () => {
@@ -68,12 +75,12 @@ const NewTrackingEditor = () => {
     const firstPlayerMaxFrame = Math.max(
       ...annotations
         .filter((a) => a.PlayerKey == firstPlayerKey)
-        .map((a) => a.FrameNo),
+        .map((a) => a.FrameNo)
     );
     const secondPlayerMaxFrame = Math.max(
       ...annotations
         .filter((a) => a.PlayerKey == secondPlayerKey)
-        .map((a) => a.FrameNo),
+        .map((a) => a.FrameNo)
     );
 
     let mergedPlayerKey;
@@ -92,18 +99,18 @@ const NewTrackingEditor = () => {
 
     //filter out duplicate annotations between main and merged player that has the same frame number
     let filteredAnnotations = annotations.filter(
-      (a) => a.playerKey != mergedPlayerKey,
+      (a) => a.playerKey != mergedPlayerKey
     );
     const mainPlayerAnnotations = annotations.filter(
-      (a) => a.playerKey == mainPlayerKey,
+      (a) => a.playerKey == mainPlayerKey
     );
     const mergedPlayerAnnotations = annotations.filter(
-      (a) => a.playerKey == mergedPlayerKey,
+      (a) => a.playerKey == mergedPlayerKey
     );
     filteredAnnotations = filteredAnnotations.concat(
       mergedPlayerAnnotations.filter((a) =>
-        mainPlayerAnnotations.every((b) => b.FrameNo != a.FrameNo),
-      ),
+        mainPlayerAnnotations.every((b) => b.FrameNo != a.FrameNo)
+      )
     );
 
     const mergedAnnotations = filteredAnnotations.map((annotation) => {
@@ -171,7 +178,7 @@ const NewTrackingEditor = () => {
     let tempList = [];
     let runningIndex = 0;
     let boxes = canvasBoxes.filter(
-      (box) => box.my.frame == getCurrentTimestampFrame(),
+      (box) => box.my.frame == getCurrentTimestampFrame()
     );
     boxes.forEach((box) => {
       const boxColor = colorSet.get(box.my.key);
@@ -353,7 +360,7 @@ const NewTrackingEditor = () => {
       // get rid of duplicates in case database has duplicate values
       const uniqueAnnotations = Array.from(
         new Set(annotationsJson.map((obj) => JSON.stringify(obj))),
-        JSON.parse,
+        JSON.parse
       );
       console.log("Unique annotations : ", uniqueAnnotations);
       // setAnnotations(uniqueAnnotations);
@@ -363,34 +370,6 @@ const NewTrackingEditor = () => {
       console.log("Finished setting video url");
     } catch (error) {
       console.error(error);
-    }
-  };
-
-  const handleDownload = async () => {
-    setIsDownloadingVideo(true);
-
-    console.log("Video name : ", videoName);
-
-    try {
-      const videoResponse = await fetch("/uploads/" + videoName);
-      if (!videoResponse.ok) {
-        throw new Error("Failed to fetch video.");
-      }
-      const videoBlob = await videoResponse.blob();
-
-      const annotationsResponse = await fetch("/api/annotations/199");
-      if (!annotationsResponse.ok) {
-        throw new Error("Failed to fetch annotations for video");
-      }
-      const annotationsJson = await annotationsResponse.json();
-      // console.log("Retrieved annotations : ", annotationsJson);
-      // setAnnotations(annotationsJson);
-
-      setVideoUrl(URL.createObjectURL(videoBlob));
-    } catch (error) {
-      console.error("Error downloading video:", error);
-    } finally {
-      setIsDownloadingVideo(false);
     }
   };
 
@@ -489,7 +468,7 @@ const NewTrackingEditor = () => {
 
   function boundingBoxColorSet(annotationList) {
     let uniquePlayerKeys = new Set(
-      annotationList.map((item) => item.PlayerKey),
+      annotationList.map((item) => item.PlayerKey)
     );
     let colorSet = new Map();
 
@@ -547,7 +526,7 @@ const NewTrackingEditor = () => {
       //   return;
       // }
       var playersToDraw = playerBoxesCopy.filter(
-        (a) => a.my.frame == frameNumber,
+        (a) => a.my.frame == frameNumber
       );
       var tempList = [];
       let runningIndex = 0;
@@ -652,7 +631,7 @@ const NewTrackingEditor = () => {
           "Video element either null, paused : ",
           videoElement.paused,
           " or ended : ",
-          videoElement.ended,
+          videoElement.ended
         );
         return;
       }
@@ -711,7 +690,7 @@ const NewTrackingEditor = () => {
   //triggered when new player is added, or when merge or swap happens
   useEffect(() => {
     const hasMatchingObject = canvasBoxes.some(
-      (a) => a.my.frame === frameNumber,
+      (a) => a.my.frame === frameNumber
     );
     if (!hasMatchingObject) {
       //no need to run this function if there is no matching object
@@ -726,7 +705,7 @@ const NewTrackingEditor = () => {
 
     //invalidate the boxes in current frame, we should do this because we are going to draw fresh boxes, and we don't want duplicate boxes
     const invalidatedCanvasBoxes = canvasBoxes.filter(
-      (a) => a.my.frame !== frameNumber,
+      (a) => a.my.frame !== frameNumber
     );
     canvasBoxes.length = 0;
     canvasBoxes.push(...invalidatedCanvasBoxes);
@@ -867,7 +846,7 @@ const NewTrackingEditor = () => {
   const handleNextChunk = () => {
     const newTimestamp = Math.min(
       videoElement.duration,
-      videoElement.currentTime + 6,
+      videoElement.currentTime + 6
     );
     videoElement.currentTime = newTimestamp;
     updateTimestamp(newTimestamp);
@@ -962,7 +941,7 @@ const NewTrackingEditor = () => {
         y1: 0,
         y2: 0,
         y_trans: 0,
-      }),
+      })
     );
   }
 
@@ -977,8 +956,8 @@ const NewTrackingEditor = () => {
         mergePlayerData={mergePlayerData}
       />
       <div className="controls">
-        <div id="tools-container">
-          <div>&nbsp;&nbsp;Show Annotation: &nbsp;</div>
+        <Box id="tools-container" sx={{ display: "flex", gap: "10px" }}>
+          <div>Show Annotation:</div>
           <FormGroup>
             <FormControlLabel
               control={
@@ -989,7 +968,7 @@ const NewTrackingEditor = () => {
               }
             />
           </FormGroup>
-          <div>&nbsp;&nbsp;Show Player Box: &nbsp;</div>
+          <div>Show Player Box:</div>
           <FormGroup>
             <FormControlLabel
               control={
@@ -1000,12 +979,8 @@ const NewTrackingEditor = () => {
           <Button variant="contained" onClick={handleAddPlayer}>
             Add player
           </Button>
-          <input style={{ marginLeft: '20px' }} type="file" onChange={handleBrowse} />
-          <button onClick={handleDownload} disabled={isDownloadingVideo}>
-            Download video
-          </button>
-        </div>
-
+          <DownloadButton players={annotations} video={video} />
+        </Box>
       </div>
 
       <div id="canvas-container">
