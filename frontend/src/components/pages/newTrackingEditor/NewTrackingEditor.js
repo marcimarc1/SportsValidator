@@ -558,7 +558,7 @@ const NewTrackingEditor = () => {
           ...canvas
             .getObjects()
             .filter(
-              (obj) => frameNumber - obj.properties.frame >= trailFrameNumber,
+              (obj) => frameNumber - obj.properties.frame >= trailFrameNumber || frameNumber - obj.properties.frame < 0,
             ),
         );
         const currentTrailsToDraw = annotations.filter(
@@ -726,7 +726,7 @@ const NewTrackingEditor = () => {
 
     const onSeek = () => {
       console.log("Seeked");
-      // updateCanvas();
+      updateCanvas();
     };
 
     videoElement.addEventListener("play", onPlay);
@@ -764,14 +764,6 @@ const NewTrackingEditor = () => {
   useEffect(() => {
     //remove old canvas objects
     canvas.remove(...canvas.getObjects());
-
-    const hasMatchingObject = canvasBoxes.some(
-      (a) => a.my.frame === frameNumber,
-    );
-    if (!hasMatchingObject) {
-      //no need to run this function if there is no matching object
-      return;
-    }
 
     const horizontalScalingFactor = canvas.width / 3840;
     const verticalScalingFactor = canvas.height / 2160;
