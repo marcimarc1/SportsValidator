@@ -23,7 +23,7 @@ const NewTrackingEditor = () => {
     location.state || {};
   // ballTracks, homographies and log are not being used. Logic will be implemented in the future.
   const [annotations, setAnnotations] = useState([]);
-  const [canvas, setCanvas] = useState("");
+  const [canvas, setCanvas] = useState(new fabric.Canvas());
   const [videoUrl, setVideoUrl] = useState("");
   const [frameNumber, setFrameNumber] = useState(0);
   const [timestamp, setTimestamp] = useState(0);
@@ -355,6 +355,9 @@ const NewTrackingEditor = () => {
         new Set(annotationsJson.map((obj) => JSON.stringify(obj))),
         JSON.parse,
       );
+      //this log is important for the test
+      //test suite: describe data fetching
+      //test: it receives correct annotation
       console.log("Unique annotations : ", uniqueAnnotations);
       // setAnnotations(uniqueAnnotations);
       // Transform file into blob URL
@@ -500,80 +503,68 @@ const NewTrackingEditor = () => {
     return colorSet;
   }
 
-  useEffect(() => {
-    if (!videoElement) return;
+  // https://stackoverflow.com/questions/33834724/draw-video-on-canvas-html5
+  const drawVideo = () => {
+    // Clear canvas
+    // context.clearRect(0, 0, canvasElement.width, canvasElement.height);
 
-    // const canvasElement = canvasRef.current;
-    // const context = canvasElement.getContext('2d');
-
-    //retrieve screen width without scrollbar
-    // let canvasWidth = document.body.clientWidth;
-    // let canvasHeight = videoElement.height / videoElement.width * canvasWidth;
-    // let canvas = new fabric.Canvas('tracking-editor-canvas');
-    // canvas.setHeight(canvasHeight);
-    // canvas.setWidth(canvasWidth);
+    // Drawing video
+    // context.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
     const horizontalScalingFactor = canvas.width / 3840;
     const verticalScalingFactor = canvas.height / 2160;
-    let previousFrameNumber = 0;
+    var fabricVideo = new fabric.Image(videoElement, {
+      left: 0,
+      top: 0,
+      width: videoElement.width,
+      height: videoElement.height,
+      selectable: true,
+    });
 
-    // https://stackoverflow.com/questions/33834724/draw-video-on-canvas-html5
-    const drawVideo = () => {
-      // Clear canvas
-      // context.clearRect(0, 0, canvasElement.width, canvasElement.height);
+    canvas.setBackgroundImage(fabricVideo, canvas.renderAll.bind(canvas), {
+      scaleX: horizontalScalingFactor,
+      scaleY: verticalScalingFactor,
+    });
+  };
 
-      // Drawing video
-      // context.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
-      var fabricVideo = new fabric.Image(videoElement, {
-        left: 0,
-        top: 0,
-        width: videoElement.width,
-        height: videoElement.height,
-        selectable: true,
-      });
+  const drawBoundingBoxes = (frameNumber) => {
+    const horizontalScalingFactor = canvas.width / 3840;
+    const verticalScalingFactor = canvas.height / 2160;
+    let playerIndex = 0;
+    let playerBoxesCopy = canvasBoxes;
+    deselectAllBox();
+    canvas.remove(...canvas.getObjects());
+    // let boxIndex = annotations.findIndex(element => element.FrameNo == frameNumber);
+    // if (boxIndex == -1) {
+    //   return;
+    // }
+    var playersToDraw = playerBoxesCopy.filter(
+      (a) => a.my.frame == frameNumber,
+    );
+    var tempList = [];
+    let runningIndex = 0;
 
-      canvas.setBackgroundImage(fabricVideo, canvas.renderAll.bind(canvas), {
-        scaleX: horizontalScalingFactor,
-        scaleY: verticalScalingFactor,
-      });
-    };
+    if (playersToDraw.length > 0) {
+      while (playerIndex < playersToDraw.length) {
+        canvas.add(playersToDraw[playerIndex]);
+        const boxColor = colorSet.get(playersToDraw[playerIndex].my.key); //used in 'stroke' property of playerBox
 
-    const drawBoundingBoxes = (frameNumber) => {
-      let playerIndex = 0;
-      let playerBoxesCopy = canvasBoxes;
-      deselectAllBox();
-      canvas.remove(...canvas.getObjects());
-      // let boxIndex = annotations.findIndex(element => element.FrameNo == frameNumber);
-      // if (boxIndex == -1) {
-      //   return;
-      // }
-      var playersToDraw = playerBoxesCopy.filter(
-        (a) => a.my.frame == frameNumber,
-      );
-      var tempList = [];
-      let runningIndex = 0;
-
-      if (playersToDraw.length > 0) {
-        while (playerIndex < playersToDraw.length) {
-          canvas.add(playersToDraw[playerIndex]);
-          const boxColor = colorSet.get(playersToDraw[playerIndex].my.key); //used in 'stroke' property of playerBox
-
-          tempList = tempList.concat([
-            <TrackListItemPlayer
-              key={runningIndex++}
-              playerBox={playersToDraw[playerIndex]}
-              name={playerNameMap.get(playersToDraw[playerIndex].my.key)}
-              changeSelection={changeSelection}
-              setName={setName}
-              blink={blink}
-              color={boxColor}
-              delete={deletePlayer}
-              handleModalOpen={handleModalOpen}
-            />,
-          ]);
-          playerIndex++;
-        }
-      } else {
-        playersToDraw = annotations.filter((a) => a.FrameNo == frameNumber);
+        tempList = tempList.concat([
+          <TrackListItemPlayer
+            key={runningIndex++}
+            playerBox={playersToDraw[playerIndex]}
+            name={playerNameMap.get(playersToDraw[playerIndex].my.key)}
+            changeSelection={changeSelection}
+            setName={setName}
+            blink={blink}
+            color={boxColor}
+            delete={deletePlayer}
+            handleModalOpen={handleModalOpen}
+          />,
+        ]);
+        playerIndex++;
+      }
+    } else {
+      playersToDraw = annotations.filter((a) => a.FrameNo == frameNumber);
 
         if (playersToDraw.length > 0) {
           //draw boxes
@@ -597,48 +588,61 @@ const NewTrackingEditor = () => {
               dirty: false,
               stroke: `rgb(${boxColor.r}, ${boxColor.g}, ${boxColor.b})`,
 
-              hasBorders: false, // disables the control borders (the lines connecting the controls the show up when object is selected
-              strokeWidth: 2,
-              strokeUniform: true, // to keep the bounding box a consisten thickness, independent of its size
-              padding: 0, // to make sure the pixel coordinates are correct
-              cornerSize: 10,
-              cornerStyle: "rect",
-              lockRotation: true,
-            });
-            playerBox.my = {
-              selected: false,
-              key: playersToDraw[playerIndex].PlayerKey,
-              frame: frameNumber,
-              //scaling factor when modifying the box
-              scaleX: 1,
-              scaleY: 1,
-              // also connect it to corresponding annotation
-            };
-            playerBox = defineBoxBehavior(playerBox);
-            playerBoxesCopy.push(playerBox);
-            canvas.add(playerBox);
+            hasBorders: false, // disables the control borders (the lines connecting the controls the show up when object is selected
+            strokeWidth: 2,
+            strokeUniform: true, // to keep the bounding box a consisten thickness, independent of its size
+            padding: 0, // to make sure the pixel coordinates are correct
+            cornerSize: 10,
+            cornerStyle: "rect",
+            lockRotation: true,
+          });
+          playerBox.my = {
+            selected: false,
+            key: playersToDraw[playerIndex].PlayerKey,
+            frame: frameNumber,
+            //scaling factor when modifying the box
+            scaleX: 1,
+            scaleY: 1,
+            // also connect it to corresponding annotation
+          };
+          playerBox = defineBoxBehavior(playerBox);
+          playerBoxesCopy.push(playerBox);
+          canvas.add(playerBox);
 
-            tempList = tempList.concat([
-              <TrackListItemPlayer
-                key={runningIndex++}
-                playerBox={playerBox}
-                color={boxColor}
-                name={playerNameMap.get(playersToDraw[playerIndex].PlayerKey)}
-                changeSelection={changeSelection}
-                setName={setName}
-                blink={blink}
-                delete={deletePlayer}
-                handleModalOpen={handleModalOpen}
-              />,
-            ]);
-            playerIndex++;
-          }
+          tempList = tempList.concat([
+            <TrackListItemPlayer
+              key={runningIndex++}
+              playerBox={playerBox}
+              color={boxColor}
+              name={playerNameMap.get(playersToDraw[playerIndex].PlayerKey)}
+              changeSelection={changeSelection}
+              setName={setName}
+              blink={blink}
+              delete={deletePlayer}
+              handleModalOpen={handleModalOpen}
+            />,
+          ]);
+          playerIndex++;
         }
       }
-      setPlayerList(tempList);
-      setCanvasBoxes(playerBoxesCopy);
-      canvas.renderAll();
-    };
+    }
+    setPlayerList(tempList);
+    setCanvasBoxes(playerBoxesCopy);
+    canvas.renderAll();
+  };
+
+  useEffect(() => {
+    if (!videoElement) return;
+    // const canvasElement = canvasRef.current;
+    // const context = canvasElement.getContext('2d');
+
+    //retrieve screen width without scrollbar
+    // let canvasWidth = document.body.clientWidth;
+    // let canvasHeight = videoElement.height / videoElement.width * canvasWidth;
+    // let canvas = new fabric.Canvas('tracking-editor-canvas');
+    // canvas.setHeight(canvasHeight);
+    // canvas.setWidth(canvasWidth);
+    let previousFrameNumber = 0;
 
     const updateCanvas = () => {
       const currentFrameNumber = getCurrentTimestampFrame();
@@ -654,6 +658,7 @@ const NewTrackingEditor = () => {
           " or ended : ",
           videoElement.ended,
         );
+        //problematic, empty playerlist when video paused
         return;
       }
 
@@ -710,8 +715,9 @@ const NewTrackingEditor = () => {
 
   //triggered when new player is added, or when merge or swap happens
   useEffect(() => {
-    const hasMatchingObject = canvasBoxes.some(
-      (a) => a.my.frame === frameNumber,
+    canvas.remove(...canvas.getObjects());
+    const hasMatchingObject = annotations.some(
+      (a) => a.FrameNo === frameNumber,
     );
     if (!hasMatchingObject) {
       //no need to run this function if there is no matching object
@@ -997,18 +1003,34 @@ const NewTrackingEditor = () => {
               }
             />
           </FormGroup>
-          <Button variant="contained" onClick={handleAddPlayer}>
+          <Button
+            data-testid="add-player-button"
+            variant="contained"
+            onClick={handleAddPlayer}
+          >
             Add player
           </Button>
+          <div className="tests">
+            <Button
+              data-testid="from-annotation"
+              className="tests"
+              onClick={() => drawBoundingBoxes(frameNumber)}
+            >
+              draw players from annotation
+            </Button>
+          </div>
         </div>
       </div>
-      <input type="file" onChange={handleBrowse} />
+      <input data-testid="video-upload" type="file" onChange={handleBrowse} />
       <button onClick={handleDownload} disabled={isDownloadingVideo}>
         Download video
       </button>
       <div id="canvas-container">
         <canvas
+          data-testid="fabric-canvas"
           ref={canvasRef}
+          canvas={JSON.stringify(canvas)}
+          annotations={annotations.length}
           className="canvas"
           id="tracking-editor-canvas"
           width="1920"
