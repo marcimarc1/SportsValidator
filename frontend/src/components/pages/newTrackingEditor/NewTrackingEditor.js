@@ -553,12 +553,10 @@ const NewTrackingEditor = () => {
         //draw boxes
         while (playerIndex < playersToDraw.length) {
           const scaledX =
-            (playersToDraw[playerIndex].x -
-              playersToDraw[playerIndex].w / 2) *
+            (playersToDraw[playerIndex].x - playersToDraw[playerIndex].w / 2) *
             horizontalScalingFactor;
           const scaledY =
-            (playersToDraw[playerIndex].y -
-              playersToDraw[playerIndex].h / 2) *
+            (playersToDraw[playerIndex].y - playersToDraw[playerIndex].h / 2) *
             verticalScalingFactor;
           const scaledWidth =
             playersToDraw[playerIndex].w * horizontalScalingFactor;
@@ -1001,13 +999,17 @@ const NewTrackingEditor = () => {
             Add player
           </Button>
           <div className="tests">
-            <Button data-testid="from-annotation" className="tests" onClick={() => drawBoundingBoxes(frameNumber)}>
+            <Button
+              data-testid="from-annotation"
+              className="tests"
+              onClick={() => drawBoundingBoxes(frameNumber)}
+            >
               draw players from annotation
             </Button>
           </div>
         </div>
       </div>
-      <input data-testid='video-upload' type="file" onChange={handleBrowse} />
+      <input data-testid="video-upload" type="file" onChange={handleBrowse} />
       <button onClick={handleDownload} disabled={isDownloadingVideo}>
         Download video
       </button>

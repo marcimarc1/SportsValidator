@@ -1,2 +1,2 @@
-require('jest-fetch-mock').enableMocks()
-window.URL.createObjectURL = function() {}
+require("jest-fetch-mock").enableMocks();
+window.URL.createObjectURL = function () {};
