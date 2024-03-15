@@ -5,18 +5,24 @@ import Router from 'react-router';
 import '@testing-library/jest-dom/extend-expect'
 import fetchMock from 'jest-fetch-mock';
 import NewTrackingEditor from '../components/pages/newTrackingEditor/NewTrackingEditor'
+import { useLocation } from 'react-router-dom/cjs/react-router-dom';
+import { parseProcessedPlayers } from '../utils/csvParser';
 
 beforeEach(() => {
     fetchMock.resetMocks();
 })
 afterEach(cleanup);
 
-//mock useParams()
+//mock useParams() and useLocation()
 jest.mock('react-router', () => ({
     ...jest.requireActual('react-router'),
     useParams: jest.fn(),
+    useLocation: jest.fn()
 }));
 jest.spyOn(Router, 'useParams').mockReturnValue({videoName: 'mockVideo'});
+useLocation.mockReturnValue({
+    state: {}
+});
 
 
 describe('data fetching', () => {
@@ -118,60 +124,24 @@ describe('player sidebar', () => {
     it('displays all players in current frame', async ()  => {
 
         //given
-        const mockFile = new File(['mock video'], 'video.mp4', { type: 'video/mp4' });
-        //should draw: mockAnnotation1 and 2
-        //should ignore: mockAnnotation3
-        const mockAnnotation1 = {
-            FrameNo: 0,
-            PlayerKey: 1,
-            h: 100,
-            w: 100,
-            x: 500,
-            x1: 0,
-            x2: 0,
-            x_trans: 0,
-            y: 100,
-            y1: 0,
-            y2: 0,
-            y_trans: 0,
-        };
-        const mockAnnotation2 = {
-            FrameNo: 0,
-            PlayerKey: 2,
-            h: 200,
-            w: 50,
-            x: 500,
-            x1: 0,
-            x2: 0,
-            x_trans: 0,
-            y: 500,
-            y1: 0,
-            y2: 0,
-            y_trans: 0,
-        };
-        const mockAnnotation3 = {
-            FrameNo: 1,
-            PlayerKey: 2,
-            h: 200,
-            w: 50,
-            x: 500,
-            x1: 0,
-            x2: 0,
-            x_trans: 0,
-            y: 500,
-            y1: 0,
-            y2: 0,
-            y_trans: 0,
-        };
-        fetchMock.mockResponse(JSON.stringify([mockAnnotation1, mockAnnotation2, mockAnnotation3]));
+        useLocation.mockReturnValue({
+            state: {
+                //up to now only necessary to mock processedPlayers
+                //should render player 1, 2 in frame0, discard player2 in frame1
+                processedPlayers: ",PlayerKey,FrameNo,x,y,w,h,x2,y2,x1,y1,x_trans,y_trans\n" + 
+                "0,1,0,377.03342250000003,50.19623244444445,86.61914,108.21205,2010.44047,201.42105500000002,1923.8213300000002,93.209005,12.295921059173809,-3.365857351237431\n" + 
+                "1,2,0,377.7366666666667,49.605735555555555,95.00244,108.161766,2018.30122,199.662933,1923.2987799999999,91.50116700000001,12.33124457968784,-3.382238612728461\n" +
+                "2,2,1,377.9406,49.65448874074074,88.64612,110.22829,2016.18706,200.83927500000001,1927.54094,90.610985,12.334635147514817,-3.3870903957875074",
+                video: undefined,
+                ballTracks: undefined,
+                homographies: undefined,
+                log: undefined
+            }
+        });
         const {container} = render(<NewTrackingEditor/>);
         const button = screen.getByTestId('from-annotation');
 
         //when
-        fireEvent.change(screen.getByTestId('video-upload'), { target: { files: [mockFile] } });
-        await waitFor(() => {
-            expect(fetchMock).toHaveBeenCalled();
-        });
         fireEvent.click(button);
 
         //then
