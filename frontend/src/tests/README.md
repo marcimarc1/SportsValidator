@@ -8,3 +8,7 @@
 3. in the root folder(/tests) there are tests of different components.
 
 4. in the parent folder(i.e. /frontend), jestConfig.js contains global rules for the test.
+
+5. commands to run tests:
+ - npm test: run the test and log the output
+ - npm run test:ci: run the test and give a brief review on test status(result, coverage, etc.)
