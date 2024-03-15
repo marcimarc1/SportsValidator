@@ -566,27 +566,26 @@ const NewTrackingEditor = () => {
     } else {
       playersToDraw = annotations.filter((a) => a.FrameNo == frameNumber);
 
-        if (playersToDraw.length > 0) {
-          //draw boxes
-          while (playerIndex < playersToDraw.length) {
-            const scaledX =
-              playersToDraw[playerIndex].x1 * horizontalScalingFactor;
-            const scaledY =
-              playersToDraw[playerIndex].y1 * verticalScalingFactor;
-            const scaledWidth =
-              playersToDraw[playerIndex].w * horizontalScalingFactor;
-            const scaledHeight =
-              playersToDraw[playerIndex].h * verticalScalingFactor;
-            const boxColor = colorSet.get(playersToDraw[playerIndex].PlayerKey); //used in 'stroke' property of playerBox
-            let playerBox = new fabric.Rect({
-              left: scaledX,
-              top: scaledY,
-              fill: "rgba(0,0,0,0)",
-              width: scaledWidth,
-              height: scaledHeight,
-              visible: isShowingBox,
-              dirty: false,
-              stroke: `rgb(${boxColor.r}, ${boxColor.g}, ${boxColor.b})`,
+      if (playersToDraw.length > 0) {
+        //draw boxes
+        while (playerIndex < playersToDraw.length) {
+          const scaledX =
+            playersToDraw[playerIndex].x1 * horizontalScalingFactor;
+          const scaledY = playersToDraw[playerIndex].y1 * verticalScalingFactor;
+          const scaledWidth =
+            playersToDraw[playerIndex].w * horizontalScalingFactor;
+          const scaledHeight =
+            playersToDraw[playerIndex].h * verticalScalingFactor;
+          const boxColor = colorSet.get(playersToDraw[playerIndex].PlayerKey); //used in 'stroke' property of playerBox
+          let playerBox = new fabric.Rect({
+            left: scaledX,
+            top: scaledY,
+            fill: "rgba(0,0,0,0)",
+            width: scaledWidth,
+            height: scaledHeight,
+            visible: isShowingBox,
+            dirty: false,
+            stroke: `rgb(${boxColor.r}, ${boxColor.g}, ${boxColor.b})`,
 
             hasBorders: false, // disables the control borders (the lines connecting the controls the show up when object is selected
             strokeWidth: 2,
