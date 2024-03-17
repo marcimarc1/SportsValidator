@@ -23,7 +23,7 @@ const NewTrackingEditor = () => {
     location.state || {};
   // ballTracks, homographies and log are not being used. Logic will be implemented in the future.
   const [annotations, setAnnotations] = useState([]);
-  const [canvas, setCanvas] = useState("");
+  const [canvas, setCanvas] = useState(new fabric.Canvas());
   const [videoUrl, setVideoUrl] = useState("");
   const [frameNumber, setFrameNumber] = useState(0);
   const [timestamp, setTimestamp] = useState(0);
@@ -710,6 +710,7 @@ const NewTrackingEditor = () => {
 
   //triggered when new player is added, or when merge or swap happens
   useEffect(() => {
+    canvas.remove(...canvas.getObjects());
     const hasMatchingObject = canvasBoxes.some(
       (a) => a.my.frame === frameNumber,
     );
