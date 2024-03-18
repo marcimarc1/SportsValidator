@@ -16,6 +16,7 @@ import {
   Switch,
   FormControlLabel,
   Button,
+  Box,  
   Typography,
 } from "@mui/material";
 import TextField from "@mui/material/TextField";
@@ -24,6 +25,7 @@ import TrackList from "../newTrackingEditor/TrackList";
 import TrackListItemPlayer from "./TrackListItemPlayer";
 import MergeAndSwapModal from "./MergeAndSwapModal";
 import { trailsFullRedraw } from "../../../utils/canvasUtils";
+import { DownloadButton } from "./DownloadButton";
 
 // TODO Take a video_id instead and have an endpoint on the server where we supply a video_id and get the corresponding video
 const NewTrackingEditor = () => {
@@ -370,34 +372,6 @@ const NewTrackingEditor = () => {
       console.log("Finished setting video url");
     } catch (error) {
       console.error(error);
-    }
-  };
-
-  const handleDownload = async () => {
-    setIsDownloadingVideo(true);
-
-    console.log("Video name : ", videoName);
-
-    try {
-      const videoResponse = await fetch("/uploads/" + videoName);
-      if (!videoResponse.ok) {
-        throw new Error("Failed to fetch video.");
-      }
-      const videoBlob = await videoResponse.blob();
-
-      const annotationsResponse = await fetch("/api/annotations/199");
-      if (!annotationsResponse.ok) {
-        throw new Error("Failed to fetch annotations for video");
-      }
-      const annotationsJson = await annotationsResponse.json();
-      // console.log("Retrieved annotations : ", annotationsJson);
-      // setAnnotations(annotationsJson);
-
-      setVideoUrl(URL.createObjectURL(videoBlob));
-    } catch (error) {
-      console.error("Error downloading video:", error);
-    } finally {
-      setIsDownloadingVideo(false);
     }
   };
 
@@ -1040,8 +1014,8 @@ const NewTrackingEditor = () => {
         mergePlayerData={mergePlayerData}
       />
       <div className="controls">
-        <div id="tools-container">
-          <div>&nbsp;&nbsp;Show Annotation: &nbsp;</div>
+        <Box id="tools-container" sx={{ display: "flex", gap: "10px" }}>
+          <div>Show Annotation:</div>
           <FormGroup>
             <FormControlLabel
               control={
@@ -1052,7 +1026,7 @@ const NewTrackingEditor = () => {
               }
             />
           </FormGroup>
-          <div>&nbsp;&nbsp;Show Player Box: &nbsp;</div>
+          <div>Show Player Box:</div>
           <FormGroup>
             <FormControlLabel
               control={
@@ -1083,12 +1057,10 @@ const NewTrackingEditor = () => {
             type="number"
             onChange={(event, val) => setTrailFrameNumber(event.target.value)}
           />
-        </div>
+          <DownloadButton players={annotations} video={video} />
+        </Box>
       </div>
-      <input type="file" onChange={handleBrowse} />
-      <button onClick={handleDownload} disabled={isDownloadingVideo}>
-        Download video
-      </button>
+
       <div id="canvas-container">
         <canvas
           ref={canvasRef}
