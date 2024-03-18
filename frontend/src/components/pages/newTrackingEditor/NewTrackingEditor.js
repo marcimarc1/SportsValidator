@@ -16,7 +16,7 @@ import {
   Switch,
   FormControlLabel,
   Button,
-  Box,  
+  Box,
   Typography,
 } from "@mui/material";
 import TextField from "@mui/material/TextField";
