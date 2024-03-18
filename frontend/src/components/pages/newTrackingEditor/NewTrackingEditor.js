@@ -910,7 +910,6 @@ const NewTrackingEditor = () => {
       } else {
         setIsPlaying(false);
         videoElement.pause();
-        updateSidebar();
       }
     }
   };
