@@ -30,7 +30,7 @@
 #canvas-container {
     display: grid;
     grid-template-columns: min-content auto;
-    grid-template-areas:"canvas sidebar";
+    grid-template-areas: "canvas sidebar";
     height: 100%;
 }
 
@@ -101,6 +101,15 @@
 .TrackListList {
     height: 91%;      /* if adding TrackListControls, subtract TrackListControls.height from this height */
     overflow: auto;     /* Scrollbar appears when content is too big for div */
+    background-color: rgba(0, 0, 0, 0.7);
+    max-height: 728px;
+    overflow-y: auto;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.TrackListList::-webkit-scrollbar { 
+    display: none;  /* Safari and Chrome */
 }
 
 .TrackListList > .inactive {
