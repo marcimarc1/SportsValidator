@@ -662,26 +662,38 @@ const NewTrackingEditor = () => {
       // updateCanvas();
     };
 
+    const onSeeking = () => {
+      console.log("Seeking");
+    };
+
+    const onStalled = () => {
+      console.log("Stalled");
+    };
+
+    const onLoadedData = () => {
+      console.log("Loaded data");
+    };
+
+    const onWaiting = () => {
+      console.log("Waiting");
+    };
+
     videoElement.addEventListener("play", onPlay);
     videoElement.addEventListener("canplay", onCanPlay);
     videoElement.addEventListener("seeked", onSeek);
-    videoElement.addEventListener("seeking", () => {
-      console.log("Seeking");
-    });
-    videoElement.addEventListener("stalled", () => {
-      console.log("Stalled");
-    });
-    videoElement.addEventListener("loadeddata", () => {
-      console.log("Loaded data");
-    });
-    videoElement.addEventListener("waiting", () => {
-      console.log("Waiting");
-    });
+    videoElement.addEventListener("seeking", onSeeking);
+    videoElement.addEventListener("stalled", onStalled);
+    videoElement.addEventListener("loadeddata", onLoadedData);
+    videoElement.addEventListener("waiting", onWaiting);
 
     return () => {
       videoElement.removeEventListener("play", onPlay);
       videoElement.removeEventListener("canplay", onCanPlay);
       videoElement.removeEventListener("seeked", onSeek);
+      videoElement.removeEventListener("seeking", onSeeking);
+      videoElement.removeEventListener("stalled", onStalled);
+      videoElement.removeEventListener("loadeddata", onLoadedData);
+      videoElement.removeEventListener("waiting", onWaiting);
     };
   }, [videoElement, isShowingBox, frameNumber, playerList, playerNameMap]);
 
