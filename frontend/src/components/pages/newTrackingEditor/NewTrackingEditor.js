@@ -5,7 +5,7 @@ import { ReactComponent as PauseIcon } from "../../../icons/pause.svg";
 import { ReactComponent as ForwardStepIcon } from "../../../icons/forward-step.svg";
 import { ReactComponent as BackwardStepIcon } from "../../../icons/backward-step.svg";
 import { useLocation } from "react-router-dom";
-import { parseProcessedPlayers } from "../../../utils/csvParser";
+import { parseProcessedPlayers, parseProcessedBalls } from "../../../utils/csvParser";
 // import tracking from "../../../data/tracking_data.json";
 // import tracking from "../../../data/tracking-data-for-test.json";
 import { fabric } from "fabric";
@@ -23,6 +23,7 @@ const NewTrackingEditor = () => {
     location.state || {};
   // ballTracks, homographies and log are not being used. Logic will be implemented in the future.
   const [annotations, setAnnotations] = useState([]);
+  const [balls, setballTracks] = useState([]);
   const [canvas, setCanvas] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
   const [frameNumber, setFrameNumber] = useState(0);
@@ -163,7 +164,12 @@ const NewTrackingEditor = () => {
       // Setting the color set based on the parsed data
       setColorSet(boundingBoxColorSet(parsedData));
     }
-  }, [processedPlayers, location.state]);
+    if(ballTracks){
+      const parsedDataBall = parseProcessedBalls(ballTracks);
+      setballTracks(parsedDataBall);
+      //setColorSet(boundingBoxColorSet(parsedDataBall));
+    }
+  }, [processedPlayers, ballTracks ,  location.state]);
 
   let wasVideoPlaying = false;
 

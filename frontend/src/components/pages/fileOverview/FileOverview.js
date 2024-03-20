@@ -110,7 +110,7 @@ class FileOverview extends Component {
         case "processed_players.csv":
           tempProcessedPlayers = file;
           break;
-        case "ball_tracks.csv":
+        case "processed_ball.csv":
           tempBallTracks = file;
           break;
         case "homographies.csv":
@@ -128,10 +128,10 @@ class FileOverview extends Component {
     });
 
     // Check if the required files are present, and set an error message if not
-    if (!tempProcessedPlayers || !tempVideo) {
+    if (!tempProcessedPlayers || !tempVideo || !tempBallTracks) {
       this.setState({
         errorMessage:
-          "Error: Missing required files. Please make sure to upload at least the video file and processed_players.csv.",
+          "Error: Missing required files. Please make sure to upload at least the video file , processed_ball.csv and processed_players.csv.",
         infoMessage: "",
       });
       return; // Exit the function if required files are missing
@@ -155,9 +155,7 @@ class FileOverview extends Component {
 
     Promise.all([
       readCSV(tempProcessedPlayers, "processedPlayers"),
-      tempBallTracks
-        ? readCSV(tempBallTracks, "ballTracks")
-        : Promise.resolve(null),
+      readCSV(tempBallTracks, "ballTracks"),
       tempHomographies
         ? readCSV(tempHomographies, "homographies")
         : Promise.resolve(null),
@@ -181,6 +179,7 @@ class FileOverview extends Component {
               newFileListItem[result.key] = result.content;
             }
           });
+          console.log(newFileListItem["ballTracks"])
 
           // Update the fileListItems state
           return {
