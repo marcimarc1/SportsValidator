@@ -248,10 +248,8 @@ const NewTrackingEditor = () => {
   function deletePlayer(playerBox) {
     canvas.setActiveObject(playerBox);
     setActiveObject(playerBox);
-    let boxIndex = canvasBoxes.indexOf(playerBox);
-    let annotationIndex = annotations.indexOf(playerBox);
-    setAnnotations(annotations.toSpliced(annotationIndex, 1));
-    setCanvasBoxes(canvasBoxes.toSpliced(boxIndex, 1));
+    setAnnotations(annotations.filter((a) => a.PlayerKey != playerBox.my.key));
+    setCanvasBoxes(canvasBoxes.filter((a) => a.my.key != playerBox.my.key));
     updateSidebar();
     canvas.discardActiveObject();
     canvas.remove(playerBox);
