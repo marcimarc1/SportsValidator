@@ -526,8 +526,11 @@ const NewTrackingEditor = () => {
       //   return;
       // }
       var playersToDraw = playerBoxesCopy.filter(
-        (a) => a.my.frame == frameNumber,
+        (a) =>
+          a.my.frame == frameNumber &&
+          (a.my.in_field === true || a.my.in_field === null),
       );
+
       var tempList = [];
       let runningIndex = 0;
 
@@ -552,7 +555,11 @@ const NewTrackingEditor = () => {
           playerIndex++;
         }
       } else {
-        playersToDraw = annotations.filter((a) => a.FrameNo == frameNumber);
+        playersToDraw = annotations.filter(
+          (a) =>
+            a.FrameNo == frameNumber &&
+            (a.in_field === true || a.in_field === null),
+        );
 
         if (playersToDraw.length > 0) {
           //draw boxes
@@ -713,7 +720,11 @@ const NewTrackingEditor = () => {
 
     //same thing we do in drawBoundingBoxes..
     if (annotations.length > 0) {
-      var playersToDraw = annotations.filter((a) => a.FrameNo == frameNumber);
+      var playersToDraw = annotations.filter(
+        (a) =>
+          a.FrameNo == frameNumber &&
+          (a.in_field === true || a.in_field === null),
+      );
 
       if (playersToDraw.length > 0) {
         //draw boxes
