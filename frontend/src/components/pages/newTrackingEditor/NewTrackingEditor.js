@@ -736,7 +736,6 @@ const NewTrackingEditor = () => {
       var playersToDraw = annotations.filter(
         (a) => a.FrameNo == frameNumber && (a.in_field || a.in_field === null),
       );
-
       if (playersToDraw.length > 0) {
         //draw boxes
         while (playerIndex < playersToDraw.length) {
@@ -948,7 +947,6 @@ const NewTrackingEditor = () => {
     const newPlayerKey = playerNameMap.size;
     const boxColor = generateColor(newPlayerKey);
     setColorSet(colorSet.set(newPlayerKey, boxColor));
-
     setAnnotations(
       annotations.concat({
         FrameNo: frameNumber,
@@ -963,6 +961,7 @@ const NewTrackingEditor = () => {
         y1: 0,
         y2: 0,
         y_trans: 0,
+        in_field: true,
       }),
     );
   }
