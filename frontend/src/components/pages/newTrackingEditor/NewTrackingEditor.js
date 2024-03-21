@@ -517,8 +517,7 @@ const NewTrackingEditor = () => {
     // }
     var playersToDraw = playerBoxesCopy.filter(
       (a) =>
-        a.my.frame == frameNumber &&
-        (a.my.in_field || a.my.in_field === null),
+        a.my.frame == frameNumber && (a.my.in_field || a.my.in_field === null),
     );
     var tempList = [];
     let runningIndex = 0;
@@ -545,8 +544,7 @@ const NewTrackingEditor = () => {
       }
     } else {
       playersToDraw = annotations.filter(
-        (a) =>
-          a.FrameNo == frameNumber && (a.in_field || a.in_field === null),
+        (a) => a.FrameNo == frameNumber && (a.in_field || a.in_field === null),
       );
 
       if (playersToDraw.length > 0) {
