@@ -1,16 +1,16 @@
-name: Lint Codebase
+name: Test
 
 on: 
   pull_request:
 
-jobs: 
-    lint:
-        name: Lint JS codebase
+jobs:    
+    test:
+        name: unit test
 
         runs-on: ubuntu-latest
 
         steps:
-            - name: Checkout            
+            - name: Checkout
               id: checkout
               uses: actions/checkout@v4
             
@@ -27,9 +27,7 @@ jobs:
               run: npm install
               working-directory: ./frontend
 
-            - name: Prettier linting
-              id: linting  
-              run: npm run check
+            - name: Run tests
+              id: test
+              run: npm test
               working-directory: ./frontend
-              env:
-                GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,2 +1,1 @@
-#ignore tests
-**/*.test.js
+#list files that are not neessary to change the format
