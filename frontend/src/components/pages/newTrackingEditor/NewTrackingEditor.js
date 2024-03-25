@@ -446,7 +446,7 @@ const NewTrackingEditor = () => {
 
   useEffect(() => {
     const localVideoElement = document.createElement("video");
-    localVideoElement.src = videoUrl;
+    localVideoElement.src = videoUrl + "#t=0.0000000001";
     localVideoElement.muted = true;
 
     //video size has to be anually set
