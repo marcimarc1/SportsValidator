@@ -446,7 +446,7 @@ const NewTrackingEditor = () => {
 
   useEffect(() => {
     const localVideoElement = document.createElement("video");
-    localVideoElement.src = videoUrl + "#t=0.0000000001";
+    localVideoElement.src = videoUrl;
     localVideoElement.muted = true;
 
     //video size has to be anually set
@@ -479,6 +479,22 @@ const NewTrackingEditor = () => {
       colorSet.set(key, color);
     });
     return colorSet;
+  }
+
+  function generatePoster(videoElement) {
+    //if video cannot be played, simply return
+    if (videoElement.readyState == 0) return;
+    //get video content of first frame
+    videoElement.currentTime = frameDuration;
+    const poster = new fabric.Image(videoElement, {
+      left: 0,
+      top: 0,
+      width: videoElement.width,
+      height: videoElement.height,
+      selectable: true,
+    });
+    videoElement.currentTime = 0;
+    return poster;
   }
 
   // https://stackoverflow.com/questions/33834724/draw-video-on-canvas-html5
@@ -680,6 +696,10 @@ const NewTrackingEditor = () => {
 
     const onLoadedData = () => {
       console.log("Loaded data");
+      const poster = generatePoster(videoElement);
+      if (poster) {
+        canvas.add(poster);
+      }
     };
 
     const onWaiting = () => {
