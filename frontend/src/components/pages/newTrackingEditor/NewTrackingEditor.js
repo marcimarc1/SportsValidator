@@ -557,7 +557,6 @@ const NewTrackingEditor = () => {
       });
     }
 
-
     var playersToDraw = canvasBoxes.filter(
       (a) =>
         a.my.frame == frameNumber && (a.my.in_field || a.my.in_field === null),
