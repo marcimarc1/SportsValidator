@@ -754,7 +754,7 @@ const NewTrackingEditor = () => {
 
   //triggered when user clicks on the video progress bar to change the video time
   useEffect(() => {
-    if(!videoElement) return;
+    if (!videoElement) return;
 
     if (videoElement.seeking && trailsEnabled) {
       trailsFullRedraw(
