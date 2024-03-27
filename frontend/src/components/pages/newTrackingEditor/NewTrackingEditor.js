@@ -17,10 +17,14 @@ import {
   FormControlLabel,
   Button,
   Box,
+  Typography,
 } from "@mui/material";
+import TextField from "@mui/material/TextField";
+
 import TrackList from "../newTrackingEditor/TrackList";
 import TrackListItemPlayer from "./TrackListItemPlayer";
 import MergeAndSwapModal from "./MergeAndSwapModal";
+import { trailsFullRedraw } from "../../../utils/canvasUtils";
 import { DownloadButton } from "./DownloadButton";
 
 // TODO Take a video_id instead and have an endpoint on the server where we supply a video_id and get the corresponding video
@@ -45,7 +49,8 @@ const NewTrackingEditor = () => {
   const [playerNameMap, setPlayerNameMap] = useState(new Map());
   const [activeObject, setActiveObject] = useState(null);
   const [colorSet, setColorSet] = useState(new Map()); //map of playerkey to color
-
+  const [trailsEnabled, setTrailsEnabled] = useState(true);
+  const [trailFrameNumber, setTrailFrameNumber] = useState(50);
   const [mergeModalState, setMergeModalState] = useState(false);
   const [playerChosenInList, setPlayerChosenInList] = useState("");
 
@@ -330,9 +335,6 @@ const NewTrackingEditor = () => {
         playerBox.my.scaleY = targetRect.scaleY;
         playerBox.setCoords();
         canvas.requestRenderAll();
-        // could be used to debug scaling function
-        // console.log("scaling factor: %f %f", targetRect.scaleX, targetRect.scaleY);
-        // console.log("player position: %d  %d  %d  %d", targetRect.left, targetRect.top, targetRect.width, targetRect.height);
       },
     });
 
@@ -508,14 +510,54 @@ const NewTrackingEditor = () => {
     const horizontalScalingFactor = canvas.width / 3840;
     const verticalScalingFactor = canvas.height / 2160;
     let playerIndex = 0;
-    let playerBoxesCopy = canvasBoxes;
     deselectAllBox();
-    canvas.remove(...canvas.getObjects());
-    // let boxIndex = annotations.findIndex(element => element.FrameNo == frameNumber);
-    // if (boxIndex == -1) {
-    //   return;
-    // }
-    var playersToDraw = playerBoxesCopy.filter(
+
+    if (!trailsEnabled) {
+      canvas.remove(...canvas.getObjects());
+    } else {
+      //remove everything except the past trails
+      canvas.remove(
+        ...canvas.getObjects().filter((obj) => obj.type !== "circle"),
+      );
+      //remove trails that are too old
+      canvas.remove(
+        ...canvas
+          .getObjects()
+          .filter(
+            (obj) =>
+              frameNumber - obj.properties.frame >= trailFrameNumber ||
+              frameNumber - obj.properties.frame < 0,
+          ),
+      );
+      const currentTrailsToDraw = annotations.filter(
+        (a) => a.FrameNo == frameNumber,
+      );
+
+      currentTrailsToDraw.forEach((a) => {
+        const scaledX = a.x1 * horizontalScalingFactor;
+        const scaledY = a.y1 * verticalScalingFactor;
+        const trailColor = colorSet.get(a.PlayerKey);
+        let trail = new fabric.Circle({
+          left: scaledX,
+          top: scaledY,
+          stroke: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
+          strokeWidth: 3,
+          fill: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
+          radius: 5,
+          visible: isShowingAnnotation,
+        });
+        trail.properties = {
+          frame: frameNumber,
+        };
+        trail.selectable = false;
+        trail.hasControls = false;
+        trail.hasBorders = false;
+        trail.hasRotatingPoint = false;
+        canvas.add(trail);
+      });
+    }
+
+    var playersToDraw = canvasBoxes.filter(
       (a) =>
         a.my.frame == frameNumber && (a.my.in_field || a.my.in_field === null),
     );
@@ -586,7 +628,7 @@ const NewTrackingEditor = () => {
             // also connect it to corresponding annotation
           };
           playerBox = defineBoxBehavior(playerBox);
-          playerBoxesCopy.push(playerBox);
+          canvasBoxes.push(playerBox);
           canvas.add(playerBox);
 
           tempList = tempList.concat([
@@ -607,7 +649,6 @@ const NewTrackingEditor = () => {
       }
     }
     setPlayerList(tempList);
-    setCanvasBoxes(playerBoxesCopy);
     canvas.renderAll();
   };
 
@@ -667,7 +708,7 @@ const NewTrackingEditor = () => {
 
     const onSeek = () => {
       console.log("Seeked");
-      // updateCanvas();
+      //updateCanvas();
     };
 
     const onSeeking = () => {
@@ -703,18 +744,36 @@ const NewTrackingEditor = () => {
       videoElement.removeEventListener("loadeddata", onLoadedData);
       videoElement.removeEventListener("waiting", onWaiting);
     };
-  }, [videoElement, isShowingBox, frameNumber, playerList, playerNameMap]);
+  }, [
+    videoElement,
+    isShowingBox,
+    playerNameMap,
+    trailFrameNumber,
+    trailsEnabled,
+  ]);
+
+  //triggered when user clicks on the video progress bar to change the video time
+  useEffect(() => {
+    if (!videoElement) return;
+
+    if (videoElement.seeking && trailsEnabled) {
+      trailsFullRedraw(
+        canvas,
+        annotations,
+        frameNumber,
+        trailFrameNumber,
+        isShowingAnnotation,
+        colorSet,
+        canvas.width / 3840,
+        canvas.height / 2160,
+      );
+    }
+  }, [videoElement?.seeking]);
 
   //triggered when new player is added, or when merge or swap happens
   useEffect(() => {
+    //remove old canvas objects
     canvas.remove(...canvas.getObjects());
-    const hasMatchingObject = annotations.some(
-      (a) => a.FrameNo === frameNumber,
-    );
-    if (!hasMatchingObject) {
-      //no need to run this function if there is no matching object
-      return;
-    }
 
     const horizontalScalingFactor = canvas.width / 3840;
     const verticalScalingFactor = canvas.height / 2160;
@@ -722,12 +781,19 @@ const NewTrackingEditor = () => {
     var tempList = [];
     let runningIndex = 0;
 
-    //invalidate the boxes in current frame, we should do this because we are going to draw fresh boxes, and we don't want duplicate boxes
-    const invalidatedCanvasBoxes = canvasBoxes.filter(
-      (a) => a.my.frame !== frameNumber,
-    );
-    canvasBoxes.length = 0;
-    canvasBoxes.push(...invalidatedCanvasBoxes);
+    if (trailsEnabled) {
+      //all trails have to be redrawn in this case
+      trailsFullRedraw(
+        canvas,
+        annotations,
+        frameNumber,
+        trailFrameNumber,
+        isShowingAnnotation,
+        colorSet,
+        horizontalScalingFactor,
+        verticalScalingFactor,
+      );
+    }
 
     //same thing we do in drawBoundingBoxes..
     if (annotations.length > 0) {
@@ -793,7 +859,7 @@ const NewTrackingEditor = () => {
         setPlayerList(tempList);
       }
     }
-  }, [playerNameMap]);
+  }, [playerNameMap, trailsEnabled, trailFrameNumber]);
 
   const handleKeyDown = (event) => {
     switch (event.keyCode) {
@@ -964,6 +1030,14 @@ const NewTrackingEditor = () => {
     );
   }
 
+  const handleEnablingTrails = () => {
+    if (trailsEnabled) {
+      setTrailsEnabled(false);
+    } else {
+      setTrailsEnabled(true);
+    }
+  };
+
   return (
     <div>
       <MergeAndSwapModal
@@ -1002,6 +1076,26 @@ const NewTrackingEditor = () => {
           >
             Add player
           </Button>
+          <Typography sx={{ marginLeft: "10px" }}>Trails </Typography>
+          <FormGroup>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={trailsEnabled}
+                  disabled={!videoElement?.paused}
+                  onChange={handleEnablingTrails}
+                />
+              }
+            />
+          </FormGroup>
+          <Typography sx={{ marginLeft: "10px" }}>Trail frames: </Typography>
+
+          <TextField
+            sx={{ bgcolor: "white", marginLeft: "10px", width: "80px" }}
+            value={trailFrameNumber}
+            type="number"
+            onChange={(event, val) => setTrailFrameNumber(event.target.value)}
+          />
           <div className="tests">
             <Button
               data-testid="from-annotation"

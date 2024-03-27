@@ -57,7 +57,7 @@ export default function MergeAndSwapModal({
         <Box textAlign="center" sx={style}>
           <FormControl component="fieldset">
             <Typography variant="h6" id="demo-simple-select-label">
-              Choose Operation
+              {"Choose Operation for " + playerChosenInList}{" "}
             </Typography>
             <RadioGroup
               sx={{ ml: 2 }}
