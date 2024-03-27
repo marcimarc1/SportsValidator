@@ -752,6 +752,24 @@ const NewTrackingEditor = () => {
     trailsEnabled,
   ]);
 
+  //triggered when user clicks on the video progress bar to change the video time
+  useEffect(() => {
+    if(!videoElement) return;
+
+    if (videoElement.seeking && trailsEnabled) {
+      trailsFullRedraw(
+        canvas,
+        annotations,
+        frameNumber,
+        trailFrameNumber,
+        isShowingAnnotation,
+        colorSet,
+        canvas.width / 3840,
+        canvas.height / 2160,
+      );
+    }
+  }, [videoElement?.seeking]);
+
   //triggered when new player is added, or when merge or swap happens
   useEffect(() => {
     //remove old canvas objects
