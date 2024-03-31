@@ -9,6 +9,7 @@ export const trailsFullRedraw = (
   colorSet,
   horizontalScalingFactor,
   verticalScalingFactor,
+  setSelectedTrails
 ) => {
   const pastTrailsToDraw = annotations.filter((a) => {
     return (
@@ -31,12 +32,22 @@ export const trailsFullRedraw = (
     });
     trail.properties = {
       frame: frameNumber,
+      playerKey: a.PlayerKey,
     };
-    //turn off properties that are not needed to increase performance
-    trail.selectable = false;
-    trail.hasControls = false;
-    trail.hasBorders = false;
     trail.hasRotatingPoint = false;
+    defineTrailBehaviour(trail, setSelectedTrails);
     canvas.add(trail);
   });
 };
+
+
+export const defineTrailBehaviour = (trail, setSelectedTrails) => {
+
+  trail.on("selected", () => {
+    console.log('selected')
+    console.log('my player key is')
+    console.log(trail.properties.playerKey)
+    setSelectedTrails(prevTrails => new Set(prevTrails.add(trail.properties.playerKey)) );
+  });
+
+}

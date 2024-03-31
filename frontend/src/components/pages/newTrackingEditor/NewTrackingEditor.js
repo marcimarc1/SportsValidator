@@ -24,7 +24,8 @@ import TextField from "@mui/material/TextField";
 import TrackList from "../newTrackingEditor/TrackList";
 import TrackListItemPlayer from "./TrackListItemPlayer";
 import MergeAndSwapModal from "./MergeAndSwapModal";
-import { trailsFullRedraw } from "../../../utils/canvasUtils";
+import { trailsFullRedraw, defineTrailBehaviour } from "../../../utils/canvasUtils";
+import { multiPlayerMerge } from "../../../utils/validation";
 import { DownloadButton } from "./DownloadButton";
 
 // TODO Take a video_id instead and have an endpoint on the server where we supply a video_id and get the corresponding video
@@ -53,6 +54,7 @@ const NewTrackingEditor = () => {
   const [trailFrameNumber, setTrailFrameNumber] = useState(50);
   const [mergeModalState, setMergeModalState] = useState(false);
   const [playerChosenInList, setPlayerChosenInList] = useState("");
+  const [selectedTrails, setSelectedTrails] = useState(new Set());
 
   const handleModalOpen = (playerInList) => {
     setPlayerChosenInList(playerInList);
@@ -63,99 +65,10 @@ const NewTrackingEditor = () => {
     setMergeModalState(false);
   };
 
-  const mergePlayerData = (mainPlayerName) => {
-    const nameToKeyMap = new Map();
-    playerNameMap.forEach((value, key) => {
-      nameToKeyMap.set(value, key);
-    });
-    const firstPlayerKey = nameToKeyMap.get(mainPlayerName);
-    const secondPlayerKey = nameToKeyMap.get(playerChosenInList);
-    if (firstPlayerKey == undefined || secondPlayerKey == undefined) {
-      console.log("players are not mapped");
-      return;
-    }
-
-    //by default, the player with the higher playerkey is the merged player
-    //and the player with the lower playerkey is the main player, which will be kept
-    const firstPlayerMaxFrame = Math.max(
-      ...annotations
-        .filter((a) => a.PlayerKey == firstPlayerKey)
-        .map((a) => a.FrameNo),
-    );
-    const secondPlayerMaxFrame = Math.max(
-      ...annotations
-        .filter((a) => a.PlayerKey == secondPlayerKey)
-        .map((a) => a.FrameNo),
-    );
-
-    let mergedPlayerKey;
-    let mainPlayerKey;
-    let mainPlayerMaxFrame;
-
-    if (firstPlayerMaxFrame > secondPlayerMaxFrame) {
-      mergedPlayerKey = firstPlayerKey;
-      mainPlayerKey = secondPlayerKey;
-      mainPlayerMaxFrame = secondPlayerMaxFrame;
-    } else {
-      mergedPlayerKey = secondPlayerKey;
-      mainPlayerKey = firstPlayerKey;
-      mainPlayerMaxFrame = firstPlayerMaxFrame;
-    }
-
-    //filter out duplicate annotations between main and merged player that has the same frame number
-    let filteredAnnotations = annotations.filter(
-      (a) => a.playerKey != mergedPlayerKey,
-    );
-    const mainPlayerAnnotations = annotations.filter(
-      (a) => a.playerKey == mainPlayerKey,
-    );
-    const mergedPlayerAnnotations = annotations.filter(
-      (a) => a.playerKey == mergedPlayerKey,
-    );
-    filteredAnnotations = filteredAnnotations.concat(
-      mergedPlayerAnnotations.filter((a) =>
-        mainPlayerAnnotations.every((b) => b.FrameNo != a.FrameNo),
-      ),
-    );
-
-    const mergedAnnotations = filteredAnnotations.map((annotation) => {
-      if (annotation.PlayerKey == mergedPlayerKey) {
-        return { ...annotation, PlayerKey: mainPlayerKey };
-      }
-      return annotation;
-    });
-    setAnnotations(mergedAnnotations);
-  };
-
-  const swapPlayerData = (secondPlayerName) => {
-    const nameToKeyMap = new Map();
-    playerNameMap.forEach((value, key) => {
-      nameToKeyMap.set(value, key);
-    });
-    const firstPlayerKey = nameToKeyMap.get(playerChosenInList);
-    const secondPlayerKey = nameToKeyMap.get(secondPlayerName);
-
-    if (firstPlayerKey == undefined || secondPlayerKey == undefined) {
-      console.log("players are not mapped");
-      return;
-    }
-
-    const swappedAnnotations = annotations.map((annotation) => {
-      if (
-        annotation.PlayerKey == firstPlayerKey &&
-        annotation.FrameNo >= frameNumber
-      ) {
-        return { ...annotation, PlayerKey: secondPlayerKey };
-      }
-      if (
-        annotation.PlayerKey == secondPlayerKey &&
-        annotation.FrameNo >= frameNumber
-      ) {
-        return { ...annotation, PlayerKey: firstPlayerKey };
-      }
-      return annotation;
-    });
-    setAnnotations(swappedAnnotations);
+  const handleMultiSelectMerge = () => {
+    console.log("Multiplayer merge");
+    console.log(Array.from(selectedTrails));
+    multiPlayerMerge(Array.from(selectedTrails), annotations, setAnnotations);
   };
 
   let { videoName } = useParams();
@@ -564,11 +477,12 @@ const NewTrackingEditor = () => {
         });
         trail.properties = {
           frame: frameNumber,
+          playerKey: a.PlayerKey,
         };
-        trail.selectable = false;
-        trail.hasControls = false;
-        trail.hasBorders = false;
         trail.hasRotatingPoint = false;
+        //before me
+        console.log('havo')
+        defineTrailBehaviour(trail, setSelectedTrails);
         canvas.add(trail);
       });
     }
@@ -1063,10 +977,11 @@ const NewTrackingEditor = () => {
       <MergeAndSwapModal
         playerChosenInList={playerChosenInList}
         playerNameMap={playerNameMap}
+        annotations={annotations}
+        setAnnotations={setAnnotations}
+        frameNumber={frameNumber}
         mergeModalState={mergeModalState}
         handleClose={handleModalClose}
-        swapPlayerData={swapPlayerData}
-        mergePlayerData={mergePlayerData}
       />
       <div className="controls">
         <Box id="tools-container" sx={{ display: "flex", gap: "10px" }}>
@@ -1095,6 +1010,13 @@ const NewTrackingEditor = () => {
             onClick={handleAddPlayer}
           >
             Add player
+          </Button>
+          <Button
+            data-testid="add-player-button"
+            variant="contained"
+            onClick={handleMultiSelectMerge}
+          >
+            Merge
           </Button>
           <Typography sx={{ marginLeft: "10px" }}>Trails </Typography>
           <FormGroup>
