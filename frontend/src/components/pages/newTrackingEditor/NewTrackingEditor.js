@@ -24,7 +24,7 @@ import TextField from "@mui/material/TextField";
 import TrackList from "../newTrackingEditor/TrackList";
 import TrackListItemPlayer from "./TrackListItemPlayer";
 import MergeAndSwapModal from "./MergeAndSwapModal";
-import { trailsFullRedraw } from "../../../utils/canvasUtils";
+import { trailsFullRedraw, drawField } from "../../../utils/canvasUtils";
 import { DownloadButton } from "./DownloadButton";
 
 // TODO Take a video_id instead and have an endpoint on the server where we supply a video_id and get the corresponding video
@@ -53,6 +53,7 @@ const NewTrackingEditor = () => {
   const [trailFrameNumber, setTrailFrameNumber] = useState(50);
   const [mergeModalState, setMergeModalState] = useState(false);
   const [playerChosenInList, setPlayerChosenInList] = useState("");
+  const [showField, setShowField] = useState(true);
 
   const handleModalOpen = (playerInList) => {
     setPlayerChosenInList(playerInList);
@@ -533,7 +534,7 @@ const NewTrackingEditor = () => {
     } else {
       //remove everything except the past trails
       canvas.remove(
-        ...canvas.getObjects().filter((obj) => obj.type !== "circle"),
+        ...canvas.getObjects().filter((obj) => obj.properties?.type !== "trail"),
       );
       //remove trails that are too old
       canvas.remove(
@@ -664,8 +665,12 @@ const NewTrackingEditor = () => {
         }
       }
     }
+    //draw the field
+    if(showField){
+      drawField(canvas, frameNumber, homographies, horizontalScalingFactor, verticalScalingFactor);
+    }
+
     setPlayerList(tempList);
-    canvas.renderAll();
   };
 
   useEffect(() => {
@@ -1058,6 +1063,10 @@ const NewTrackingEditor = () => {
     }
   };
 
+  const handleEnablingField = () => {
+    setShowField(!showField);
+  }
+
   return (
     <div>
       <MergeAndSwapModal
@@ -1109,13 +1118,23 @@ const NewTrackingEditor = () => {
             />
           </FormGroup>
           <Typography sx={{ marginLeft: "10px" }}>Trail frames: </Typography>
-
           <TextField
             sx={{ bgcolor: "white", marginLeft: "10px", width: "80px" }}
             value={trailFrameNumber}
             type="number"
             onChange={(event, val) => setTrailFrameNumber(event.target.value)}
           />
+          <Typography sx={{ marginLeft: "10px" }}>Show Field </Typography>
+          <FormGroup>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={showField}
+                  onChange={handleEnablingField}
+                />
+              }
+            />
+          </FormGroup>
           <div className="tests">
             <Button
               data-testid="from-annotation"
