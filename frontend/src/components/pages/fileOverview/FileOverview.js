@@ -2,8 +2,6 @@ import React, { Component } from "react";
 import FileListItem from "./FileListItem";
 import "./FileOverview.css";
 import IconButton from "@material-ui/core/IconButton";
-
-import videofiles from "../../../data/videofiles.json";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faPlus,
@@ -53,8 +51,6 @@ class FileOverview extends Component {
       updatedFileListItems[id].name = name;
       return { fileListItems: updatedFileListItems };
     });
-    // when Backend is added, might make sense to leave the above setState call in the code and just rerender the
-    // changed object instead of getting the complete data again and rerendering everything
   };
 
   changeNotes = (id, notes) => {
@@ -113,8 +109,9 @@ class FileOverview extends Component {
         case "ball_tracks.csv":
           tempBallTracks = file;
           break;
-        case "homographies.csv":
+        case "homographies.json":
           tempHomographies = file;
+          console.log("homographies.json");
           break;
         case "log.txt":
           tempLog = file;
@@ -153,6 +150,17 @@ class FileOverview extends Component {
       });
     };
 
+    const readJson = (file, key) => {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          resolve({ key, content: JSON.parse(e.target.result) });
+        };
+        reader.onerror = (e) => reject(e);
+        reader.readAsText(file);
+      });
+    };
+
     let videoDuration = await new Promise((resolve) => {
       const videoElement = document.createElement("video");
       videoElement.preload = "metadata";
@@ -170,7 +178,7 @@ class FileOverview extends Component {
         ? readCSV(tempBallTracks, "ballTracks")
         : Promise.resolve(null),
       tempHomographies
-        ? readCSV(tempHomographies, "homographies")
+        ? readJson(tempHomographies, "homographies")
         : Promise.resolve(null),
       tempLog ? readCSV(tempLog, "log") : Promise.resolve(null),
     ])
