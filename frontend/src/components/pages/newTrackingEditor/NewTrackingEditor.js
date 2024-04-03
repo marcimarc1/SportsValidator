@@ -643,6 +643,7 @@ const NewTrackingEditor = () => {
             scaleY: 1,
             // also connect it to corresponding annotation
           };
+          playerBox.setControlVisible("mtr", false);
           playerBox = defineBoxBehavior(playerBox);
           canvasBoxes.push(playerBox);
           canvas.add(playerBox);
@@ -857,6 +858,7 @@ const NewTrackingEditor = () => {
             scaleY: 1,
             // also connect it to corresponding annotation
           };
+          playerBox.setControlVisible("mtr", false);
           playerBox = defineBoxBehavior(playerBox);
           canvasBoxes.push(playerBox);
           canvas.add(playerBox);
@@ -989,7 +991,6 @@ const NewTrackingEditor = () => {
   };
 
   const handleSeekEnd = () => {
-    updateSidebar();
     if (wasVideoPlaying) {
       videoElement.play();
     }
