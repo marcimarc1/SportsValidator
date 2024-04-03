@@ -1,5 +1,6 @@
 import { fabric } from "fabric";
 import { getTemplate } from "./templates";
+import { inv } from "mathjs";
 
 export const trailsFullRedraw = (
   canvas,
@@ -43,21 +44,6 @@ export const trailsFullRedraw = (
   });
 };
 
-function inverseMatrix(m) {
-  let det = m[0][0] * (m[1][1] * m[2][2] - m[2][1] * m[1][2]) -
-            m[0][1] * (m[1][0] * m[2][2] - m[1][2] * m[2][0]) +
-            m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0]);
-
-  let invDet = 1 / det;
-
-  return [
-      [(m[1][1] * m[2][2] - m[2][1] * m[1][2]) * invDet, (m[0][2] * m[2][1] - m[0][1] * m[2][2]) * invDet, (m[0][1] * m[1][2] - m[0][2] * m[1][1]) * invDet],
-      [(m[1][2] * m[2][0] - m[1][0] * m[2][2]) * invDet, (m[0][0] * m[2][2] - m[0][2] * m[2][0]) * invDet, (m[1][0] * m[0][2] - m[0][0] * m[1][2]) * invDet],
-      [(m[1][0] * m[2][1] - m[2][0] * m[1][1]) * invDet, (m[2][0] * m[0][1] - m[0][0] * m[2][1]) * invDet, (m[0][0] * m[1][1] - m[1][0] * m[0][1]) * invDet]
-  ];
-}
-
-
 function applyHomography(homography, point) {
     let [x, y] = point;
     let w = homography[2][0] * x + homography[2][1] * y + homography[2][2];
@@ -67,7 +53,7 @@ function applyHomography(homography, point) {
     return { x: transformedX, y: transformedY };
 }
 
-export const drawField = (
+export const drawFieldPoints = (
     canvas, 
     frameNumber, 
     homographies,
@@ -76,7 +62,7 @@ export const drawField = (
   ) => {
   const template = getTemplate("Soccer", 103.82979583740234, 68.09894561767578);
   const homography = homographies[frameNumber];
-  const invHomography = inverseMatrix(homography);
+  const invHomography = inv(homography);
 
   const templateKeys = Object.keys(template);
   templateKeys.forEach(key => {

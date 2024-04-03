@@ -24,7 +24,7 @@ import TextField from "@mui/material/TextField";
 import TrackList from "../newTrackingEditor/TrackList";
 import TrackListItemPlayer from "./TrackListItemPlayer";
 import MergeAndSwapModal from "./MergeAndSwapModal";
-import { trailsFullRedraw, drawField } from "../../../utils/canvasUtils";
+import { trailsFullRedraw, drawFieldPoints } from "../../../utils/canvasUtils";
 import { DownloadButton } from "./DownloadButton";
 
 // TODO Take a video_id instead and have an endpoint on the server where we supply a video_id and get the corresponding video
@@ -665,9 +665,9 @@ const NewTrackingEditor = () => {
         }
       }
     }
-    //draw the field
+
     if(showField){
-      drawField(canvas, frameNumber, homographies, horizontalScalingFactor, verticalScalingFactor);
+      drawFieldPoints(canvas, frameNumber, homographies, horizontalScalingFactor, verticalScalingFactor);
     }
 
     setPlayerList(tempList);
@@ -1064,7 +1064,12 @@ const NewTrackingEditor = () => {
   };
 
   const handleEnablingField = () => {
-    setShowField(!showField);
+    if(showField){
+      setShowField(false);
+    }
+    else{
+      setShowField(true);
+    }
   }
 
   return (

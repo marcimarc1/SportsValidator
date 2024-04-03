@@ -71,7 +71,6 @@ function createSoccerTemplate(LENGTH = 91, WIDTH = 50) {
     };
 }
 
-// Tennis field template
 function createTennisTemplate() {
     const LENGTH = 23.77;
     const WIDTH = 8.23 + 2 * 1.37;
