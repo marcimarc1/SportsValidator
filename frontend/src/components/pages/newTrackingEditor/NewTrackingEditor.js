@@ -322,19 +322,21 @@ const NewTrackingEditor = () => {
     });
 
     playerBox.on({
-      modified: (event) => {
-        let targetRect = event.target;
-        playerBox.left = targetRect.left;
-        playerBox.top = targetRect.top;
-        playerBox.width =
-          (playerBox.width * targetRect.scaleX) / playerBox.my.scaleX;
-        playerBox.height =
-          (targetRect.height * targetRect.scaleY) / playerBox.my.scaleY;
-        playerBox.dirty = true;
-        playerBox.my.scaleX = targetRect.scaleX;
-        playerBox.my.scaleY = targetRect.scaleY;
+      modified: () => {
+        var boundingRect = playerBox.getBoundingRect();
+        var scaleX = playerBox.scaleX; // Save current scale factors
+        var scaleY = playerBox.scaleY;
+        
+        // Calculate actual width and height based on scale factors
+        var actualWidth = (boundingRect.width - playerBox.strokeWidth) / scaleX;
+        var actualHeight = (boundingRect.height - playerBox.strokeWidth) / scaleY;
+        playerBox.left = boundingRect.left;
+        playerBox.top = boundingRect.top;
+        playerBox.width = actualWidth;
+        playerBox.height = actualHeight;
+
         playerBox.setCoords();
-        canvas.requestRenderAll();
+        canvas.renderAll();
       },
     });
 
@@ -638,9 +640,6 @@ const NewTrackingEditor = () => {
             selected: false,
             key: playersToDraw[playerIndex].PlayerKey,
             frame: frameNumber,
-            //scaling factor when modifying the box
-            scaleX: 1,
-            scaleY: 1,
             // also connect it to corresponding annotation
           };
           playerBox.setControlVisible("mtr", false);
@@ -852,9 +851,6 @@ const NewTrackingEditor = () => {
             selected: false,
             key: playersToDraw[playerIndex].PlayerKey,
             frame: frameNumber,
-            //scaling factor when modifying the box
-            scaleX: 1,
-            scaleY: 1,
             // also connect it to corresponding annotation
           };
           playerBox.setControlVisible("mtr", false);
