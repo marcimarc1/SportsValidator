@@ -43,8 +43,11 @@ class FileListItem extends Component {
       this.thumbnailImageHeight * this.thumbnailRescale,
     );
     let duration = this.props.duration;
-    if (duration < 60) duration = duration.toString() + "min";
-    else duration = `${Math.floor(duration / 60)}h ${duration % 60}min`;
+    let durationMin = duration / 60;
+    let durationHour = duration / 3600;
+    if (durationMin < 1) duration = Math.round(duration) + "s";
+    else if (durationMin < 60) duration = `${Math.floor(durationMin)}min ${Math.round(duration % 60)}s`;
+    else duration = `${Math.floor(durationHour)}h ${Math.round(durationMin) % 60}min`;
     let borderStyle = {
       borderRadius: `5px ${thumbnailHeight / 2}px ${thumbnailHeight / 2}px 5px`,
     };
@@ -155,7 +158,7 @@ class FileListItem extends Component {
 
 FileListItem.propTypes = {
   videoName: PropTypes.string.isRequired,
-  duration: PropTypes.number, //video duration in minutes
+  duration: PropTypes.number, //video duration in seconds
   changeName: PropTypes.func.isRequired,
   changeNotes: PropTypes.func.isRequired,
   delete: PropTypes.func.isRequired,

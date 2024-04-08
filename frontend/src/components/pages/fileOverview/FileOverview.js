@@ -162,7 +162,6 @@ class FileOverview extends Component {
       };
       videoElement.src = window.URL.createObjectURL(tempVideo);
     });
-    videoDuration = Math.round(videoDuration / 60);
 
     Promise.all([
       readCSV(tempProcessedPlayers, "processedPlayers"),
