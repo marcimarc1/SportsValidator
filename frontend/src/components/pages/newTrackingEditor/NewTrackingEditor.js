@@ -725,7 +725,6 @@ const NewTrackingEditor = () => {
 
     const onSeek = () => {
       console.log("Seeked");
-      //updateCanvas();
     };
 
     const onSeeking = () => {
