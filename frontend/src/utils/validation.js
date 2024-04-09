@@ -1,4 +1,10 @@
-export const mergePlayerData = (mainPlayerName, playerNameMap, playerChosenInList, annotations, setAnnotations) => {
+export const mergePlayerData = (
+  mainPlayerName,
+  playerNameMap,
+  playerChosenInList,
+  annotations,
+  setAnnotations,
+) => {
   const nameToKeyMap = new Map();
   playerNameMap.forEach((value, key) => {
     nameToKeyMap.set(value, key);
@@ -59,67 +65,29 @@ export const mergePlayerData = (mainPlayerName, playerNameMap, playerChosenInLis
   setAnnotations(mergedAnnotations);
 };
 
-export const mergePlayerWithKeys = (firstPlayerKey, secondPlayerKey, annotations, setAnnotations) => {
-
-  const firstPlayerMaxFrame = Math.max(
-    ...annotations
-      .filter((a) => a.PlayerKey == firstPlayerKey)
-      .map((a) => a.FrameNo),
-  );
-  const secondPlayerMaxFrame = Math.max(
-    ...annotations
-      .filter((a) => a.PlayerKey == secondPlayerKey)
-      .map((a) => a.FrameNo),
-  );
-
-  let mergedPlayerKey;
-  let mainPlayerKey;
-
-  if (firstPlayerMaxFrame > secondPlayerMaxFrame) {
-    mergedPlayerKey = firstPlayerKey;
-    mainPlayerKey = secondPlayerKey;
-  } else {
-    mergedPlayerKey = secondPlayerKey;
-    mainPlayerKey = firstPlayerKey;
-  }
-
-    //filter out duplicate annotations between main and merged player that has the same frame number
-    let filteredAnnotations = annotations.filter(
-      (a) => a.playerKey != mergedPlayerKey,
-    );
-    const mainPlayerAnnotations = annotations.filter(
-      (a) => a.playerKey == mainPlayerKey,
-    );
-    const mergedPlayerAnnotations = annotations.filter(
-      (a) => a.playerKey == mergedPlayerKey,
-    );
-    filteredAnnotations = filteredAnnotations.concat(
-      mergedPlayerAnnotations.filter((a) =>
-        mainPlayerAnnotations.every((b) => b.FrameNo != a.FrameNo),
-      ),
-    );
-  
-    const mergedAnnotations = filteredAnnotations.map((annotation) => {
-      if (annotation.PlayerKey == mergedPlayerKey) {
-        return { ...annotation, PlayerKey: mainPlayerKey };
-      }
-      return annotation;
-    });
-    setAnnotations(mergedAnnotations);
-
-}
-
-export const multiPlayerMerge = (playerKeyArray, annotations, setAnnotations ) => {
-  
-  playerKeyArray.forEach((playerKey, index) => {
-    if (index == 0) {
-      return;
+export const multiPlayerMerge = (
+  playerKeyArray,
+  annotations,
+  setAnnotations,
+) => {
+  const newAnnotations = annotations.map((a) => {
+    if (playerKeyArray.includes(a.PlayerKey)) {
+      a.PlayerKey = playerKeyArray[0];
+      return a;
     }
-    mergePlayerWithKeys(playerKeyArray[0], playerKey, annotations, setAnnotations);
-  })
-}
+    return a;
+  });
+  setAnnotations(newAnnotations);
+};
 
-export const swapPlayerData = (secondPlayerName, playerNameMap, playerChosenInList, annotations, setAnnotations, frameNumber) => {
+export const swapPlayerData = (
+  secondPlayerName,
+  playerNameMap,
+  playerChosenInList,
+  annotations,
+  setAnnotations,
+  frameNumber,
+) => {
   const nameToKeyMap = new Map();
   playerNameMap.forEach((value, key) => {
     nameToKeyMap.set(value, key);

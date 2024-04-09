@@ -24,7 +24,10 @@ import TextField from "@mui/material/TextField";
 import TrackList from "../newTrackingEditor/TrackList";
 import TrackListItemPlayer from "./TrackListItemPlayer";
 import MergeAndSwapModal from "./MergeAndSwapModal";
-import { trailsFullRedraw, defineTrailBehaviour } from "../../../utils/canvasUtils";
+import {
+  trailsFullRedraw,
+  defineTrailBehaviour,
+} from "../../../utils/canvasUtils";
 import { multiPlayerMerge } from "../../../utils/validation";
 import { DownloadButton } from "./DownloadButton";
 
@@ -69,6 +72,7 @@ const NewTrackingEditor = () => {
     console.log("Multiplayer merge");
     console.log(Array.from(selectedTrails));
     multiPlayerMerge(Array.from(selectedTrails), annotations, setAnnotations);
+    setSelectedTrails(new Set());
   };
 
   let { videoName } = useParams();
@@ -480,8 +484,6 @@ const NewTrackingEditor = () => {
           playerKey: a.PlayerKey,
         };
         trail.hasRotatingPoint = false;
-        //before me
-        console.log('havo')
         defineTrailBehaviour(trail, setSelectedTrails);
         canvas.add(trail);
       });
@@ -700,6 +702,7 @@ const NewTrackingEditor = () => {
         colorSet,
         canvas.width / 3840,
         canvas.height / 2160,
+        setSelectedTrails,
       );
     }
   }, [videoElement?.seeking]);
@@ -726,6 +729,7 @@ const NewTrackingEditor = () => {
         colorSet,
         horizontalScalingFactor,
         verticalScalingFactor,
+        setSelectedTrails,
       );
     }
 
@@ -1012,7 +1016,7 @@ const NewTrackingEditor = () => {
             Add player
           </Button>
           <Button
-            data-testid="add-player-button"
+            data-testid="merge-button"
             variant="contained"
             onClick={handleMultiSelectMerge}
           >

@@ -9,7 +9,7 @@ export const trailsFullRedraw = (
   colorSet,
   horizontalScalingFactor,
   verticalScalingFactor,
-  setSelectedTrails
+  setSelectedTrails,
 ) => {
   const pastTrailsToDraw = annotations.filter((a) => {
     return (
@@ -31,7 +31,7 @@ export const trailsFullRedraw = (
       visible: isShowingAnnotation,
     });
     trail.properties = {
-      frame: frameNumber,
+      frame: a.FrameNo,
       playerKey: a.PlayerKey,
     };
     trail.hasRotatingPoint = false;
@@ -40,14 +40,14 @@ export const trailsFullRedraw = (
   });
 };
 
-
 export const defineTrailBehaviour = (trail, setSelectedTrails) => {
-
   trail.on("selected", () => {
-    console.log('selected')
-    console.log('my player key is')
-    console.log(trail.properties.playerKey)
-    setSelectedTrails(prevTrails => new Set(prevTrails.add(trail.properties.playerKey)) );
+    setSelectedTrails((prevTrails) => {
+      return new Set(prevTrails.add(trail.properties.playerKey));
+    });
   });
 
-}
+  trail.on("deselected", () => {
+    setSelectedTrails(new Set());
+  });
+};
