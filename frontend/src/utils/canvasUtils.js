@@ -46,8 +46,4 @@ export const defineTrailBehaviour = (trail, setSelectedTrails) => {
       return new Set(prevTrails.add(trail.properties.playerKey));
     });
   });
-
-  trail.on("deselected", () => {
-    setSelectedTrails(new Set());
-  });
 };
