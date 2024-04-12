@@ -590,7 +590,7 @@ const NewTrackingEditor = () => {
       currentTrailsToDraw.forEach((a) => {
         const scaledX = a.x1 * horizontalScalingFactor;
         const scaledY = a.y1 * verticalScalingFactor;
-        const trailColor = colorSet.get(a.PlayerKey);
+        const trailColor = colorSetPlayer.get(a.PlayerKey);
         let trail = new fabric.Circle({
           left: scaledX,
           top: scaledY,
@@ -611,7 +611,7 @@ const NewTrackingEditor = () => {
       });
     }
 
-    var playersToDraw = canvasBoxes.filter(
+    var playersToDraw = canvasBoxesPlayer.filter(
       (a) =>
         a.my.frame == frameNumber && (a.my.in_field || a.my.in_field === null),
     );
@@ -621,7 +621,7 @@ const NewTrackingEditor = () => {
     if (playersToDraw.length > 0) {
       while (playerIndex < playersToDraw.length) {
         canvas.add(playersToDraw[playerIndex]);
-        const boxColor = colorSet.get(playersToDraw[playerIndex].my.key); //used in 'stroke' property of playerBox
+        const boxColor = colorSetPlayer.get(playersToDraw[playerIndex].my.key); //used in 'stroke' property of playerBox
 
         tempList = tempList.concat([
           <TrackListItemPlayer
@@ -745,7 +745,7 @@ const NewTrackingEditor = () => {
             playersToDraw[playerIndex].w * horizontalScalingFactor;
           const scaledHeight =
             playersToDraw[playerIndex].h * verticalScalingFactor;
-          const boxColor = colorSet.get(playersToDraw[playerIndex].PlayerKey); //used in 'stroke' property of playerBox
+          const boxColor = colorSetPlayer.get(playersToDraw[playerIndex].PlayerKey); //used in 'stroke' property of playerBox
           let playerBox = new fabric.Rect({
             left: scaledX,
             top: scaledY,
@@ -775,7 +775,7 @@ const NewTrackingEditor = () => {
           };
           playerBox.setControlVisible("mtr", false);
           playerBox = defineBoxBehavior(playerBox);
-          canvasBoxes.push(playerBox);
+          canvasBoxesPlayer.push(playerBox);
           canvas.add(playerBox);
 
           tempList = tempList.concat([
@@ -977,7 +977,7 @@ const NewTrackingEditor = () => {
         frameNumber,
         trailFrameNumber,
         isShowingAnnotation,
-        colorSet,
+        colorSetPlayer,
         canvas.width / 3840,
         canvas.height / 2160,
       );
@@ -1016,7 +1016,7 @@ const NewTrackingEditor = () => {
         frameNumber,
         trailFrameNumber,
         isShowingAnnotation,
-        colorSet,
+        colorSetPlayer,
         horizontalScalingFactor,
         verticalScalingFactor,
       );
