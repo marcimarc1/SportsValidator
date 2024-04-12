@@ -15,6 +15,7 @@ export const parseProcessedPlayers = (csvContent) => {
     "y1",
     "y2",
     "y_trans",
+    "in_field",
   ];
   const headers = lines[0].split(",");
 
@@ -29,11 +30,19 @@ export const parseProcessedPlayers = (csvContent) => {
 
     let obj = {};
     expectedOrder.forEach((header) => {
-      const value = currentline[headerIndexMap[header]].trim();
-      obj[header] =
-        header === "FrameNo" || header === "PlayerKey"
-          ? parseInt(value, 10)
-          : parseFloat(value);
+      if (header in headerIndexMap) {
+        const value = currentline[headerIndexMap[header]].trim();
+        if (header === "in_field") {
+          obj[header] = value === "True" || value === "true" || value === "1";
+        } else {
+          obj[header] =
+            header === "FrameNo" || header === "PlayerKey"
+              ? parseInt(value, 10)
+              : parseFloat(value);
+        }
+      } else {
+        obj[header] = header === "in_field" ? null : undefined;
+      }
     });
     result.push(obj);
   }

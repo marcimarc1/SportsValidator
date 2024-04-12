@@ -94,7 +94,7 @@ class FileOverview extends Component {
     );
   };
 
-  fileHandler = (event) => {
+  fileHandler = async (event) => {
     event.preventDefault();
     const files = Array.from(this.fileInput.current.files);
 
@@ -153,6 +153,17 @@ class FileOverview extends Component {
       });
     };
 
+    let videoDuration = await new Promise((resolve) => {
+      const videoElement = document.createElement("video");
+      videoElement.preload = "metadata";
+      videoElement.onloadedmetadata = () => {
+        window.URL.revokeObjectURL(videoElement.src);
+        resolve(videoElement.duration);
+      };
+      videoElement.src = window.URL.createObjectURL(tempVideo);
+    });
+    videoDuration = Math.round(videoDuration / 60);
+
     Promise.all([
       readCSV(tempProcessedPlayers, "processedPlayers"),
       readCSV(tempBallTracks, "ballTracks"),
@@ -163,9 +174,9 @@ class FileOverview extends Component {
     ])
       .then((results) => {
         this.setState((prevState) => {
-          // Create a new object for the fileListItems array
           const newFileListItem = {
             videoName: tempVideo.name,
+            duration: videoDuration,
             processedPlayers: tempProcessedPlayers,
             ballTracks: tempBallTracks,
             homographies: tempHomographies,
