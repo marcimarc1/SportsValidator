@@ -179,7 +179,6 @@ class FileOverview extends Component {
               newFileListItem[result.key] = result.content;
             }
           });
-          console.log(newFileListItem["ballTracks"])
 
           // Update the fileListItems state
           return {

@@ -82,7 +82,5 @@ export const parseProcessedPlayers = (csvContent) => {
     }
   
     result.sort((a, b) => a.FrameNo === b.FrameNo ? a.trackNo - b.trackNo : a.FrameNo - b.FrameNo);
-    console.log("here")
-    console.log(result)
     return result;
   };

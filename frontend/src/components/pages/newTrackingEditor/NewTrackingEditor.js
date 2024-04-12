@@ -14,6 +14,7 @@ import SeekBar from "./SeekBar";
 import { FormGroup, Switch, FormControlLabel, Button } from "@mui/material";
 import TrackList from "../newTrackingEditor/TrackList";
 import TrackListItemPlayer from "./TrackListItemPlayer";
+import TrackListItemBall from "./TrackListItemBall";
 import MergeAndSwapModal from "./MergeAndSwapModal";
 
 // TODO Take a video_id instead and have an endpoint on the server where we supply a video_id and get the corresponding video
@@ -34,11 +35,16 @@ const NewTrackingEditor = () => {
   const [isDownloadingVideo, setIsDownloadingVideo] = useState(false);
   const [isShowingBox, setIsShowingBox] = useState(true);
   const [isShowingAnnotation, setIsShowingAnnotation] = useState(true);
+  const [isShowingBall, setIsShowingBall] = useState(true);
   const [playerList, setPlayerList] = useState([]);
-  const [canvasBoxes, setCanvasBoxes] = useState([]);
+  const [ballList, setBallList] = useState([]);
+  const [canvasBoxesPlayer, setCanvasBoxesPlayer] = useState([]);
+  const [canvasBoxesBall, setCanvasBoxesBall] = useState([]);
   const [playerNameMap, setPlayerNameMap] = useState(new Map());
+  const [ballNameMap, setBallNameMap] = useState(new Map());
   const [activeObject, setActiveObject] = useState(null);
-  const [colorSet, setColorSet] = useState(new Map()); //map of playerkey to color
+  const [colorSetPlayer, setColorSetPlayer] = useState(new Map()); //map of playerkey to color
+  const [colorSetBall, setColorSetBall] = useState(new Map());
 
   const [mergeModalState, setMergeModalState] = useState(false);
   const [playerChosenInList, setPlayerChosenInList] = useState("");
@@ -162,11 +168,12 @@ const NewTrackingEditor = () => {
       const parsedData = parseProcessedPlayers(processedPlayers);
       setAnnotations(parsedData);
       // Setting the color set based on the parsed data
-      setColorSet(boundingBoxColorSet(parsedData));
+      setColorSetPlayer(boundingBoxColorSet(parsedData));
     }
     if(ballTracks){
       const parsedDataBall = parseProcessedBalls(ballTracks);
       setballTracks(parsedDataBall);
+      setColorSetBall(generateColor(1))
       //setColorSet(boundingBoxColorSet(parsedDataBall));
     }
   }, [processedPlayers, ballTracks ,  location.state]);
@@ -176,11 +183,11 @@ const NewTrackingEditor = () => {
   function updateSidebar() {
     let tempList = [];
     let runningIndex = 0;
-    let boxes = canvasBoxes.filter(
+    let boxes = canvasBoxesPlayer.filter(
       (box) => box.my.frame == getCurrentTimestampFrame(),
     );
     boxes.forEach((box) => {
-      const boxColor = colorSet.get(box.my.key);
+      const boxColor = colorSetPlayer.get(box.my.key);
 
       tempList = tempList.concat([
         <TrackListItemPlayer
@@ -247,10 +254,10 @@ const NewTrackingEditor = () => {
   function deletePlayer(playerBox) {
     canvas.setActiveObject(playerBox);
     setActiveObject(playerBox);
-    let boxIndex = canvasBoxes.indexOf(playerBox);
+    let boxIndex = canvasBoxesPlayer.indexOf(playerBox);
     let annotationIndex = annotations.indexOf(playerBox);
     setAnnotations(annotations.toSpliced(annotationIndex, 1));
-    setCanvasBoxes(canvasBoxes.toSpliced(boxIndex, 1));
+    setCanvasBoxesPlayer(canvasBoxesPlayer.toSpliced(boxIndex, 1));
     updateSidebar();
     canvas.discardActiveObject();
     canvas.remove(playerBox);
@@ -269,7 +276,7 @@ const NewTrackingEditor = () => {
 
   function boxInCanvas(playerBox) {
     //check if the box is in the canvas
-    canvasBoxes.forEach((box) => {
+    canvasBoxesPlayer.forEach((box) => {
       if (box == playerBox) {
         return true;
       }
@@ -279,7 +286,7 @@ const NewTrackingEditor = () => {
 
   function deselectAllBox() {
     canvas.discardActiveObject();
-    canvasBoxes.forEach((box) => {
+    canvasBoxesPlayer.forEach((box) => {
       //comments from selectBBox about deep clone also apply here!
       box.my.selected = false;
       //this.setState({dummy: !this.state.dummy});
@@ -300,7 +307,7 @@ const NewTrackingEditor = () => {
       selectBBox(playerBox);
     }
   }
-
+  //TOBI: rename functions vars
   function defineBoxBehavior(playerBox) {
     playerBox.on({
       selected: () => {},
@@ -339,6 +346,14 @@ const NewTrackingEditor = () => {
   const retrievePlayerKeys = () => {
     if (annotations.length > 0) {
       return annotations.map((a) => a.PlayerKey);
+    } else {
+      return 0;
+    }
+  };
+
+  const retrieveBallKeys = () => {
+    if (balls.length > 0) {
+      return balls.map((a) => a.trackNo);
     } else {
       return 0;
     }
@@ -407,7 +422,7 @@ const NewTrackingEditor = () => {
 
       playerList.forEach((item) => {
         if (item.props.playerBox.my.key == activeObject.my.key) {
-          const boxColor = colorSet.get(activeObject.my.key); //used in 'stroke' property of playerBox
+          const boxColor = colorSetPlayer.get(activeObject.my.key); //used in 'stroke' property of playerBox
 
           tempList = tempList.concat([
             <TrackListItemPlayer
@@ -425,7 +440,7 @@ const NewTrackingEditor = () => {
         } else {
           let tempBox = item.props.playerBox;
           tempBox.my.selected = false;
-          const boxColor = colorSet.get(tempBox.my.key);
+          const boxColor = colorSetPlayer.get(tempBox.my.key);
 
           tempList = tempList.concat([
             <TrackListItemPlayer
@@ -457,6 +472,18 @@ const NewTrackingEditor = () => {
     setPlayerNameMap(tempMap);
   }, [annotations]);
 
+  useEffect(() => {
+    // as ball is not contained in the tracking data, set "player{id}" as default name.
+    let ballKeys = retrieveBallKeys();
+    let tempMap = new Map();
+    for (var i = 0; i < ballKeys.length; i++) {
+      let ballName = "ball" + ballKeys[i];
+      tempMap.set(ballKeys[i], ballName);
+    }
+    setBallNameMap(tempMap);
+  }, [balls]);
+
+  
   useEffect(() => {
     let canvasWidth = document.body.clientWidth - 300;
     var canvasHeight = 800;
@@ -545,7 +572,9 @@ const NewTrackingEditor = () => {
 
     const drawBoundingBoxes = (frameNumber) => {
       let playerIndex = 0;
-      let playerBoxesCopy = canvasBoxes;
+      let ballIndex = 0;
+      let playerBoxesCopy = canvasBoxesPlayer;
+      let ballBoxesCopy = canvasBoxesBall;
       deselectAllBox();
       canvas.remove(...canvas.getObjects());
       // let boxIndex = annotations.findIndex(element => element.FrameNo == frameNumber);
@@ -555,13 +584,104 @@ const NewTrackingEditor = () => {
       var playersToDraw = playerBoxesCopy.filter(
         (a) => a.my.frame == frameNumber,
       );
-      var tempList = [];
+      var ballsToDraw = ballBoxesCopy.filter(
+        (a) => a.my.frame == frameNumber,
+      );
+      var tempListBall = [];
       let runningIndex = 0;
+
+      if (ballsToDraw.length > 0){
+        while(ballIndex < ballsToDraw.length){
+          canvas.add(ballsToDraw[ballIndex]);
+          const boxColor =generateColor(1);
+          tempListBall = tempListBall.concat([
+            <TrackListItemBall
+              key={runningIndex++}
+              ballBox={activeObject}
+              name={ballNameMap.get(ballsToDraw[ballIndex].trackNo)}
+              changeSelection={changeSelection}
+              setName={setName}
+              blink={blink}
+              color={boxColor}
+              delete={deletePlayer}
+            />,
+          ]);
+          ballIndex++;
+        }
+      } else {
+        ballsToDraw = balls.filter((a) => a.FrameNo == frameNumber);
+        if(ballsToDraw.length > 0){
+          while(ballIndex < ballsToDraw.length){
+            const scaledX =
+              ballsToDraw[ballIndex].x1 * horizontalScalingFactor;
+            const scaledY =
+              ballsToDraw[ballIndex].y1 * verticalScalingFactor;
+            const scaledWidth =
+              10;
+            //fixed width and length
+              console.log(ballsToDraw[ballIndex].w)
+            console.log(horizontalScalingFactor)
+            const scaledHeight =
+              10;
+            const boxColor = generateColor(1); //used in 'stroke' property of playerBox
+            let ballBox = new fabric.Rect({
+              left: scaledX,
+              top: scaledY,
+              fill: "rgba(0,0,0,0)",
+              width: scaledWidth,
+              height: scaledHeight,
+              visible: isShowingBox,
+              dirty: false,
+              stroke: `rgb(${boxColor.r}, ${boxColor.g}, ${boxColor.b})`,
+
+              hasBorders: false, // disables the control borders (the lines connecting the controls the show up when object is selected
+              strokeWidth: 2,
+              strokeUniform: true, // to keep the bounding box a consisten thickness, independent of its size
+              padding: 0, // to make sure the pixel coordinates are correct
+              cornerSize: 10,
+              cornerStyle: "rect",
+              lockRotation: true,
+            });
+            ballBox.my = {
+              selected: false,
+              key: ballsToDraw[ballIndex].trackNo,
+              frame: frameNumber,
+              //scaling factor when modifying the box
+              scaleX: 1,
+              scaleY: 1,
+              // also connect it to corresponding annotation
+            };
+            ballBox = defineBoxBehavior(ballBox);
+            ballBoxesCopy.push(ballBox);
+            canvas.add(ballBox);
+            console.log("here")
+            console.log(canvas)
+            tempListBall = tempListBall.concat([
+              <TrackListItemBall
+              key={runningIndex++}
+              ballBox={ballBox}
+              name={ballNameMap.get(ballsToDraw[ballIndex].trackNo)}
+              changeSelection={changeSelection}
+              setName={setName}
+              blink={blink}
+              color={boxColor}
+              delete={deletePlayer}
+            />,
+            ]);
+            ballIndex++;
+          }
+        }
+      }
+      setBallList(tempListBall);
+      setCanvasBoxesBall(ballBoxesCopy);
+
+      var tempList = [];
+      runningIndex = 0;
 
       if (playersToDraw.length > 0) {
         while (playerIndex < playersToDraw.length) {
           canvas.add(playersToDraw[playerIndex]);
-          const boxColor = colorSet.get(playersToDraw[playerIndex].my.key); //used in 'stroke' property of playerBox
+          const boxColor = colorSetPlayer.get(playersToDraw[playerIndex].my.key); //used in 'stroke' property of playerBox
 
           tempList = tempList.concat([
             <TrackListItemPlayer
@@ -592,7 +712,7 @@ const NewTrackingEditor = () => {
               playersToDraw[playerIndex].w * horizontalScalingFactor;
             const scaledHeight =
               playersToDraw[playerIndex].h * verticalScalingFactor;
-            const boxColor = colorSet.get(playersToDraw[playerIndex].PlayerKey); //used in 'stroke' property of playerBox
+            const boxColor = colorSetPlayer.get(playersToDraw[playerIndex].PlayerKey); //used in 'stroke' property of playerBox
             let playerBox = new fabric.Rect({
               left: scaledX,
               top: scaledY,
@@ -642,7 +762,7 @@ const NewTrackingEditor = () => {
         }
       }
       setPlayerList(tempList);
-      setCanvasBoxes(playerBoxesCopy);
+      setCanvasBoxesPlayer(playerBoxesCopy);
       canvas.renderAll();
     };
 
@@ -716,7 +836,7 @@ const NewTrackingEditor = () => {
 
   //triggered when new player is added, or when merge or swap happens
   useEffect(() => {
-    const hasMatchingObject = canvasBoxes.some(
+    const hasMatchingObject = canvasBoxesPlayer.some(
       (a) => a.my.frame === frameNumber,
     );
     if (!hasMatchingObject) {
@@ -731,11 +851,11 @@ const NewTrackingEditor = () => {
     let runningIndex = 0;
 
     //invalidate the boxes in current frame, we should do this because we are going to draw fresh boxes, and we don't want duplicate boxes
-    const invalidatedCanvasBoxes = canvasBoxes.filter(
+    const invalidatedCanvasBoxes = canvasBoxesPlayer.filter(
       (a) => a.my.frame !== frameNumber,
     );
-    canvasBoxes.length = 0;
-    canvasBoxes.push(...invalidatedCanvasBoxes);
+    canvasBoxesPlayer.length = 0;
+    canvasBoxesPlayer.push(...invalidatedCanvasBoxes);
 
     //same thing we do in drawBoundingBoxes..
     if (annotations.length > 0) {
@@ -751,7 +871,7 @@ const NewTrackingEditor = () => {
             playersToDraw[playerIndex].w * horizontalScalingFactor;
           const scaledHeight =
             playersToDraw[playerIndex].h * verticalScalingFactor;
-          const boxColor = colorSet.get(playersToDraw[playerIndex].PlayerKey); //used in 'stroke' property of playerBox
+          const boxColor = colorSetPlayer.get(playersToDraw[playerIndex].PlayerKey); //used in 'stroke' property of playerBox
 
           let playerBox = new fabric.Rect({
             left: scaledX,
@@ -779,7 +899,7 @@ const NewTrackingEditor = () => {
             // also connect it to corresponding annotation
           };
           playerBox = defineBoxBehavior(playerBox);
-          canvasBoxes.push(playerBox);
+          canvasBoxesPlayer.push(playerBox);
           canvas.add(playerBox);
 
           tempList = tempList.concat([
@@ -949,10 +1069,20 @@ const NewTrackingEditor = () => {
     }
   }
 
+  
+  function handleDisplayingBall() {
+    if (isShowingAnnotation) {
+      setIsShowingAnnotation(false);
+    } else {
+      setIsShowingAnnotation(true);
+    }
+  }
+
+
   function handleAddPlayer() {
     const newPlayerKey = playerNameMap.size;
     const boxColor = generateColor(newPlayerKey);
-    setColorSet(colorSet.set(newPlayerKey, boxColor));
+    setColorSetPlayer(colorSetPlayer.set(newPlayerKey, boxColor));
 
     setAnnotations(
       annotations.concat({
@@ -1022,7 +1152,7 @@ const NewTrackingEditor = () => {
           style={{ display: "block", width: "100%", height: "auto" }}
         ></canvas>
         {/* <div className="sidebar">sidebar is here</div> */}
-        <TrackList>{playerList}</TrackList>
+        <TrackList groups={ballList} children={playerList}></TrackList>
       </div>
       <div className="controls">
         <SeekBar
