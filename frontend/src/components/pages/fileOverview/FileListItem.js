@@ -46,8 +46,10 @@ class FileListItem extends Component {
     let durationMin = duration / 60;
     let durationHour = duration / 3600;
     if (durationMin < 1) duration = Math.round(duration) + "s";
-    else if (durationMin < 60) duration = `${Math.floor(durationMin)}min ${Math.round(duration % 60)}s`;
-    else duration = `${Math.floor(durationHour)}h ${Math.round(durationMin) % 60}min`;
+    else if (durationMin < 60)
+      duration = `${Math.floor(durationMin)}min ${Math.round(duration % 60)}s`;
+    else
+      duration = `${Math.floor(durationHour)}h ${Math.round(durationMin) % 60}min`;
     let borderStyle = {
       borderRadius: `5px ${thumbnailHeight / 2}px ${thumbnailHeight / 2}px 5px`,
     };

@@ -6,7 +6,10 @@ import { ReactComponent as ForwardStepIcon } from "../../../icons/forward-step.s
 import { ReactComponent as BackwardStepIcon } from "../../../icons/backward-step.svg";
 import { useLocation } from "react-router-dom";
 import { parseProcessedPlayers } from "../../../utils/csvParser";
-import { convertBoxToAnnotation, convertAnnotationToBox } from "../../../utils/AnnotationBoxConverter";
+import {
+  convertBoxToAnnotation,
+  convertAnnotationToBox,
+} from "../../../utils/AnnotationBoxConverter";
 // import tracking from "../../../data/tracking_data.json";
 // import tracking from "../../../data/tracking-data-for-test.json";
 import { fabric } from "fabric";
@@ -330,7 +333,8 @@ const NewTrackingEditor = () => {
         // Calculate actual width and height based on scale factors
         //when scaling the box, only scaleX and scaleY change, while width and height not
         var actualWidth = (boundingRect.width - playerBox.strokeWidth) / scaleX;
-        var actualHeight = (boundingRect.height - playerBox.strokeWidth) / scaleY;
+        var actualHeight =
+          (boundingRect.height - playerBox.strokeWidth) / scaleY;
         playerBox.left = boundingRect.left;
         playerBox.top = boundingRect.top;
         playerBox.width = actualWidth;
@@ -338,11 +342,20 @@ const NewTrackingEditor = () => {
 
         const horizontalScalingFactor = canvas.width / 3840;
         const verticalScalingFactor = canvas.height / 2160;
-        const modifiedAnnotation = convertBoxToAnnotation(playerBox, horizontalScalingFactor, verticalScalingFactor);
+        const modifiedAnnotation = convertBoxToAnnotation(
+          playerBox,
+          horizontalScalingFactor,
+          verticalScalingFactor,
+        );
         console.log(modifiedAnnotation);
-        const annotationToReplace = annotations.findIndex(a => a.FrameNo == playerBox.my.frame && a.PlayerKey == playerBox.my.key);
+        const annotationToReplace = annotations.findIndex(
+          (a) =>
+            a.FrameNo == playerBox.my.frame && a.PlayerKey == playerBox.my.key,
+        );
         if (annotationToReplace == -1) {
-          console.error("the modified bounding box doesn't exist in annotations.");
+          console.error(
+            "the modified bounding box doesn't exist in annotations.",
+          );
         }
         annotations.splice(annotationToReplace, 1, modifiedAnnotation);
         canvas.renderAll();
@@ -619,41 +632,14 @@ const NewTrackingEditor = () => {
       if (playersToDraw.length > 0) {
         //draw boxes
         while (playerIndex < playersToDraw.length) {
-          const scaledX =
-            playersToDraw[playerIndex].x1 * horizontalScalingFactor;
-          const scaledY = playersToDraw[playerIndex].y1 * verticalScalingFactor;
-          const scaledWidth =
-            playersToDraw[playerIndex].w * horizontalScalingFactor;
-          const scaledHeight =
-            playersToDraw[playerIndex].h * verticalScalingFactor;
           const boxColor = colorSet.get(playersToDraw[playerIndex].PlayerKey); //used in 'stroke' property of playerBox
-          let playerBox = new fabric.Rect({
-            left: scaledX,
-            top: scaledY,
-            fill: "rgba(0,0,0,0)",
-            width: scaledWidth,
-            height: scaledHeight,
-            //!!
-            visible: isShowingBox,
-            dirty: false,
-            //!!
-            stroke: `rgb(${boxColor.r}, ${boxColor.g}, ${boxColor.b})`,
-
-            hasBorders: false, // disables the control borders (the lines connecting the controls the show up when object is selected
-            strokeWidth: 2,
-            strokeUniform: true, // to keep the bounding box a consisten thickness, independent of its size
-            padding: 0, // to make sure the pixel coordinates are correct
-            cornerSize: 10,
-            cornerStyle: "rect",
-            lockRotation: true,
-          });
-          playerBox.my = {
-            selected: false,
-            key: playersToDraw[playerIndex].PlayerKey,
-            frame: frameNumber,
-            in_field: playersToDraw[playerIndex].in_field,
-            // also connect it to corresponding annotation
-          };
+          let playerBox = convertAnnotationToBox(
+            playersToDraw[playerIndex],
+            horizontalScalingFactor,
+            verticalScalingFactor,
+          );
+          playerBox.visible = isShowingBox;
+          playerBox.stroke = `rgb(${boxColor.r}, ${boxColor.g}, ${boxColor.b})`;
           playerBox.setControlVisible("mtr", false);
           playerBox = defineBoxBehavior(playerBox);
           canvas.add(playerBox);
@@ -833,38 +819,14 @@ const NewTrackingEditor = () => {
       if (playersToDraw.length > 0) {
         //draw boxes
         while (playerIndex < playersToDraw.length) {
-          const scaledX =
-            playersToDraw[playerIndex].x1 * horizontalScalingFactor;
-          const scaledY = playersToDraw[playerIndex].y1 * verticalScalingFactor;
-          const scaledWidth =
-            playersToDraw[playerIndex].w * horizontalScalingFactor;
-          const scaledHeight =
-            playersToDraw[playerIndex].h * verticalScalingFactor;
           const boxColor = colorSet.get(playersToDraw[playerIndex].PlayerKey); //used in 'stroke' property of playerBox
-
-          let playerBox = new fabric.Rect({
-            left: scaledX,
-            top: scaledY,
-            fill: "rgba(0,0,0,0)",
-            width: scaledWidth,
-            height: scaledHeight,
-            visible: isShowingBox,
-            dirty: false,
-            stroke: `rgb(${boxColor.r}, ${boxColor.g}, ${boxColor.b})`,
-            hasBorders: false, // disables the control borders (the lines connecting the controls the show up when object is selected
-            strokeWidth: 2,
-            strokeUniform: true, // to keep the bounding box a consisten thickness, independent of its size
-            padding: 0, // to make sure the pixel coordinates are correct
-            cornerStyle: "rect",
-            lockRotation: true,
-          });
-          playerBox.my = {
-            selected: false,
-            key: playersToDraw[playerIndex].PlayerKey,
-            frame: frameNumber,
-            in_field: playersToDraw[playerIndex].in_field,
-            // also connect it to corresponding annotation
-          };
+          let playerBox = convertAnnotationToBox(
+            playersToDraw[playerIndex],
+            horizontalScalingFactor,
+            verticalScalingFactor,
+          );
+          playerBox.visible = isShowingBox;
+          playerBox.stroke = `rgb(${boxColor.r}, ${boxColor.g}, ${boxColor.b})`;
           playerBox.setControlVisible("mtr", false);
           playerBox = defineBoxBehavior(playerBox);
           canvas.add(playerBox);
