@@ -6,6 +6,7 @@ import { ReactComponent as ForwardStepIcon } from "../../../icons/forward-step.s
 import { ReactComponent as BackwardStepIcon } from "../../../icons/backward-step.svg";
 import { useLocation } from "react-router-dom";
 import { parseProcessedPlayers } from "../../../utils/csvParser";
+import { convertBoxToAnnotation, convertAnnotationToBox } from "../../../utils/AnnotationBoxConverter";
 // import tracking from "../../../data/tracking_data.json";
 // import tracking from "../../../data/tracking-data-for-test.json";
 import { fabric } from "fabric";
@@ -326,8 +327,8 @@ const NewTrackingEditor = () => {
         var boundingRect = playerBox.getBoundingRect();
         var scaleX = playerBox.scaleX; // Save current scale factors
         var scaleY = playerBox.scaleY;
-        
         // Calculate actual width and height based on scale factors
+        //when scaling the box, only scaleX and scaleY change, while width and height not
         var actualWidth = (boundingRect.width - playerBox.strokeWidth) / scaleX;
         var actualHeight = (boundingRect.height - playerBox.strokeWidth) / scaleY;
         playerBox.left = boundingRect.left;
@@ -335,7 +336,15 @@ const NewTrackingEditor = () => {
         playerBox.width = actualWidth;
         playerBox.height = actualHeight;
 
-        playerBox.setCoords();
+        const horizontalScalingFactor = canvas.width / 3840;
+        const verticalScalingFactor = canvas.height / 2160;
+        const modifiedAnnotation = convertBoxToAnnotation(playerBox, horizontalScalingFactor, verticalScalingFactor);
+        console.log(modifiedAnnotation);
+        const annotationToReplace = annotations.findIndex(a => a.FrameNo == playerBox.my.frame && a.PlayerKey == playerBox.my.key);
+        if (annotationToReplace == -1) {
+          console.error("the modified bounding box doesn't exist in annotations.");
+        }
+        annotations.splice(annotationToReplace, 1, modifiedAnnotation);
         canvas.renderAll();
       },
     });
@@ -624,8 +633,10 @@ const NewTrackingEditor = () => {
             fill: "rgba(0,0,0,0)",
             width: scaledWidth,
             height: scaledHeight,
+            //!!
             visible: isShowingBox,
             dirty: false,
+            //!!
             stroke: `rgb(${boxColor.r}, ${boxColor.g}, ${boxColor.b})`,
 
             hasBorders: false, // disables the control borders (the lines connecting the controls the show up when object is selected
@@ -640,11 +651,11 @@ const NewTrackingEditor = () => {
             selected: false,
             key: playersToDraw[playerIndex].PlayerKey,
             frame: frameNumber,
+            in_field: playersToDraw[playerIndex].in_field,
             // also connect it to corresponding annotation
           };
           playerBox.setControlVisible("mtr", false);
           playerBox = defineBoxBehavior(playerBox);
-          canvasBoxes.push(playerBox);
           canvas.add(playerBox);
 
           tempList = tempList.concat([
@@ -851,11 +862,11 @@ const NewTrackingEditor = () => {
             selected: false,
             key: playersToDraw[playerIndex].PlayerKey,
             frame: frameNumber,
+            in_field: playersToDraw[playerIndex].in_field,
             // also connect it to corresponding annotation
           };
           playerBox.setControlVisible("mtr", false);
           playerBox = defineBoxBehavior(playerBox);
-          canvasBoxes.push(playerBox);
           canvas.add(playerBox);
 
           tempList = tempList.concat([
