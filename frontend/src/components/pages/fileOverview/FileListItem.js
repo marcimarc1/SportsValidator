@@ -79,6 +79,7 @@ class FileListItem extends Component {
         <div className="FileOverviewListItemContainerLeft">
           <img
             className="FileOverviewListItemThumbnail"
+            //TODO: update src attribute with this.props.poster
             src={Thumbnail1}
             alt="Thumbnail"
             width={thumbnailWidth}
