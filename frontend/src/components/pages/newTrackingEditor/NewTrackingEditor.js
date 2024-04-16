@@ -26,11 +26,12 @@ import TrackListItemPlayer from "./TrackListItemPlayer";
 import MergeAndSwapModal from "./MergeAndSwapModal";
 import { trailsFullRedraw, drawFieldPoints } from "../../../utils/canvasUtils";
 import { DownloadButton } from "./DownloadButton";
+import { parseLogFile } from "../../../utils/logFileParser";
 
 // TODO Take a video_id instead and have an endpoint on the server where we supply a video_id and get the corresponding video
 const NewTrackingEditor = () => {
   const location = useLocation();
-  const { processedPlayers, video, ballTracks, homographies, log } =
+  const { processedPlayers, video, ballTracks, homographies, log, fieldSize } =
     location.state || {};
   // ballTracks, homographies and log are not being used. Logic will be implemented in the future.
   const [annotations, setAnnotations] = useState([]);
@@ -54,6 +55,7 @@ const NewTrackingEditor = () => {
   const [mergeModalState, setMergeModalState] = useState(false);
   const [playerChosenInList, setPlayerChosenInList] = useState("");
   const [showField, setShowField] = useState(true);
+  const logFile = parseLogFile(log);
 
   const handleModalOpen = (playerInList) => {
     setPlayerChosenInList(playerInList);
@@ -668,7 +670,7 @@ const NewTrackingEditor = () => {
 
     canvas.remove(...canvas.getObjects().filter((obj) => obj.properties?.type === "field"));
     if(showField){
-      drawFieldPoints(canvas, frameNumber, homographies, horizontalScalingFactor, verticalScalingFactor);
+      drawFieldPoints(canvas, frameNumber, homographies, horizontalScalingFactor, verticalScalingFactor, logFile.Sport, fieldSize.length, fieldSize.width);
     }
 
     setPlayerList(tempList);

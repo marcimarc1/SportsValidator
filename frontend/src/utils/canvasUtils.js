@@ -59,8 +59,11 @@ export const drawFieldPoints = (
     homographies,
     horizontalScalingFactor,
     verticalScalingFactor,
+    sport, 
+    length,
+    width
   ) => {
-  const template = getTemplate("Soccer", 103.82979583740234, 68.09894561767578);
+  const template = getTemplate(sport, length, width);
   const homography = homographies[frameNumber];
   const invHomography = inv(homography);
 
