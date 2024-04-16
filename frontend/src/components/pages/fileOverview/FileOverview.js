@@ -25,7 +25,8 @@ class FileOverview extends Component {
     ballTracks: null, // State variable for ball_tracks.csv
     homographies: null, // State variable for homographies.csv
     log: null, // State variable for log.txt
-    video: null, // State variable for the video file
+    video: null, // State variable for the video file,
+    fieldSize: null, // State variable for the field size
     errorMessage: "", // To store error messages
     infoMessage:
       "Please upload the mandatory video file and processed players file. Ball tracks, homographies, and log files are optional.", // Updated informational message
@@ -99,6 +100,7 @@ class FileOverview extends Component {
     let tempHomographies = null;
     let tempLog = null;
     let tempVideo = null;
+    let tempFieldSize = null;
 
     // Determine the type of each file
     files.forEach((file) => {
@@ -116,6 +118,8 @@ class FileOverview extends Component {
         case "log.txt":
           tempLog = file;
           break;
+        case "homographiesoptimized_field_size.json":
+          tempFieldSize = file;
         default:
           if (file.name.match(/\.(mp4|avi|mov|wmv)$/i)) {
             tempVideo = file;
@@ -180,7 +184,12 @@ class FileOverview extends Component {
       tempHomographies
         ? readJson(tempHomographies, "homographies")
         : Promise.resolve(null),
-      tempLog ? readCSV(tempLog, "log") : Promise.resolve(null),
+      tempLog 
+        ? readCSV(tempLog, "log") 
+        : Promise.resolve(null),
+      tempFieldSize 
+        ? readJson(tempFieldSize, "fieldSize") 
+        : Promise.resolve(null),
     ])
       .then((results) => {
         this.setState((prevState) => {
@@ -192,6 +201,7 @@ class FileOverview extends Component {
             homographies: tempHomographies,
             log: tempLog,
             video: tempVideo,
+            fieldSize: tempFieldSize,
           };
 
           // Add CSV content to the new object
@@ -238,6 +248,7 @@ class FileOverview extends Component {
             video={e.video}
             ballTracks={e.ballTracks}
             homographies={e.homographies}
+            fieldSize={e.fieldSize}
             log={e.log}
             changeName={this.changeName}
             changeNotes={this.changeNotes}
