@@ -534,7 +534,7 @@ const NewTrackingEditor = () => {
     } else {
       //remove everything except the past trails
       canvas.remove(
-        ...canvas.getObjects().filter((obj) => obj.properties?.type !== "trail"),
+        ...canvas.getObjects().filter((obj) => obj.type !== "circle"),
       );
       //remove trails that are too old
       canvas.remove(
@@ -666,6 +666,7 @@ const NewTrackingEditor = () => {
       }
     }
 
+    canvas.remove(...canvas.getObjects().filter((obj) => obj.properties?.type === "field"));
     if(showField){
       drawFieldPoints(canvas, frameNumber, homographies, horizontalScalingFactor, verticalScalingFactor);
     }
@@ -775,6 +776,7 @@ const NewTrackingEditor = () => {
     playerNameMap,
     trailFrameNumber,
     trailsEnabled,
+    showField
   ]);
 
   //triggered when user clicks on the video progress bar to change the video time
@@ -1136,6 +1138,7 @@ const NewTrackingEditor = () => {
                 <Switch
                   checked={showField}
                   onChange={handleEnablingField}
+                  disabled={!videoElement?.paused}
                 />
               }
             />
