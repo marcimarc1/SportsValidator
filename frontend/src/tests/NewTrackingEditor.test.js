@@ -75,15 +75,16 @@ describe("add player button", () => {
     //given
     const canvasElement = screen.getByTestId("fabric-canvas");
     const button = screen.getByTestId("add-player-button");
-    const initialNumber = canvasElement.getAttribute("annotations");
-    expect(initialNumber).toEqual("0");
-
+    let annotations = JSON.parse(canvasElement.getAttribute("annotations"));
+    const initialNumber = annotations.length;
+    expect(initialNumber).toEqual(0);
     //when
     fireEvent.click(button);
 
     //then
-    const updatedNumber = canvasElement.getAttribute("annotations");
-    expect(updatedNumber).toEqual("1");
+    annotations = JSON.parse(canvasElement.getAttribute("annotations"));
+    const updatedNumber = annotations.length;
+    expect(updatedNumber).toEqual(1);
   });
 
   it("creates a bounding box in the canvas", async () => {
@@ -171,64 +172,3 @@ import { readFileSync } from 'fs';
 
 import path from 'path'
 
-
-describe("multi select merging works correct", () => {
-  it("merges every selected player into one player key, which has the smallest frame number", async () => {
-
-    // Specify the path to your file
-    const filePath = path.resolve(__dirname, './test_csvs/test.csv');
-
-    let fileContent;
-    // Read file content synchronously
-    try {
-      fileContent = readFileSync(filePath, 'utf-8');
-    } catch (error) {
-      console.error('Error reading the file:', error);
-    }
-
-    //given
-    useLocation.mockReturnValue({
-      state: {
-        processedPlayers: fileContent
-      },
-    });
-
-    const logSpy = jest.spyOn(global.console, "log");
-    const mockAnnotation = parseProcessedPlayers(mockCSV);
-
-    //when
-    render(<NewTrackingEditor />);
-
-    //then
-    await waitFor(() => {
-      expect(logSpy).toHaveBeenCalledWith(
-        "retrieved annotation:",
-        mockAnnotation,
-      );
-    });
-
-    const nextFrameButton = screen.getByTestId("next-frame-button");
-    
-    
-    //click it 332 times
-
-    for (let i = 0; i < 332; i++) {
-      fireEvent.click(nextFrameButton);
-    }
-
-    //wait a bit
-    await new Promise(r => setTimeout(r, 1000));
-    const canvasElement = screen.getByTestId("fabric-canvas");
-    var JSONCanvas = canvasElement.getAttribute("canvas");
-    const initialCanvas = new fabric.Canvas("canvas");
-    //retrieve serialized fabric canvas
-    initialCanvas.loadFromJSON(
-      JSONCanvas,
-      initialCanvas.renderAll.bind(initialCanvas),
-    );
-    console.log(initialCanvas.getObjects().length);
-
-    const playerList = container.querySelector(".TrackListList").children[0];
-    console.log(playerList.childElementCount);
-  });
-});

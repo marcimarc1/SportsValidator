@@ -1061,7 +1061,7 @@ const NewTrackingEditor = () => {
           data-testid="fabric-canvas"
           ref={canvasRef}
           canvas={JSON.stringify(canvas)}
-          annotations={annotations.length}
+          annotations={JSON.stringify(annotations)}
           className="canvas"
           id="tracking-editor-canvas"
           width="1920"
