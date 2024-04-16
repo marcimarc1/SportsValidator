@@ -82,21 +82,16 @@ export const drawFieldPoints = (
         visible: true,
         originX: 'center',
         originY: 'center',
+        hasRotatingPoint: false,
+        hasBorders: false,
+        hasControls: false,
       });
       circle.properties = {
         type: "field",
         subtype: key,
+        frame: frameNumber,
       };
       canvas.add(circle);
-    
-    const text = new fabric.Text(key, {
-      left: transformedPoint.x + 7,
-      top: transformedPoint.y + 7,
-      fill: 'blue',
-      fontSize: 16,
-      visible: true,
-    });
-    canvas.add(text);
     });
   });
 }
