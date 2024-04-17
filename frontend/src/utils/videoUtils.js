@@ -7,39 +7,72 @@ const getReferenceTimestampForFrame = (n, frameDuration) => {
   return n * frameDuration + frameDuration / 3;
 };
 
-const updateTimestamp = (newTimestamp, frameDuration, setFrameNumber, setTimestamp) => {
+const updateTimestamp = (
+  newTimestamp,
+  frameDuration,
+  setFrameNumber,
+  setTimestamp,
+) => {
   const newFrameNumber = Math.floor(newTimestamp / frameDuration);
   setTimestamp(newTimestamp);
   setFrameNumber(newFrameNumber);
 };
 
-export const handleNextFrame = (videoElement, frameNumber, setFrameNumber, setTimestamp, frameDuration) => {
+export const handleNextFrame = (
+  videoElement,
+  frameNumber,
+  setFrameNumber,
+  setTimestamp,
+  frameDuration,
+) => {
   if (videoElement) {
     const nextFrame = frameNumber + 1;
-    const referenceTimestamp = getReferenceTimestampForFrame(nextFrame, frameDuration);
+    const referenceTimestamp = getReferenceTimestampForFrame(
+      nextFrame,
+      frameDuration,
+    );
     videoElement.currentTime = referenceTimestamp;
     setFrameNumber(nextFrame);
     setTimestamp(referenceTimestamp);
   }
 };
 
-export const handlePreviousFrame = (videoElement, frameNumber, setFrameNumber, setTimestamp, frameDuration) => {
+export const handlePreviousFrame = (
+  videoElement,
+  frameNumber,
+  setFrameNumber,
+  setTimestamp,
+  frameDuration,
+) => {
   if (videoElement && frameNumber > 0) {
     const previousFrame = frameNumber - 1;
-    const referenceTimestamp = getReferenceTimestampForFrame(previousFrame, frameDuration);
+    const referenceTimestamp = getReferenceTimestampForFrame(
+      previousFrame,
+      frameDuration,
+    );
     videoElement.currentTime = referenceTimestamp;
     setFrameNumber(previousFrame);
     setTimestamp(referenceTimestamp);
   }
 };
 
-export const handlePreviousChunk = (videoElement, frameDuration, setFrameNumber, setTimestamp) => {
+export const handlePreviousChunk = (
+  videoElement,
+  frameDuration,
+  setFrameNumber,
+  setTimestamp,
+) => {
   const newTimestamp = Math.max(0, videoElement.currentTime - 6);
   videoElement.currentTime = newTimestamp;
   updateTimestamp(newTimestamp, frameDuration, setFrameNumber, setTimestamp);
 };
 
-export const handleNextChunk = (videoElement, frameDuration, setFrameNumber, setTimestamp) => {
+export const handleNextChunk = (
+  videoElement,
+  frameDuration,
+  setFrameNumber,
+  setTimestamp,
+) => {
   const newTimestamp = Math.min(
     videoElement.duration,
     videoElement.currentTime + 6,
@@ -71,7 +104,14 @@ export const handleSeekStart = (videoElement, wasVideoPlaying) => {
   }
 };
 
-export const handleSeekPercent = (value, videoElement, setProgress, frameDuration, setFrameNumber, setTimestamp) => {
+export const handleSeekPercent = (
+  value,
+  videoElement,
+  setProgress,
+  frameDuration,
+  setFrameNumber,
+  setTimestamp,
+) => {
   setProgress(value);
   const newTimestamp = (value / 100) * videoElement.duration;
   videoElement.currentTime = newTimestamp;

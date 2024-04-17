@@ -1,7 +1,18 @@
 import React, { useRef, useState, useEffect } from "react";
 import "./SeekBar.css";
 
-const SeekBar = ({ onSeekStart, onSeekPercent, onSeekEnd, progress, videoElement, setProgress, wasVideoPlaying, frameDuration, setFrameNumber, setTimestamp }) => {
+const SeekBar = ({
+  onSeekStart,
+  onSeekPercent,
+  onSeekEnd,
+  progress,
+  videoElement,
+  setProgress,
+  wasVideoPlaying,
+  frameDuration,
+  setFrameNumber,
+  setTimestamp,
+}) => {
   const [displayedProgress, setDisplayedProgress] = useState(0);
   const [isSeeking, setIsSeeking] = useState(false);
 
@@ -16,7 +27,14 @@ const SeekBar = ({ onSeekStart, onSeekPercent, onSeekEnd, progress, videoElement
   const seek = (eventX) => {
     const percent = computePercentage(eventX);
     setDisplayedProgress(percent);
-    onSeekPercent(percent, videoElement, setProgress, frameDuration, setFrameNumber, setTimestamp);
+    onSeekPercent(
+      percent,
+      videoElement,
+      setProgress,
+      frameDuration,
+      setFrameNumber,
+      setTimestamp,
+    );
   };
 
   const handleMouseMoveDocument = (event) => {
