@@ -525,7 +525,6 @@ const NewTrackingEditor = () => {
   const drawBoundingBoxes = (frameNumber) => {
     const horizontalScalingFactor = canvas.width / 3840;
     const verticalScalingFactor = canvas.height / 2160;
-    let playerIndex = 0;
     deselectAllBox();
 
     if (!trailsEnabled) {
@@ -546,7 +545,7 @@ const NewTrackingEditor = () => {
           ),
       );
       const currentTrailsToDraw = annotations.filter(
-        (a) => a.FrameNo == frameNumber,
+        (a) => a.FrameNo == frameNumber && (a.in_field || a.in_field === null),
       );
 
       currentTrailsToDraw.forEach((a) => {
@@ -573,23 +572,23 @@ const NewTrackingEditor = () => {
       });
     }
 
-    var playersToDraw = canvasBoxes.filter(
+    var boundingBoxesToDraw = canvasBoxes.filter(
       (a) =>
         a.my.frame == frameNumber && (a.my.in_field || a.my.in_field === null),
     );
     var tempList = [];
     let runningIndex = 0;
 
-    if (playersToDraw.length > 0) {
-      while (playerIndex < playersToDraw.length) {
-        canvas.add(playersToDraw[playerIndex]);
-        const boxColor = colorSet.get(playersToDraw[playerIndex].my.key); //used in 'stroke' property of playerBox
+    if (boundingBoxesToDraw.length > 0) {
+      boundingBoxesToDraw.forEach((boundingBox) => {
+        canvas.add(boundingBox);
+        const boxColor = colorSet.get(boundingBox.my.key); //used in 'stroke' property of playerBox
 
         tempList = tempList.concat([
           <TrackListItemPlayer
             key={runningIndex++}
-            playerBox={playersToDraw[playerIndex]}
-            name={playerNameMap.get(playersToDraw[playerIndex].my.key)}
+            playerBox={boundingBox}
+            name={playerNameMap.get(boundingBox.my.key)}
             changeSelection={changeSelection}
             setName={setName}
             blink={blink}
@@ -598,24 +597,23 @@ const NewTrackingEditor = () => {
             handleModalOpen={handleModalOpen}
           />,
         ]);
-        playerIndex++;
-      }
+      });
     } else {
-      playersToDraw = annotations.filter(
+      boundingBoxesToDraw = annotations.filter(
         (a) => a.FrameNo == frameNumber && (a.in_field || a.in_field === null),
       );
 
-      if (playersToDraw.length > 0) {
+      if (boundingBoxesToDraw.length > 0) {
         //draw boxes
-        while (playerIndex < playersToDraw.length) {
+        boundingBoxesToDraw.forEach((boundingBox) => {
           const scaledX =
-            playersToDraw[playerIndex].x1 * horizontalScalingFactor;
-          const scaledY = playersToDraw[playerIndex].y1 * verticalScalingFactor;
+          boundingBox.x1 * horizontalScalingFactor;
+          const scaledY = boundingBox.y1 * verticalScalingFactor;
           const scaledWidth =
-            playersToDraw[playerIndex].w * horizontalScalingFactor;
+          boundingBox.w * horizontalScalingFactor;
           const scaledHeight =
-            playersToDraw[playerIndex].h * verticalScalingFactor;
-          const boxColor = colorSet.get(playersToDraw[playerIndex].PlayerKey); //used in 'stroke' property of playerBox
+          boundingBox.h * verticalScalingFactor;
+          const boxColor = colorSet.get(boundingBox.PlayerKey); //used in 'stroke' property of playerBox
           let playerBox = new fabric.Rect({
             left: scaledX,
             top: scaledY,
@@ -636,7 +634,7 @@ const NewTrackingEditor = () => {
           });
           playerBox.my = {
             selected: false,
-            key: playersToDraw[playerIndex].PlayerKey,
+            key: boundingBox.PlayerKey,
             frame: frameNumber,
             //scaling factor when modifying the box
             scaleX: 1,
@@ -653,7 +651,7 @@ const NewTrackingEditor = () => {
               key={runningIndex++}
               playerBox={playerBox}
               color={boxColor}
-              name={playerNameMap.get(playersToDraw[playerIndex].PlayerKey)}
+              name={playerNameMap.get(boundingBox.PlayerKey)}
               changeSelection={changeSelection}
               setName={setName}
               blink={blink}
@@ -661,8 +659,7 @@ const NewTrackingEditor = () => {
               handleModalOpen={handleModalOpen}
             />,
           ]);
-          playerIndex++;
-        }
+        });
       }
     }
     setPlayerList(tempList);
