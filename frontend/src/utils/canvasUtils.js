@@ -12,7 +12,7 @@ export const trailsFullRedraw = (
 ) => {
   const pastTrailsToDraw = annotations.filter((a) => {
     return (
-      a.FrameNo > frameNumber - trailFrameNumber && a.FrameNo < frameNumber
+      a.FrameNo > frameNumber - trailFrameNumber && a.FrameNo < frameNumber && (a.in_field || a.in_field === null)
     );
   });
 

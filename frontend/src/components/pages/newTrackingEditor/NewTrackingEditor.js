@@ -815,20 +815,20 @@ const NewTrackingEditor = () => {
 
     //same thing we do in drawBoundingBoxes..
     if (annotations.length > 0) {
-      var playersToDraw = annotations.filter(
+      var boundingBoxesToDraw = annotations.filter(
         (a) => a.FrameNo == frameNumber && (a.in_field || a.in_field === null),
       );
-      if (playersToDraw.length > 0) {
+      if (boundingBoxesToDraw.length > 0) {
         //draw boxes
-        while (playerIndex < playersToDraw.length) {
+        boundingBoxesToDraw.forEach((boundingBox) => {
           const scaledX =
-            playersToDraw[playerIndex].x1 * horizontalScalingFactor;
-          const scaledY = playersToDraw[playerIndex].y1 * verticalScalingFactor;
+            boundingBox.x1 * horizontalScalingFactor;
+          const scaledY = boundingBox.y1 * verticalScalingFactor;
           const scaledWidth =
-            playersToDraw[playerIndex].w * horizontalScalingFactor;
+            boundingBox.w * horizontalScalingFactor;
           const scaledHeight =
-            playersToDraw[playerIndex].h * verticalScalingFactor;
-          const boxColor = colorSet.get(playersToDraw[playerIndex].PlayerKey); //used in 'stroke' property of playerBox
+            boundingBox.h * verticalScalingFactor;
+          const boxColor = colorSet.get(boundingBox.PlayerKey); //used in 'stroke' property of playerBox
 
           let playerBox = new fabric.Rect({
             left: scaledX,
@@ -848,7 +848,7 @@ const NewTrackingEditor = () => {
           });
           playerBox.my = {
             selected: false,
-            key: playersToDraw[playerIndex].PlayerKey,
+            key: boundingBox.PlayerKey,
             frame: frameNumber,
             //scaling factor when modifying the box
             scaleX: 1,
@@ -864,7 +864,7 @@ const NewTrackingEditor = () => {
             <TrackListItemPlayer
               key={runningIndex++}
               playerBox={playerBox}
-              name={playerNameMap.get(playersToDraw[playerIndex].PlayerKey)}
+              name={playerNameMap.get(boundingBox.PlayerKey)}
               changeSelection={changeSelection}
               setName={setName}
               blink={blink}
@@ -873,8 +873,7 @@ const NewTrackingEditor = () => {
               handleModalOpen={handleModalOpen}
             />,
           ]);
-          playerIndex++;
-        }
+        });
         setPlayerList(tempList);
       }
     }
