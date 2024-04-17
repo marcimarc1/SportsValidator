@@ -1,18 +1,20 @@
 import { create } from "zustand";
 import { fabric } from "fabric";
-import { immer } from 'zustand/middleware/immer'
+import { immer } from "zustand/middleware/immer";
 
 // We use immer to change nested state in zustand
 // like state.videoElement.currentTime
-export const useVideoStore = create(immer((set) => ({
-  videoElement: null,
-  setVideoElement: (videoElement) => set(() => ({  videoElement })),
-  updateCurrentTime: (newTime) => {
-    set((state) => {
-      state.videoElement.currentTime = newTime;
-    });
-  }
-})));
+export const useVideoStore = create(
+  immer((set) => ({
+    videoElement: null,
+    setVideoElement: (videoElement) => set(() => ({ videoElement })),
+    updateCurrentTime: (newTime) => {
+      set((state) => {
+        state.videoElement.currentTime = newTime;
+      });
+    },
+  })),
+);
 
 export const getCurrentTimestampFrame = (frameDuration) => {
   const videoElement = useVideoStore.getState().videoElement;
@@ -78,8 +80,10 @@ export const handlePreviousChunk = (
   setFrameNumber,
   setTimestamp,
 ) => {
-
-  const newTimestamp = Math.max(0, useVideoStore.getState().videoElement.currentTime - 6);
+  const newTimestamp = Math.max(
+    0,
+    useVideoStore.getState().videoElement.currentTime - 6,
+  );
   useVideoStore.getState().updateCurrentTime(newTimestamp);
   updateTimestamp(newTimestamp, frameDuration, setFrameNumber, setTimestamp);
 };
@@ -100,7 +104,6 @@ export const handleNextChunk = (
 };
 
 export const handlePlayPause = (setIsPlaying) => {
-
   const videoElement = useVideoStore.getState().videoElement;
 
   if (videoElement && videoElement.readyState != 0 && !videoElement.ended) {
@@ -134,7 +137,8 @@ export const handleSeekPercent = (
   setTimestamp,
 ) => {
   setProgress(value);
-  const newTimestamp = (value / 100) * useVideoStore.getState().videoElement.duration;
+  const newTimestamp =
+    (value / 100) * useVideoStore.getState().videoElement.duration;
 
   useVideoStore.getState().updateCurrentTime(newTimestamp);
   updateTimestamp(newTimestamp, frameDuration, setFrameNumber, setTimestamp);

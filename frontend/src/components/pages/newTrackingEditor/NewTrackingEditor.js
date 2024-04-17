@@ -37,7 +37,7 @@ import {
   handleSeekPercent,
   handleSeekStart,
   formatTime,
-  generatePoster
+  generatePoster,
 } from "../../../utils/videoUtils";
 
 import { useVideoStore } from "../../../utils/videoUtils";
@@ -54,8 +54,8 @@ const NewTrackingEditor = () => {
   const [frameNumber, setFrameNumber] = useState(0);
   const [timestamp, setTimestamp] = useState(0);
 
-  const videoElement = useVideoStore(state => state.videoElement);
-  const setVideoElement = useVideoStore(state => state.setVideoElement);
+  const videoElement = useVideoStore((state) => state.videoElement);
+  const setVideoElement = useVideoStore((state) => state.setVideoElement);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -205,8 +205,7 @@ const NewTrackingEditor = () => {
     let tempList = [];
     let runningIndex = 0;
     let boxes = canvasBoxes.filter(
-      (box) =>
-        box.my.frame == getCurrentTimestampFrame( frameDuration),
+      (box) => box.my.frame == getCurrentTimestampFrame(frameDuration),
     );
     boxes.forEach((box) => {
       const boxColor = colorSet.get(box.my.key);
@@ -502,8 +501,6 @@ const NewTrackingEditor = () => {
     return colorSet;
   }
 
-
-
   // https://stackoverflow.com/questions/33834724/draw-video-on-canvas-html5
   const drawVideo = () => {
     // Clear canvas
@@ -688,9 +685,7 @@ const NewTrackingEditor = () => {
     let previousFrameNumber = 0;
 
     const updateCanvas = () => {
-      const currentFrameNumber = getCurrentTimestampFrame(
-        frameDuration,
-      );
+      const currentFrameNumber = getCurrentTimestampFrame(frameDuration);
       drawVideo();
       drawBoundingBoxes(currentFrameNumber);
     };
@@ -707,9 +702,7 @@ const NewTrackingEditor = () => {
         return;
       }
 
-      const currentFrameNumber = getCurrentTimestampFrame(
-        frameDuration,
-      );
+      const currentFrameNumber = getCurrentTimestampFrame(frameDuration);
       if (currentFrameNumber != previousFrameNumber) {
         setFrameNumber(currentFrameNumber);
         setTimestamp(videoElement.currentTime);
@@ -895,11 +888,7 @@ const NewTrackingEditor = () => {
   const handleKeyDown = (event) => {
     switch (event.keyCode) {
       case 74: // j
-        handlePreviousChunk(
-          frameDuration,
-          setFrameNumber,
-          setTimestamp,
-        );
+        handlePreviousChunk(frameDuration, setFrameNumber, setTimestamp);
         break;
       case 75: // k
         handlePlayPause(setIsPlaying);
@@ -1092,11 +1081,7 @@ const NewTrackingEditor = () => {
           <button
             className="icon-button"
             onClick={() =>
-              handlePreviousFrame(
-                frameNumber,
-                setFrameNumber,
-                setTimestamp,
-              )
+              handlePreviousFrame(frameNumber, setFrameNumber, setTimestamp)
             }
           >
             <BackwardStepIcon className="icon" />
@@ -1105,11 +1090,7 @@ const NewTrackingEditor = () => {
           <button
             className="icon-button"
             onClick={() =>
-              handleNextFrame(
-                frameNumber,
-                setFrameNumber,
-                setTimestamp,
-              )
+              handleNextFrame(frameNumber, setFrameNumber, setTimestamp)
             }
           >
             <ForwardStepIcon className="icon" />
