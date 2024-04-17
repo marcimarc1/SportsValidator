@@ -26,6 +26,7 @@ import TrackListItemPlayer from "./TrackListItemPlayer";
 import MergeAndSwapModal from "./MergeAndSwapModal";
 import { trailsFullRedraw } from "../../../utils/canvasUtils";
 import { DownloadButton } from "./DownloadButton";
+import { getCurrentTimestampFrame, handleNextChunk, handleNextFrame, handlePlayPause, handlePreviousChunk, handlePreviousFrame, handleSeekEnd, handleSeekPercent, handleSeekStart, formatTime} from "../../../utils/videoUtils";
 
 // TODO Take a video_id instead and have an endpoint on the server where we supply a video_id and get the corresponding video
 const NewTrackingEditor = () => {
@@ -187,7 +188,7 @@ const NewTrackingEditor = () => {
     let tempList = [];
     let runningIndex = 0;
     let boxes = canvasBoxes.filter(
-      (box) => box.my.frame == getCurrentTimestampFrame(),
+      (box) => box.my.frame == getCurrentTimestampFrame(videoElement, frameDuration),
     );
     boxes.forEach((box) => {
       const boxColor = colorSet.get(box.my.key);
@@ -683,7 +684,7 @@ const NewTrackingEditor = () => {
     let previousFrameNumber = 0;
 
     const updateCanvas = () => {
-      const currentFrameNumber = getCurrentTimestampFrame();
+      const currentFrameNumber = getCurrentTimestampFrame(videoElement, frameDuration);
       drawVideo();
       drawBoundingBoxes(currentFrameNumber);
     };
@@ -700,7 +701,7 @@ const NewTrackingEditor = () => {
         return;
       }
 
-      const currentFrameNumber = getCurrentTimestampFrame();
+      const currentFrameNumber = getCurrentTimestampFrame(videoElement, frameDuration);
       if (currentFrameNumber != previousFrameNumber) {
         setFrameNumber(currentFrameNumber);
         setTimestamp(videoElement.currentTime);
@@ -886,19 +887,19 @@ const NewTrackingEditor = () => {
   const handleKeyDown = (event) => {
     switch (event.keyCode) {
       case 74: // j
-        handlePreviousChunk();
+        handlePreviousChunk(videoElement, frameDuration, setFrameNumber, setTimestamp);
         break;
       case 75: // k
-        handlePlayPause();
+        handlePlayPause(videoElement, setIsPlaying);
         break;
       case 76: // l
-        handleNextChunk();
+        handleNextChunk(videoElement);
         break;
       case 188: // ,
-        handlePreviousFrame();
+        handlePreviousFrame(videoElement, frameNumber, setFrameNumber, setTimestamp, frameDuration);
         break;
       case 190: // .
-        handleNextFrame();
+        handleNextFrame(videoElement, frameNumber, setFrameNumber, setTimestamp, frameDuration);
         break;
     }
   };
@@ -910,97 +911,7 @@ const NewTrackingEditor = () => {
     };
   }, [handleKeyDown]);
 
-  const getCurrentTimestampFrame = () => {
-    // First frame is frame 0
-    return Math.floor(videoElement.currentTime / frameDuration);
-  };
 
-  const getReferenceTimestampForFrame = (n) => {
-    return n * frameDuration + frameDuration / 3;
-  };
-
-  const updateTimestamp = (newTimestamp) => {
-    const newFrameNumber = Math.floor(newTimestamp / frameDuration);
-    setTimestamp(newTimestamp);
-    setFrameNumber(newFrameNumber);
-  };
-
-  const handleNextFrame = () => {
-    if (videoElement) {
-      const nextFrame = frameNumber + 1;
-      const referenceTimestamp = getReferenceTimestampForFrame(nextFrame);
-      videoElement.currentTime = referenceTimestamp;
-      setFrameNumber(nextFrame);
-      setTimestamp(referenceTimestamp);
-    }
-  };
-
-  const handlePreviousFrame = () => {
-    if (videoElement && frameNumber > 0) {
-      const previousFrame = frameNumber - 1;
-      const referenceTimestamp = getReferenceTimestampForFrame(previousFrame);
-      videoElement.currentTime = referenceTimestamp;
-      setFrameNumber(previousFrame);
-      setTimestamp(referenceTimestamp);
-    }
-  };
-
-  const handlePreviousChunk = () => {
-    const newTimestamp = Math.max(0, videoElement.currentTime - 6);
-    videoElement.currentTime = newTimestamp;
-    updateTimestamp(newTimestamp);
-  };
-
-  const handleNextChunk = () => {
-    const newTimestamp = Math.min(
-      videoElement.duration,
-      videoElement.currentTime + 6,
-    );
-    videoElement.currentTime = newTimestamp;
-    updateTimestamp(newTimestamp);
-  };
-
-  const handlePlayPause = () => {
-    if (videoElement && videoElement.readyState != 0 && !videoElement.ended) {
-      if (videoElement.paused) {
-        setIsPlaying(true);
-        videoElement.play();
-      } else {
-        setIsPlaying(false);
-        videoElement.pause();
-      }
-    }
-  };
-
-  // Seeking
-
-  const handleSeekStart = () => {
-    if (videoElement && !videoElement.ended && !videoElement.paused) {
-      wasVideoPlaying = true;
-      videoElement.pause();
-    } else {
-      wasVideoPlaying = false;
-    }
-  };
-
-  const handleSeekPercent = (value) => {
-    setProgress(value);
-    const newTimestamp = (value / 100) * videoElement.duration;
-    videoElement.currentTime = newTimestamp;
-    updateTimestamp(newTimestamp);
-  };
-
-  const handleSeekEnd = () => {
-    if (wasVideoPlaying) {
-      videoElement.play();
-    }
-  };
-
-  const formatTime = (time) => {
-    const minutes = Math.floor(time / 60);
-    const seconds = time % 60;
-    return `${minutes}:${seconds.toFixed(5).padStart(2, "0")}`;
-  };
 
   function handleDisplayingBox() {
     if (isShowingBox) {
@@ -1151,16 +1062,22 @@ const NewTrackingEditor = () => {
           onSeekPercent={handleSeekPercent}
           onSeekEnd={handleSeekEnd}
           progress={progress}
+          videoElement={videoElement}
+          setProgress={setProgress}
+          wasVideoPlaying={wasVideoPlaying}
+          frameDuration={frameDuration}
+          setFrameNumber={setFrameNumber}
+          setTimestamp={setTimestamp}
         />
         <div id="buttons-container">
-          <button className="icon-button" onClick={handlePreviousFrame}>
+          <button className="icon-button" onClick={ () => handlePreviousFrame(videoElement, frameNumber, setFrameNumber, setTimestamp)}>
             <BackwardStepIcon className="icon" />
           </button>
           <span id="frame-number-display">Frame {frameNumber}</span>
-          <button className="icon-button" onClick={handleNextFrame}>
+          <button className="icon-button" onClick={() => handleNextFrame(videoElement, frameNumber, setFrameNumber, setTimestamp)}>
             <ForwardStepIcon className="icon" />
           </button>
-          <button className="icon-button" onClick={handlePlayPause}>
+          <button className="icon-button" onClick={() =>  handlePlayPause(videoElement, setIsPlaying)}>
             {isPlaying ? (
               <PauseIcon className="icon" />
             ) : (
