@@ -37,7 +37,10 @@ import {
   handleSeekPercent,
   handleSeekStart,
   formatTime,
+  generatePoster
 } from "../../../utils/videoUtils";
+
+import { useVideoStore } from "../../../utils/videoUtils";
 
 // TODO Take a video_id instead and have an endpoint on the server where we supply a video_id and get the corresponding video
 const NewTrackingEditor = () => {
@@ -50,7 +53,10 @@ const NewTrackingEditor = () => {
   const [videoUrl, setVideoUrl] = useState("");
   const [frameNumber, setFrameNumber] = useState(0);
   const [timestamp, setTimestamp] = useState(0);
-  const [videoElement, setVideoElement] = useState(null);
+
+  const videoElement = useVideoStore(state => state.videoElement);
+  const setVideoElement = useVideoStore(state => state.setVideoElement);
+
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [isDownloadingVideo, setIsDownloadingVideo] = useState(false);
@@ -200,7 +206,7 @@ const NewTrackingEditor = () => {
     let runningIndex = 0;
     let boxes = canvasBoxes.filter(
       (box) =>
-        box.my.frame == getCurrentTimestampFrame(videoElement, frameDuration),
+        box.my.frame == getCurrentTimestampFrame( frameDuration),
     );
     boxes.forEach((box) => {
       const boxColor = colorSet.get(box.my.key);
@@ -496,21 +502,7 @@ const NewTrackingEditor = () => {
     return colorSet;
   }
 
-  function generatePoster(videoElement) {
-    //if video cannot be played, simply return
-    if (videoElement.readyState == 0) return;
-    //get video content of first frame
-    videoElement.currentTime = frameDuration;
-    const poster = new fabric.Image(videoElement, {
-      left: 0,
-      top: 0,
-      width: videoElement.width,
-      height: videoElement.height,
-      selectable: true,
-    });
-    videoElement.currentTime = 0;
-    return poster;
-  }
+
 
   // https://stackoverflow.com/questions/33834724/draw-video-on-canvas-html5
   const drawVideo = () => {
@@ -697,7 +689,6 @@ const NewTrackingEditor = () => {
 
     const updateCanvas = () => {
       const currentFrameNumber = getCurrentTimestampFrame(
-        videoElement,
         frameDuration,
       );
       drawVideo();
@@ -717,7 +708,6 @@ const NewTrackingEditor = () => {
       }
 
       const currentFrameNumber = getCurrentTimestampFrame(
-        videoElement,
         frameDuration,
       );
       if (currentFrameNumber != previousFrameNumber) {
@@ -757,7 +747,7 @@ const NewTrackingEditor = () => {
 
     const onLoadedData = () => {
       console.log("Loaded data");
-      const poster = generatePoster(videoElement);
+      const poster = generatePoster();
       if (poster) {
         canvas.add(poster);
       }
@@ -906,21 +896,19 @@ const NewTrackingEditor = () => {
     switch (event.keyCode) {
       case 74: // j
         handlePreviousChunk(
-          videoElement,
           frameDuration,
           setFrameNumber,
           setTimestamp,
         );
         break;
       case 75: // k
-        handlePlayPause(videoElement, setIsPlaying);
+        handlePlayPause(setIsPlaying);
         break;
       case 76: // l
-        handleNextChunk(videoElement);
+        handleNextChunk();
         break;
       case 188: // ,
         handlePreviousFrame(
-          videoElement,
           frameNumber,
           setFrameNumber,
           setTimestamp,
@@ -929,7 +917,6 @@ const NewTrackingEditor = () => {
         break;
       case 190: // .
         handleNextFrame(
-          videoElement,
           frameNumber,
           setFrameNumber,
           setTimestamp,
@@ -1095,7 +1082,6 @@ const NewTrackingEditor = () => {
           onSeekPercent={handleSeekPercent}
           onSeekEnd={handleSeekEnd}
           progress={progress}
-          videoElement={videoElement}
           setProgress={setProgress}
           wasVideoPlaying={wasVideoPlaying}
           frameDuration={frameDuration}
@@ -1107,7 +1093,6 @@ const NewTrackingEditor = () => {
             className="icon-button"
             onClick={() =>
               handlePreviousFrame(
-                videoElement,
                 frameNumber,
                 setFrameNumber,
                 setTimestamp,
@@ -1121,7 +1106,6 @@ const NewTrackingEditor = () => {
             className="icon-button"
             onClick={() =>
               handleNextFrame(
-                videoElement,
                 frameNumber,
                 setFrameNumber,
                 setTimestamp,
@@ -1132,7 +1116,7 @@ const NewTrackingEditor = () => {
           </button>
           <button
             className="icon-button"
-            onClick={() => handlePlayPause(videoElement, setIsPlaying)}
+            onClick={() => handlePlayPause(setIsPlaying)}
           >
             {isPlaying ? (
               <PauseIcon className="icon" />

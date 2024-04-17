@@ -1,12 +1,12 @@
 import React, { useRef, useState, useEffect } from "react";
 import "./SeekBar.css";
+import { useVideoStore } from "../../../utils/videoUtils";
 
 const SeekBar = ({
   onSeekStart,
   onSeekPercent,
   onSeekEnd,
   progress,
-  videoElement,
   setProgress,
   wasVideoPlaying,
   frameDuration,
@@ -29,7 +29,6 @@ const SeekBar = ({
     setDisplayedProgress(percent);
     onSeekPercent(
       percent,
-      videoElement,
       setProgress,
       frameDuration,
       setFrameNumber,
@@ -46,12 +45,12 @@ const SeekBar = ({
     setIsSeeking(false);
     document.removeEventListener("mousemove", handleMouseMoveDocument);
     document.removeEventListener("mouseup", handleMouseUpDocument);
-    onSeekEnd(videoElement, wasVideoPlaying);
+    onSeekEnd(wasVideoPlaying);
   };
 
   // Using document wide listener to be able to detect mouse move even when it goes out of the container
   const handleMouseDown = (event) => {
-    onSeekStart(videoElement, wasVideoPlaying);
+    onSeekStart(wasVideoPlaying);
     setIsSeeking(true);
     seek(event.clientX);
     document.addEventListener("mousemove", handleMouseMoveDocument);
