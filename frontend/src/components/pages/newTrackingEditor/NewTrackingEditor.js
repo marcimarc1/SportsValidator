@@ -606,13 +606,10 @@ const NewTrackingEditor = () => {
       if (boundingBoxesToDraw.length > 0) {
         //draw boxes
         boundingBoxesToDraw.forEach((boundingBox) => {
-          const scaledX =
-          boundingBox.x1 * horizontalScalingFactor;
+          const scaledX = boundingBox.x1 * horizontalScalingFactor;
           const scaledY = boundingBox.y1 * verticalScalingFactor;
-          const scaledWidth =
-          boundingBox.w * horizontalScalingFactor;
-          const scaledHeight =
-          boundingBox.h * verticalScalingFactor;
+          const scaledWidth = boundingBox.w * horizontalScalingFactor;
+          const scaledHeight = boundingBox.h * verticalScalingFactor;
           const boxColor = colorSet.get(boundingBox.PlayerKey); //used in 'stroke' property of playerBox
           let playerBox = new fabric.Rect({
             left: scaledX,
@@ -821,13 +818,10 @@ const NewTrackingEditor = () => {
       if (boundingBoxesToDraw.length > 0) {
         //draw boxes
         boundingBoxesToDraw.forEach((boundingBox) => {
-          const scaledX =
-            boundingBox.x1 * horizontalScalingFactor;
+          const scaledX = boundingBox.x1 * horizontalScalingFactor;
           const scaledY = boundingBox.y1 * verticalScalingFactor;
-          const scaledWidth =
-            boundingBox.w * horizontalScalingFactor;
-          const scaledHeight =
-            boundingBox.h * verticalScalingFactor;
+          const scaledWidth = boundingBox.w * horizontalScalingFactor;
+          const scaledHeight = boundingBox.h * verticalScalingFactor;
           const boxColor = colorSet.get(boundingBox.PlayerKey); //used in 'stroke' property of playerBox
 
           let playerBox = new fabric.Rect({
