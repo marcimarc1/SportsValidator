@@ -1,4 +1,8 @@
 export const parseLogFile = (text) => {
+  if (!text) {
+    return {};
+  }
+
   const lines = text.trim().split("\n");
   const result = {};
 
