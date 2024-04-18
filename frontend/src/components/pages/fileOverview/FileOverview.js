@@ -46,18 +46,17 @@ class FileOverview extends Component {
   //     this.setState({fileListItems});
   // }
 
-  
   //generate a poster to be displayed as file overview
   generatePosterSrc = (videoFile) => {
     return new Promise((resolve, reject) => {
-      const videoElement = document.createElement('video');
+      const videoElement = document.createElement("video");
       videoElement.preload = "metadata";
       videoElement.src = window.URL.createObjectURL(videoFile);
-  
-      videoElement.addEventListener('canplay', () => {
+
+      videoElement.addEventListener("canplay", () => {
         const canvas = new fabric.StaticCanvas(null, {
           width: videoElement.width,
-          height: videoElement.height
+          height: videoElement.height,
         });
 
         const poster = new fabric.Image(videoElement, {
@@ -67,18 +66,18 @@ class FileOverview extends Component {
         });
         canvas.add(poster);
         canvas.renderAll();
-    
+
         // Convert canvas content to data URL
         const posterSrc = canvas.toDataURL({
-          format: 'jpeg',
-          quality: 1
+          format: "jpeg",
+          quality: 1,
         });
         resolve(posterSrc);
       });
-  
+
       // error handling
-      videoElement.addEventListener('error', () => {
-        reject(new Error('Failed to load video file'));
+      videoElement.addEventListener("error", () => {
+        reject(new Error("Failed to load video file"));
       });
     });
   };
