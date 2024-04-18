@@ -184,11 +184,9 @@ class FileOverview extends Component {
       tempHomographies
         ? readJson(tempHomographies, "homographies")
         : Promise.resolve(null),
-      tempLog 
-        ? readCSV(tempLog, "log") 
-        : Promise.resolve(null),
-      tempFieldSize 
-        ? readJson(tempFieldSize, "fieldSize") 
+      tempLog ? readCSV(tempLog, "log") : Promise.resolve(null),
+      tempFieldSize
+        ? readJson(tempFieldSize, "fieldSize")
         : Promise.resolve(null),
     ])
       .then((results) => {

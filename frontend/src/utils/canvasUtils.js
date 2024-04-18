@@ -45,46 +45,50 @@ export const trailsFullRedraw = (
 };
 
 function applyHomography(homography, point) {
-    let [x, y] = point;
-    let w = homography[2][0] * x + homography[2][1] * y + homography[2][2];
-    let transformedX = (homography[0][0] * x + homography[0][1] * y + homography[0][2]) / w;
-    let transformedY = (homography[1][0] * x + homography[1][1] * y + homography[1][2]) / w;
+  let [x, y] = point;
+  let w = homography[2][0] * x + homography[2][1] * y + homography[2][2];
+  let transformedX =
+    (homography[0][0] * x + homography[0][1] * y + homography[0][2]) / w;
+  let transformedY =
+    (homography[1][0] * x + homography[1][1] * y + homography[1][2]) / w;
 
-    return { x: transformedX, y: transformedY };
+  return { x: transformedX, y: transformedY };
 }
 
 export const drawFieldPoints = (
-    canvas, 
-    frameNumber, 
-    homographies,
-    horizontalScalingFactor,
-    verticalScalingFactor,
-    sport, 
-    length,
-    width
-  ) => {
+  canvas,
+  frameNumber,
+  homographies,
+  horizontalScalingFactor,
+  verticalScalingFactor,
+  sport,
+  length,
+  width,
+) => {
   const template = getTemplate(sport, length, width);
   const homography = homographies[frameNumber];
   const invHomography = inv(homography);
 
   const templateKeys = Object.keys(template);
-  templateKeys.forEach(key => {
-
+  templateKeys.forEach((key) => {
     const points = template[key];
-    points.forEach(point => {
+    points.forEach((point) => {
       let transformedPoint = applyHomography(invHomography, point);
-      transformedPoint = { x: transformedPoint.x * horizontalScalingFactor, y: transformedPoint.y * verticalScalingFactor };
-    
+      transformedPoint = {
+        x: transformedPoint.x * horizontalScalingFactor,
+        y: transformedPoint.y * verticalScalingFactor,
+      };
+
       let circle = new fabric.Circle({
         left: transformedPoint.x,
         top: transformedPoint.y,
-        stroke: 'blue',
+        stroke: "blue",
         strokeWidth: 1,
-        fill: 'blue',
+        fill: "blue",
         radius: 5,
         visible: true,
-        originX: 'center',
-        originY: 'center',
+        originX: "center",
+        originY: "center",
         hasRotatingPoint: false,
         hasBorders: false,
         hasControls: false,
@@ -97,6 +101,4 @@ export const drawFieldPoints = (
       canvas.add(circle);
     });
   });
-}
-
-
+};

@@ -668,9 +668,20 @@ const NewTrackingEditor = () => {
       }
     }
 
-    canvas.remove(...canvas.getObjects().filter((obj) => obj.properties?.type === "field"));
-    if(showField){
-      drawFieldPoints(canvas, frameNumber, homographies, horizontalScalingFactor, verticalScalingFactor, logFile.Sport, fieldSize.length, fieldSize.width);
+    canvas.remove(
+      ...canvas.getObjects().filter((obj) => obj.properties?.type === "field"),
+    );
+    if (showField) {
+      drawFieldPoints(
+        canvas,
+        frameNumber,
+        homographies,
+        horizontalScalingFactor,
+        verticalScalingFactor,
+        logFile.Sport,
+        fieldSize.length,
+        fieldSize.width,
+      );
     }
 
     setPlayerList(tempList);
@@ -778,7 +789,7 @@ const NewTrackingEditor = () => {
     playerNameMap,
     trailFrameNumber,
     trailsEnabled,
-    showField
+    showField,
   ]);
 
   //triggered when user clicks on the video progress bar to change the video time
@@ -1068,13 +1079,12 @@ const NewTrackingEditor = () => {
   };
 
   const handleEnablingField = () => {
-    if(showField){
+    if (showField) {
       setShowField(false);
-    }
-    else{
+    } else {
       setShowField(true);
     }
-  }
+  };
 
   return (
     <div>
