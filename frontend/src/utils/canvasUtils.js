@@ -9,10 +9,13 @@ export const trailsFullRedraw = (
   colorSet,
   horizontalScalingFactor,
   verticalScalingFactor,
+  setSelectedTrails,
 ) => {
   const pastTrailsToDraw = annotations.filter((a) => {
     return (
-      a.FrameNo > frameNumber - trailFrameNumber && a.FrameNo < frameNumber
+      a.FrameNo > frameNumber - trailFrameNumber &&
+      a.FrameNo < frameNumber &&
+      (a.in_field || a.in_field === null)
     );
   });
 
@@ -30,13 +33,19 @@ export const trailsFullRedraw = (
       visible: isShowingAnnotation,
     });
     trail.properties = {
-      frame: frameNumber,
+      frame: a.FrameNo,
+      playerKey: a.PlayerKey,
     };
-    //turn off properties that are not needed to increase performance
-    trail.selectable = false;
-    trail.hasControls = false;
-    trail.hasBorders = false;
     trail.hasRotatingPoint = false;
+    defineTrailBehaviour(trail, setSelectedTrails);
     canvas.add(trail);
+  });
+};
+
+export const defineTrailBehaviour = (trail, setSelectedTrails) => {
+  trail.on("selected", () => {
+    setSelectedTrails((prevTrails) => {
+      return new Set(prevTrails.add(trail.properties.playerKey));
+    });
   });
 };
