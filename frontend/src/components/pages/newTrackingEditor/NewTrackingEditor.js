@@ -41,14 +41,11 @@ import {
   handlePlayPause,
   handlePreviousChunk,
   handlePreviousFrame,
-  handleSeekEnd,
-  handleSeekPercent,
-  handleSeekStart,
   formatTime,
   generatePoster,
 } from "../../../utils/videoUtils";
 
-import { useVideoStore } from "../../../utils/videoUtils";
+import { useVideoStore } from "../../../store/store";
 
 // TODO Take a video_id instead and have an endpoint on the server where we supply a video_id and get the corresponding video
 const NewTrackingEditor = () => {
@@ -957,9 +954,6 @@ const NewTrackingEditor = () => {
       </div>
       <div className="controls">
         <SeekBar
-          onSeekStart={handleSeekStart}
-          onSeekPercent={handleSeekPercent}
-          onSeekEnd={handleSeekEnd}
           progress={progress}
           setProgress={setProgress}
           wasVideoPlaying={wasVideoPlaying}
