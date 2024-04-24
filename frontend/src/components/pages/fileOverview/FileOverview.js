@@ -19,6 +19,7 @@ class FileOverview extends Component {
   }
 
   state = {
+    fileInputNumber: 0,
     fileListItems: [],
     uploadExpanded: false,
     firstTime: true, // used to not trigger any animations when component is mounted
@@ -94,9 +95,20 @@ class FileOverview extends Component {
     );
   };
 
+  fileSelectionHandler = (event) => {
+    const files = event.target.files;
+    this.setState({
+      fileInputNumber: files.length,
+    });
+  };
+
   fileHandler = async (event) => {
     event.preventDefault();
     const files = Array.from(this.fileInput.current.files);
+
+    this.setState({
+      fileInputNumber: files.length,
+    });
 
     let tempProcessedPlayers = null;
     let tempBallTracks = null;
@@ -238,6 +250,10 @@ class FileOverview extends Component {
         ) : undefined,
     );
 
+    let fileCountDisplay =
+      this.state.fileInputNumber > 0
+        ? `(${this.state.fileInputNumber} files selected)`
+        : "";
     return (
       <div className="FileOverview">
         {this.state.errorMessage && (
@@ -268,7 +284,18 @@ class FileOverview extends Component {
                 className={"FileInput" + classNameFileUploadPostfix}
                 onSubmit={this.fileHandler}
               >
-                <input type="file" ref={this.fileInput} name="file" multiple />
+                <label className="file-upload" for="file-upload">
+                  Choose Files {fileCountDisplay}
+                </label>
+
+                <input
+                  id="file-upload"
+                  type="file"
+                  ref={this.fileInput}
+                  onChange={this.fileSelectionHandler}
+                  name="file"
+                  multiple
+                />
                 {/*<input type="submit">*/}
                 <IconButton
                   className="FileInputCheckmark"

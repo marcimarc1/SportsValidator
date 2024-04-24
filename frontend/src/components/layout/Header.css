@@ -1,38 +1,26 @@
+:root {
+    --main-text-color: #F5EDF0;
+    --main-bg: #1B1F22;
+    --secondary-bg: #424B54;
+    --accent: #83B692;
+}
+
 .Header {
-    /*background-color: rgba(0, 50, 40, 0.9);*/
-    background-color: rgba(0, 0, 0, 0.7);
+    background-color: var(--main-bg);
     width: 100%;
-    /*position: absolute;*/
-    /*padding-top: 40px;*/
     display: flex;
     justify-content: space-between;
     align-items: center;
-
-    /*position: fixed;*/    /* Did not have intended behaviour */
 }
 
  .Header.on-start-page {
      position: absolute;
-     padding-top: 40px;
      animation: grow-header 0.3s ease-out;
  }
 
  .Header.shrink-animation {
      animation: grow-header 0.3s ease-out reverse;
  }
-
- /*.Header .not-on-start-page {*/
- /*    height: 60px;  !*Added afterwards to what it turned out to be (actually 59.2px) with items/padding so that spacer can be same height*!*/
- /*}*/
-
- /*.HeaderSpacerDummy {*/
- /*    width: 100%;*/
- /*    height: 60px;*/
- /*}*/
-
-/*.HeaderSpacerDummy .on-start-page {*/
-/*    display: none;*/
-/*}*/
 
  @keyframes grow-header {
      0% {
@@ -50,9 +38,8 @@
 }
 
 .HeaderIcon, .HeaderText {
-    /*color: navajowhite;*/
-    color: #727272;
-    font-size: 2rem;
+    color: var(--accent);
+    font-size: 1rem;
     margin-block-start: 0.67rem;
     margin-block-end: 0.67rem;
     z-index: 2;
@@ -63,7 +50,7 @@
 }
 
 .HeaderIcon {
-    transform: scale(2);
+    transform: scale(1.3);
 }
 
 .HeaderText {

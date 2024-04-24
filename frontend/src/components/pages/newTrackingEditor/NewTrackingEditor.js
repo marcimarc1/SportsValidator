@@ -499,6 +499,12 @@ const NewTrackingEditor = () => {
     return poster;
   }
 
+  const [drawInField, setDrawInField] = useState(true);
+
+  const isInField = (inField) => {
+    return inField === true || inField === null;
+  };
+
   // https://stackoverflow.com/questions/33834724/draw-video-on-canvas-html5
   const drawVideo = () => {
     // Clear canvas
@@ -573,10 +579,10 @@ const NewTrackingEditor = () => {
       });
     }
 
-    var playersToDraw = canvasBoxes.filter(
-      (a) =>
-        a.my.frame == frameNumber && (a.my.in_field || a.my.in_field === null),
-    );
+    var playersToDraw = drawInField
+      ? canvasBoxes.filter((a) => isInField(a.my.in_field))
+      : canvasBoxes;
+
     var tempList = [];
     let runningIndex = 0;
 
@@ -601,9 +607,11 @@ const NewTrackingEditor = () => {
         playerIndex++;
       }
     } else {
-      playersToDraw = annotations.filter(
-        (a) => a.FrameNo == frameNumber && (a.in_field || a.in_field === null),
-      );
+      var playersToDraw = drawInField
+        ? annotations.filter(
+            (a) => a.FrameNo === frameNumber && isInField(a.in_field),
+          )
+        : annotations.filter((a) => a.FrameNo === frameNumber);
 
       if (playersToDraw.length > 0) {
         //draw boxes
@@ -818,11 +826,14 @@ const NewTrackingEditor = () => {
 
     //same thing we do in drawBoundingBoxes..
     if (annotations.length > 0) {
-      var playersToDraw = annotations.filter(
-        (a) => a.FrameNo == frameNumber && (a.in_field || a.in_field === null),
-      );
+      var playersToDraw = drawInField
+        ? annotations.filter(
+            (a) => a.FrameNo === frameNumber && isInField(a.in_field),
+          )
+        : annotations.filter((a) => a.FrameNo === frameNumber);
+
       if (playersToDraw.length > 0) {
-        //draw boxes
+        //draw boxesd
         while (playerIndex < playersToDraw.length) {
           const scaledX =
             playersToDraw[playerIndex].x1 * horizontalScalingFactor;
@@ -1076,6 +1087,7 @@ const NewTrackingEditor = () => {
             <FormControlLabel
               control={
                 <Switch
+                  color="default"
                   checked={isShowingAnnotation}
                   onChange={handleDisplayingAnnotation}
                 />
@@ -1086,13 +1098,31 @@ const NewTrackingEditor = () => {
           <FormGroup>
             <FormControlLabel
               control={
-                <Switch checked={isShowingBox} onChange={handleDisplayingBox} />
+                <Switch
+                  color="default"
+                  checked={isShowingBox}
+                  onChange={handleDisplayingBox}
+                />
+              }
+            />
+          </FormGroup>
+          <div>Show In Field:</div>
+          <FormGroup>
+            <FormControlLabel
+              control={
+                <Switch
+                  color="default"
+                  checked={drawInField}
+                  disabled={!videoElement?.paused}
+                  onChange={() => setDrawInField(!drawInField)}
+                />
               }
             />
           </FormGroup>
           <Button
             data-testid="add-player-button"
             variant="contained"
+            color="info"
             onClick={handleAddPlayer}
           >
             Add player
@@ -1102,6 +1132,7 @@ const NewTrackingEditor = () => {
             <FormControlLabel
               control={
                 <Switch
+                  color="default"
                   checked={trailsEnabled}
                   disabled={!videoElement?.paused}
                   onChange={handleEnablingTrails}
@@ -1112,7 +1143,12 @@ const NewTrackingEditor = () => {
           <Typography sx={{ marginLeft: "10px" }}>Trail frames: </Typography>
 
           <TextField
-            sx={{ bgcolor: "white", marginLeft: "10px", width: "80px" }}
+            variant="standard"
+            sx={{
+              width: "50px",
+              input: { color: "white" },
+              mr: 2,
+            }}
             value={trailFrameNumber}
             type="number"
             onChange={(event, val) => setTrailFrameNumber(event.target.value)}

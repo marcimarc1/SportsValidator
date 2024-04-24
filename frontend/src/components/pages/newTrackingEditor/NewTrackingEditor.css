@@ -1,3 +1,10 @@
+:root {
+    --main-text-color: #F5EDF0;
+    --main-bg: #1B1F22;
+    --secondary-bg: #424B54;
+    --accent: #83B692;
+}
+
 .video-player {
     position: relative;
     width: 100%;
@@ -5,10 +12,9 @@
 .controls {
     display: block;
     width: 100%;
-    background-color: rgba(0, 0, 0, 0.8);
-    color: #fff;
+    background-color: var(--secondary-bg);
     padding: 1rem 1rem;
-    color: rgb(220, 220, 220);
+    color: var(--main-text-color)
 }
 
 .controls span {
@@ -77,9 +83,8 @@
 .TrackListTabs {
     border-width: 0px 0px 3px 8px;
     border-style: solid;
-    border-color: black;
+    border-color: var(--main-bg);
     height: 73px;
-    background-color: #BBB;
 }
 
 .TrackListTabs Button {     /*selects all elements of type Button inside element with class TrackListTabs*/
@@ -87,15 +92,21 @@
     width: 33.33%;
     /*border-radius: 40px 40px 0 0;*/
     border-radius: 0;
+    background-color: var(--main-bg);
+    color: var(--main-text-color);
 }
 
 .TrackListTabs .active {
-    background-color: #727272;
+    background-color: var(--accent);
+}
+
+.TrackListTabs:hover{
+    background-color: var(--secondary-bg);
 }
 
 /* so that active button appears not clickable, also otherwise it only turns dark grey (~ looks active) after mouse is gone */
 .TrackListTabs .active:hover {
-    background-color: #727272;
+    background-color: var(--secondary-bg);
 }
 
 .TrackListList {
@@ -128,7 +139,7 @@
 .TrackListItem {
     border-style: none none solid solid;
     border-width: 0px 0px 3px 8px;
-    background-color: #727272;
+    background-color: #BBC3C9;
     display: flex;
     justify-content: flex-start;
     align-items: center;
@@ -139,7 +150,7 @@
     position: absolute;
     width: 0%;
     height: 100%;
-    background-color: #BBB;
+    background-color: var(--main-text-color);
     z-index: 1;
     transition: width 0.3s ease-out;
 }
@@ -210,12 +221,12 @@ for now just using style property of EditText component in JS code*/
 }
 
 .selected {
-    background-color: #BBBBBB;
+    background-color: var(--accent);
     /*color: white !important;  this would change the color (effects for example ID and border) */
 }
 
 .selected.expanded {    /* prevents selected item to change color so that only changes color by sliding animation of SwapOverlay */
-    background-color: #727272;
+    background-color:var(--accent);
 }
 
 .staticText {
@@ -226,18 +237,6 @@ for now just using style property of EditText component in JS code*/
 .video-player {
     position: relative;
     width: 100%;
-}
-.controls {
-    display: block;
-    width: 100%;
-    background-color: rgba(0, 0, 0, 0.8);
-    color: #fff;
-    padding: 1rem 1rem;
-    color: rgb(220, 220, 220);
-}
-
-.controls span {
-    text-align: center;
 }
 
 #buttons-container {

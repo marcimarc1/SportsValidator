@@ -1,6 +1,8 @@
-element {
-    /* Did not work, see comment in ../analysis/Analysis.css */
-    /*--my-box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);*/
+:root {
+    --main-text-color: #F5EDF0;
+    --main-bg: #1B1F22;
+    --secondary-bg: #424B54;
+    --accent: #83B692;
 }
 
 .spacer1 {
@@ -46,13 +48,7 @@ element {
     display: flex;
     flex-direction: column;
     align-items: center;
-    background-color: #727272;      /* GRASS BACKGROUND: comment this out and comment in the following background-image and background-repeat properties instead */
-    /*background-image: linear-gradient(  !* This way the linear gradient (which in this case is just a dark overlay to make the background image darker) is in front of the real background image *!*/
-    /*        to bottom,*/
-    /*        rgba(0, 0, 0, 0.7),*/
-    /*        rgba(0, 0, 0, 0.7)*/
-    /*), url("../../../pictures/green_grass_texture_512x512.png");*/
-    /*background-repeat: repeat;*/
+    background-color: var(--secondary-bg); 
 }
 
 .FileOverviewHeadingContainer {
@@ -69,7 +65,7 @@ element {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: #BBBBBB;
+    background-color: var(--main-text-color);
     position: absolute !important;
     left: 10px;
     box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
@@ -145,7 +141,7 @@ element {
 
 .FileOverviewListItem {
     /* height is set in js according to thumbnail size */
-    background-color: #BBBBBB;
+    background-color: var(--main-text-color);
     width: 100%;
     margin-top: 3em;
     display: flex;
@@ -196,7 +192,6 @@ element {
 }
 
 .NotesEditTextarea {
-    paddingTop: 0;
     width: 100%;
 }
 
@@ -208,13 +203,33 @@ element {
 }
 
 .FileOverviewListItemButton {
-    variant: contained;
     background-color: #344911 !important;
-    color: #BBBBBB !important;
+    color: var(--main-text-color) !important;
     border-radius: 50% !important;
     margin: 3px !important;
 }
 
 .hide {
     display: none;
+}
+
+input[type="file"] {
+    display: none;
+}
+
+
+.file-upload {
+    margin-left: 1em;
+    border: 3px solid #ccc;
+    border-radius: 20px;
+    color: var(--main-bg);
+    font-weight: bold;
+    display: inline-block;
+    padding: 6px 12px;
+    cursor: pointer;
+}
+
+.file-upload:hover {
+    background-color: var(--secondary-bg);
+    color: var(--main-text-color);
 }
