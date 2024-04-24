@@ -75,15 +75,16 @@ describe("add player button", () => {
     //given
     const canvasElement = screen.getByTestId("fabric-canvas");
     const button = screen.getByTestId("add-player-button");
-    const initialNumber = canvasElement.getAttribute("annotations");
-    expect(initialNumber).toEqual("0");
-
+    let annotations = JSON.parse(canvasElement.getAttribute("annotations"));
+    const initialNumber = annotations.length;
+    expect(initialNumber).toEqual(0);
     //when
     fireEvent.click(button);
 
     //then
-    const updatedNumber = canvasElement.getAttribute("annotations");
-    expect(updatedNumber).toEqual("1");
+    annotations = JSON.parse(canvasElement.getAttribute("annotations"));
+    const updatedNumber = annotations.length;
+    expect(updatedNumber).toEqual(1);
   });
 
   it("creates a bounding box in the canvas", async () => {

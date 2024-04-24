@@ -10,3 +10,4 @@ backend/react-app
 /docs
 
 /frontend/junit.xml
+.vscode/*
