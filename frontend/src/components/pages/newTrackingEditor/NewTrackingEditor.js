@@ -30,7 +30,7 @@ import {
 } from "../../../utils/canvasUtils";
 import { multiPlayerMerge } from "../../../utils/validation";
 import { DownloadButton } from "./DownloadButton";
-import Slider from '@mui/material/Slider';
+import Slider from "@mui/material/Slider";
 
 // TODO Take a video_id instead and have an endpoint on the server where we supply a video_id and get the corresponding video
 const NewTrackingEditor = () => {
@@ -471,8 +471,9 @@ const NewTrackingEditor = () => {
         const scaledX = a.x1 * horizontalScalingFactor;
         const scaledY = a.y1 * verticalScalingFactor;
         const scaledWidth = a.w * horizontalScalingFactor;
-        const scaledHeight =a.h * verticalScalingFactor;
-        const radius = scaledWidth < scaledHeight ? scaledWidth / 4 : scaledHeight / 4;
+        const scaledHeight = a.h * verticalScalingFactor;
+        const radius =
+          scaledWidth < scaledHeight ? scaledWidth / 4 : scaledHeight / 4;
         const trailColor = colorSet.get(a.PlayerKey);
         let trail = new fabric.Circle({
           left: scaledX,
@@ -480,7 +481,7 @@ const NewTrackingEditor = () => {
           stroke: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
           strokeWidth: 3,
           fill: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
-          radius: radius * trailSize / 50,
+          radius: (radius * trailSize) / 50,
           visible: isShowingAnnotation,
         });
         trail.properties = {
@@ -686,7 +687,7 @@ const NewTrackingEditor = () => {
     playerNameMap,
     trailFrameNumber,
     trailsEnabled,
-    trailSize
+    trailSize,
   ]);
 
   //triggered when user clicks on the video progress bar to change the video time
@@ -704,7 +705,7 @@ const NewTrackingEditor = () => {
         canvas.width / 3840,
         canvas.height / 2160,
         setSelectedTrails,
-        trailSize
+        trailSize,
       );
     }
   }, [videoElement?.seeking]);
@@ -732,7 +733,7 @@ const NewTrackingEditor = () => {
         horizontalScalingFactor,
         verticalScalingFactor,
         setSelectedTrails,
-        trailSize
+        trailSize,
       );
     }
 
@@ -977,7 +978,7 @@ const NewTrackingEditor = () => {
 
   const handleSwitchingTrailSize = (event) => {
     setTrailSize(event.target.value);
-  }
+  };
 
   return (
     <div>
@@ -1038,7 +1039,17 @@ const NewTrackingEditor = () => {
             />
           </FormGroup>
           <Typography>Trails Size </Typography>
-          <Slider sx={{width: '60px'}} value={trailSize} disabled={!videoElement?.paused} onChange={handleSwitchingTrailSize} min={10} max={100} step={10} aria-label="Default" valueLabelDisplay="auto" />
+          <Slider
+            sx={{ width: "60px" }}
+            value={trailSize}
+            disabled={!videoElement?.paused}
+            onChange={handleSwitchingTrailSize}
+            min={10}
+            max={100}
+            step={10}
+            aria-label="Default"
+            valueLabelDisplay="auto"
+          />
           <Typography sx={{ marginLeft: "10px" }}>Trail frames: </Typography>
 
           <TextField
