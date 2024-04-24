@@ -53,6 +53,7 @@ const NewTrackingEditor = () => {
   const [trailFrameNumber, setTrailFrameNumber] = useState(50);
   const [mergeModalState, setMergeModalState] = useState(false);
   const [playerChosenInList, setPlayerChosenInList] = useState("");
+  const [drawInField, setDrawInField] = useState(true);
 
   const handleModalOpen = (playerInList) => {
     setPlayerChosenInList(playerInList);
@@ -499,8 +500,6 @@ const NewTrackingEditor = () => {
     return poster;
   }
 
-  const [drawInField, setDrawInField] = useState(true);
-
   const isInField = (inField) => {
     return inField === true || inField === null;
   };
@@ -580,8 +579,10 @@ const NewTrackingEditor = () => {
     }
 
     var playersToDraw = drawInField
-      ? canvasBoxes.filter((a) => isInField(a.my.in_field))
-      : canvasBoxes;
+      ? canvasBoxes.filter(
+          (a) => a.my.frame === frameNumber && isInField(a.my.in_field),
+        )
+      : canvasBoxes.filter((a) => a.my.frame === frameNumber);
 
     var tempList = [];
     let runningIndex = 0;
@@ -607,7 +608,7 @@ const NewTrackingEditor = () => {
         playerIndex++;
       }
     } else {
-      var playersToDraw = drawInField
+      playersToDraw = drawInField
         ? annotations.filter(
             (a) => a.FrameNo === frameNumber && isInField(a.in_field),
           )
@@ -779,6 +780,7 @@ const NewTrackingEditor = () => {
     playerNameMap,
     trailFrameNumber,
     trailsEnabled,
+    drawInField,
   ]);
 
   //triggered when user clicks on the video progress bar to change the video time
@@ -892,7 +894,7 @@ const NewTrackingEditor = () => {
         setPlayerList(tempList);
       }
     }
-  }, [playerNameMap, trailsEnabled, trailFrameNumber]);
+  }, [playerNameMap, trailsEnabled, trailFrameNumber, drawInField]);
 
   const handleKeyDown = (event) => {
     switch (event.keyCode) {
