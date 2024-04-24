@@ -63,9 +63,7 @@ export function generateColor(value) {
 }
 
 export function boundingBoxColorSet(annotationList) {
-  let uniquePlayerKeys = new Set(
-    annotationList.map((item) => item.PlayerKey),
-  );
+  let uniquePlayerKeys = new Set(annotationList.map((item) => item.PlayerKey));
   let colorSet = new Map();
 
   uniquePlayerKeys.forEach((key) => {

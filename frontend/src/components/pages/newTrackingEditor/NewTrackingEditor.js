@@ -49,6 +49,7 @@ import {
 } from "../../../utils/videoUtils";
 
 import { useVideoStore } from "../../../store/store";
+import Controls from "./Controls";
 
 // TODO Take a video_id instead and have an endpoint on the server where we supply a video_id and get the corresponding video
 const NewTrackingEditor = () => {
@@ -246,8 +247,6 @@ const NewTrackingEditor = () => {
       selectBBox(playerBox);
     }
   }
-
-
 
   const retrievePlayerKeys = () => {
     if (annotations.length > 0) {
@@ -768,72 +767,24 @@ const NewTrackingEditor = () => {
         mergeModalState={mergeModalState}
         handleClose={handleModalClose}
       />
-      <div className="controls">
-        <Box id="tools-container" sx={{ display: "flex", gap: "10px" }}>
-          <div>Show Annotation:</div>
-          <FormGroup>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={isShowingAnnotation}
-                  onChange={handleDisplayingAnnotation}
-                />
-              }
-            />
-          </FormGroup>
-          <div>Show Player Box:</div>
-          <FormGroup>
-            <FormControlLabel
-              control={
-                <Switch checked={isShowingBox} onChange={handleDisplayingBox} />
-              }
-            />
-          </FormGroup>
-          <Button
-            data-testid="add-player-button"
-            variant="contained"
-            onClick={handleAddPlayer}
-          >
-            Add player
-          </Button>
-          <Button
-            data-testid="merge-button"
-            variant="contained"
-            onClick={handleMultiSelectMerge}
-          >
-            Merge
-          </Button>
-          <Typography sx={{ marginLeft: "10px" }}>Trails </Typography>
-          <FormGroup>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={trailsEnabled}
-                  disabled={!videoElement?.paused}
-                  onChange={handleEnablingTrails}
-                />
-              }
-            />
-          </FormGroup>
-          <Typography sx={{ marginLeft: "10px" }}>Trail frames: </Typography>
-          <TextField
-            sx={{ bgcolor: "white", marginLeft: "10px", width: "80px" }}
-            value={trailFrameNumber}
-            type="number"
-            onChange={(event, val) => setTrailFrameNumber(event.target.value)}
-          />
-          <div className="tests">
-            <Button
-              data-testid="from-annotation"
-              className="tests"
-              onClick={() => drawBoundingBoxes(frameNumber)}
-            >
-              draw players from annotation
-            </Button>
-          </div>
-          <DownloadButton players={annotations} video={video} />
-        </Box>
-      </div>
+      <Controls
+        isShowingAnnotation={isShowingAnnotation}
+        handleDisplayingAnnotation={handleDisplayingAnnotation}
+        isShowingBox={isShowingBox}
+        handleDisplayingBox={handleDisplayingBox}
+        handleAddPlayer={handleAddPlayer}
+        handleMultiSelectMerge={handleMultiSelectMerge}
+        trailsEnabled={trailsEnabled}
+        videoElement={videoElement}
+        handleEnablingTrails={handleEnablingTrails}
+        trailFrameNumber={trailFrameNumber}
+        setTrailFrameNumber={setTrailFrameNumber}
+        drawBoundingBoxes={drawBoundingBoxes}
+        frameNumber={frameNumber}
+        DownloadButton={DownloadButton}
+        annotations={annotations}
+        video={video}
+      />
       <div id="canvas-container">
         <canvas
           data-testid="fabric-canvas"

@@ -86,8 +86,7 @@ export function defineBoxBehavior(playerBox, canvas, annotations) {
       // Calculate actual width and height based on scale factors
       //when scaling the box, only scaleX and scaleY change, while width and height not
       var actualWidth = (boundingRect.width - playerBox.strokeWidth) / scaleX;
-      var actualHeight =
-        (boundingRect.height - playerBox.strokeWidth) / scaleY;
+      var actualHeight = (boundingRect.height - playerBox.strokeWidth) / scaleY;
       playerBox.left = boundingRect.left;
       playerBox.top = boundingRect.top;
       playerBox.width = actualWidth;

@@ -1,6 +1,10 @@
 import React, { useRef, useState, useEffect } from "react";
 import "./SeekBar.css";
-import { useVideoStore, handleSeekStart, handleSeekPercent, handleSeekEnd } from "../../../utils/videoUtils";
+import {
+  handleSeekStart,
+  handleSeekPercent,
+  handleSeekEnd,
+} from "../../../utils/videoUtils";
 
 const SeekBar = ({
   progress,
