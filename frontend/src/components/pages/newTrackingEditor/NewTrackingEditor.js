@@ -30,6 +30,7 @@ import {
 } from "../../../utils/canvasUtils";
 import { multiPlayerMerge } from "../../../utils/validation";
 import { DownloadButton } from "./DownloadButton";
+import Slider from '@mui/material/Slider';
 
 // TODO Take a video_id instead and have an endpoint on the server where we supply a video_id and get the corresponding video
 const NewTrackingEditor = () => {
@@ -58,6 +59,7 @@ const NewTrackingEditor = () => {
   const [mergeModalState, setMergeModalState] = useState(false);
   const [playerChosenInList, setPlayerChosenInList] = useState("");
   const [selectedTrails, setSelectedTrails] = useState(new Set());
+  const [trailSize, setTrailSize] = useState(50);
 
   const handleModalOpen = (playerInList) => {
     setPlayerChosenInList(playerInList);
@@ -469,6 +471,9 @@ const NewTrackingEditor = () => {
       currentTrailsToDraw.forEach((a) => {
         const scaledX = a.x1 * horizontalScalingFactor;
         const scaledY = a.y1 * verticalScalingFactor;
+        const scaledWidth = a.w * horizontalScalingFactor;
+        const scaledHeight =a.h * verticalScalingFactor;
+        const radius = scaledWidth < scaledHeight ? scaledWidth / 4 : scaledHeight / 4;
         const trailColor = colorSet.get(a.PlayerKey);
         let trail = new fabric.Circle({
           left: scaledX,
@@ -476,7 +481,7 @@ const NewTrackingEditor = () => {
           stroke: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
           strokeWidth: 3,
           fill: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
-          radius: 5,
+          radius: radius * trailSize / 50,
           visible: isShowingAnnotation,
         });
         trail.properties = {
@@ -687,6 +692,7 @@ const NewTrackingEditor = () => {
     playerNameMap,
     trailFrameNumber,
     trailsEnabled,
+    trailSize
   ]);
 
   //triggered when user clicks on the video progress bar to change the video time
@@ -704,6 +710,7 @@ const NewTrackingEditor = () => {
         canvas.width / 3840,
         canvas.height / 2160,
         setSelectedTrails,
+        trailSize
       );
     }
   }, [videoElement?.seeking]);
@@ -731,6 +738,7 @@ const NewTrackingEditor = () => {
         horizontalScalingFactor,
         verticalScalingFactor,
         setSelectedTrails,
+        trailSize
       );
     }
 
@@ -799,7 +807,7 @@ const NewTrackingEditor = () => {
         setPlayerList(tempList);
       }
     }
-  }, [playerNameMap, trailsEnabled, trailFrameNumber]);
+  }, [playerNameMap, trailsEnabled, trailSize, trailFrameNumber]);
 
   const handleKeyDown = (event) => {
     switch (event.keyCode) {
@@ -977,6 +985,10 @@ const NewTrackingEditor = () => {
     }
   };
 
+  const handleSwitchingTrailSize = (event) => {
+    setTrailSize(event.target.value);
+  }
+
   return (
     <div>
       <MergeAndSwapModal
@@ -1035,6 +1047,8 @@ const NewTrackingEditor = () => {
               }
             />
           </FormGroup>
+          <Typography>Trails Size </Typography>
+          <Slider sx={{width: '60px'}} value={trailSize} disabled={!videoElement?.paused} onChange={handleSwitchingTrailSize} min={10} max={100} step={10} aria-label="Default" valueLabelDisplay="auto" />
           <Typography sx={{ marginLeft: "10px" }}>Trail frames: </Typography>
 
           <TextField
@@ -1061,8 +1075,6 @@ const NewTrackingEditor = () => {
           data-testid="fabric-canvas"
           ref={canvasRef}
           canvas={JSON.stringify(canvas)}
-          canvasObjects={JSON.stringify(canvas.getObjects())}
-          annotations={JSON.stringify(annotations)}
           className="canvas"
           id="tracking-editor-canvas"
           width="1920"
