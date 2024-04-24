@@ -5,6 +5,7 @@ import IconButton from "@material-ui/core/IconButton";
 
 import videofiles from "../../../data/videofiles.json";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { fabric } from "fabric";
 import {
   faPlus,
   faCheck,
@@ -44,6 +45,42 @@ class FileOverview extends Component {
   //     }
   //     this.setState({fileListItems});
   // }
+
+  //generate a poster to be displayed as file overview
+  generatePosterSrc = (videoFile) => {
+    return new Promise((resolve, reject) => {
+      const videoElement = document.createElement("video");
+      videoElement.preload = "metadata";
+      videoElement.src = window.URL.createObjectURL(videoFile);
+
+      videoElement.addEventListener("canplay", () => {
+        const canvas = new fabric.StaticCanvas(null, {
+          width: videoElement.width,
+          height: videoElement.height,
+        });
+
+        const poster = new fabric.Image(videoElement, {
+          left: 0,
+          top: 0,
+          selectable: true,
+        });
+        canvas.add(poster);
+        canvas.renderAll();
+
+        // Convert canvas content to data URL
+        const posterSrc = canvas.toDataURL({
+          format: "jpeg",
+          quality: 1,
+        });
+        resolve(posterSrc);
+      });
+
+      // error handling
+      videoElement.addEventListener("error", () => {
+        reject(new Error("Failed to load video file"));
+      });
+    });
+  };
 
   changeName = (id, name) => {
     // TODO BACKEND
@@ -162,7 +199,6 @@ class FileOverview extends Component {
       };
       videoElement.src = window.URL.createObjectURL(tempVideo);
     });
-    videoDuration = Math.round(videoDuration / 60);
 
     Promise.all([
       readCSV(tempProcessedPlayers, "processedPlayers"),
@@ -231,6 +267,7 @@ class FileOverview extends Component {
             ballTracks={e.ballTracks}
             homographies={e.homographies}
             log={e.log}
+            poster={this.generatePosterSrc(e.video)}
             changeName={this.changeName}
             changeNotes={this.changeNotes}
             delete={this.delete}
