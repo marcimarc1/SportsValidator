@@ -9,7 +9,8 @@ import { parseProcessedPlayers } from "../../../utils/csvParser";
 import {
   convertBoxToAnnotation,
   convertAnnotationToBox,
-} from "../../../utils/AnnotationBoxConverter";
+  defineBoxBehavior,
+} from "../../../utils/canvasBoxesUtils";
 // import tracking from "../../../data/tracking_data.json";
 // import tracking from "../../../data/tracking-data-for-test.json";
 import { fabric } from "fabric";
@@ -31,6 +32,8 @@ import MergeAndSwapModal from "./MergeAndSwapModal";
 import {
   trailsFullRedraw,
   defineTrailBehaviour,
+  boundingBoxColorSet,
+  generateColor,
 } from "../../../utils/canvasUtils";
 import { multiPlayerMerge } from "../../../utils/validation";
 import { DownloadButton } from "./DownloadButton";
@@ -64,7 +67,6 @@ const NewTrackingEditor = () => {
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [isDownloadingVideo, setIsDownloadingVideo] = useState(false);
   const [isShowingBox, setIsShowingBox] = useState(true);
   const [isShowingAnnotation, setIsShowingAnnotation] = useState(true);
   const [playerList, setPlayerList] = useState([]);
@@ -245,91 +247,13 @@ const NewTrackingEditor = () => {
     }
   }
 
-  function defineBoxBehavior(playerBox) {
-    playerBox.on({
-      selected: () => {},
-      mousedown: () => {},
-      mouseover: () => {},
-    });
 
-    playerBox.on({
-      deselected: () => {},
-      mouseout: () => {},
-    });
-
-    playerBox.on({
-      modified: () => {
-        var boundingRect = playerBox.getBoundingRect();
-        var scaleX = playerBox.scaleX; // Save current scale factors
-        var scaleY = playerBox.scaleY;
-        // Calculate actual width and height based on scale factors
-        //when scaling the box, only scaleX and scaleY change, while width and height not
-        var actualWidth = (boundingRect.width - playerBox.strokeWidth) / scaleX;
-        var actualHeight =
-          (boundingRect.height - playerBox.strokeWidth) / scaleY;
-        playerBox.left = boundingRect.left;
-        playerBox.top = boundingRect.top;
-        playerBox.width = actualWidth;
-        playerBox.height = actualHeight;
-
-        const horizontalScalingFactor = canvas.width / 3840;
-        const verticalScalingFactor = canvas.height / 2160;
-        const modifiedAnnotation = convertBoxToAnnotation(
-          playerBox,
-          horizontalScalingFactor,
-          verticalScalingFactor,
-        );
-        console.log(modifiedAnnotation);
-        const annotationToReplace = annotations.findIndex(
-          (a) =>
-            a.FrameNo == playerBox.my.frame && a.PlayerKey == playerBox.my.key,
-        );
-        if (annotationToReplace == -1) {
-          console.error(
-            "the modified bounding box doesn't exist in annotations.",
-          );
-        }
-        annotations.splice(annotationToReplace, 1, modifiedAnnotation);
-        canvas.renderAll();
-      },
-    });
-
-    return playerBox;
-  }
 
   const retrievePlayerKeys = () => {
     if (annotations.length > 0) {
       return annotations.map((a) => a.PlayerKey);
     } else {
       return 0;
-    }
-  };
-
-  // For changing video source file
-  const handleBrowse = async (event) => {
-    try {
-      // Get the uploaded file
-      const file = event.target.files[0];
-
-      const annotationsResponse = await fetch("/api/annotations/199");
-      if (!annotationsResponse.ok) {
-        throw new Error("Failed to fetch annotations for video");
-      }
-      const annotationsJson = await annotationsResponse.json();
-      console.log("Retrieved annotations : ", annotationsJson);
-      // get rid of duplicates in case database has duplicate values
-      const uniqueAnnotations = Array.from(
-        new Set(annotationsJson.map((obj) => JSON.stringify(obj))),
-        JSON.parse,
-      );
-      console.log("Unique annotations : ", uniqueAnnotations);
-      // setAnnotations(uniqueAnnotations);
-      // Transform file into blob URL
-      // setAnnotations(tracking);
-      setVideoUrl(URL.createObjectURL(file));
-      console.log("Finished setting video url");
-    } catch (error) {
-      console.error(error);
     }
   };
 
@@ -413,31 +337,6 @@ const NewTrackingEditor = () => {
 
     setVideoElement(localVideoElement);
   }, [videoUrl]);
-
-  function seededRandom(seed) {
-    var x = Math.sin(seed++) * 10000;
-    return x - Math.floor(x);
-  }
-
-  function generateColor(value) {
-    var r = Math.floor(seededRandom(value) * 256);
-    var g = Math.floor(seededRandom(value + 1) * 256);
-    var b = Math.floor(seededRandom(value + 2) * 256);
-    return { r, g, b };
-  }
-
-  function boundingBoxColorSet(annotationList) {
-    let uniquePlayerKeys = new Set(
-      annotationList.map((item) => item.PlayerKey),
-    );
-    let colorSet = new Map();
-
-    uniquePlayerKeys.forEach((key) => {
-      let color = generateColor(key);
-      colorSet.set(key, color);
-    });
-    return colorSet;
-  }
 
   // https://stackoverflow.com/questions/33834724/draw-video-on-canvas-html5
   const drawVideo = () => {
@@ -554,7 +453,7 @@ const NewTrackingEditor = () => {
           playerBox.visible = isShowingBox;
           playerBox.stroke = `rgb(${boxColor.r}, ${boxColor.g}, ${boxColor.b})`;
           playerBox.setControlVisible("mtr", false);
-          playerBox = defineBoxBehavior(playerBox);
+          playerBox = defineBoxBehavior(playerBox, canvas, annotations);
           canvas.add(playerBox);
 
           tempList = tempList.concat([
@@ -742,7 +641,7 @@ const NewTrackingEditor = () => {
           playerBox.visible = isShowingBox;
           playerBox.stroke = `rgb(${boxColor.r}, ${boxColor.g}, ${boxColor.b})`;
           playerBox.setControlVisible("mtr", false);
-          playerBox = defineBoxBehavior(playerBox);
+          playerBox = defineBoxBehavior(playerBox, canvas, annotations);
           canvas.add(playerBox);
 
           tempList = tempList.concat([
@@ -917,7 +816,6 @@ const NewTrackingEditor = () => {
             />
           </FormGroup>
           <Typography sx={{ marginLeft: "10px" }}>Trail frames: </Typography>
-
           <TextField
             sx={{ bgcolor: "white", marginLeft: "10px", width: "80px" }}
             value={trailFrameNumber}
@@ -936,7 +834,6 @@ const NewTrackingEditor = () => {
           <DownloadButton players={annotations} video={video} />
         </Box>
       </div>
-
       <div id="canvas-container">
         <canvas
           data-testid="fabric-canvas"

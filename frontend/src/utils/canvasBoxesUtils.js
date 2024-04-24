@@ -65,3 +65,55 @@ export const convertBoxToAnnotation = (
     console.error("the data format of bounding box and annotation doesn't fit");
   }
 };
+
+export function defineBoxBehavior(playerBox, canvas, annotations) {
+  playerBox.on({
+    selected: () => {},
+    mousedown: () => {},
+    mouseover: () => {},
+  });
+
+  playerBox.on({
+    deselected: () => {},
+    mouseout: () => {},
+  });
+
+  playerBox.on({
+    modified: () => {
+      var boundingRect = playerBox.getBoundingRect();
+      var scaleX = playerBox.scaleX; // Save current scale factors
+      var scaleY = playerBox.scaleY;
+      // Calculate actual width and height based on scale factors
+      //when scaling the box, only scaleX and scaleY change, while width and height not
+      var actualWidth = (boundingRect.width - playerBox.strokeWidth) / scaleX;
+      var actualHeight =
+        (boundingRect.height - playerBox.strokeWidth) / scaleY;
+      playerBox.left = boundingRect.left;
+      playerBox.top = boundingRect.top;
+      playerBox.width = actualWidth;
+      playerBox.height = actualHeight;
+
+      const horizontalScalingFactor = canvas.width / 3840;
+      const verticalScalingFactor = canvas.height / 2160;
+      const modifiedAnnotation = convertBoxToAnnotation(
+        playerBox,
+        horizontalScalingFactor,
+        verticalScalingFactor,
+      );
+      console.log(modifiedAnnotation);
+      const annotationToReplace = annotations.findIndex(
+        (a) =>
+          a.FrameNo == playerBox.my.frame && a.PlayerKey == playerBox.my.key,
+      );
+      if (annotationToReplace == -1) {
+        console.error(
+          "the modified bounding box doesn't exist in annotations.",
+        );
+      }
+      annotations.splice(annotationToReplace, 1, modifiedAnnotation);
+      canvas.renderAll();
+    },
+  });
+
+  return playerBox;
+}
