@@ -44,7 +44,16 @@ export default function MergeAndSwapModal({
   };
 
   const handleClick = () => {
-    if (operation === "swap") swapPlayerData(selectedPlayer, playerNameMap, setPlayerNameMap, playerChosenInList, annotations, setAnnotations, frameNumber);
+    if (operation === "swap")
+      swapPlayerData(
+        selectedPlayer,
+        playerNameMap,
+        setPlayerNameMap,
+        playerChosenInList,
+        annotations,
+        setAnnotations,
+        frameNumber,
+      );
     else
       mergePlayerData(
         selectedPlayer,

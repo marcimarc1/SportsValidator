@@ -75,7 +75,13 @@ const NewTrackingEditor = () => {
   const handleMultiSelectMerge = () => {
     console.log("Multiplayer merge");
     console.log(Array.from(selectedTrails));
-    multiPlayerMerge(Array.from(selectedTrails), annotations, setAnnotations, playerNameMap, setPlayerNameMap);
+    multiPlayerMerge(
+      Array.from(selectedTrails),
+      annotations,
+      setAnnotations,
+      playerNameMap,
+      setPlayerNameMap,
+    );
     setSelectedTrails(new Set());
   };
 
@@ -100,7 +106,7 @@ const NewTrackingEditor = () => {
       // Setting the color set based on the parsed data
       setColorSet(boundingBoxColorSet(parsedData));
 
-      let playerKeys = parsedData.map((a) => a.PlayerKey)
+      let playerKeys = parsedData.map((a) => a.PlayerKey);
       let tempMap = new Map();
       playerKeys.forEach((key) => {
         let playerName = "player" + key;
