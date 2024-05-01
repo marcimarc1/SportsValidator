@@ -28,7 +28,11 @@ import TextField from "@mui/material/TextField";
 import TrackList from "../newTrackingEditor/TrackList";
 import TrackListItemPlayer from "./TrackListItemPlayer";
 import MergeAndSwapModal from "./MergeAndSwapModal";
-import { trailsFullRedraw, drawFieldPoints, defineTrailBehaviour } from "../../../utils/canvasUtils";
+import {
+  trailsFullRedraw,
+  drawFieldPoints,
+  defineTrailBehaviour,
+} from "../../../utils/canvasUtils";
 import { multiPlayerMerge } from "../../../utils/validation";
 import { DownloadButton } from "./DownloadButton";
 import { parseLogFile } from "../../../utils/logFileParser";

@@ -112,6 +112,5 @@ export const defineTrailBehaviour = (trail, setSelectedTrails) => {
     setSelectedTrails((prevTrails) => {
       return new Set(prevTrails.add(trail.properties.playerKey));
     });
-  }
-  );
+  });
 };
