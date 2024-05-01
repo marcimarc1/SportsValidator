@@ -95,12 +95,16 @@ export const drawFieldPoints = (
         hasBorders: false,
         hasControls: false,
       });
+
       circle.properties = {
         type: "field",
         subtype: key,
         frame: frameNumber,
       };
+
       canvas.add(circle);
+    });
+  });
 };
 
 export const defineTrailBehaviour = (trail, setSelectedTrails) => {
@@ -108,4 +112,6 @@ export const defineTrailBehaviour = (trail, setSelectedTrails) => {
     setSelectedTrails((prevTrails) => {
       return new Set(prevTrails.add(trail.properties.playerKey));
     });
-});
+  }
+  );
+};
