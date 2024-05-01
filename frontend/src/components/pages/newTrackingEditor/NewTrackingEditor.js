@@ -366,6 +366,7 @@ const NewTrackingEditor = () => {
 
   useEffect(() => {
     // as player name is not contained in the tracking data, set "player{id}" as default name.
+    // this function causes renamed names to be lost when the video is changed.
     let playerKeys = retrievePlayerKeys();
     let tempMap = new Map();
     for (var i = 0; i < playerKeys.length; i++) {
@@ -373,7 +374,7 @@ const NewTrackingEditor = () => {
       tempMap.set(playerKeys[i], playerName);
     }
     setPlayerNameMap(tempMap);
-  }, [annotations]);
+  }, []);
 
   useEffect(() => {
     let canvasWidth = document.body.clientWidth - 300;
