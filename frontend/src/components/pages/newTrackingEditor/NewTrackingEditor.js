@@ -194,6 +194,11 @@ const NewTrackingEditor = () => {
     setActiveObject(playerBox);
     setAnnotations(annotations.filter((a) => a.PlayerKey != playerBox.my.key));
     setCanvasBoxes(canvasBoxes.filter((a) => a.my.key != playerBox.my.key));
+    
+    let newPlayerNameMap = new Map(playerNameMap);
+    newPlayerNameMap.delete(playerBox.my.key)
+    setPlayerNameMap(newPlayerNameMap);
+
     updateSidebar();
     canvas.discardActiveObject();
     canvas.remove(playerBox);
@@ -926,6 +931,7 @@ const NewTrackingEditor = () => {
         in_field: true,
       }),
     );
+    setPlayerNameMap(new Map(playerNameMap.set(newPlayerKey, "player" + newPlayerKey)));
   }
 
   const handleEnablingTrails = () => {
