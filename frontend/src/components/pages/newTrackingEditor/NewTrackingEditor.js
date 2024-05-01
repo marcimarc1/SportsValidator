@@ -75,7 +75,7 @@ const NewTrackingEditor = () => {
   const handleMultiSelectMerge = () => {
     console.log("Multiplayer merge");
     console.log(Array.from(selectedTrails));
-    multiPlayerMerge(Array.from(selectedTrails), annotations, setAnnotations);
+    multiPlayerMerge(Array.from(selectedTrails), annotations, setAnnotations, playerNameMap, setPlayerNameMap);
     setSelectedTrails(new Set());
   };
 
@@ -99,6 +99,14 @@ const NewTrackingEditor = () => {
       console.log("retrieved annotation:", parsedData);
       // Setting the color set based on the parsed data
       setColorSet(boundingBoxColorSet(parsedData));
+
+      let playerKeys = parsedData.map((a) => a.PlayerKey)
+      let tempMap = new Map();
+      playerKeys.forEach((key) => {
+        let playerName = "player" + key;
+        tempMap.set(key, playerName);
+      });
+      setPlayerNameMap(tempMap);
     }
   }, [processedPlayers, location.state]);
 
@@ -282,14 +290,6 @@ const NewTrackingEditor = () => {
     return playerBox;
   }
 
-  const retrievePlayerKeys = () => {
-    if (annotations.length > 0) {
-      return annotations.map((a) => a.PlayerKey);
-    } else {
-      return 0;
-    }
-  };
-
   // For changing video source file
   const handleBrowse = async (event) => {
     try {
@@ -363,18 +363,6 @@ const NewTrackingEditor = () => {
       setPlayerList(tempList);
     }
   }, [activeObject]);
-
-  useEffect(() => {
-    // as player name is not contained in the tracking data, set "player{id}" as default name.
-    // this function causes renamed names to be lost when the video is changed.
-    let playerKeys = retrievePlayerKeys();
-    let tempMap = new Map();
-    for (var i = 0; i < playerKeys.length; i++) {
-      let playerName = "player" + playerKeys[i];
-      tempMap.set(playerKeys[i], playerName);
-    }
-    setPlayerNameMap(tempMap);
-  }, []);
 
   useEffect(() => {
     let canvasWidth = document.body.clientWidth - 300;
@@ -947,6 +935,7 @@ const NewTrackingEditor = () => {
       <MergeAndSwapModal
         playerChosenInList={playerChosenInList}
         playerNameMap={playerNameMap}
+        setPlayerNameMap={setPlayerNameMap}
         annotations={annotations}
         setAnnotations={setAnnotations}
         frameNumber={frameNumber}
