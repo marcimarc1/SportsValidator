@@ -975,6 +975,7 @@ const NewTrackingEditor = () => {
       <MergeAndSwapModal
         playerChosenInList={playerChosenInList}
         playerNameMap={playerNameMap}
+        setPlayerNameMap={setPlayerNameMap}
         annotations={annotations}
         setAnnotations={setAnnotations}
         frameNumber={frameNumber}

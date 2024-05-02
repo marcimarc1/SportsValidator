@@ -83,6 +83,7 @@ export const multiPlayerMerge = (
 export const swapPlayerData = (
   secondPlayerName,
   playerNameMap,
+  setPlayerNameMap,
   playerChosenInList,
   annotations,
   setAnnotations,
