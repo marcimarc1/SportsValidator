@@ -775,7 +775,6 @@ const NewTrackingEditor = () => {
     }
   }, [annotations, playerNameMap, trailsEnabled, trailSize, trailFrameNumber]);
 
-
   const handleKeyDown = (event) => {
     switch (event.keyCode) {
       case 74: // j
