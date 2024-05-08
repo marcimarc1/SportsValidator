@@ -76,6 +76,22 @@ export const multiPlayerMerge = (
   playerNameMap,
   setPlayerNameMap,
 ) => {
+
+  function removeDuplicates(array) {
+    const uniquePairs = {};
+    const result = [];
+
+    array.forEach(obj => {
+        const key = obj.PlayerKey + ',' + obj.FrameNo;
+        if (!uniquePairs[key]) {
+            result.push(obj);
+            uniquePairs[key] = true;
+        }
+    });
+
+    return result;
+  }
+
   const newAnnotations = annotations.map((a) => {
     if (playerKeyArray.includes(a.PlayerKey)) {
       a.PlayerKey = playerKeyArray[0];
@@ -83,7 +99,7 @@ export const multiPlayerMerge = (
     }
     return a;
   });
-  setAnnotations(newAnnotations);
+  setAnnotations(removeDuplicates(newAnnotations));
   let newPlayerNameMap = new Map(playerNameMap);
   playerKeyArray.shift();
   playerKeyArray.forEach((key) => {
