@@ -128,9 +128,5 @@ export const swapPlayerData = (
     }
     return annotation;
   });
-  let newPlayerNameMap = new Map(playerNameMap);
-  newPlayerNameMap.set(firstPlayerKey, secondPlayerName);
-  newPlayerNameMap.set(secondPlayerKey, playerChosenInList);
-  setPlayerNameMap(newPlayerNameMap);
   setAnnotations(swappedAnnotations);
 };

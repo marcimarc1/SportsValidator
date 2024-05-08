@@ -674,6 +674,7 @@ const NewTrackingEditor = () => {
       videoElement.removeEventListener("waiting", onWaiting);
     };
   }, [
+    annotations,
     videoElement,
     isShowingBox,
     playerNameMap,
@@ -763,7 +764,7 @@ const NewTrackingEditor = () => {
         setPlayerList(tempList);
       }
     }
-  }, [playerNameMap, trailsEnabled, trailFrameNumber]);
+  }, [annotations, playerNameMap, trailsEnabled, trailFrameNumber]);
 
   const handleKeyDown = (event) => {
     switch (event.keyCode) {
