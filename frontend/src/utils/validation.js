@@ -76,17 +76,16 @@ export const multiPlayerMerge = (
   playerNameMap,
   setPlayerNameMap,
 ) => {
-
   function removeDuplicates(array) {
     const uniquePairs = {};
     const result = [];
 
-    array.forEach(obj => {
-        const key = obj.PlayerKey + ',' + obj.FrameNo;
-        if (!uniquePairs[key]) {
-            result.push(obj);
-            uniquePairs[key] = true;
-        }
+    array.forEach((obj) => {
+      const key = obj.PlayerKey + "," + obj.FrameNo;
+      if (!uniquePairs[key]) {
+        result.push(obj);
+        uniquePairs[key] = true;
+      }
     });
 
     return result;
