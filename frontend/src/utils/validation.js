@@ -1,6 +1,7 @@
 export const mergePlayerData = (
   mainPlayerName,
   playerNameMap,
+  setPlayerNameMap,
   playerChosenInList,
   annotations,
   setAnnotations,
@@ -63,13 +64,33 @@ export const mergePlayerData = (
     return annotation;
   });
   setAnnotations(mergedAnnotations);
+  let newPlayerNameMap = new Map(playerNameMap);
+  newPlayerNameMap.delete(mergedPlayerKey);
+  setPlayerNameMap(newPlayerNameMap);
 };
 
 export const multiPlayerMerge = (
   playerKeyArray,
   annotations,
   setAnnotations,
+  playerNameMap,
+  setPlayerNameMap,
 ) => {
+  function removeDuplicates(array) {
+    const uniquePairs = {};
+    const result = [];
+
+    array.forEach((obj) => {
+      const key = obj.PlayerKey + "," + obj.FrameNo;
+      if (!uniquePairs[key]) {
+        result.push(obj);
+        uniquePairs[key] = true;
+      }
+    });
+
+    return result;
+  }
+
   const newAnnotations = annotations.map((a) => {
     if (playerKeyArray.includes(a.PlayerKey)) {
       a.PlayerKey = playerKeyArray[0];
@@ -77,12 +98,19 @@ export const multiPlayerMerge = (
     }
     return a;
   });
-  setAnnotations(newAnnotations);
+  setAnnotations(removeDuplicates(newAnnotations));
+  let newPlayerNameMap = new Map(playerNameMap);
+  playerKeyArray.shift();
+  playerKeyArray.forEach((key) => {
+    newPlayerNameMap.delete(key);
+  });
+  setPlayerNameMap(newPlayerNameMap);
 };
 
 export const swapPlayerData = (
   secondPlayerName,
   playerNameMap,
+  setPlayerNameMap,
   playerChosenInList,
   annotations,
   setAnnotations,

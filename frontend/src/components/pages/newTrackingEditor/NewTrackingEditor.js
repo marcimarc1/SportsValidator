@@ -77,7 +77,13 @@ const NewTrackingEditor = () => {
   const handleMultiSelectMerge = () => {
     console.log("Multiplayer merge");
     console.log(Array.from(selectedTrails));
-    multiPlayerMerge(Array.from(selectedTrails), annotations, setAnnotations);
+    multiPlayerMerge(
+      Array.from(selectedTrails),
+      annotations,
+      setAnnotations,
+      playerNameMap,
+      setPlayerNameMap,
+    );
     setSelectedTrails(new Set());
   };
 
@@ -101,6 +107,14 @@ const NewTrackingEditor = () => {
       console.log("retrieved annotation:", parsedData);
       // Setting the color set based on the parsed data
       setColorSet(boundingBoxColorSet(parsedData));
+
+      let playerKeys = parsedData.map((a) => a.PlayerKey);
+      let tempMap = new Map();
+      playerKeys.forEach((key) => {
+        let playerName = "player" + key;
+        tempMap.set(key, playerName);
+      });
+      setPlayerNameMap(tempMap);
     }
   }, [processedPlayers, location.state]);
 
@@ -182,6 +196,11 @@ const NewTrackingEditor = () => {
     setActiveObject(playerBox);
     setAnnotations(annotations.filter((a) => a.PlayerKey != playerBox.my.key));
     setCanvasBoxes(canvasBoxes.filter((a) => a.my.key != playerBox.my.key));
+
+    let newPlayerNameMap = new Map(playerNameMap);
+    newPlayerNameMap.delete(playerBox.my.key);
+    setPlayerNameMap(newPlayerNameMap);
+
     updateSidebar();
     canvas.discardActiveObject();
     canvas.remove(playerBox);
@@ -284,14 +303,6 @@ const NewTrackingEditor = () => {
     return playerBox;
   }
 
-  const retrievePlayerKeys = () => {
-    if (annotations.length > 0) {
-      return annotations.map((a) => a.PlayerKey);
-    } else {
-      return 0;
-    }
-  };
-
   // For changing video source file
   const handleBrowse = async (event) => {
     try {
@@ -365,17 +376,6 @@ const NewTrackingEditor = () => {
       setPlayerList(tempList);
     }
   }, [activeObject]);
-
-  useEffect(() => {
-    // as player name is not contained in the tracking data, set "player{id}" as default name.
-    let playerKeys = retrievePlayerKeys();
-    let tempMap = new Map();
-    for (var i = 0; i < playerKeys.length; i++) {
-      let playerName = "player" + playerKeys[i];
-      tempMap.set(playerKeys[i], playerName);
-    }
-    setPlayerNameMap(tempMap);
-  }, [annotations]);
 
   useEffect(() => {
     let canvasWidth = document.body.clientWidth - 300;
@@ -680,6 +680,7 @@ const NewTrackingEditor = () => {
       videoElement.removeEventListener("waiting", onWaiting);
     };
   }, [
+    annotations,
     videoElement,
     isShowingBox,
     playerNameMap,
@@ -772,7 +773,7 @@ const NewTrackingEditor = () => {
         setPlayerList(tempList);
       }
     }
-  }, [playerNameMap, trailsEnabled, trailSize, trailFrameNumber]);
+  }, [annotations, playerNameMap, trailsEnabled, trailSize, trailFrameNumber]);
 
   const handleKeyDown = (event) => {
     switch (event.keyCode) {
@@ -940,6 +941,9 @@ const NewTrackingEditor = () => {
         in_field: true,
       }),
     );
+    setPlayerNameMap(
+      new Map(playerNameMap.set(newPlayerKey, "player" + newPlayerKey)),
+    );
   }
 
   const handleEnablingTrails = () => {
@@ -959,6 +963,7 @@ const NewTrackingEditor = () => {
       <MergeAndSwapModal
         playerChosenInList={playerChosenInList}
         playerNameMap={playerNameMap}
+        setPlayerNameMap={setPlayerNameMap}
         annotations={annotations}
         setAnnotations={setAnnotations}
         frameNumber={frameNumber}
