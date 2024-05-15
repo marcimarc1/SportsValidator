@@ -39,11 +39,15 @@ export default function MergeAndSwapModal({
 }) {
   const [selectedPlayer, setSelectedPlayer] = useState("");
   const [operation, setOperation] = useState("swap");
-  const menuItems = useMemo( () => Array.from(playerNameMap.values()).map((name) => {
-    if (name !== playerChosenInList) {
-      return <MenuItem value={name}>{name}</MenuItem>;
-    }
-  }), [playerNameMap, playerChosenInList]);
+  const menuItems = useMemo(
+    () =>
+      Array.from(playerNameMap.values()).map((name) => {
+        if (name !== playerChosenInList) {
+          return <MenuItem value={name}>{name}</MenuItem>;
+        }
+      }),
+    [playerNameMap, playerChosenInList],
+  );
 
   const handleChange = (event) => {
     setSelectedPlayer(event.target.value);
