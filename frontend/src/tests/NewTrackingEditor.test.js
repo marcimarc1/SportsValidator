@@ -6,6 +6,8 @@ import {
   render,
   cleanup,
   waitFor,
+  findByText,
+  within,
 } from "@testing-library/react";
 import { fabric } from "fabric";
 import Router from "react-router";
@@ -15,6 +17,9 @@ import NewTrackingEditor from "../components/pages/newTrackingEditor/NewTracking
 import { useLocation } from "react-router-dom/cjs/react-router-dom";
 import { parseProcessedPlayers } from "../utils/csvParser";
 
+import userEvent from '@testing-library/user-event'
+
+
 beforeEach(() => {
   fetchMock.resetMocks();
   //by default useLocation doesn't return player data and video
@@ -23,7 +28,7 @@ beforeEach(() => {
   });
 });
 afterEach(cleanup);
-
+const user = userEvent.setup()
 //mock useParams() and useLocation()
 jest.mock("react-router", () => ({
   ...jest.requireActual("react-router"),
@@ -31,6 +36,7 @@ jest.mock("react-router", () => ({
   useLocation: jest.fn(),
 }));
 jest.spyOn(Router, "useParams").mockReturnValue({ videoName: "mockVideo" });
+jest.setTimeout(30000);
 
 const mockCSV =
   ",PlayerKey,FrameNo,x,y,w,h,x2,y2,x1,y1,x_trans,y_trans\n" +
@@ -40,6 +46,7 @@ const mockCSV =
 
 describe("data fetching", () => {
   it("receives correct annotation", async () => {
+    
     //given
     useLocation.mockReturnValue({
       state: {
@@ -57,6 +64,36 @@ describe("data fetching", () => {
 
     //when
     render(<NewTrackingEditor />);
+
+
+    //given
+    const canvasElement = screen.getByTestId("fabric-canvas");
+    const button = screen.getByTestId("add-player-button");
+    const initialNumber = canvasElement.getAttribute("annotations");
+    expect(initialNumber).toEqual("3");
+
+
+    const validationButton = screen.getByTestId("mergeSwapModalplayer2");
+    fireEvent.click(validationButton);
+
+    const mergeRadioButton = screen.getByTestId("merge-label");
+    fireEvent.click(mergeRadioButton);
+
+    const mergeSwapModalSelect = await screen.findByTestId('select-element');
+    //userEvent.mouseDown(mergeSwapModalSelect);    
+    const combobox = await within(mergeSwapModalSelect).findByRole("button")
+
+    await userEvent.click(combobox);
+
+    const player1 = await screen.findByTestId("menuitemplayer1");
+
+    await userEvent.click(player1);
+
+    const applyButton = screen.getByTestId("mergeSwapModalApplyButton");
+    fireEvent.click(applyButton);
+
+    const newNumber = canvasElement.getAttribute("annotations");
+    expect(newNumber).toEqual("2");
 
     //then
     await waitFor(() => {

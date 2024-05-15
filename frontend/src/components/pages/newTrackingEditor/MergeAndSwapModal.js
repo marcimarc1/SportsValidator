@@ -87,8 +87,9 @@ export default function MergeAndSwapModal({
               value={operation}
               onChange={(event) => setOperation(event.target.value)}
             >
-              <FormControlLabel value="swap" control={<Radio />} label="Swap" />
+              <FormControlLabel data-testid='swap-label' value="swap" control={<Radio />} label="Swap" />
               <FormControlLabel
+                data-testid='merge-label'
                 value="merge"
                 control={<Radio />}
                 label="Merge"
@@ -116,18 +117,21 @@ export default function MergeAndSwapModal({
               labelId="demo-simple-select-label"
               id="demo-simple-select"
               value={selectedPlayer}
-              label="Age"
+              label="Choose Player"
+              data-testid='select-element'
               onChange={handleChange}
             >
               {Array.from(playerNameMap.values()).map((name) => {
                 if (name !== playerChosenInList) {
-                  return <MenuItem value={name}>{name}</MenuItem>;
+                  const testid = 'menuitem' + name;
+                  return <MenuItem data-testid={testid} value={name}>{name}</MenuItem>;
                 }
               })}
             </Select>
           </FormControl>
 
           <Button
+            data-testid='mergeSwapModalApplyButton'
             style={{ marginTop: "2em" }}
             color="primary"
             variant="contained"
