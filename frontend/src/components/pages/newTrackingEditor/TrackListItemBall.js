@@ -135,8 +135,6 @@ class TrackListItemBall extends Component {
       // let deselect = this.props.playerBox.my.selected;
       this.props.changeSelection(ballBox);
     };
-
-    console.log(this.props);
     const dotStyle = {
       width: "12px",
       height: "12px",

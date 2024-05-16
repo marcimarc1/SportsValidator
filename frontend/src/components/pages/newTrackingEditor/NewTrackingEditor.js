@@ -127,6 +127,7 @@ const NewTrackingEditor = () => {
     if(ballTracks){
       const parsedDataBall = parseProcessedBalls(ballTracks);
       setballTracks(parsedDataBall);
+      console.log("retrieved ballsdata:", parsedDataBall);
       setColorSetBall(boundingBoxBallColorSet(parsedDataBall))
       //setColorSet(boundingBoxColorSet(parsedDataBall));
     }
@@ -234,7 +235,7 @@ const NewTrackingEditor = () => {
     canvas.setActiveObject(playerBox);
     setActiveObject(playerBox);
     setAnnotations(annotations.filter((a) => a.PlayerKey != playerBox.my.key));
-    setCanvasBoxesPlayer(canvasBoxes.filter((a) => a.my.key != playerBox.my.key));
+    setCanvasBoxesPlayer(canvasBoxesPlayer.filter((a) => a.my.key != playerBox.my.key));
 
     let newPlayerNameMap = new Map(playerNameMap);
     newPlayerNameMap.delete(playerBox.my.key);
@@ -388,7 +389,7 @@ const NewTrackingEditor = () => {
       },
     });
 
-    return canvasBox;
+    return playerBox;
   }
 
   const retrievePlayerKeys = () => {
@@ -705,20 +706,21 @@ const NewTrackingEditor = () => {
           playerBox.setControlVisible("mtr", false);
           playerBox = defineBoxBehavior(playerBox);
           canvasBoxesPlayer.push(playerBox);
+
+          tempList = tempList.concat([
+            <TrackListItemPlayer
+              key={runningIndex++}
+              playerBox={playerBox}
+              color={boxColor}
+              name={playerNameMap.get(boundingBox.PlayerKey)}
+              changeSelection={changeSelection}
+              setName={setNamePlayer}
+              blink={blink}
+              delete={deletePlayer}
+              handleModalOpen={handleModalOpen}
+            />,
+          ]);
         })
-        tempList = tempList.concat([
-          <TrackListItemPlayer
-            key={runningIndex++}
-            playerBox={playerBox}
-            color={boxColor}
-            name={playerNameMap.get(boundingBox.PlayerKey)}
-            changeSelection={changeSelection}
-            setName={setNamePlayer}
-            blink={blink}
-            delete={deletePlayer}
-            handleModalOpen={handleModalOpen}
-          />,
-        ]);
       }
     }
     setPlayerList(tempList);
@@ -737,7 +739,7 @@ const NewTrackingEditor = () => {
           <TrackListItemBall
             key={runningIndex++}
             ballBox={activeObject}
-            name={ballNameMap.get(ballsToDraw[ballIndex].trackNo)}
+            name={ballNameMap.get(boundingBox.my.key)}
             changeSelection={changeSelection}
             setName={setNameBall}
             blink={blink}
@@ -748,7 +750,7 @@ const NewTrackingEditor = () => {
       });
     } else {
       ballsToDraw = balls.filter(
-        (a) => a.my.frame == frameNumber,
+        (a) => a.FrameNo == frameNumber,
       );
       if(ballsToDraw.length > 0){
         ballsToDraw.forEach((boundingBox)=> {
@@ -763,24 +765,23 @@ const NewTrackingEditor = () => {
           ballBox.setControlVisible("mtr", false);
           ballBox = defineBoxBehavior(ballBox);
           canvasBoxesBall.push(ballBox);
+          tempList = tempList.concat([
+            <TrackListItemBall
+            key={runningIndex++}
+            ballBox={ballBox}
+            name={ballNameMap.get(boundingBox.trackNo)}
+            changeSelection={changeSelection}
+            setName={setNameBall}
+            blink={blink}
+            color={boxColor}
+            delete={deleteBall}
+          />,
+          ]);
         })
-
-        tempList = tempList.concat([
-          <TrackListItemBall
-          key={runningIndex++}
-          ballBox={ballBox}
-          name={ballNameMap.get(ballsToDraw[ballIndex].trackNo)}
-          changeSelection={changeSelection}
-          setName={setNameBall}
-          blink={blink}
-          color={boxColor}
-          delete={deleteBall}
-        />,
-        ]);
       }
     }
-  setBallList(tempListBall);
-  canvas.renderAll;
+  setBallList(tempList);
+  canvas.renderAll();
   }  
 
   useEffect(() => {
@@ -956,7 +957,7 @@ const NewTrackingEditor = () => {
       if (playerBoxesToDraw.length > 0) {
         //draw boxes
           playerBoxesToDraw.forEach((boundingBox) => {
-          const boxColor = colorSet.get(boundingBox.PlayerKey); //used in 'stroke' property of playerBox
+          const boxColor = colorSetPlayer.get(boundingBox.PlayerKey); //used in 'stroke' property of playerBox
           let playerBox = convertAnnotationToBox(
             boundingBox,
             horizontalScalingFactor,
