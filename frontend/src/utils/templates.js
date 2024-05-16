@@ -1,8 +1,8 @@
-function createSoccerTemplate(LENGTH = 91, WIDTH = 50) {
+function createSoccerTemplate(LENGTH = 100, WIDTH = 50) {
   const GOAL_WIDTH = 7.32;
   const GOAL_AREA_LENGTH = 5.5;
   const GOAL_AREA_DEPTH = 5.5;
-  const PENALTY_AREA_LENGTH = 11;
+  const PENALTY_AREA_LENGTH = 40.3; 
   const PENALTY_AREA_DEPTH = 16.5;
   const MID_CIRCLE_RADIUS = 9.15;
 
@@ -11,81 +11,99 @@ function createSoccerTemplate(LENGTH = 91, WIDTH = 50) {
     [0, WIDTH],
     [LENGTH, WIDTH],
     [LENGTH, 0],
+    [0, 0]
   ];
 
   let penaltyAreaRight = [
     [
-      LENGTH - PENALTY_AREA_DEPTH,
-      WIDTH / 2 - (GOAL_AREA_LENGTH + PENALTY_AREA_LENGTH + GOAL_WIDTH / 2),
-    ],
-    [
-      LENGTH - PENALTY_AREA_DEPTH,
-      WIDTH / 2 + (GOAL_AREA_LENGTH + PENALTY_AREA_LENGTH + GOAL_WIDTH / 2),
-    ],
-    [
-      LENGTH,
-      WIDTH / 2 + (GOAL_AREA_LENGTH + PENALTY_AREA_LENGTH + GOAL_WIDTH / 2),
-    ],
-    [
-      LENGTH,
-      WIDTH / 2 - (GOAL_AREA_LENGTH + PENALTY_AREA_LENGTH + GOAL_WIDTH / 2),
-    ],
+      [
+        LENGTH - PENALTY_AREA_DEPTH,
+        WIDTH / 2 - PENALTY_AREA_LENGTH / 2,
+      ],
+      [
+        LENGTH - PENALTY_AREA_DEPTH,
+        WIDTH / 2 + PENALTY_AREA_LENGTH / 2,
+      ],
+      [
+        LENGTH,
+        WIDTH / 2 + PENALTY_AREA_LENGTH / 2,
+      ],
+      [
+        LENGTH,
+        WIDTH / 2 - PENALTY_AREA_LENGTH / 2,
+      ],
+      [
+        LENGTH - PENALTY_AREA_DEPTH,
+        WIDTH / 2 - PENALTY_AREA_LENGTH / 2,
+      ]
+    ]
   ];
-
+  
   let penaltyAreaLeft = [
     [
-      PENALTY_AREA_DEPTH,
-      WIDTH / 2 - (GOAL_AREA_LENGTH + PENALTY_AREA_LENGTH + GOAL_WIDTH / 2),
-    ],
-    [
-      PENALTY_AREA_DEPTH,
-      WIDTH / 2 + (GOAL_AREA_LENGTH + PENALTY_AREA_LENGTH + GOAL_WIDTH / 2),
-    ],
-    [0, WIDTH / 2 + (GOAL_AREA_LENGTH + PENALTY_AREA_LENGTH + GOAL_WIDTH / 2)],
-    [0, WIDTH / 2 - (GOAL_AREA_LENGTH + PENALTY_AREA_LENGTH + GOAL_WIDTH / 2)],
-  ];
+      [
+        PENALTY_AREA_DEPTH,
+        WIDTH / 2 - PENALTY_AREA_LENGTH / 2,
+      ],
+      [
+        PENALTY_AREA_DEPTH,
+        WIDTH / 2 + PENALTY_AREA_LENGTH / 2,
+      ],
+      [0, WIDTH / 2 + PENALTY_AREA_LENGTH / 2],
+      [0, WIDTH / 2 - PENALTY_AREA_LENGTH / 2],
+      [
+        PENALTY_AREA_DEPTH,
+        WIDTH / 2 - PENALTY_AREA_LENGTH / 2,
+      ],
+    ]
+  ];  
 
   const penaltyArea = penaltyAreaLeft.concat(penaltyAreaRight);
 
-  const goalAreaRight = [
-    [LENGTH - GOAL_AREA_LENGTH, WIDTH / 2 - (GOAL_AREA_DEPTH + GOAL_WIDTH / 2)],
-    [LENGTH - GOAL_AREA_LENGTH, WIDTH / 2 + (GOAL_AREA_DEPTH + GOAL_WIDTH / 2)],
-    [LENGTH, WIDTH / 2 + (GOAL_AREA_DEPTH + GOAL_WIDTH / 2)],
-    [LENGTH, WIDTH / 2 - (GOAL_AREA_DEPTH + GOAL_WIDTH / 2)],
+  let goalAreaRight = [
+    [
+      [LENGTH - GOAL_AREA_LENGTH, WIDTH / 2 - (GOAL_AREA_DEPTH + GOAL_WIDTH / 2)],
+      [LENGTH - GOAL_AREA_LENGTH, WIDTH / 2 + (GOAL_AREA_DEPTH + GOAL_WIDTH / 2)],
+      [LENGTH, WIDTH / 2 + (GOAL_AREA_DEPTH + GOAL_WIDTH / 2)],
+      [LENGTH, WIDTH / 2 - (GOAL_AREA_DEPTH + GOAL_WIDTH / 2)],
+      [LENGTH - GOAL_AREA_LENGTH, WIDTH / 2 - (GOAL_AREA_DEPTH + GOAL_WIDTH / 2)]
+    ]
   ];
 
-  const goalAreaLeft = [
-    [GOAL_AREA_LENGTH, WIDTH / 2 - (GOAL_AREA_DEPTH + GOAL_WIDTH / 2)],
-    [GOAL_AREA_LENGTH, WIDTH / 2 + (GOAL_AREA_DEPTH + GOAL_WIDTH / 2)],
-    [0, WIDTH / 2 + (GOAL_AREA_DEPTH + GOAL_WIDTH / 2)],
-    [0, WIDTH / 2 - (GOAL_AREA_DEPTH + GOAL_WIDTH / 2)],
+  let goalAreaLeft = [
+    [
+      [GOAL_AREA_LENGTH, WIDTH / 2 - (GOAL_AREA_DEPTH + GOAL_WIDTH / 2)],
+      [GOAL_AREA_LENGTH, WIDTH / 2 + (GOAL_AREA_DEPTH + GOAL_WIDTH / 2)],
+      [0, WIDTH / 2 + (GOAL_AREA_DEPTH + GOAL_WIDTH / 2)],
+      [0, WIDTH / 2 - (GOAL_AREA_DEPTH + GOAL_WIDTH / 2)],
+      [GOAL_AREA_LENGTH, WIDTH / 2 - (GOAL_AREA_DEPTH + GOAL_WIDTH / 2)]
+    ]
   ];
 
   const goalArea = goalAreaLeft.concat(goalAreaRight);
 
   const middleLine = [
     [LENGTH / 2, 0],
-    [LENGTH / 2, WIDTH],
+    [LENGTH / 2, WIDTH]
   ];
 
-  const middleLineXCircle = [
-    [LENGTH / 2, WIDTH / 2 + MID_CIRCLE_RADIUS],
-    [LENGTH / 2, WIDTH / 2 - MID_CIRCLE_RADIUS],
-  ];
+  const middleCircle = { 
+    center: [LENGTH / 2, WIDTH / 2], 
+    radius: MID_CIRCLE_RADIUS 
+  };
 
   const penaltySpot = [
-    [11, WIDTH / 2],
-    [LENGTH - 11, WIDTH / 2],
+    [[11, WIDTH / 2]],
+    [[LENGTH - 11, WIDTH / 2]]
   ];
 
   return {
-    Corner: outerArea,
-    "16m": penaltyArea,
-    "5m": goalArea,
-    Midpoint: [[LENGTH / 2, WIDTH / 2]],
-    MidlineSideline: middleLine,
-    MidlineCircle: middleLineXCircle,
-    PenaltySpot: penaltySpot,
+    Corners: outerArea,
+    '16m': penaltyArea,
+    '5m': goalArea,
+    Midline: middleLine,
+    Midcircle: middleCircle,
+    PenaltySpots: penaltySpot
   };
 }
 
