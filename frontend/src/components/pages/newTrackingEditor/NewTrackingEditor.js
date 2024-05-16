@@ -233,7 +233,7 @@ const NewTrackingEditor = () => {
       tempList = tempList.concat([
         <TrackListItemBall
           key={runningIndex++}
-          ballBox={activeObject}
+          ballBox={box}
           name={ballNameMap.get(box.my.key)}
           changeSelection={changeSelection}
           setName={setNameBall}
@@ -298,9 +298,7 @@ const NewTrackingEditor = () => {
     let boxIndex = canvasBoxesPlayer.indexOf(playerBox);
     let annotationIndex = annotations.indexOf(playerBox);
     setAnnotations(annotations.toSpliced(annotationIndex, 1));
-    console.log(canvasBoxesPlayer)
     setCanvasBoxesPlayer(canvasBoxesPlayer.toSpliced(boxIndex, 1));
-    console.log(canvasBoxesPlayer)
     updateSidebar();
     canvas.discardActiveObject();
     canvas.remove(playerBox);
