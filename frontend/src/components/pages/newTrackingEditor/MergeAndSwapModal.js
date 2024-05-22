@@ -13,6 +13,7 @@ import FormControlLabel from "@material-ui/core/FormControlLabel";
 
 import { useState } from "react";
 import { mergePlayerData, swapPlayerData } from "../../../utils/validation";
+import { useMemo } from "react";
 
 const style = {
   position: "absolute",
@@ -38,6 +39,20 @@ export default function MergeAndSwapModal({
 }) {
   const [selectedPlayer, setSelectedPlayer] = useState("");
   const [operation, setOperation] = useState("swap");
+  const menuItems = useMemo(
+    () =>
+      Array.from(playerNameMap.values()).map((name) => {
+        if (name !== playerChosenInList) {
+          const testid = "menuitem" + name;
+          return (
+            <MenuItem data-testid={testid} value={name}>
+              {name}
+            </MenuItem>
+          );
+        }
+      }),
+    [playerNameMap, playerChosenInList],
+  );
 
   const handleChange = (event) => {
     setSelectedPlayer(event.target.value);
@@ -125,16 +140,7 @@ export default function MergeAndSwapModal({
               data-testid="select-element"
               onChange={handleChange}
             >
-              {Array.from(playerNameMap.values()).map((name) => {
-                if (name !== playerChosenInList) {
-                  const testid = "menuitem" + name;
-                  return (
-                    <MenuItem data-testid={testid} value={name}>
-                      {name}
-                    </MenuItem>
-                  );
-                }
-              })}
+              {menuItems}
             </Select>
           </FormControl>
 
