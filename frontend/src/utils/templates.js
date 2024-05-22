@@ -11,7 +11,6 @@ function createSoccerTemplate(LENGTH = 100, WIDTH = 50) {
     [0, WIDTH],
     [LENGTH, WIDTH],
     [LENGTH, 0],
-    [0, 0]
   ];
 
   let penaltyAreaRight = [
@@ -31,10 +30,6 @@ function createSoccerTemplate(LENGTH = 100, WIDTH = 50) {
       [
         LENGTH,
         WIDTH / 2 - PENALTY_AREA_LENGTH / 2,
-      ],
-      [
-        LENGTH - PENALTY_AREA_DEPTH,
-        WIDTH / 2 - PENALTY_AREA_LENGTH / 2,
       ]
     ]
   ];
@@ -51,10 +46,6 @@ function createSoccerTemplate(LENGTH = 100, WIDTH = 50) {
       ],
       [0, WIDTH / 2 + PENALTY_AREA_LENGTH / 2],
       [0, WIDTH / 2 - PENALTY_AREA_LENGTH / 2],
-      [
-        PENALTY_AREA_DEPTH,
-        WIDTH / 2 - PENALTY_AREA_LENGTH / 2,
-      ],
     ]
   ];  
 
@@ -66,7 +57,6 @@ function createSoccerTemplate(LENGTH = 100, WIDTH = 50) {
       [LENGTH - GOAL_AREA_LENGTH, WIDTH / 2 + (GOAL_AREA_DEPTH + GOAL_WIDTH / 2)],
       [LENGTH, WIDTH / 2 + (GOAL_AREA_DEPTH + GOAL_WIDTH / 2)],
       [LENGTH, WIDTH / 2 - (GOAL_AREA_DEPTH + GOAL_WIDTH / 2)],
-      [LENGTH - GOAL_AREA_LENGTH, WIDTH / 2 - (GOAL_AREA_DEPTH + GOAL_WIDTH / 2)]
     ]
   ];
 
@@ -76,7 +66,6 @@ function createSoccerTemplate(LENGTH = 100, WIDTH = 50) {
       [GOAL_AREA_LENGTH, WIDTH / 2 + (GOAL_AREA_DEPTH + GOAL_WIDTH / 2)],
       [0, WIDTH / 2 + (GOAL_AREA_DEPTH + GOAL_WIDTH / 2)],
       [0, WIDTH / 2 - (GOAL_AREA_DEPTH + GOAL_WIDTH / 2)],
-      [GOAL_AREA_LENGTH, WIDTH / 2 - (GOAL_AREA_DEPTH + GOAL_WIDTH / 2)]
     ]
   ];
 
@@ -129,9 +118,9 @@ function createTennisTemplate() {
 
   const baselineSingle = [
     [BASELINE, BASELINE_WIDTH],
-    [BASELINE, WIDTH - BASELINE_WIDTH],
     [LENGTH - BASELINE, BASELINE_WIDTH],
     [LENGTH - BASELINE, WIDTH - BASELINE_WIDTH],
+    [BASELINE, WIDTH - BASELINE_WIDTH],
   ];
 
   const centerNet = [[LENGTH / 2, WIDTH / 2]];
@@ -148,9 +137,9 @@ function createTennisTemplate() {
 
   const serviceSingle = [
     [0, WIDTH - SERVICE_LINE_WIDTH],
-    [0, SERVICE_LINE_WIDTH],
     [LENGTH, WIDTH - SERVICE_LINE_WIDTH],
     [LENGTH, SERVICE_LINE_WIDTH],
+    [0, SERVICE_LINE_WIDTH],
   ];
 
   return {

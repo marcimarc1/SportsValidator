@@ -590,8 +590,8 @@ const NewTrackingEditor = () => {
         horizontalScalingFactor,
         verticalScalingFactor,
         logFile.Sport,
-        fieldSize.length,
-        fieldSize.width,
+        fieldSize?.length || 0,
+        fieldSize?.width || 0,
       );
     }
 

@@ -176,8 +176,10 @@ export const drawFieldPoints = (
       return pointObj;
     });
 
-    for (let i = 0; i < pointObjects.length - 1; i++) {
-      drawLine(pointObjects[i], pointObjects[i + 1], color);
+    for (let i = 0; i < pointObjects.length; i++) {
+      const startPoint = pointObjects[i];
+      const endPoint = pointObjects[(i + 1) % pointObjects.length]; // Connect last point to the first
+      drawLine(startPoint, endPoint, color);
     }
 
     canvas.off('object:moving', updateLines);
@@ -190,7 +192,7 @@ export const drawFieldPoints = (
   }
   if (template['16m']) {
     template['16m'].forEach((area, areaIndex) => {
-      drawLinesFromPoints(area, 'red', '16m', areaIndex);
+      drawLinesFromPoints(area, 'orange', '16m', areaIndex);
     });
   }
   if (template['5m']) {
@@ -208,6 +210,24 @@ export const drawFieldPoints = (
   }
   if (template.PenaltySpots) {
     template.PenaltySpots.forEach((spot) => drawCircle(spot[0], 0.1, 'yellow'));
+  }
+  if(template.BaseLineXcenterline){
+    drawLinesFromPoints(template.BaseLineXcenterline, 'blue', 'BaseLineXcenterline', 0);
+  }
+  if(template.BaselineXsingle){
+    drawLinesFromPoints(template.BaselineXsingle, 'blue', 'BaselineXsingle', 0);
+  }
+  if(template.CenterLineXnet){
+    drawLinesFromPoints(template.CenterLineXnet, 'blue', 'CenterLineXnet', 0);
+  }
+  if(template.NetXsingle){
+    drawLinesFromPoints(template.NetXsingle, 'red', 'NetXsingle', 0);
+  }
+  if(template.NetXsideLine){
+    drawLinesFromPoints(template.NetXsideLine, 'red', 'NetXsideLine', 0);
+  }
+  if(template.ServiceXsingle){
+    drawLinesFromPoints(template.ServiceXsingle, 'yellow', 'ServiceXsingle', 0);
   }
 };
 
