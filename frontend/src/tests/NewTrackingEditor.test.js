@@ -6,7 +6,6 @@ import {
   render,
   cleanup,
   waitFor,
-  findByText,
   within,
 } from "@testing-library/react";
 import { fabric } from "fabric";
@@ -35,7 +34,6 @@ jest.mock("react-router", () => ({
   useLocation: jest.fn(),
 }));
 jest.spyOn(Router, "useParams").mockReturnValue({ videoName: "mockVideo" });
-jest.setTimeout(30000);
 
 const mockCSV =
   ",PlayerKey,FrameNo,x,y,w,h,x2,y2,x1,y1,x_trans,y_trans\n" +
