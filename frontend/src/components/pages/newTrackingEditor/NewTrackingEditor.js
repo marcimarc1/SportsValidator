@@ -64,7 +64,7 @@ const NewTrackingEditor = () => {
   const [playerChosenInList, setPlayerChosenInList] = useState("");
   const [selectedTrails, setSelectedTrails] = useState(new Set());
   const [trailSize, setTrailSize] = useState(50);
-  const [drawInField, setDrawInField] = useState(true);
+  const [drawInField, setDrawInField] = useState(false);
 
   const handleModalOpen = (playerInList) => {
     setPlayerChosenInList(playerInList);
