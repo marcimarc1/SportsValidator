@@ -83,7 +83,7 @@ const NewTrackingEditor = () => {
       annotations,
       setAnnotations,
       playerNameMap,
-      setPlayerNameMap
+      setPlayerNameMap,
     );
     setSelectedTrails(new Set());
   };
@@ -125,7 +125,7 @@ const NewTrackingEditor = () => {
     let tempList = [];
     let runningIndex = 0;
     let boxes = canvasBoxes.filter(
-      (box) => box.my.frame == getCurrentTimestampFrame()
+      (box) => box.my.frame == getCurrentTimestampFrame(),
     );
     boxes.forEach((box) => {
       const boxColor = colorSet.get(box.my.key);
@@ -284,16 +284,16 @@ const NewTrackingEditor = () => {
         const modifiedAnnotation = convertBoxToAnnotation(
           playerBox,
           horizontalScalingFactor,
-          verticalScalingFactor
+          verticalScalingFactor,
         );
         console.log(modifiedAnnotation);
         const annotationToReplace = annotations.findIndex(
           (a) =>
-            a.FrameNo == playerBox.my.frame && a.PlayerKey == playerBox.my.key
+            a.FrameNo == playerBox.my.frame && a.PlayerKey == playerBox.my.key,
         );
         if (annotationToReplace == -1) {
           console.error(
-            "the modified bounding box doesn't exist in annotations."
+            "the modified bounding box doesn't exist in annotations.",
           );
         }
         annotations.splice(annotationToReplace, 1, modifiedAnnotation);
@@ -319,7 +319,7 @@ const NewTrackingEditor = () => {
       // get rid of duplicates in case database has duplicate values
       const uniqueAnnotations = Array.from(
         new Set(annotationsJson.map((obj) => JSON.stringify(obj))),
-        JSON.parse
+        JSON.parse,
       );
       console.log("Unique annotations : ", uniqueAnnotations);
       // setAnnotations(uniqueAnnotations);
@@ -416,7 +416,7 @@ const NewTrackingEditor = () => {
 
   function boundingBoxColorSet(annotationList) {
     let uniquePlayerKeys = new Set(
-      annotationList.map((item) => item.PlayerKey)
+      annotationList.map((item) => item.PlayerKey),
     );
     let colorSet = new Map();
 
@@ -480,7 +480,7 @@ const NewTrackingEditor = () => {
     } else {
       //remove everything except the past trails
       canvas.remove(
-        ...canvas.getObjects().filter((obj) => obj.type !== "circle")
+        ...canvas.getObjects().filter((obj) => obj.type !== "circle"),
       );
       //remove trails that are too old
       canvas.remove(
@@ -489,12 +489,12 @@ const NewTrackingEditor = () => {
           .filter(
             (obj) =>
               frameNumber - obj.properties.frame >= trailFrameNumber ||
-              frameNumber - obj.properties.frame < 0
-          )
+              frameNumber - obj.properties.frame < 0,
+          ),
       );
       const currentTrailsToDraw = drawInField
         ? annotations.filter(
-            (a) => a.FrameNo === frameNumber && isInField(a.in_field)
+            (a) => a.FrameNo === frameNumber && isInField(a.in_field),
           )
         : annotations.filter((a) => a.FrameNo === frameNumber);
 
@@ -527,7 +527,7 @@ const NewTrackingEditor = () => {
 
     var boundingBoxesToDraw = drawInField
       ? canvasBoxes.filter(
-          (a) => a.my.frame === frameNumber && isInField(a.my.in_field)
+          (a) => a.my.frame === frameNumber && isInField(a.my.in_field),
         )
       : canvasBoxes.filter((a) => a.my.frame === frameNumber);
 
@@ -556,7 +556,7 @@ const NewTrackingEditor = () => {
     } else {
       boundingBoxesToDraw = drawInField
         ? annotations.filter(
-            (a) => a.FrameNo === frameNumber && isInField(a.in_field)
+            (a) => a.FrameNo === frameNumber && isInField(a.in_field),
           )
         : annotations.filter((a) => a.FrameNo === frameNumber);
 
@@ -567,7 +567,7 @@ const NewTrackingEditor = () => {
           let playerBox = convertAnnotationToBox(
             boundingBox,
             horizontalScalingFactor,
-            verticalScalingFactor
+            verticalScalingFactor,
           );
           playerBox.visible = isShowingBox;
           playerBox.stroke = `rgb(${boxColor.r}, ${boxColor.g}, ${boxColor.b})`;
@@ -620,7 +620,7 @@ const NewTrackingEditor = () => {
           "Video element either null, paused : ",
           videoElement.paused,
           " or ended : ",
-          videoElement.ended
+          videoElement.ended,
         );
         //problematic, empty playerlist when video paused
         return;
@@ -716,7 +716,7 @@ const NewTrackingEditor = () => {
         canvas.width / 3840,
         canvas.height / 2160,
         setSelectedTrails,
-        trailSize
+        trailSize,
       );
     }
   }, [videoElement?.seeking]);
@@ -744,7 +744,7 @@ const NewTrackingEditor = () => {
         horizontalScalingFactor,
         verticalScalingFactor,
         setSelectedTrails,
-        trailSize
+        trailSize,
       );
     }
 
@@ -752,7 +752,7 @@ const NewTrackingEditor = () => {
     if (annotations.length > 0) {
       var boundingBoxesToDraw = drawInField
         ? annotations.filter(
-            (a) => a.FrameNo === frameNumber && isInField(a.in_field)
+            (a) => a.FrameNo === frameNumber && isInField(a.in_field),
           )
         : annotations.filter((a) => a.FrameNo === frameNumber);
 
@@ -763,7 +763,7 @@ const NewTrackingEditor = () => {
           let playerBox = convertAnnotationToBox(
             boundingBox,
             horizontalScalingFactor,
-            verticalScalingFactor
+            verticalScalingFactor,
           );
           playerBox.visible = isShowingBox;
           playerBox.stroke = `rgb(${boxColor.r}, ${boxColor.g}, ${boxColor.b})`;
@@ -868,7 +868,7 @@ const NewTrackingEditor = () => {
   const handleNextChunk = () => {
     const newTimestamp = Math.min(
       videoElement.duration,
-      videoElement.currentTime + 6
+      videoElement.currentTime + 6,
     );
     videoElement.currentTime = newTimestamp;
     updateTimestamp(newTimestamp);
@@ -961,10 +961,10 @@ const NewTrackingEditor = () => {
         y2: 0,
         y_trans: 0,
         in_field: true,
-      })
+      }),
     );
     setPlayerNameMap(
-      new Map(playerNameMap.set(newPlayerKey, "player" + newPlayerKey))
+      new Map(playerNameMap.set(newPlayerKey, "player" + newPlayerKey)),
     );
   }
 
