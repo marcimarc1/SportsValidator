@@ -12,6 +12,7 @@ import Radio from "@material-ui/core/Radio";
 import FormControlLabel from "@material-ui/core/FormControlLabel";
 
 import { useState } from "react";
+import { mergePlayerData, swapPlayerData } from "../../../utils/validation";
 
 const style = {
   position: "absolute",
@@ -28,10 +29,12 @@ const style = {
 export default function MergeAndSwapModal({
   playerChosenInList,
   playerNameMap,
+  setPlayerNameMap,
+  annotations,
+  setAnnotations,
+  frameNumber,
   mergeModalState,
   handleClose,
-  swapPlayerData,
-  mergePlayerData,
 }) {
   const [selectedPlayer, setSelectedPlayer] = useState("");
   const [operation, setOperation] = useState("swap");
@@ -41,8 +44,25 @@ export default function MergeAndSwapModal({
   };
 
   const handleClick = () => {
-    if (operation === "swap") swapPlayerData(selectedPlayer);
-    else mergePlayerData(selectedPlayer);
+    if (operation === "swap")
+      swapPlayerData(
+        selectedPlayer,
+        playerNameMap,
+        setPlayerNameMap,
+        playerChosenInList,
+        annotations,
+        setAnnotations,
+        frameNumber,
+      );
+    else
+      mergePlayerData(
+        selectedPlayer,
+        playerNameMap,
+        setPlayerNameMap,
+        playerChosenInList,
+        annotations,
+        setAnnotations,
+      );
     handleClose();
   };
 

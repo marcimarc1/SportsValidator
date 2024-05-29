@@ -6,6 +6,10 @@ import { ReactComponent as ForwardStepIcon } from "../../../icons/forward-step.s
 import { ReactComponent as BackwardStepIcon } from "../../../icons/backward-step.svg";
 import { useLocation } from "react-router-dom";
 import { parseProcessedPlayers } from "../../../utils/csvParser";
+import {
+  convertBoxToAnnotation,
+  convertAnnotationToBox,
+} from "../../../utils/AnnotationBoxConverter";
 // import tracking from "../../../data/tracking_data.json";
 // import tracking from "../../../data/tracking-data-for-test.json";
 import { fabric } from "fabric";
@@ -24,8 +28,13 @@ import TextField from "@mui/material/TextField";
 import TrackList from "../newTrackingEditor/TrackList";
 import TrackListItemPlayer from "./TrackListItemPlayer";
 import MergeAndSwapModal from "./MergeAndSwapModal";
-import { trailsFullRedraw } from "../../../utils/canvasUtils";
+import {
+  trailsFullRedraw,
+  defineTrailBehaviour,
+} from "../../../utils/canvasUtils";
+import { multiPlayerMerge } from "../../../utils/validation";
 import { DownloadButton } from "./DownloadButton";
+import Slider from "@mui/material/Slider";
 
 // TODO Take a video_id instead and have an endpoint on the server where we supply a video_id and get the corresponding video
 const NewTrackingEditor = () => {
@@ -53,7 +62,8 @@ const NewTrackingEditor = () => {
   const [trailFrameNumber, setTrailFrameNumber] = useState(50);
   const [mergeModalState, setMergeModalState] = useState(false);
   const [playerChosenInList, setPlayerChosenInList] = useState("");
-  const [drawInField, setDrawInField] = useState(true);
+  const [selectedTrails, setSelectedTrails] = useState(new Set());
+  const [trailSize, setTrailSize] = useState(50);
 
   const handleModalOpen = (playerInList) => {
     setPlayerChosenInList(playerInList);
@@ -64,99 +74,17 @@ const NewTrackingEditor = () => {
     setMergeModalState(false);
   };
 
-  const mergePlayerData = (mainPlayerName) => {
-    const nameToKeyMap = new Map();
-    playerNameMap.forEach((value, key) => {
-      nameToKeyMap.set(value, key);
-    });
-    const firstPlayerKey = nameToKeyMap.get(mainPlayerName);
-    const secondPlayerKey = nameToKeyMap.get(playerChosenInList);
-    if (firstPlayerKey == undefined || secondPlayerKey == undefined) {
-      console.log("players are not mapped");
-      return;
-    }
-
-    //by default, the player with the higher playerkey is the merged player
-    //and the player with the lower playerkey is the main player, which will be kept
-    const firstPlayerMaxFrame = Math.max(
-      ...annotations
-        .filter((a) => a.PlayerKey == firstPlayerKey)
-        .map((a) => a.FrameNo),
+  const handleMultiSelectMerge = () => {
+    console.log("Multiplayer merge");
+    console.log(Array.from(selectedTrails));
+    multiPlayerMerge(
+      Array.from(selectedTrails),
+      annotations,
+      setAnnotations,
+      playerNameMap,
+      setPlayerNameMap
     );
-    const secondPlayerMaxFrame = Math.max(
-      ...annotations
-        .filter((a) => a.PlayerKey == secondPlayerKey)
-        .map((a) => a.FrameNo),
-    );
-
-    let mergedPlayerKey;
-    let mainPlayerKey;
-    let mainPlayerMaxFrame;
-
-    if (firstPlayerMaxFrame > secondPlayerMaxFrame) {
-      mergedPlayerKey = firstPlayerKey;
-      mainPlayerKey = secondPlayerKey;
-      mainPlayerMaxFrame = secondPlayerMaxFrame;
-    } else {
-      mergedPlayerKey = secondPlayerKey;
-      mainPlayerKey = firstPlayerKey;
-      mainPlayerMaxFrame = firstPlayerMaxFrame;
-    }
-
-    //filter out duplicate annotations between main and merged player that has the same frame number
-    let filteredAnnotations = annotations.filter(
-      (a) => a.playerKey != mergedPlayerKey,
-    );
-    const mainPlayerAnnotations = annotations.filter(
-      (a) => a.playerKey == mainPlayerKey,
-    );
-    const mergedPlayerAnnotations = annotations.filter(
-      (a) => a.playerKey == mergedPlayerKey,
-    );
-    filteredAnnotations = filteredAnnotations.concat(
-      mergedPlayerAnnotations.filter((a) =>
-        mainPlayerAnnotations.every((b) => b.FrameNo != a.FrameNo),
-      ),
-    );
-
-    const mergedAnnotations = filteredAnnotations.map((annotation) => {
-      if (annotation.PlayerKey == mergedPlayerKey) {
-        return { ...annotation, PlayerKey: mainPlayerKey };
-      }
-      return annotation;
-    });
-    setAnnotations(mergedAnnotations);
-  };
-
-  const swapPlayerData = (secondPlayerName) => {
-    const nameToKeyMap = new Map();
-    playerNameMap.forEach((value, key) => {
-      nameToKeyMap.set(value, key);
-    });
-    const firstPlayerKey = nameToKeyMap.get(playerChosenInList);
-    const secondPlayerKey = nameToKeyMap.get(secondPlayerName);
-
-    if (firstPlayerKey == undefined || secondPlayerKey == undefined) {
-      console.log("players are not mapped");
-      return;
-    }
-
-    const swappedAnnotations = annotations.map((annotation) => {
-      if (
-        annotation.PlayerKey == firstPlayerKey &&
-        annotation.FrameNo >= frameNumber
-      ) {
-        return { ...annotation, PlayerKey: secondPlayerKey };
-      }
-      if (
-        annotation.PlayerKey == secondPlayerKey &&
-        annotation.FrameNo >= frameNumber
-      ) {
-        return { ...annotation, PlayerKey: firstPlayerKey };
-      }
-      return annotation;
-    });
-    setAnnotations(swappedAnnotations);
+    setSelectedTrails(new Set());
   };
 
   let { videoName } = useParams();
@@ -179,6 +107,14 @@ const NewTrackingEditor = () => {
       console.log("retrieved annotation:", parsedData);
       // Setting the color set based on the parsed data
       setColorSet(boundingBoxColorSet(parsedData));
+
+      let playerKeys = parsedData.map((a) => a.PlayerKey);
+      let tempMap = new Map();
+      playerKeys.forEach((key) => {
+        let playerName = "player" + key;
+        tempMap.set(key, playerName);
+      });
+      setPlayerNameMap(tempMap);
     }
   }, [processedPlayers, location.state]);
 
@@ -188,7 +124,7 @@ const NewTrackingEditor = () => {
     let tempList = [];
     let runningIndex = 0;
     let boxes = canvasBoxes.filter(
-      (box) => box.my.frame == getCurrentTimestampFrame(),
+      (box) => box.my.frame == getCurrentTimestampFrame()
     );
     boxes.forEach((box) => {
       const boxColor = colorSet.get(box.my.key);
@@ -260,6 +196,11 @@ const NewTrackingEditor = () => {
     setActiveObject(playerBox);
     setAnnotations(annotations.filter((a) => a.PlayerKey != playerBox.my.key));
     setCanvasBoxes(canvasBoxes.filter((a) => a.my.key != playerBox.my.key));
+
+    let newPlayerNameMap = new Map(playerNameMap);
+    newPlayerNameMap.delete(playerBox.my.key);
+    setPlayerNameMap(newPlayerNameMap);
+
     updateSidebar();
     canvas.discardActiveObject();
     canvas.remove(playerBox);
@@ -323,32 +264,44 @@ const NewTrackingEditor = () => {
     });
 
     playerBox.on({
-      modified: (event) => {
-        let targetRect = event.target;
-        playerBox.left = targetRect.left;
-        playerBox.top = targetRect.top;
-        playerBox.width =
-          (playerBox.width * targetRect.scaleX) / playerBox.my.scaleX;
-        playerBox.height =
-          (targetRect.height * targetRect.scaleY) / playerBox.my.scaleY;
-        playerBox.dirty = true;
-        playerBox.my.scaleX = targetRect.scaleX;
-        playerBox.my.scaleY = targetRect.scaleY;
-        playerBox.setCoords();
-        canvas.requestRenderAll();
+      modified: () => {
+        var boundingRect = playerBox.getBoundingRect();
+        var scaleX = playerBox.scaleX; // Save current scale factors
+        var scaleY = playerBox.scaleY;
+        // Calculate actual width and height based on scale factors
+        //when scaling the box, only scaleX and scaleY change, while width and height not
+        var actualWidth = (boundingRect.width - playerBox.strokeWidth) / scaleX;
+        var actualHeight =
+          (boundingRect.height - playerBox.strokeWidth) / scaleY;
+        playerBox.left = boundingRect.left;
+        playerBox.top = boundingRect.top;
+        playerBox.width = actualWidth;
+        playerBox.height = actualHeight;
+
+        const horizontalScalingFactor = canvas.width / 3840;
+        const verticalScalingFactor = canvas.height / 2160;
+        const modifiedAnnotation = convertBoxToAnnotation(
+          playerBox,
+          horizontalScalingFactor,
+          verticalScalingFactor
+        );
+        console.log(modifiedAnnotation);
+        const annotationToReplace = annotations.findIndex(
+          (a) =>
+            a.FrameNo == playerBox.my.frame && a.PlayerKey == playerBox.my.key
+        );
+        if (annotationToReplace == -1) {
+          console.error(
+            "the modified bounding box doesn't exist in annotations."
+          );
+        }
+        annotations.splice(annotationToReplace, 1, modifiedAnnotation);
+        canvas.renderAll();
       },
     });
 
     return playerBox;
   }
-
-  const retrievePlayerKeys = () => {
-    if (annotations.length > 0) {
-      return annotations.map((a) => a.PlayerKey);
-    } else {
-      return 0;
-    }
-  };
 
   // For changing video source file
   const handleBrowse = async (event) => {
@@ -365,7 +318,7 @@ const NewTrackingEditor = () => {
       // get rid of duplicates in case database has duplicate values
       const uniqueAnnotations = Array.from(
         new Set(annotationsJson.map((obj) => JSON.stringify(obj))),
-        JSON.parse,
+        JSON.parse
       );
       console.log("Unique annotations : ", uniqueAnnotations);
       // setAnnotations(uniqueAnnotations);
@@ -425,17 +378,6 @@ const NewTrackingEditor = () => {
   }, [activeObject]);
 
   useEffect(() => {
-    // as player name is not contained in the tracking data, set "player{id}" as default name.
-    let playerKeys = retrievePlayerKeys();
-    let tempMap = new Map();
-    for (var i = 0; i < playerKeys.length; i++) {
-      let playerName = "player" + playerKeys[i];
-      tempMap.set(playerKeys[i], playerName);
-    }
-    setPlayerNameMap(tempMap);
-  }, [annotations]);
-
-  useEffect(() => {
     let canvasWidth = document.body.clientWidth - 300;
     var canvasHeight = 800;
     if (videoElement) {
@@ -473,7 +415,7 @@ const NewTrackingEditor = () => {
 
   function boundingBoxColorSet(annotationList) {
     let uniquePlayerKeys = new Set(
-      annotationList.map((item) => item.PlayerKey),
+      annotationList.map((item) => item.PlayerKey)
     );
     let colorSet = new Map();
 
@@ -530,7 +472,6 @@ const NewTrackingEditor = () => {
   const drawBoundingBoxes = (frameNumber) => {
     const horizontalScalingFactor = canvas.width / 3840;
     const verticalScalingFactor = canvas.height / 2160;
-    let playerIndex = 0;
     deselectAllBox();
 
     if (!trailsEnabled) {
@@ -538,7 +479,7 @@ const NewTrackingEditor = () => {
     } else {
       //remove everything except the past trails
       canvas.remove(
-        ...canvas.getObjects().filter((obj) => obj.type !== "circle"),
+        ...canvas.getObjects().filter((obj) => obj.type !== "circle")
       );
       //remove trails that are too old
       canvas.remove(
@@ -547,16 +488,20 @@ const NewTrackingEditor = () => {
           .filter(
             (obj) =>
               frameNumber - obj.properties.frame >= trailFrameNumber ||
-              frameNumber - obj.properties.frame < 0,
-          ),
+              frameNumber - obj.properties.frame < 0
+          )
       );
       const currentTrailsToDraw = annotations.filter(
-        (a) => a.FrameNo == frameNumber,
+        (a) => a.FrameNo == frameNumber && (a.in_field || a.in_field === null)
       );
 
       currentTrailsToDraw.forEach((a) => {
         const scaledX = a.x1 * horizontalScalingFactor;
         const scaledY = a.y1 * verticalScalingFactor;
+        const scaledWidth = a.w * horizontalScalingFactor;
+        const scaledHeight = a.h * verticalScalingFactor;
+        const radius =
+          scaledWidth < scaledHeight ? scaledWidth / 4 : scaledHeight / 4;
         const trailColor = colorSet.get(a.PlayerKey);
         let trail = new fabric.Circle({
           left: scaledX,
@@ -564,39 +509,36 @@ const NewTrackingEditor = () => {
           stroke: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
           strokeWidth: 3,
           fill: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
-          radius: 5,
+          radius: (radius * trailSize) / 50,
           visible: isShowingAnnotation,
         });
         trail.properties = {
           frame: frameNumber,
+          playerKey: a.PlayerKey,
         };
-        trail.selectable = false;
-        trail.hasControls = false;
-        trail.hasBorders = false;
         trail.hasRotatingPoint = false;
+        defineTrailBehaviour(trail, setSelectedTrails);
         canvas.add(trail);
       });
     }
 
-    var playersToDraw = drawInField
-      ? canvasBoxes.filter(
-          (a) => a.my.frame === frameNumber && isInField(a.my.in_field),
-        )
-      : canvasBoxes.filter((a) => a.my.frame === frameNumber);
-
+    var boundingBoxesToDraw = canvasBoxes.filter(
+      (a) =>
+        a.my.frame == frameNumber && (a.my.in_field || a.my.in_field === null)
+    );
     var tempList = [];
     let runningIndex = 0;
 
-    if (playersToDraw.length > 0) {
-      while (playerIndex < playersToDraw.length) {
-        canvas.add(playersToDraw[playerIndex]);
-        const boxColor = colorSet.get(playersToDraw[playerIndex].my.key); //used in 'stroke' property of playerBox
+    if (boundingBoxesToDraw.length > 0) {
+      boundingBoxesToDraw.forEach((boundingBox) => {
+        canvas.add(boundingBox);
+        const boxColor = colorSet.get(boundingBox.my.key); //used in 'stroke' property of playerBox
 
         tempList = tempList.concat([
           <TrackListItemPlayer
             key={runningIndex++}
-            playerBox={playersToDraw[playerIndex]}
-            name={playerNameMap.get(playersToDraw[playerIndex].my.key)}
+            playerBox={boundingBox}
+            name={playerNameMap.get(boundingBox.my.key)}
             changeSelection={changeSelection}
             setName={setName}
             blink={blink}
@@ -605,56 +547,25 @@ const NewTrackingEditor = () => {
             handleModalOpen={handleModalOpen}
           />,
         ]);
-        playerIndex++;
-      }
+      });
     } else {
-      playersToDraw = drawInField
-        ? annotations.filter(
-            (a) => a.FrameNo === frameNumber && isInField(a.in_field),
-          )
-        : annotations.filter((a) => a.FrameNo === frameNumber);
+      boundingBoxesToDraw = annotations.filter(
+        (a) => a.FrameNo == frameNumber && (a.in_field || a.in_field === null)
+      );
 
-      if (playersToDraw.length > 0) {
+      if (boundingBoxesToDraw.length > 0) {
         //draw boxes
-        while (playerIndex < playersToDraw.length) {
-          const scaledX =
-            playersToDraw[playerIndex].x1 * horizontalScalingFactor;
-          const scaledY = playersToDraw[playerIndex].y1 * verticalScalingFactor;
-          const scaledWidth =
-            playersToDraw[playerIndex].w * horizontalScalingFactor;
-          const scaledHeight =
-            playersToDraw[playerIndex].h * verticalScalingFactor;
-          const boxColor = colorSet.get(playersToDraw[playerIndex].PlayerKey); //used in 'stroke' property of playerBox
-          let playerBox = new fabric.Rect({
-            left: scaledX,
-            top: scaledY,
-            fill: "rgba(0,0,0,0)",
-            width: scaledWidth,
-            height: scaledHeight,
-            visible: isShowingBox,
-            dirty: false,
-            stroke: `rgb(${boxColor.r}, ${boxColor.g}, ${boxColor.b})`,
-
-            hasBorders: false, // disables the control borders (the lines connecting the controls the show up when object is selected
-            strokeWidth: 2,
-            strokeUniform: true, // to keep the bounding box a consisten thickness, independent of its size
-            padding: 0, // to make sure the pixel coordinates are correct
-            cornerSize: 10,
-            cornerStyle: "rect",
-            lockRotation: true,
-          });
-          playerBox.my = {
-            selected: false,
-            key: playersToDraw[playerIndex].PlayerKey,
-            frame: frameNumber,
-            //scaling factor when modifying the box
-            scaleX: 1,
-            scaleY: 1,
-            // also connect it to corresponding annotation
-          };
+        boundingBoxesToDraw.forEach((boundingBox) => {
+          const boxColor = colorSet.get(boundingBox.PlayerKey); //used in 'stroke' property of playerBox
+          let playerBox = convertAnnotationToBox(
+            boundingBox,
+            horizontalScalingFactor,
+            verticalScalingFactor
+          );
+          playerBox.visible = isShowingBox;
+          playerBox.stroke = `rgb(${boxColor.r}, ${boxColor.g}, ${boxColor.b})`;
           playerBox.setControlVisible("mtr", false);
           playerBox = defineBoxBehavior(playerBox);
-          canvasBoxes.push(playerBox);
           canvas.add(playerBox);
 
           tempList = tempList.concat([
@@ -662,7 +573,7 @@ const NewTrackingEditor = () => {
               key={runningIndex++}
               playerBox={playerBox}
               color={boxColor}
-              name={playerNameMap.get(playersToDraw[playerIndex].PlayerKey)}
+              name={playerNameMap.get(boundingBox.PlayerKey)}
               changeSelection={changeSelection}
               setName={setName}
               blink={blink}
@@ -670,8 +581,7 @@ const NewTrackingEditor = () => {
               handleModalOpen={handleModalOpen}
             />,
           ]);
-          playerIndex++;
-        }
+        });
       }
     }
     setPlayerList(tempList);
@@ -703,7 +613,7 @@ const NewTrackingEditor = () => {
           "Video element either null, paused : ",
           videoElement.paused,
           " or ended : ",
-          videoElement.ended,
+          videoElement.ended
         );
         //problematic, empty playerlist when video paused
         return;
@@ -734,7 +644,6 @@ const NewTrackingEditor = () => {
 
     const onSeek = () => {
       console.log("Seeked");
-      //updateCanvas();
     };
 
     const onSeeking = () => {
@@ -775,12 +684,13 @@ const NewTrackingEditor = () => {
       videoElement.removeEventListener("waiting", onWaiting);
     };
   }, [
+    annotations,
     videoElement,
     isShowingBox,
     playerNameMap,
     trailFrameNumber,
     trailsEnabled,
-    drawInField,
+    trailSize,
   ]);
 
   //triggered when user clicks on the video progress bar to change the video time
@@ -797,6 +707,8 @@ const NewTrackingEditor = () => {
         colorSet,
         canvas.width / 3840,
         canvas.height / 2160,
+        setSelectedTrails,
+        trailSize
       );
     }
   }, [videoElement?.seeking]);
@@ -823,64 +735,36 @@ const NewTrackingEditor = () => {
         colorSet,
         horizontalScalingFactor,
         verticalScalingFactor,
+        setSelectedTrails,
+        trailSize
       );
     }
 
     //same thing we do in drawBoundingBoxes..
     if (annotations.length > 0) {
-      var playersToDraw = drawInField
-        ? annotations.filter(
-            (a) => a.FrameNo === frameNumber && isInField(a.in_field),
-          )
-        : annotations.filter((a) => a.FrameNo === frameNumber);
-
-      if (playersToDraw.length > 0) {
-        //draw boxesd
-        while (playerIndex < playersToDraw.length) {
-          const scaledX =
-            playersToDraw[playerIndex].x1 * horizontalScalingFactor;
-          const scaledY = playersToDraw[playerIndex].y1 * verticalScalingFactor;
-          const scaledWidth =
-            playersToDraw[playerIndex].w * horizontalScalingFactor;
-          const scaledHeight =
-            playersToDraw[playerIndex].h * verticalScalingFactor;
-          const boxColor = colorSet.get(playersToDraw[playerIndex].PlayerKey); //used in 'stroke' property of playerBox
-
-          let playerBox = new fabric.Rect({
-            left: scaledX,
-            top: scaledY,
-            fill: "rgba(0,0,0,0)",
-            width: scaledWidth,
-            height: scaledHeight,
-            visible: isShowingBox,
-            dirty: false,
-            stroke: `rgb(${boxColor.r}, ${boxColor.g}, ${boxColor.b})`,
-            hasBorders: false, // disables the control borders (the lines connecting the controls the show up when object is selected
-            strokeWidth: 2,
-            strokeUniform: true, // to keep the bounding box a consisten thickness, independent of its size
-            padding: 0, // to make sure the pixel coordinates are correct
-            cornerStyle: "rect",
-            lockRotation: true,
-          });
-          playerBox.my = {
-            selected: false,
-            key: playersToDraw[playerIndex].PlayerKey,
-            frame: frameNumber,
-            //scaling factor when modifying the box
-            scaleX: 1,
-            scaleY: 1,
-            // also connect it to corresponding annotation
-          };
+      var boundingBoxesToDraw = annotations.filter(
+        (a) => a.FrameNo == frameNumber && (a.in_field || a.in_field === null)
+      );
+      if (boundingBoxesToDraw.length > 0) {
+        //draw boxes
+        boundingBoxesToDraw.forEach((boundingBox) => {
+          const boxColor = colorSet.get(boundingBox.PlayerKey); //used in 'stroke' property of playerBox
+          let playerBox = convertAnnotationToBox(
+            boundingBox,
+            horizontalScalingFactor,
+            verticalScalingFactor
+          );
+          playerBox.visible = isShowingBox;
+          playerBox.stroke = `rgb(${boxColor.r}, ${boxColor.g}, ${boxColor.b})`;
           playerBox.setControlVisible("mtr", false);
           playerBox = defineBoxBehavior(playerBox);
-          canvasBoxes.push(playerBox);
           canvas.add(playerBox);
 
           tempList = tempList.concat([
             <TrackListItemPlayer
               key={runningIndex++}
               playerBox={playerBox}
-              name={playerNameMap.get(playersToDraw[playerIndex].PlayerKey)}
+              name={playerNameMap.get(boundingBox.PlayerKey)}
               changeSelection={changeSelection}
               setName={setName}
               blink={blink}
@@ -889,12 +773,11 @@ const NewTrackingEditor = () => {
               handleModalOpen={handleModalOpen}
             />,
           ]);
-          playerIndex++;
-        }
+        });
         setPlayerList(tempList);
       }
     }
-  }, [playerNameMap, trailsEnabled, trailFrameNumber, drawInField]);
+  }, [annotations, playerNameMap, trailsEnabled, trailSize, trailFrameNumber]);
 
   const handleKeyDown = (event) => {
     switch (event.keyCode) {
@@ -967,7 +850,7 @@ const NewTrackingEditor = () => {
   const handleNextChunk = () => {
     const newTimestamp = Math.min(
       videoElement.duration,
-      videoElement.currentTime + 6,
+      videoElement.currentTime + 6
     );
     videoElement.currentTime = newTimestamp;
     updateTimestamp(newTimestamp);
@@ -1060,7 +943,10 @@ const NewTrackingEditor = () => {
         y2: 0,
         y_trans: 0,
         in_field: true,
-      }),
+      })
+    );
+    setPlayerNameMap(
+      new Map(playerNameMap.set(newPlayerKey, "player" + newPlayerKey))
     );
   }
 
@@ -1072,76 +958,83 @@ const NewTrackingEditor = () => {
     }
   };
 
+  const handleSwitchingTrailSize = (event) => {
+    setTrailSize(event.target.value);
+  };
+
   return (
     <div>
       <MergeAndSwapModal
         playerChosenInList={playerChosenInList}
         playerNameMap={playerNameMap}
+        setPlayerNameMap={setPlayerNameMap}
+        annotations={annotations}
+        setAnnotations={setAnnotations}
+        frameNumber={frameNumber}
         mergeModalState={mergeModalState}
         handleClose={handleModalClose}
-        swapPlayerData={swapPlayerData}
-        mergePlayerData={mergePlayerData}
       />
       <div className="controls">
         <Box id="tools-container" sx={{ display: "flex", gap: "10px" }}>
           <div>Show Annotation:</div>
-          <FormGroup>
-            <FormControlLabel
-              control={
-                <Switch
-                  color="default"
-                  checked={isShowingAnnotation}
-                  onChange={handleDisplayingAnnotation}
-                />
-              }
-            />
-          </FormGroup>
+
+          <Switch
+            checked={isShowingAnnotation}
+            onChange={handleDisplayingAnnotation}
+          />
+
           <div>Show Player Box:</div>
-          <FormGroup>
-            <FormControlLabel
-              control={
-                <Switch
-                  color="default"
-                  checked={isShowingBox}
-                  onChange={handleDisplayingBox}
-                />
-              }
-            />
-          </FormGroup>
+
+          <Switch checked={isShowingBox} onChange={handleDisplayingBox} />
           <div>Show In Field:</div>
-          <FormGroup>
-            <FormControlLabel
-              control={
-                <Switch
-                  color="default"
-                  checked={drawInField}
-                  disabled={!videoElement?.paused}
-                  onChange={() => setDrawInField(!drawInField)}
-                />
-              }
-            />
-          </FormGroup>
+
+          <Switch
+            checked={true}
+            disabled={!videoElement?.paused}
+            color="primary"
+          />
+
           <Button
             data-testid="add-player-button"
             variant="contained"
-            color="info"
             onClick={handleAddPlayer}
+            sx={{
+              backgroundColor: "#BBC3C9 !important",
+              color: "#1b1f22 !important",
+            }}
           >
             Add player
           </Button>
+          <Button
+            data-testid="merge-button"
+            variant="contained"
+            onClick={handleMultiSelectMerge}
+            sx={{
+              backgroundColor: "#BBC3C9 !important",
+              color: "#1b1f22 !important",
+            }}
+          >
+            Merge
+          </Button>
           <Typography sx={{ marginLeft: "10px" }}>Trails </Typography>
-          <FormGroup>
-            <FormControlLabel
-              control={
-                <Switch
-                  color="default"
-                  checked={trailsEnabled}
-                  disabled={!videoElement?.paused}
-                  onChange={handleEnablingTrails}
-                />
-              }
-            />
-          </FormGroup>
+
+          <Switch
+            checked={trailsEnabled}
+            disabled={!videoElement?.paused}
+            onChange={handleEnablingTrails}
+          />
+          <Typography>Trails Size </Typography>
+          <Slider
+            sx={{ width: "60px" }}
+            value={trailSize}
+            disabled={!videoElement?.paused}
+            onChange={handleSwitchingTrailSize}
+            min={10}
+            max={100}
+            step={10}
+            aria-label="Default"
+            valueLabelDisplay="auto"
+          />
           <Typography sx={{ marginLeft: "10px" }}>Trail frames: </Typography>
 
           <TextField
