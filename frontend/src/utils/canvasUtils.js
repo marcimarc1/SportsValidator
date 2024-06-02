@@ -66,19 +66,20 @@ export const drawFieldPoints = (
   length,
   width,
 ) => {
-  const template = getTemplate(sport, length, width);
+  const { points, lines } = getTemplate(sport, length, width);
   const homography = homographies[frameNumber];
   const invHomography = inv(homography);
 
   const transformPoint = (point) => {
-    let transformedPoint = applyHomography(invHomography, point);
+    let transformedPoint = applyHomography(invHomography, point.coords);
     return {
+      id: point.id,
       x: transformedPoint.x * horizontalScalingFactor,
       y: transformedPoint.y * verticalScalingFactor,
     };
   };
 
-  const drawPoint = (point, color, id, radius = 5) => {
+  const drawPoint = (point, color, radius = 5) => {
     const transformedPoint = transformPoint(point);
 
     const circle = new fabric.Circle({
@@ -97,7 +98,7 @@ export const drawFieldPoints = (
       frame: frameNumber,
     };
 
-    circle.id = id;
+    circle.id = point.id;
     canvas.add(circle);
     return circle;
   };
@@ -139,14 +140,46 @@ export const drawFieldPoints = (
     return line;
   };
 
+  const drawLineFromPoints = (points, color, lineId) => {
+    const pointObjects = points.map((point, index) => {
+      const id = point.id;
+      const existingPoint = canvas.getObjects().find((obj) => obj.id === id);
+
+      if (existingPoint) {
+        return existingPoint;
+      }
+
+      return drawPoint(point, color);
+    });
+
+    for (let i = 0; i < pointObjects.length - 1; i++) {
+      const startPoint = pointObjects[i];
+      const endPoint = pointObjects[i + 1];
+      drawLine(startPoint, endPoint, color);
+    }
+
+    canvas.off('object:moving', updateLines);
+    canvas.on('object:moving', updateLines);
+  };
+
   const drawCircle = (center, radius, color) => {
-    const transformedCenter = transformPoint(center);
+    const transformedCenter = transformPoint({ coords: center });
+
+    const radiusPointX = [center[0] + radius, center[1]];
+    const radiusPointY = [center[0], center[1] + radius];
+  
+    const transformedRadiusPointX = transformPoint({ coords: radiusPointX });
+    const transformedRadiusPointY = transformPoint({ coords: radiusPointY });
+  
+    // Calculate the transformed radii
+    const transformedRadiusX = Math.abs(transformedRadiusPointX.x - transformedCenter.x);
+    const transformedRadiusY = Math.abs(transformedRadiusPointY.y - transformedCenter.y);
 
     const ellipse = new fabric.Ellipse({
       left: transformedCenter.x,
       top: transformedCenter.y,
-      rx: horizontalScalingFactor * radius * 29,
-      ry: verticalScalingFactor * radius * 29,
+      rx: transformedRadiusX,
+      ry: transformedRadiusY,
       stroke: color,
       strokeWidth: 3,
       fill: 'transparent',
@@ -163,73 +196,20 @@ export const drawFieldPoints = (
     canvas.add(ellipse);
   };
 
-  const drawLinesFromPoints = (points, color, areaType, areaIndex) => {
-    const pointObjects = points.map((point, index) => {
-      const id = `point-${areaType}-${frameNumber}-${areaIndex}-${index}`;
-      const existingPoint = canvas.getObjects().find((obj) => obj.id === id);
+  // Drawing lines from template
+  Object.entries(lines).forEach(([lineId, points]) => {
+    drawLineFromPoints(points, 'blue', lineId);
+  });
 
-      if (existingPoint) {
-        return existingPoint;
-      }
-
-      const pointObj = drawPoint(point, color, id);
-      return pointObj;
-    });
-
-    for (let i = 0; i < pointObjects.length; i++) {
-      const startPoint = pointObjects[i];
-      const endPoint = pointObjects[(i + 1) % pointObjects.length]; // Connect last point to the first
-      drawLine(startPoint, endPoint, color);
-    }
-
-    canvas.off('object:moving', updateLines);
-    canvas.on('object:moving', updateLines);
-  };
-
-  // Drawing different field lines
-  if (template.Corners) {
-    drawLinesFromPoints(template.Corners, 'blue', 'corners', 0);
+  if (points.middleCircle) {
+    drawCircle(points.middleCircle.center, points.middleCircle.radius, 'yellow');
   }
-  if (template['16m']) {
-    template['16m'].forEach((area, areaIndex) => {
-      drawLinesFromPoints(area, 'orange', '16m', areaIndex);
-    });
-  }
-  if (template['5m']) {
-    template['5m'].forEach((area, areaIndex) => {
-      drawLinesFromPoints(area, 'red', '5m', areaIndex);
-    });
-  }
-  if (template.Midline) {
-    drawLinesFromPoints(template.Midline, 'blue', 'midline', 0);
-  }
-  if (template.Midcircle) {
-    const center = template.Midcircle.center;
-    const radius = template.Midcircle.radius;
-    drawCircle(center, radius, 'yellow');
-  }
-  if (template.PenaltySpots) {
-    template.PenaltySpots.forEach((spot) => drawCircle(spot[0], 0.1, 'yellow'));
-  }
-  if(template.BaseLineXcenterline){
-    drawLinesFromPoints(template.BaseLineXcenterline, 'blue', 'BaseLineXcenterline', 0);
-  }
-  if(template.BaselineXsingle){
-    drawLinesFromPoints(template.BaselineXsingle, 'blue', 'BaselineXsingle', 0);
-  }
-  if(template.CenterLineXnet){
-    drawLinesFromPoints(template.CenterLineXnet, 'blue', 'CenterLineXnet', 0);
-  }
-  if(template.NetXsingle){
-    drawLinesFromPoints(template.NetXsingle, 'red', 'NetXsingle', 0);
-  }
-  if(template.NetXsideLine){
-    drawLinesFromPoints(template.NetXsideLine, 'red', 'NetXsideLine', 0);
-  }
-  if(template.ServiceXsingle){
-    drawLinesFromPoints(template.ServiceXsingle, 'yellow', 'ServiceXsingle', 0);
+  if(points.penaltySpot){
+    drawCircle(points.penaltySpot[0].coords, 0.3, 'red');
+    drawCircle(points.penaltySpot[1].coords, 0.3, 'red');
   }
 };
+
 
 export const defineTrailBehaviour = (trail, setSelectedTrails) => {
   trail.on("selected", () => {

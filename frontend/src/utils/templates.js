@@ -1,4 +1,4 @@
-function createSoccerTemplate(LENGTH = 100, WIDTH = 50) {
+function createSoccerTemplate(LENGTH, WIDTH) {
   const GOAL_WIDTH = 7.32;
   const GOAL_AREA_LENGTH = 5.5;
   const GOAL_AREA_DEPTH = 5.5;
@@ -6,94 +6,130 @@ function createSoccerTemplate(LENGTH = 100, WIDTH = 50) {
   const PENALTY_AREA_DEPTH = 16.5;
   const MID_CIRCLE_RADIUS = 9.15;
 
-  const outerArea = [
-    [0, 0],
-    [0, WIDTH],
-    [LENGTH, WIDTH],
-    [LENGTH, 0],
-  ];
-
-  let penaltyAreaRight = [
-    [
-      [
-        LENGTH - PENALTY_AREA_DEPTH,
-        WIDTH / 2 - PENALTY_AREA_LENGTH / 2,
-      ],
-      [
-        LENGTH - PENALTY_AREA_DEPTH,
-        WIDTH / 2 + PENALTY_AREA_LENGTH / 2,
-      ],
-      [
-        LENGTH,
-        WIDTH / 2 + PENALTY_AREA_LENGTH / 2,
-      ],
-      [
-        LENGTH,
-        WIDTH / 2 - PENALTY_AREA_LENGTH / 2,
-      ]
-    ]
-  ];
-  
-  let penaltyAreaLeft = [
-    [
-      [
-        PENALTY_AREA_DEPTH,
-        WIDTH / 2 - PENALTY_AREA_LENGTH / 2,
-      ],
-      [
-        PENALTY_AREA_DEPTH,
-        WIDTH / 2 + PENALTY_AREA_LENGTH / 2,
-      ],
-      [0, WIDTH / 2 + PENALTY_AREA_LENGTH / 2],
-      [0, WIDTH / 2 - PENALTY_AREA_LENGTH / 2],
-    ]
-  ];  
-
-  const penaltyArea = penaltyAreaLeft.concat(penaltyAreaRight);
-
-  let goalAreaRight = [
-    [
-      [LENGTH - GOAL_AREA_LENGTH, WIDTH / 2 - (GOAL_AREA_DEPTH + GOAL_WIDTH / 2)],
-      [LENGTH - GOAL_AREA_LENGTH, WIDTH / 2 + (GOAL_AREA_DEPTH + GOAL_WIDTH / 2)],
-      [LENGTH, WIDTH / 2 + (GOAL_AREA_DEPTH + GOAL_WIDTH / 2)],
-      [LENGTH, WIDTH / 2 - (GOAL_AREA_DEPTH + GOAL_WIDTH / 2)],
-    ]
-  ];
-
-  let goalAreaLeft = [
-    [
-      [GOAL_AREA_LENGTH, WIDTH / 2 - (GOAL_AREA_DEPTH + GOAL_WIDTH / 2)],
-      [GOAL_AREA_LENGTH, WIDTH / 2 + (GOAL_AREA_DEPTH + GOAL_WIDTH / 2)],
-      [0, WIDTH / 2 + (GOAL_AREA_DEPTH + GOAL_WIDTH / 2)],
-      [0, WIDTH / 2 - (GOAL_AREA_DEPTH + GOAL_WIDTH / 2)],
-    ]
-  ];
-
-  const goalArea = goalAreaLeft.concat(goalAreaRight);
-
-  const middleLine = [
-    [LENGTH / 2, 0],
-    [LENGTH / 2, WIDTH]
-  ];
-
-  const middleCircle = { 
-    center: [LENGTH / 2, WIDTH / 2], 
-    radius: MID_CIRCLE_RADIUS 
+  const points = {
+    outerArea: [
+      { id: 'outer-0', coords: [0, 0] }, // Top-left
+      { id: 'outer-1', coords: [LENGTH, 0] }, // Top-right
+      { id: 'outer-2', coords: [LENGTH, WIDTH] }, // Bottom-right
+      { id: 'outer-3', coords: [0, WIDTH] }, // Bottom-left
+    ],
+    penaltyAreaLeft: [
+      { id: 'penalty-left-0', coords: [0, WIDTH / 2 - PENALTY_AREA_LENGTH / 2] }, // Top-left
+      { id: 'penalty-left-1', coords: [PENALTY_AREA_DEPTH, WIDTH / 2 - PENALTY_AREA_LENGTH / 2] }, // Top-right
+      { id: 'penalty-left-2', coords: [PENALTY_AREA_DEPTH, WIDTH / 2 + PENALTY_AREA_LENGTH / 2] }, // Bottom-right
+      { id: 'penalty-left-3', coords: [0, WIDTH / 2 + PENALTY_AREA_LENGTH / 2] }, // Bottom-left
+    ],
+    penaltyAreaRight: [
+      { id: 'penalty-right-0', coords: [LENGTH - PENALTY_AREA_DEPTH, WIDTH / 2 - PENALTY_AREA_LENGTH / 2] }, // Top-left
+      { id: 'penalty-right-1', coords: [LENGTH, WIDTH / 2 - PENALTY_AREA_LENGTH / 2] }, // Top-right
+      { id: 'penalty-right-2', coords: [LENGTH, WIDTH / 2 + PENALTY_AREA_LENGTH / 2] }, // Bottom-right
+      { id: 'penalty-right-3', coords: [LENGTH - PENALTY_AREA_DEPTH, WIDTH / 2 + PENALTY_AREA_LENGTH / 2] }, // Bottom-left
+    ],
+    goalAreaLeft: [
+      { id: 'goal-left-0', coords: [0, WIDTH / 2 - (GOAL_AREA_DEPTH + GOAL_WIDTH / 2)] }, // Top-left
+      { id: 'goal-left-1', coords: [GOAL_AREA_LENGTH, WIDTH / 2 - (GOAL_AREA_DEPTH + GOAL_WIDTH / 2)] }, // Top-right
+      { id: 'goal-left-2', coords: [GOAL_AREA_LENGTH, WIDTH / 2 + (GOAL_AREA_DEPTH + GOAL_WIDTH / 2)] }, // Bottom-right
+      { id: 'goal-left-3', coords: [0, WIDTH / 2 + (GOAL_AREA_DEPTH + GOAL_WIDTH / 2)] }, // Bottom-left
+    ],
+    goalAreaRight: [
+      { id: 'goal-right-0', coords: [LENGTH - GOAL_AREA_LENGTH, WIDTH / 2 - (GOAL_AREA_DEPTH + GOAL_WIDTH / 2)] }, // Top-left
+      { id: 'goal-right-1', coords: [LENGTH, WIDTH / 2 - (GOAL_AREA_DEPTH + GOAL_WIDTH / 2)] }, // Top-right
+      { id: 'goal-right-2', coords: [LENGTH, WIDTH / 2 + (GOAL_AREA_DEPTH + GOAL_WIDTH / 2)] }, // Bottom-right
+      { id: 'goal-right-3', coords: [LENGTH - GOAL_AREA_LENGTH, WIDTH / 2 + (GOAL_AREA_DEPTH + GOAL_WIDTH / 2)] }, // Bottom-left
+    ],
+    middleLine: [
+      { id: 'midline-0', coords: [LENGTH / 2, 0] }, // Top
+      { id: 'midline-1', coords: [LENGTH / 2, WIDTH] }, // Bottom
+    ],
+    middleCircle: { 
+      center: [LENGTH / 2, WIDTH / 2], 
+      radius: MID_CIRCLE_RADIUS 
+    },
+    penaltySpot: [
+      { id: 'penalty-spot-0', coords: [11, WIDTH / 2] },
+      { id: 'penalty-spot-1', coords: [LENGTH - 11, WIDTH / 2] }
+    ],
   };
 
-  const penaltySpot = [
-    [[11, WIDTH / 2]],
-    [[LENGTH - 11, WIDTH / 2]]
-  ];
-
-  return {
-    Corners: outerArea,
-    '16m': penaltyArea,
-    '5m': goalArea,
-    Midline: middleLine,
-    Midcircle: middleCircle,
-    PenaltySpots: penaltySpot
+  const lines = {
+    leftOuterLine: [
+      points.outerArea[0],
+      points.penaltyAreaLeft[0],
+      points.goalAreaLeft[0],
+      points.goalAreaLeft[3],
+      points.penaltyAreaLeft[3],
+      points.outerArea[3],
+    ],
+    rightOuterLine: [
+      points.outerArea[1],
+      points.penaltyAreaRight[1],
+      points.goalAreaRight[1],
+      points.goalAreaRight[2],
+      points.penaltyAreaRight[2],
+      points.outerArea[2],
+    ],
+    topOuterLine: [
+      points.outerArea[0],
+      points.middleLine[0],
+      points.outerArea[1],
+    ],
+    bottomOuterLine: [
+      points.outerArea[3],
+      points.middleLine[1],
+      points.outerArea[2],
+    ],
+    rightPenaltyAreaLeftLine: [
+      points.penaltyAreaRight[0],
+      points.penaltyAreaRight[3],
+    ], 
+    rightPenaltyAreaBottomLine: [
+      points.penaltyAreaRight[3],
+      points.penaltyAreaRight[2],
+    ],
+    rightPenaltyAreaTopLine: [
+      points.penaltyAreaRight[0],
+      points.penaltyAreaRight[1],
+    ],
+    rightGoalAreaLeftLine: [
+      points.goalAreaRight[0],
+      points.goalAreaRight[3],
+    ],
+    rightGoalAreaBottomLine: [
+      points.goalAreaRight[3],
+      points.goalAreaRight[2],
+    ],
+    rightGoalAreaTopLine: [
+      points.goalAreaRight[0],
+      points.goalAreaRight[1],
+    ],
+    leftPenaltyAreaRightLine: [
+      points.penaltyAreaLeft[1],
+      points.penaltyAreaLeft[2],
+    ],
+    leftPenaltyAreaBottomLine: [
+      points.penaltyAreaLeft[2],
+      points.penaltyAreaLeft[3],
+    ],
+    leftPenaltyAreaTopLine: [
+      points.penaltyAreaLeft[0],
+      points.penaltyAreaLeft[1],
+    ],
+    leftGoalAreaRightLine: [
+      points.goalAreaLeft[1],
+      points.goalAreaLeft[2],
+    ],
+    leftGoalAreaBottomLine: [
+      points.goalAreaLeft[2],
+      points.goalAreaLeft[3],
+    ],
+    leftGoalAreaTopLine: [
+      points.goalAreaLeft[0],
+      points.goalAreaLeft[1],
+    ],
+    middleLine: points.middleLine,
   };
+
+  return { points, lines };
 }
 
 function createTennisTemplate() {
