@@ -66,6 +66,10 @@ export const DownloadButton = ({ players, video }) => {
         aria-haspopup="true"
         aria-expanded={open ? "true" : undefined}
         onClick={handleClick}
+        sx={{
+          backgroundColor: "#BBC3C9 !important",
+          color: "#1b1f22 !important",
+        }}
       >
         Download
       </Button>

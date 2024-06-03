@@ -1,28 +1,28 @@
 .Pointer {
-    cursor: pointer;
+  cursor: pointer;
 }
 
 .NavBar {
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    background-color: #bbbbbb;
-    /*padding: 1.2em 0;   !* top and bottom *!*/
-    height: 73px;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  background-color: #bbbbbb;
+  /*padding: 1.2em 0;   !* top and bottom *!*/
+  height: 73px;
 }
 
 .NavBarUndoRedoIcon {
-    margin: 0 10px;
+  margin: 0 10px;
 }
 
 .NavBarSlider {
-    margin-left: 5rem;
+  margin-left: 5rem;
 }
 
 .NavBarTransport {
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
 }
 
 /*.NavBarTransportButtonContainer {*/
@@ -30,73 +30,75 @@
 /*}*/
 
 .NavBarTransportButton {
-    margin: 0 3px;  /* top/bottom left/right margin */
+  margin: 0 3px; /* top/bottom left/right margin */
 }
 
 .NavBarTransportButtonPlay .NavBarTransportButtonPause {
-    margin: 0 10px;
+  margin: 0 10px;
 }
 
 .NavBarTransportButtonDoubleChevronRight {
-    margin: 0 0 0 1px;
+  margin: 0 0 0 1px;
 }
 
-.NavBarTransportButtonFirst, .NavBarTransportButtonLast {
-    margin: 0 0;
+.NavBarTransportButtonFirst,
+.NavBarTransportButtonLast {
+  margin: 0 0;
 }
 
 .Slider {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .SliderSlider {
-    width: 350px !important;
-    margin-right: 10px;
+  width: 350px !important;
+  margin-right: 10px;
 }
 
 .SliderNumberInput {
-    width: 50px !important;
+  width: 50px !important;
 }
 
 .NavBarAppearanceSelectionContainer {
-    display: flex;
-    margin-top: 5px;
+  display: flex;
+  margin-top: 5px;
 }
 
 .NavBarLabelVisibilityDropdown {
-    width: 10rem;
-    display: flex;
-    align-items: flex-start;
+  width: 10rem;
+  display: flex;
+  align-items: flex-start;
 }
 
 .NavBarColorByCategorySwitch {
-    display: flex;
-    align-items: flex-start;
+  display: flex;
+  align-items: flex-start;
 }
 
 #labeling-select-label {
-    margin-left: 5px;
+  margin-left: 5px;
 }
 
 .Label {
-    font-weight: 450;   /* slightly bolder than normal */
+  font-weight: 450; /* slightly bolder than normal */
 }
 
 .remove {
-    display: none;
+  display: none;
 }
 
 /* The following rules change the color of the Mui Switch */
 .MuiSwitch-colorSecondary.Mui-checked + .MuiSwitch-track {
-    background-color: #344911 !important;
+  background-color: #344911 !important;
 }
 
 .MuiSwitch-colorSecondary.Mui-checked {
-    color: #344911 !important;
+  color: #344911 !important;
 }
 
-.MuiSwitch-colorSecondary.Mui-checked:hover {   /* sets the very slightly colored shade around the thumb before clicking when mouse is on the thumb of the switch */
-    background-color: rgba(34, 49, 11, 0.04) !important;
+.MuiSwitch-colorSecondary.Mui-checked:hover {
+  /* sets the very slightly colored shade around the thumb before clicking when mouse is on the thumb of the switch */
+  background-color: rgba(34, 49, 11, 0.04) !important;
 }
