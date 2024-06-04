@@ -35,10 +35,7 @@ class TrackList extends Component {
           </Button>
         </div>
 
-        <div
-          className="TrackListList"
-          style={{ backgroundColor: "rgba(0, 0, 0, 0.7)" }}
-        >
+        <div className="TrackListList">
           <div className={this.state.activeTab == 0 ? "" : "inactive"}>
             {this.props.children}
           </div>

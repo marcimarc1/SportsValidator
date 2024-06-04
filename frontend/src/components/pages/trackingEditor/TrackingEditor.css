@@ -1,3 +1,10 @@
+:root {
+    --main-text-color: #F5EDF0;
+    --main-bg: #1B1F22;
+    --secondary-bg: #424B54;
+    --accent: #83B692;
+}
+
 canvas {
     /*background-size: 100% 100%;*/
 }
@@ -21,7 +28,6 @@ canvas {
 .TrackListTabs {
     border-width: 0px 0px 3px 8px;
     border-style: solid;
-    border-color: black;
     height: 73px;
     background-color: #BBB;
 }
@@ -63,6 +69,7 @@ canvas {
 .TrackListItem {
     border-style: none none solid solid;
     border-width: 0px 0px 3px 8px;
+    border-color: var(--main-bg) !important;
     background-color: #727272;
     display: flex;
     justify-content: flex-start;
