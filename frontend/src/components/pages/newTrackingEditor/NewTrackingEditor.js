@@ -125,6 +125,7 @@ const NewTrackingEditor = () => {
       });
       setPlayerNameMap(tempMap);
     }
+    
     if(ballTracks){
       const parsedDataBall = parseProcessedBalls(ballTracks);
       setballTracks(parsedDataBall);
