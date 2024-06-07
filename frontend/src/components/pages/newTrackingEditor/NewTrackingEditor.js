@@ -132,6 +132,13 @@ const NewTrackingEditor = () => {
       console.log("retrieved ballsdata:", parsedDataBall);
       setColorSetBall(boundingBoxBallColorSet(parsedDataBall))
       //setColorSet(boundingBoxColorSet(parsedDataBall));
+      let ballKeys = parsedDataBall.map((a) => a.trackNo);
+      let tempMap = new Map();
+      ballKeys.forEach((key) => {
+        let ballName = "ball" + key;
+        tempMap.set(key, ballName);
+      });
+      setBallNameMap(tempMap);
     }
   }, [processedPlayers, ballTracks ,  location.state]);
 
@@ -618,7 +625,7 @@ const NewTrackingEditor = () => {
     const verticalScalingFactor = canvas.height / 2160;
     deselectAllPlayerBox();
     deselectAllBallBox();
-      
+
     if (!trailsEnabled) {
       canvas.remove(...canvas.getObjects());
     } else {
@@ -717,7 +724,7 @@ const NewTrackingEditor = () => {
           playerBox.stroke = `rgb(${boxColor.r}, ${boxColor.g}, ${boxColor.b})`;
           playerBox.setControlVisible("mtr", false);
           playerBox = defineBoxBehavior(playerBox);
-          canvasBoxesPlayer.push(playerBox);
+          canvas.add(playerBox);
 
           tempList = tempList.concat([
             <TrackListItemPlayer
@@ -776,7 +783,7 @@ const NewTrackingEditor = () => {
           ballBox.stroke = `rgb(${boxColor.r}, ${boxColor.g}, ${boxColor.b})`;
           ballBox.setControlVisible("mtr", false);
           ballBox = defineBoxBehavior(ballBox);
-          canvasBoxesBall.push(ballBox);
+          canvas.add(ballBox);
           tempList = tempList.concat([
             <TrackListItemBall
             key={runningIndex++}
@@ -933,7 +940,7 @@ const NewTrackingEditor = () => {
     }
     //remove old canvas objects
     canvas.remove(...canvas.getObjects());
-
+    
     const horizontalScalingFactor = canvas.width / 3840;
     const verticalScalingFactor = canvas.height / 2160;
     let playerIndex = 0;
@@ -1194,11 +1201,7 @@ const NewTrackingEditor = () => {
   }
 
   const handleEnablingTrails = () => {
-    if (trailsEnabled) {
-      setTrailsEnabled(false);
-    } else {
-      setTrailsEnabled(true);
-    }
+    setTrailsEnabled(!trailsEnabled);
   };
 
   const handleSwitchingTrailSize = (event) => {
