@@ -74,8 +74,8 @@ export const convertBallsAnnotationToBox = (
   try {
     const scaledX = ballinfo.x1 * horizontalScalingFactor;
     const scaledY = ballinfo.y1 * verticalScalingFactor;
-    const scaledWidth = 10 * horizontalScalingFactor;
-    const scaledHeight = 10 * verticalScalingFactor;
+    const scaledWidth = 20 * horizontalScalingFactor;
+    const scaledHeight = 20 * verticalScalingFactor;
     const boundingBox = new fabric.Rect({
       left: scaledX,
       top: scaledY,

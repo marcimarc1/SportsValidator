@@ -348,7 +348,7 @@ const NewTrackingEditor = () => {
       selectBBox(canvasBox);
     }
   }
-  //TOBI: rename functions vars
+
   function defineBoxBehavior(playerBox) {
     playerBox.on({
       selected: () => {},
@@ -940,7 +940,7 @@ const NewTrackingEditor = () => {
     }
     //remove old canvas objects
     canvas.remove(...canvas.getObjects());
-    
+
     const horizontalScalingFactor = canvas.width / 3840;
     const verticalScalingFactor = canvas.height / 2160;
     let playerIndex = 0;
