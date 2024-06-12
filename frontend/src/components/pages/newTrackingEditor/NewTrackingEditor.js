@@ -688,6 +688,7 @@ const NewTrackingEditor = () => {
     if (playersToDraw.length > 0) {
       playersToDraw.forEach((boundingBox) => {
         canvas.add(boundingBox);
+        canvasBoxesPlayer.push(boundingBox);
         const boxColor = colorSetPlayer.get(boundingBox.my.key); //used in 'stroke' property of playerBox
 
         tempList = tempList.concat([
@@ -725,6 +726,7 @@ const NewTrackingEditor = () => {
           playerBox.setControlVisible("mtr", false);
           playerBox = defineBoxBehavior(playerBox);
           canvas.add(playerBox);
+          canvasBoxesPlayer.push(playerBox);
 
           tempList = tempList.concat([
             <TrackListItemPlayer
@@ -752,6 +754,7 @@ const NewTrackingEditor = () => {
     if (ballsToDraw.length > 0){
       ballsToDraw.forEach((boundingBox)=>{
         canvas.add(boundingBox);
+        canvasBoxesBall.push(boundingBox);
         const boxColor = colorSetBall.get(boundingBox.my.key); //used in 'stroke' property of playerBox
 
         tempList = tempList.concat([
@@ -784,6 +787,7 @@ const NewTrackingEditor = () => {
           ballBox.setControlVisible("mtr", false);
           ballBox = defineBoxBehavior(ballBox);
           canvas.add(ballBox);
+          canvasBoxesBall.push(ballBox);
           tempList = tempList.concat([
             <TrackListItemBall
             key={runningIndex++}
@@ -800,6 +804,7 @@ const NewTrackingEditor = () => {
       }
     }
   setBallList(tempList);
+  
   canvas.renderAll();
   }  
 
