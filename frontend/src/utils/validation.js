@@ -17,8 +17,8 @@ export const mergePlayerData = (
     return;
   }
 
-  //by default, the player with the higher playerkey is the merged player
-  //and the player with the lower playerkey is the main player, which will be kept
+  //by default, the player with the higher frame number is the merged player
+  //and the player with the lower frame number is the main player, which will be kept
   const firstPlayerMaxFrame = Math.max(
     ...annotations
       .filter((a) => a.PlayerKey == firstPlayerKey)
@@ -43,13 +43,13 @@ export const mergePlayerData = (
 
   //filter out duplicate annotations between main and merged player that has the same frame number
   let filteredAnnotations = annotations.filter(
-    (a) => a.playerKey != mergedPlayerKey,
+    (a) => a.PlayerKey != mergedPlayerKey,
   );
   const mainPlayerAnnotations = annotations.filter(
-    (a) => a.playerKey == mainPlayerKey,
+    (a) => a.PlayerKey == mainPlayerKey,
   );
   const mergedPlayerAnnotations = annotations.filter(
-    (a) => a.playerKey == mergedPlayerKey,
+    (a) => a.PlayerKey == mergedPlayerKey,
   );
   filteredAnnotations = filteredAnnotations.concat(
     mergedPlayerAnnotations.filter((a) =>
@@ -110,7 +110,6 @@ export const multiPlayerMerge = (
 export const swapPlayerData = (
   secondPlayerName,
   playerNameMap,
-  setPlayerNameMap,
   playerChosenInList,
   annotations,
   setAnnotations,
