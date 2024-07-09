@@ -35,7 +35,7 @@
     "web-vitals": "^0.2.4"
   },
   "scripts": {
-    "start": "react-scripts --openssl-legacy-provider start",
+    "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "jest",
     "eject": "react-scripts eject",
@@ -90,5 +90,10 @@
     "jest-fetch-mock": "3.0.3",
     "jest-junit": "16.0.0",
     "react-test-renderer": "17.0.2"
+  },
+  "browser": {
+    "fs": false,
+    "path": false,
+    "os": false
   }
 }
