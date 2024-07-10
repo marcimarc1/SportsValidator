@@ -926,8 +926,6 @@ const NewTrackingEditor = () => {
 
   //triggered when new player is added, or when merge or swap happens
   useEffect(() => {
-    console.log("ich werde ausgeführt");
-    console.log(annotations);
     const hasMatchingObject = canvasBoxesPlayer.some(
       (a) => a.my.frame === frameNumber
     );
@@ -974,8 +972,6 @@ const NewTrackingEditor = () => {
           )
         : annotations.filter((a) => a.FrameNo === frameNumber);
 
-      console.log("playerBoxesToDraw");
-      console.log(playerBoxesToDraw);
       if (playerBoxesToDraw.length > 0) {
         //draw boxes
         playerBoxesToDraw.forEach((boundingBox) => {
