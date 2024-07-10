@@ -265,9 +265,8 @@ const NewTrackingEditor = () => {
     setActiveObject(ballBox);
     setballTracks(balls.filter((a) => a.trackNo != ballBox.my.key));
     setCanvasBoxesBall(
-      canvasBoxesBall.filter((a) => a.trackNo != ballBox.my.key)
+      canvasBoxesBall.filter((a) => a.my.key != ballBox.my.key)
     );
-
     let newBallNameMap = new Map(ballNameMap);
     newBallNameMap.delete(ballBox.my.key);
     setBallNameMap(newBallNameMap);
