@@ -28,7 +28,7 @@ class TrackListItemBall extends Component {
   state = {
     swapExpanded: false,
     swapSelectionVisible: false,
-    firstTime: true // used to not trigger any animations when component is mounted
+    firstTime: true, // used to not trigger any animations when component is mounted
   };
 
   prevBallId = -1;
