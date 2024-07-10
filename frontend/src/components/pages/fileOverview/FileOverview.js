@@ -37,7 +37,7 @@ class FileOverview extends Component {
 
     // Check for duplicate files
     const newFiles = files.filter(
-      (file) => !this.state.selectedFiles.find((f) => f.name === file.name),
+      (file) => !this.state.selectedFiles.find((f) => f.name === file.name)
     );
 
     if (newFiles.length === 0) {
@@ -53,23 +53,24 @@ class FileOverview extends Component {
         selectedFiles: [...prevState.selectedFiles, ...newFiles],
         errorMessage: "",
       }),
-      this.checkRequiredFiles,
+      this.checkRequiredFiles
     );
   };
 
   checkRequiredFiles = () => {
     const { selectedFiles } = this.state;
     const tempProcessedPlayers = selectedFiles.find(
-      (file) => file.name === "processed_players.csv",
+      (file) => file.name === "processed_players.csv"
     );
     const tempProcessedBall = selectedFiles.find(
-      (file) => file.name === "processed_ball.csv",
+      (file) => file.name === "processed_ball.csv"
     );
     const tempVideo = selectedFiles.find((file) =>
-      file.name.match(/\.(mp4|avi|mov|wmv)$/i),
+      file.name.match(/\.(mp4|avi|mov|wmv)$/i)
     );
 
-    const requiredFilesUploaded = tempProcessedPlayers && tempProcessedBall && tempVideo;
+    const requiredFilesUploaded =
+      tempProcessedPlayers && tempProcessedBall && tempVideo;
 
     if (!requiredFilesUploaded) {
       this.setState({
@@ -155,7 +156,7 @@ class FileOverview extends Component {
         setTimeout(() => {
           if (this.state.uploadExpanded)
             this.setState({ fileSelectionVisible: true });
-        }, 400),
+        }, 400)
     );
   };
 
@@ -167,10 +168,10 @@ class FileOverview extends Component {
     this.setState(
       (prevState) => ({
         selectedFiles: prevState.selectedFiles.filter(
-          (file) => file.name !== fileName,
+          (file) => file.name !== fileName
         ),
       }),
-      this.checkRequiredFiles,
+      this.checkRequiredFiles
     );
   };
 
@@ -178,17 +179,17 @@ class FileOverview extends Component {
     const { selectedFiles } = this.state;
 
     let tempProcessedPlayers = selectedFiles.find(
-      (file) => file.name === "processed_players.csv",
+      (file) => file.name === "processed_players.csv"
     );
     let tempBallTracks = selectedFiles.find(
-      (file) => file.name === "ball_tracks.csv",
+      (file) => file.name === "ball_tracks.csv"
     );
     let tempHomographies = selectedFiles.find(
-      (file) => file.name === "homographies.csv",
+      (file) => file.name === "homographies.csv"
     );
     let tempLog = selectedFiles.find((file) => file.name === "log.txt");
     let tempVideo = selectedFiles.find((file) =>
-      file.name.match(/\.(mp4|avi|mov|wmv)$/i),
+      file.name.match(/\.(mp4|avi|mov|wmv)$/i)
     );
 
     const readCSV = (file, key) => {
@@ -278,7 +279,7 @@ class FileOverview extends Component {
           changeNotes={this.changeNotes}
           delete={this.delete}
         />
-      ) : undefined,
+      ) : undefined
     );
 
     return (
