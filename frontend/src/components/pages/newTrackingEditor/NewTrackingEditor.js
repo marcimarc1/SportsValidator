@@ -243,19 +243,12 @@ const NewTrackingEditor = () => {
   }
 
   function deletePlayer(playerBox) {
-    canvas.setActiveObject(playerBox);
-    setActiveObject(playerBox);
     setAnnotations(annotations.filter((a) => a.PlayerKey != playerBox.my.key));
-    setCanvasBoxesPlayer(
-      canvasBoxesPlayer.filter((a) => a.my.key != playerBox.my.key)
-    );
 
     let newPlayerNameMap = new Map(playerNameMap);
     newPlayerNameMap.delete(playerBox.my.key);
     setPlayerNameMap(newPlayerNameMap);
 
-    updateSidebar();
-    canvas.discardActiveObject();
     canvas.remove(playerBox);
     canvas.requestRenderAll();
   }
@@ -933,13 +926,15 @@ const NewTrackingEditor = () => {
 
   //triggered when new player is added, or when merge or swap happens
   useEffect(() => {
+    console.log("ich werde ausgeführt");
+    console.log(annotations);
     const hasMatchingObject = canvasBoxesPlayer.some(
       (a) => a.my.frame === frameNumber
     );
-    if (!hasMatchingObject) {
-      //no need to run this function if there is no matching object
-      return;
-    }
+    //if (!hasMatchingObject) {
+    //no need to run this function if there is no matching object
+    //return;
+    //}
     //remove old canvas objects
     canvas.remove(...canvas.getObjects());
 
@@ -979,6 +974,8 @@ const NewTrackingEditor = () => {
           )
         : annotations.filter((a) => a.FrameNo === frameNumber);
 
+      console.log("playerBoxesToDraw");
+      console.log(playerBoxesToDraw);
       if (playerBoxesToDraw.length > 0) {
         //draw boxes
         playerBoxesToDraw.forEach((boundingBox) => {
@@ -1013,6 +1010,8 @@ const NewTrackingEditor = () => {
     }
   }, [
     annotations,
+    balls,
+    ballNameMap,
     playerNameMap,
     trailsEnabled,
     trailSize,
