@@ -65,7 +65,7 @@ describe("data fetching", () => {
     await waitFor(() => {
       expect(logSpy).toHaveBeenCalledWith(
         "retrieved annotation:",
-        mockAnnotation
+        mockAnnotation,
       );
     });
   });
@@ -207,7 +207,7 @@ describe("add player button", () => {
     //retrieve serialized fabric canvas
     initialCanvas.loadFromJSON(
       JSONCanvas,
-      initialCanvas.renderAll.bind(initialCanvas)
+      initialCanvas.renderAll.bind(initialCanvas),
     );
 
     //when
@@ -219,7 +219,7 @@ describe("add player button", () => {
     //retrieve serialized fabric canvas
     updatedCanvas.loadFromJSON(
       JSONCanvas,
-      updatedCanvas.renderAll.bind(updatedCanvas)
+      updatedCanvas.renderAll.bind(updatedCanvas),
     );
     expect(initialCanvas.getObjects().length).toEqual(0);
     expect(updatedCanvas.getObjects().length).toEqual(1);
@@ -268,10 +268,10 @@ describe("player sidebar", () => {
     const playerList = container.querySelector(".TrackListList").children[0];
     expect(playerList.childElementCount).toEqual(2);
     expect(
-      getNodeText(playerList.children[0].querySelector(".TrackListItemName"))
+      getNodeText(playerList.children[0].querySelector(".TrackListItemName")),
     ).toEqual("player1");
     expect(
-      getNodeText(playerList.children[1].querySelector(".TrackListItemName"))
+      getNodeText(playerList.children[1].querySelector(".TrackListItemName")),
     ).toEqual("player2");
   });
 });
