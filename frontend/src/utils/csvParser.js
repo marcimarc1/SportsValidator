@@ -48,7 +48,7 @@ export const parseProcessedPlayers = (csvContent) => {
   }
 
   result.sort((a, b) =>
-    a.FrameNo === b.FrameNo ? a.PlayerKey - b.PlayerKey : a.FrameNo - b.FrameNo
+    a.FrameNo === b.FrameNo ? a.PlayerKey - b.PlayerKey : a.FrameNo - b.FrameNo,
   );
 
   return result;
@@ -90,7 +90,7 @@ export const parseProcessedBalls = (csvContent) => {
   }
 
   result.sort((a, b) =>
-    a.FrameNo === b.FrameNo ? a.trackNo - b.trackNo : a.FrameNo - b.FrameNo
+    a.FrameNo === b.FrameNo ? a.trackNo - b.trackNo : a.FrameNo - b.FrameNo,
   );
   return result;
 };
