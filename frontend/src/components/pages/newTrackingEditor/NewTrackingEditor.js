@@ -592,9 +592,9 @@ const NewTrackingEditor = () => {
       }
     }
 
-    if(isShowingBox) {
+    if (isShowingBox) {
       boundingBoxesToDraw.forEach((a) => {
-        const fontSize = 12
+        const fontSize = 12;
         const scaledX = a.x1 * horizontalScalingFactor;
         const scaledY = a.y1 * verticalScalingFactor - fontSize;
         const playerKey = a.PlayerKey.toString();
