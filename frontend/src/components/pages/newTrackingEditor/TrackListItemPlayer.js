@@ -134,7 +134,7 @@ class TrackListItemPlayer extends Component {
     }
 
     let name = this.props.name ? this.props.name : "test1";
-
+    this.testId = "mergeSwapModal" + this.props.name;
     // selects or deselects (if its already selected) the clicked item (e.g. player)
     let clickItem = () => {
       // let deselect = this.props.playerBox.my.selected;
