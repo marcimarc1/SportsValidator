@@ -181,11 +181,14 @@ class FileOverview extends Component {
       (file) => file.name === "ball_tracks.csv",
     );
     let tempHomographies = selectedFiles.find(
-      (file) => file.name === "homographies.csv",
+      (file) => file.name === "homographies.json",
     );
     let tempLog = selectedFiles.find((file) => file.name === "log.txt");
     let tempVideo = selectedFiles.find((file) =>
       file.name.match(/\.(mp4|avi|mov|wmv)$/i),
+    );
+    let tempFieldSize = selectedFiles.find(
+      (file) => file.name === "homographiesoptimized_field_size.json",
     );
 
     const readCSV = (file, key) => {

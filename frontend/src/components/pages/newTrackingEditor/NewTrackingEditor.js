@@ -1003,8 +1003,8 @@ const NewTrackingEditor = () => {
     } else {
       setShowField(true);
     }
-  }
-  
+  };
+
   const handleSwitchingTrailSize = (event) => {
     setTrailSize(event.target.value);
   };
@@ -1133,7 +1133,11 @@ const NewTrackingEditor = () => {
               draw players from annotation
             </Button>
           </div>
-          <DownloadButton players={annotations} video={video} homographies={homographies} />
+          <DownloadButton
+            players={annotations}
+            video={video}
+            homographies={homographies}
+          />
         </Box>
       </div>
 

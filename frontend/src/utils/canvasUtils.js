@@ -63,7 +63,11 @@ function applyHomography(homography, point) {
 
 const calculateNewHomography = (points) => {
   //TODO: update this function to calculate the homography matrix
-  return [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
+  return [
+    [1, 0, 0],
+    [0, 1, 0],
+    [0, 0, 1],
+  ];
 };
 
 export const drawFieldPoints = (
@@ -86,7 +90,7 @@ export const drawFieldPoints = (
       id: point.id,
       x: transformedPoint.x * horizontalScalingFactor,
       y: transformedPoint.y * verticalScalingFactor,
-      originalCoords: point.coords // Store original coordinates for homography calculation
+      originalCoords: point.coords, // Store original coordinates for homography calculation
     };
   };
 
@@ -98,14 +102,14 @@ export const drawFieldPoints = (
       top: transformedPoint.y,
       radius: radius,
       fill: color,
-      originX: 'center',
-      originY: 'center',
+      originX: "center",
+      originY: "center",
       selectable: true,
       hasControls: false,
     });
 
     circle.properties = {
-      type: 'fieldPoint',
+      type: "fieldPoint",
       frame: frameNumber,
     };
 
@@ -116,9 +120,13 @@ export const drawFieldPoints = (
   };
 
   const updateLines = () => {
-    canvas.getObjects('line').forEach((line) => {
-      const startPoint = canvas.getObjects().find((obj) => obj.id === line.startPointId);
-      const endPoint = canvas.getObjects().find((obj) => obj.id === line.endPointId);
+    canvas.getObjects("line").forEach((line) => {
+      const startPoint = canvas
+        .getObjects()
+        .find((obj) => obj.id === line.startPointId);
+      const endPoint = canvas
+        .getObjects()
+        .find((obj) => obj.id === line.endPointId);
 
       if (startPoint && endPoint) {
         line.set({
@@ -134,14 +142,17 @@ export const drawFieldPoints = (
   };
 
   const drawLine = (startPoint, endPoint, color) => {
-    const line = new fabric.Line([startPoint.left, startPoint.top, endPoint.left, endPoint.top], {
-      stroke: color,
-      strokeWidth: 3,
-      selectable: false,
-    });
+    const line = new fabric.Line(
+      [startPoint.left, startPoint.top, endPoint.left, endPoint.top],
+      {
+        stroke: color,
+        strokeWidth: 3,
+        selectable: false,
+      },
+    );
 
     line.properties = {
-      type: 'field',
+      type: "field",
       frame: frameNumber,
     };
 
@@ -170,8 +181,8 @@ export const drawFieldPoints = (
       drawLine(startPoint, endPoint, color);
     }
 
-    canvas.off('object:moving', updateLines);
-    canvas.on('object:moving', updateLines);
+    canvas.off("object:moving", updateLines);
+    canvas.on("object:moving", updateLines);
   };
 
   const drawCircle = (center, radius, color) => {
@@ -179,13 +190,17 @@ export const drawFieldPoints = (
 
     const radiusPointX = [center[0] + radius, center[1]];
     const radiusPointY = [center[0], center[1] + radius];
-  
+
     const transformedRadiusPointX = transformPoint({ coords: radiusPointX });
     const transformedRadiusPointY = transformPoint({ coords: radiusPointY });
-  
+
     // Calculate the transformed radii
-    const transformedRadiusX = Math.abs(transformedRadiusPointX.x - transformedCenter.x);
-    const transformedRadiusY = Math.abs(transformedRadiusPointY.y - transformedCenter.y);
+    const transformedRadiusX = Math.abs(
+      transformedRadiusPointX.x - transformedCenter.x,
+    );
+    const transformedRadiusY = Math.abs(
+      transformedRadiusPointY.y - transformedCenter.y,
+    );
 
     const ellipse = new fabric.Ellipse({
       left: transformedCenter.x,
@@ -194,14 +209,14 @@ export const drawFieldPoints = (
       ry: transformedRadiusY,
       stroke: color,
       strokeWidth: 3,
-      fill: 'transparent',
-      originX: 'center',
-      originY: 'center',
+      fill: "transparent",
+      originX: "center",
+      originY: "center",
       selectable: true,
     });
 
     ellipse.properties = {
-      type: 'field',
+      type: "field",
       frame: frameNumber,
     };
 
@@ -210,35 +225,41 @@ export const drawFieldPoints = (
 
   // Drawing lines from template
   Object.entries(lines).forEach(([lineId, points]) => {
-    drawLineFromPoints(points, 'blue', lineId);
+    drawLineFromPoints(points, "blue", lineId);
   });
 
   if (points.middleCircle) {
-    drawCircle(points.middleCircle.center, points.middleCircle.radius, 'yellow');
+    drawCircle(
+      points.middleCircle.center,
+      points.middleCircle.radius,
+      "yellow",
+    );
   }
-  if(points.penaltySpot){
-    drawCircle(points.penaltySpot[0].coords, 0.3, 'red');
-    drawCircle(points.penaltySpot[1].coords, 0.3, 'red');
+  if (points.penaltySpot) {
+    drawCircle(points.penaltySpot[0].coords, 0.3, "red");
+    drawCircle(points.penaltySpot[1].coords, 0.3, "red");
   }
 
   // Function to update homography
   const updateHomography = () => {
     // Collect current and original coordinates of points
-    const fieldPoints = canvas.getObjects().filter(obj => obj.properties?.type === 'fieldPoint').map(obj => ({
-      x: obj.left,
-      y: obj.top,
-      originalCoords: obj.originalCoords
-    }));
+    const fieldPoints = canvas
+      .getObjects()
+      .filter((obj) => obj.properties?.type === "fieldPoint")
+      .map((obj) => ({
+        x: obj.left,
+        y: obj.top,
+        originalCoords: obj.originalCoords,
+      }));
 
     homographies[frameNumber] = calculateNewHomography(fieldPoints);
 
-    console.log(homographies[frameNumber])
+    console.log(homographies[frameNumber]);
   };
 
-  canvas.off('object:modified', updateHomography);
-  canvas.on('object:modified', updateHomography);
+  canvas.off("object:modified", updateHomography);
+  canvas.on("object:modified", updateHomography);
 };
-
 
 export const defineTrailBehaviour = (trail, setSelectedTrails) => {
   trail.on("selected", () => {
