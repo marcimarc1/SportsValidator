@@ -1,6 +1,7 @@
 import { fabric } from "fabric";
 import { getTemplate } from "./templates";
-import { inv } from "mathjs";
+import * as math from "mathjs";
+import numeric from 'numeric';
 
 export const trailsFullRedraw = (
   canvas,
@@ -56,6 +57,40 @@ function applyHomography(homography, point) {
   return { x: transformedX, y: transformedY };
 }
 
+const calculateNewHomography = (points) => {
+  if (points.length < 4) {
+    throw new Error('At least 4 points are required to calculate the homography');
+  }
+
+  const A = [];
+
+  points.forEach(point => {
+    console.log(point);
+    const { x, y, originalCoords } = point;
+    const [X, Y] = originalCoords; // Ensure originalCoords is an array [originalX, originalY]
+
+    A.push([
+      X, Y, 1, 0, 0, 0, -x * X, -x * Y, -x
+    ]);
+    A.push([
+      0, 0, 0, X, Y, 1, -y * X, -y * Y, -y
+    ]);
+  });
+
+  const A_matrix = numeric.dot(numeric.transpose(A), A);
+  const SVD = numeric.svd(A_matrix);
+  const V = SVD.V;
+  const h = V[V.length - 1];
+
+  const homography = [
+    [h[0], h[1], h[2]],
+    [h[3], h[4], h[5]],
+    [h[6], h[7], h[8]]
+  ];
+
+  return homography;
+};
+
 export const drawFieldPoints = (
   canvas,
   frameNumber,
@@ -67,8 +102,8 @@ export const drawFieldPoints = (
   width,
 ) => {
   const { points, lines } = getTemplate(sport, length, width);
-  const homography = homographies[frameNumber];
-  const invHomography = inv(homography);
+  let homography = homographies[frameNumber];
+  let invHomography = math.inv(homography);
 
   const transformPoint = (point) => {
     let transformedPoint = applyHomography(invHomography, point.coords);
@@ -76,6 +111,7 @@ export const drawFieldPoints = (
       id: point.id,
       x: transformedPoint.x * horizontalScalingFactor,
       y: transformedPoint.y * verticalScalingFactor,
+      originalCoords: point.coords // Store original coordinates for homography calculation
     };
   };
 
@@ -99,6 +135,7 @@ export const drawFieldPoints = (
     };
 
     circle.id = point.id;
+    circle.originalCoords = point.coords; // Store original coordinates in the circle object
     canvas.add(circle);
     return circle;
   };
@@ -208,6 +245,23 @@ export const drawFieldPoints = (
     drawCircle(points.penaltySpot[0].coords, 0.3, 'red');
     drawCircle(points.penaltySpot[1].coords, 0.3, 'red');
   }
+
+  // Function to update homography
+  const updateHomography = () => {
+    // Collect current and original coordinates of points
+    const fieldPoints = canvas.getObjects().filter(obj => obj.properties?.type === 'fieldPoint').map(obj => ({
+      x: obj.left,
+      y: obj.top,
+      originalCoords: obj.originalCoords
+    }));
+
+    homographies[frameNumber] = calculateNewHomography(fieldPoints);
+
+    console.log(homographies[frameNumber])
+  };
+
+  canvas.off('object:modified', updateHomography);
+  canvas.on('object:modified', updateHomography);
 };
 
 

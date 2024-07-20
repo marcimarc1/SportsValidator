@@ -1057,7 +1057,7 @@ const NewTrackingEditor = () => {
               draw players from annotation
             </Button>
           </div>
-          <DownloadButton players={annotations} video={video} />
+          <DownloadButton players={annotations} video={video} homographies={homographies} />
         </Box>
       </div>
 

@@ -140,53 +140,95 @@ function createTennisTemplate() {
   const BASELINE = 5.49;
   const BASELINE_WIDTH = 1.37;
 
-  const outerAreaTennis = [
-    [0, 0],
-    [0, WIDTH],
-    [LENGTH, WIDTH],
-    [LENGTH, 0],
-  ];
-
-  const baselineCenterline = [
-    [BASELINE, WIDTH / 2],
-    [LENGTH - BASELINE, WIDTH / 2],
-  ];
-
-  const baselineSingle = [
-    [BASELINE, BASELINE_WIDTH],
-    [LENGTH - BASELINE, BASELINE_WIDTH],
-    [LENGTH - BASELINE, WIDTH - BASELINE_WIDTH],
-    [BASELINE, WIDTH - BASELINE_WIDTH],
-  ];
-
-  const centerNet = [[LENGTH / 2, WIDTH / 2]];
-
-  const singleNet = [
-    [LENGTH / 2, WIDTH - BASELINE_WIDTH],
-    [LENGTH / 2, BASELINE_WIDTH],
-  ];
-
-  const sideNet = [
-    [LENGTH / 2, WIDTH],
-    [LENGTH / 2, 0],
-  ];
-
-  const serviceSingle = [
-    [0, WIDTH - SERVICE_LINE_WIDTH],
-    [LENGTH, WIDTH - SERVICE_LINE_WIDTH],
-    [LENGTH, SERVICE_LINE_WIDTH],
-    [0, SERVICE_LINE_WIDTH],
-  ];
-
-  return {
-    Corners: outerAreaTennis,
-    BaseLineXcenterline: baselineCenterline,
-    BaselineXsingle: baselineSingle,
-    CenterLineXnet: centerNet,
-    NetXsingle: singleNet,
-    NetXsideLine: sideNet,
-    ServiceXsingle: serviceSingle,
+  const points = {
+    outerArea: [
+      { id: 'outer-0', coords: [0, 0] }, // Top-left
+      { id: 'outer-1', coords: [LENGTH, 0] }, // Top-right
+      { id: 'outer-2', coords: [LENGTH, WIDTH] }, // Bottom-right
+      { id: 'outer-3', coords: [0, WIDTH] }, // Bottom-left
+    ],
+    baselineCenterline: [
+      { id: 'baseline-center-0', coords: [BASELINE, WIDTH / 2] },
+      { id: 'baseline-center-1', coords: [LENGTH - BASELINE, WIDTH / 2] },
+    ],
+    baselineSingle: [
+      { id: 'baseline-single-0', coords: [BASELINE, BASELINE_WIDTH] },
+      { id: 'baseline-single-1', coords: [LENGTH - BASELINE, BASELINE_WIDTH] },
+      { id: 'baseline-single-2', coords: [LENGTH - BASELINE, WIDTH - BASELINE_WIDTH] },
+      { id: 'baseline-single-3', coords: [BASELINE, WIDTH - BASELINE_WIDTH] },
+    ],
+    centerNet: [
+      { id: 'center-net', coords: [LENGTH / 2, WIDTH / 2] }
+    ],
+    singleNet: [
+      { id: 'single-net-0', coords: [LENGTH / 2, BASELINE_WIDTH] },
+      { id: 'single-net-1', coords: [LENGTH / 2, WIDTH - BASELINE_WIDTH] },
+    ],
+    sideNet: [
+      { id: 'side-net-0', coords: [LENGTH / 2, 0] },
+      { id: 'side-net-1', coords: [LENGTH / 2, WIDTH] },
+    ],
+    serviceSingle: [
+      { id: 'service-single-0', coords: [0, SERVICE_LINE_WIDTH] },
+      { id: 'service-single-1', coords: [LENGTH, SERVICE_LINE_WIDTH] },
+      { id: 'service-single-2', coords: [LENGTH, WIDTH - SERVICE_LINE_WIDTH] },
+      { id: 'service-single-3', coords: [0, WIDTH - SERVICE_LINE_WIDTH] },
+    ],
   };
+
+  const lines = {
+    outerLine: [
+      points.outerArea[0],
+      points.sideNet[0],
+      points.outerArea[1],
+      points.serviceSingle[1],
+      points.serviceSingle[2],
+      points.outerArea[2],
+      points.sideNet[1],
+      points.outerArea[3],
+      points.serviceSingle[3],
+      points.serviceSingle[0],
+      points.outerArea[0],
+    ],
+    baselineCenterline: [
+      points.baselineCenterline[0],
+      points.centerNet[0],
+      points.baselineCenterline[1],
+    ],
+    baselineSingle: [
+      points.baselineSingle[0],
+      points.singleNet[0],
+      points.baselineSingle[1],
+      points.baselineCenterline[1],
+      points.baselineSingle[2],
+      points.singleNet[1],
+      points.baselineSingle[3],
+      points.baselineCenterline[0],
+      points.baselineSingle[0],
+    ],
+    sideNet: [
+      points.sideNet[0],
+      points.singleNet[0],
+      points.centerNet[0],
+      points.singleNet[1],
+      points.sideNet[1],
+    ],
+    serviceSingle: [
+      points.serviceSingle[0],
+      points.baselineSingle[0],
+      points.singleNet[0],
+      points.baselineSingle[1],
+      points.serviceSingle[1],
+      points.serviceSingle[2],
+      points.baselineSingle[2],
+      points.singleNet[1],
+      points.baselineSingle[3],
+      points.serviceSingle[3],
+      points.serviceSingle[0],
+    ],
+  };
+
+  return { points, lines };
 }
 
 function createUltimateTemplate() {
