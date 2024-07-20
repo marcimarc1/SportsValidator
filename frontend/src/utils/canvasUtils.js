@@ -1,7 +1,6 @@
 import { fabric } from "fabric";
 import { getTemplate } from "./templates";
 import * as math from "mathjs";
-import numeric from 'numeric';
 
 export const trailsFullRedraw = (
   canvas,
@@ -58,37 +57,8 @@ function applyHomography(homography, point) {
 }
 
 const calculateNewHomography = (points) => {
-  if (points.length < 4) {
-    throw new Error('At least 4 points are required to calculate the homography');
-  }
-
-  const A = [];
-
-  points.forEach(point => {
-    console.log(point);
-    const { x, y, originalCoords } = point;
-    const [X, Y] = originalCoords; // Ensure originalCoords is an array [originalX, originalY]
-
-    A.push([
-      X, Y, 1, 0, 0, 0, -x * X, -x * Y, -x
-    ]);
-    A.push([
-      0, 0, 0, X, Y, 1, -y * X, -y * Y, -y
-    ]);
-  });
-
-  const A_matrix = numeric.dot(numeric.transpose(A), A);
-  const SVD = numeric.svd(A_matrix);
-  const V = SVD.V;
-  const h = V[V.length - 1];
-
-  const homography = [
-    [h[0], h[1], h[2]],
-    [h[3], h[4], h[5]],
-    [h[6], h[7], h[8]]
-  ];
-
-  return homography;
+  //TODO: update this function to calculate the homography matrix
+  return [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
 };
 
 export const drawFieldPoints = (
