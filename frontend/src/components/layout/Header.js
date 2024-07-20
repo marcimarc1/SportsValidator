@@ -119,8 +119,6 @@ class Header extends Component {
           (this.props.shrinkAnimation ? " shrink-animation" : "")
         }
       >
-        {/*The above is just the standard html header tag (instead of div), not to be confused with the Header component*/}
-
         <Link className="HeaderLinkWrapper" to="/">
           <HomeLogo
             id="home-logo"
@@ -131,23 +129,6 @@ class Header extends Component {
 
         {headerLinks}
 
-        {/*First, I tried to do it like follows (which would be more straight-forward) but react router does not seem to support placing a Link component inside a BrowserRouter/Route*/}
-
-        {/*<Router>*/}
-        {/*    <Route exact path="/" >*/}
-        {/*        /!*<Link className="HeaderText turn-light-gray-on-hover" to="/about"> About </Link>*!/*/}
-        {/*        /!*<Link className="HeaderText turn-light-gray-on-hover" to="/feedback"> Feedback </Link>*!/*/}
-        {/*    </Route>*/}
-        {/*    <Route path="/trackingEditor/:id" >*/}
-        {/*        /!*<Link className="HeaderText turn-light-gray-on-hover" to={"/games"} > File Overview </Link>*!/*/}
-        {/*        /!*<Link className="HeaderText turn-light-gray-on-hover" to={"/analysis/"+this.id} > Analysis </Link>*!/*/}
-        {/*    </Route>*/}
-        {/*    <Route path="/analysis/:id" >*/}
-        {/*            <Link className="HeaderText turn-light-gray-on-hover" to={"/games"} > File Overview </Link>*/}
-        {/*            <Link className="HeaderText turn-light-gray-on-hover" to={"/trackingEditor/"+this.id} > TrackingEditor </Link>*/}
-        {/*    </Route>*/}
-        {/*</Router>*/}
-
         <Link className="HeaderLinkWrapper" to="/account">
           <AccountLogo
             id="account-logo"
@@ -156,8 +137,6 @@ class Header extends Component {
         </Link>
       </header>
     );
-    // {/*    <div className={"HeaderSpacerDummy" + (this.props.onStartPage ? " on-start-page" : "")}></div>*/}
-    // {/*</div>*/}
   }
 }
 

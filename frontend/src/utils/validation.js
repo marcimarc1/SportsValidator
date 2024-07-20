@@ -1,6 +1,7 @@
 export const mergePlayerData = (
   mainPlayerName,
   playerNameMap,
+  setPlayerNameMap,
   playerChosenInList,
   annotations,
   setAnnotations,
@@ -16,8 +17,8 @@ export const mergePlayerData = (
     return;
   }
 
-  //by default, the player with the higher playerkey is the merged player
-  //and the player with the lower playerkey is the main player, which will be kept
+  //by default, the player with the higher frame number is the merged player
+  //and the player with the lower frame number is the main player, which will be kept
   const firstPlayerMaxFrame = Math.max(
     ...annotations
       .filter((a) => a.PlayerKey == firstPlayerKey)
@@ -42,13 +43,13 @@ export const mergePlayerData = (
 
   //filter out duplicate annotations between main and merged player that has the same frame number
   let filteredAnnotations = annotations.filter(
-    (a) => a.playerKey != mergedPlayerKey,
+    (a) => a.PlayerKey != mergedPlayerKey,
   );
   const mainPlayerAnnotations = annotations.filter(
-    (a) => a.playerKey == mainPlayerKey,
+    (a) => a.PlayerKey == mainPlayerKey,
   );
   const mergedPlayerAnnotations = annotations.filter(
-    (a) => a.playerKey == mergedPlayerKey,
+    (a) => a.PlayerKey == mergedPlayerKey,
   );
   filteredAnnotations = filteredAnnotations.concat(
     mergedPlayerAnnotations.filter((a) =>
@@ -63,13 +64,33 @@ export const mergePlayerData = (
     return annotation;
   });
   setAnnotations(mergedAnnotations);
+  let newPlayerNameMap = new Map(playerNameMap);
+  newPlayerNameMap.delete(mergedPlayerKey);
+  setPlayerNameMap(newPlayerNameMap);
 };
 
 export const multiPlayerMerge = (
   playerKeyArray,
   annotations,
   setAnnotations,
+  playerNameMap,
+  setPlayerNameMap,
 ) => {
+  function removeDuplicates(array) {
+    const uniquePairs = {};
+    const result = [];
+
+    array.forEach((obj) => {
+      const key = obj.PlayerKey + "," + obj.FrameNo;
+      if (!uniquePairs[key]) {
+        result.push(obj);
+        uniquePairs[key] = true;
+      }
+    });
+
+    return result;
+  }
+
   const newAnnotations = annotations.map((a) => {
     if (playerKeyArray.includes(a.PlayerKey)) {
       a.PlayerKey = playerKeyArray[0];
@@ -77,7 +98,13 @@ export const multiPlayerMerge = (
     }
     return a;
   });
-  setAnnotations(newAnnotations);
+  setAnnotations(removeDuplicates(newAnnotations));
+  let newPlayerNameMap = new Map(playerNameMap);
+  playerKeyArray.shift();
+  playerKeyArray.forEach((key) => {
+    newPlayerNameMap.delete(key);
+  });
+  setPlayerNameMap(newPlayerNameMap);
 };
 
 export const swapPlayerData = (

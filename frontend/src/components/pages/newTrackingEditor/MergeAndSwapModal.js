@@ -13,6 +13,7 @@ import FormControlLabel from "@material-ui/core/FormControlLabel";
 
 import { useState } from "react";
 import { mergePlayerData, swapPlayerData } from "../../../utils/validation";
+import { useMemo } from "react";
 
 const style = {
   position: "absolute",
@@ -38,6 +39,20 @@ export default function MergeAndSwapModal({
 }) {
   const [selectedPlayer, setSelectedPlayer] = useState("");
   const [operation, setOperation] = useState("swap");
+  const menuItems = useMemo(
+    () =>
+      Array.from(playerNameMap.values()).map((name) => {
+        if (name !== playerChosenInList) {
+          const testid = "menuitem" + name;
+          return (
+            <MenuItem data-testid={testid} value={name}>
+              {name}
+            </MenuItem>
+          );
+        }
+      }),
+    [playerNameMap, playerChosenInList],
+  );
 
   const handleChange = (event) => {
     setSelectedPlayer(event.target.value);
@@ -48,7 +63,6 @@ export default function MergeAndSwapModal({
       swapPlayerData(
         selectedPlayer,
         playerNameMap,
-        setPlayerNameMap,
         playerChosenInList,
         annotations,
         setAnnotations,
@@ -58,6 +72,7 @@ export default function MergeAndSwapModal({
       mergePlayerData(
         selectedPlayer,
         playerNameMap,
+        setPlayerNameMap,
         playerChosenInList,
         annotations,
         setAnnotations,
@@ -86,8 +101,14 @@ export default function MergeAndSwapModal({
               value={operation}
               onChange={(event) => setOperation(event.target.value)}
             >
-              <FormControlLabel value="swap" control={<Radio />} label="Swap" />
               <FormControlLabel
+                data-testid="swap-label"
+                value="swap"
+                control={<Radio />}
+                label="Swap"
+              />
+              <FormControlLabel
+                data-testid="merge-label"
                 value="merge"
                 control={<Radio />}
                 label="Merge"
@@ -115,18 +136,16 @@ export default function MergeAndSwapModal({
               labelId="demo-simple-select-label"
               id="demo-simple-select"
               value={selectedPlayer}
-              label="Age"
+              label="Choose Player"
+              data-testid="select-element"
               onChange={handleChange}
             >
-              {Array.from(playerNameMap.values()).map((name) => {
-                if (name !== playerChosenInList) {
-                  return <MenuItem value={name}>{name}</MenuItem>;
-                }
-              })}
+              {menuItems}
             </Select>
           </FormControl>
 
           <Button
+            data-testid="mergeSwapModalApplyButton"
             style={{ marginTop: "2em" }}
             color="primary"
             variant="contained"

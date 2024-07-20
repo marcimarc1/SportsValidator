@@ -12,6 +12,7 @@ export const trailsFullRedraw = (
   horizontalScalingFactor,
   verticalScalingFactor,
   setSelectedTrails,
+  trailSize,
 ) => {
   const pastTrailsToDraw = annotations.filter((a) => {
     return (
@@ -24,6 +25,10 @@ export const trailsFullRedraw = (
   pastTrailsToDraw.forEach((a) => {
     const scaledX = a.x1 * horizontalScalingFactor;
     const scaledY = a.y1 * verticalScalingFactor;
+    const scaledWidth = a.w * horizontalScalingFactor;
+    const scaledHeight = a.h * verticalScalingFactor;
+    const radius =
+      scaledWidth < scaledHeight ? scaledWidth / 4 : scaledHeight / 4;
     const trailColor = colorSet.get(a.PlayerKey);
     let trail = new fabric.Circle({
       left: scaledX,
@@ -31,7 +36,7 @@ export const trailsFullRedraw = (
       stroke: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
       strokeWidth: 3,
       fill: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
-      radius: 5,
+      radius: (radius * trailSize) / 50,
       visible: isShowingAnnotation,
     });
     trail.properties = {

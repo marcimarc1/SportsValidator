@@ -36,6 +36,7 @@ import {
 import { multiPlayerMerge } from "../../../utils/validation";
 import { DownloadButton } from "./DownloadButton";
 import { parseLogFile } from "../../../utils/logFileParser";
+import Slider from "@mui/material/Slider";
 
 // TODO Take a video_id instead and have an endpoint on the server where we supply a video_id and get the corresponding video
 const NewTrackingEditor = () => {
@@ -66,6 +67,8 @@ const NewTrackingEditor = () => {
   const [showField, setShowField] = useState(true);
   const logFile = parseLogFile(log);
   const [selectedTrails, setSelectedTrails] = useState(new Set());
+  const [trailSize, setTrailSize] = useState(50);
+  const [drawInField, setDrawInField] = useState(false);
 
   const handleModalOpen = (playerInList) => {
     setPlayerChosenInList(playerInList);
@@ -79,7 +82,13 @@ const NewTrackingEditor = () => {
   const handleMultiSelectMerge = () => {
     console.log("Multiplayer merge");
     console.log(Array.from(selectedTrails));
-    multiPlayerMerge(Array.from(selectedTrails), annotations, setAnnotations);
+    multiPlayerMerge(
+      Array.from(selectedTrails),
+      annotations,
+      setAnnotations,
+      playerNameMap,
+      setPlayerNameMap,
+    );
     setSelectedTrails(new Set());
   };
 
@@ -103,6 +112,14 @@ const NewTrackingEditor = () => {
       console.log("retrieved annotation:", parsedData);
       // Setting the color set based on the parsed data
       setColorSet(boundingBoxColorSet(parsedData));
+
+      let playerKeys = parsedData.map((a) => a.PlayerKey);
+      let tempMap = new Map();
+      playerKeys.forEach((key) => {
+        let playerName = "player" + key;
+        tempMap.set(key, playerName);
+      });
+      setPlayerNameMap(tempMap);
     }
   }, [processedPlayers, location.state]);
 
@@ -184,6 +201,11 @@ const NewTrackingEditor = () => {
     setActiveObject(playerBox);
     setAnnotations(annotations.filter((a) => a.PlayerKey != playerBox.my.key));
     setCanvasBoxes(canvasBoxes.filter((a) => a.my.key != playerBox.my.key));
+
+    let newPlayerNameMap = new Map(playerNameMap);
+    newPlayerNameMap.delete(playerBox.my.key);
+    setPlayerNameMap(newPlayerNameMap);
+
     updateSidebar();
     canvas.discardActiveObject();
     canvas.remove(playerBox);
@@ -286,14 +308,6 @@ const NewTrackingEditor = () => {
     return playerBox;
   }
 
-  const retrievePlayerKeys = () => {
-    if (annotations.length > 0) {
-      return annotations.map((a) => a.PlayerKey);
-    } else {
-      return 0;
-    }
-  };
-
   // For changing video source file
   const handleBrowse = async (event) => {
     try {
@@ -369,17 +383,6 @@ const NewTrackingEditor = () => {
   }, [activeObject]);
 
   useEffect(() => {
-    // as player name is not contained in the tracking data, set "player{id}" as default name.
-    let playerKeys = retrievePlayerKeys();
-    let tempMap = new Map();
-    for (var i = 0; i < playerKeys.length; i++) {
-      let playerName = "player" + playerKeys[i];
-      tempMap.set(playerKeys[i], playerName);
-    }
-    setPlayerNameMap(tempMap);
-  }, [annotations]);
-
-  useEffect(() => {
     let canvasWidth = document.body.clientWidth - 300;
     var canvasHeight = 800;
     if (videoElement) {
@@ -444,6 +447,10 @@ const NewTrackingEditor = () => {
     return poster;
   }
 
+  const isInField = (inField) => {
+    return inField === true || inField === null;
+  };
+
   // https://stackoverflow.com/questions/33834724/draw-video-on-canvas-html5
   const drawVideo = () => {
     // Clear canvas
@@ -489,13 +496,19 @@ const NewTrackingEditor = () => {
               frameNumber - obj.properties.frame < 0,
           ),
       );
-      const currentTrailsToDraw = annotations.filter(
-        (a) => a.FrameNo == frameNumber && (a.in_field || a.in_field === null),
-      );
+      const currentTrailsToDraw = drawInField
+        ? annotations.filter(
+            (a) => a.FrameNo === frameNumber && isInField(a.in_field),
+          )
+        : annotations.filter((a) => a.FrameNo === frameNumber);
 
       currentTrailsToDraw.forEach((a) => {
         const scaledX = a.x1 * horizontalScalingFactor;
         const scaledY = a.y1 * verticalScalingFactor;
+        const scaledWidth = a.w * horizontalScalingFactor;
+        const scaledHeight = a.h * verticalScalingFactor;
+        const radius =
+          scaledWidth < scaledHeight ? scaledWidth / 4 : scaledHeight / 4;
         const trailColor = colorSet.get(a.PlayerKey);
         let trail = new fabric.Circle({
           left: scaledX,
@@ -503,7 +516,7 @@ const NewTrackingEditor = () => {
           stroke: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
           strokeWidth: 3,
           fill: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
-          radius: 5,
+          radius: (radius * trailSize) / 50,
           visible: isShowingAnnotation,
         });
         trail.properties = {
@@ -516,10 +529,12 @@ const NewTrackingEditor = () => {
       });
     }
 
-    var boundingBoxesToDraw = canvasBoxes.filter(
-      (a) =>
-        a.my.frame == frameNumber && (a.my.in_field || a.my.in_field === null),
-    );
+    var boundingBoxesToDraw = drawInField
+      ? canvasBoxes.filter(
+          (a) => a.my.frame === frameNumber && isInField(a.my.in_field),
+        )
+      : canvasBoxes.filter((a) => a.my.frame === frameNumber);
+
     var tempList = [];
     let runningIndex = 0;
 
@@ -543,9 +558,11 @@ const NewTrackingEditor = () => {
         ]);
       });
     } else {
-      boundingBoxesToDraw = annotations.filter(
-        (a) => a.FrameNo == frameNumber && (a.in_field || a.in_field === null),
-      );
+      boundingBoxesToDraw = drawInField
+        ? annotations.filter(
+            (a) => a.FrameNo === frameNumber && isInField(a.in_field),
+          )
+        : annotations.filter((a) => a.FrameNo === frameNumber);
 
       if (boundingBoxesToDraw.length > 0) {
         //draw boxes
@@ -694,12 +711,15 @@ const NewTrackingEditor = () => {
       videoElement.removeEventListener("waiting", onWaiting);
     };
   }, [
+    annotations,
     videoElement,
     isShowingBox,
     playerNameMap,
     trailFrameNumber,
     trailsEnabled,
     showField,
+    trailSize,
+    drawInField,
   ]);
 
   //triggered when user clicks on the video progress bar to change the video time
@@ -717,6 +737,7 @@ const NewTrackingEditor = () => {
         canvas.width / 3840,
         canvas.height / 2160,
         setSelectedTrails,
+        trailSize,
       );
     }
   }, [videoElement?.seeking]);
@@ -744,14 +765,18 @@ const NewTrackingEditor = () => {
         horizontalScalingFactor,
         verticalScalingFactor,
         setSelectedTrails,
+        trailSize,
       );
     }
 
     //same thing we do in drawBoundingBoxes..
     if (annotations.length > 0) {
-      var boundingBoxesToDraw = annotations.filter(
-        (a) => a.FrameNo == frameNumber && (a.in_field || a.in_field === null),
-      );
+      var boundingBoxesToDraw = drawInField
+        ? annotations.filter(
+            (a) => a.FrameNo === frameNumber && isInField(a.in_field),
+          )
+        : annotations.filter((a) => a.FrameNo === frameNumber);
+
       if (boundingBoxesToDraw.length > 0) {
         //draw boxes
         boundingBoxesToDraw.forEach((boundingBox) => {
@@ -784,7 +809,14 @@ const NewTrackingEditor = () => {
         setPlayerList(tempList);
       }
     }
-  }, [playerNameMap, trailsEnabled, trailFrameNumber]);
+  }, [
+    annotations,
+    playerNameMap,
+    trailsEnabled,
+    trailSize,
+    trailFrameNumber,
+    drawInField,
+  ]);
 
   const handleKeyDown = (event) => {
     switch (event.keyCode) {
@@ -952,6 +984,9 @@ const NewTrackingEditor = () => {
         in_field: true,
       }),
     );
+    setPlayerNameMap(
+      new Map(playerNameMap.set(newPlayerKey, "player" + newPlayerKey)),
+    );
   }
 
   const handleEnablingTrails = () => {
@@ -968,6 +1003,10 @@ const NewTrackingEditor = () => {
     } else {
       setShowField(true);
     }
+  }
+  
+  const handleSwitchingTrailSize = (event) => {
+    setTrailSize(event.target.value);
   };
 
   return (
@@ -985,28 +1024,37 @@ const NewTrackingEditor = () => {
       <div className="controls">
         <Box id="tools-container" sx={{ display: "flex", gap: "10px" }}>
           <div>Show Annotation:</div>
-          <FormGroup>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={isShowingAnnotation}
-                  onChange={handleDisplayingAnnotation}
-                />
-              }
-            />
-          </FormGroup>
+
+          <Switch
+            color="default"
+            checked={isShowingAnnotation}
+            onChange={handleDisplayingAnnotation}
+          />
+
           <div>Show Player Box:</div>
-          <FormGroup>
-            <FormControlLabel
-              control={
-                <Switch checked={isShowingBox} onChange={handleDisplayingBox} />
-              }
-            />
-          </FormGroup>
+
+          <Switch
+            color="default"
+            checked={isShowingBox}
+            onChange={handleDisplayingBox}
+          />
+          <div>Show In Field:</div>
+
+          <Switch
+            color="default"
+            checked={drawInField}
+            disabled={!videoElement?.paused}
+            onChange={() => setDrawInField(!drawInField)}
+          />
+
           <Button
             data-testid="add-player-button"
             variant="contained"
             onClick={handleAddPlayer}
+            sx={{
+              backgroundColor: "#BBC3C9 !important",
+              color: "#1b1f22 !important",
+            }}
           >
             Add player
           </Button>
@@ -1014,24 +1062,52 @@ const NewTrackingEditor = () => {
             data-testid="merge-button"
             variant="contained"
             onClick={handleMultiSelectMerge}
+            sx={{
+              backgroundColor: "#BBC3C9 !important",
+              color: "#1b1f22 !important",
+            }}
           >
             Merge
           </Button>
           <Typography sx={{ marginLeft: "10px" }}>Trails </Typography>
-          <FormGroup>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={trailsEnabled}
-                  disabled={!videoElement?.paused}
-                  onChange={handleEnablingTrails}
-                />
-              }
-            />
-          </FormGroup>
+
+          <Switch
+            color="default"
+            checked={trailsEnabled}
+            disabled={!videoElement?.paused}
+            onChange={handleEnablingTrails}
+          />
+          <Typography>Trails Size </Typography>
+          <Slider
+            sx={{
+              width: "60px",
+              "& .MuiSlider-thumb": {
+                color: "white",
+              },
+              "& .MuiSlider-track": {
+                color: "var(--accent)",
+              },
+              "& .MuiSlider-rail": {
+                color: "var(--main-bg)",
+              },
+            }}
+            value={trailSize}
+            disabled={!videoElement?.paused}
+            onChange={handleSwitchingTrailSize}
+            min={10}
+            max={100}
+            step={10}
+            aria-label="Default"
+            valueLabelDisplay="auto"
+          />
           <Typography sx={{ marginLeft: "10px" }}>Trail frames: </Typography>
           <TextField
-            sx={{ bgcolor: "white", marginLeft: "10px", width: "80px" }}
+            variant="standard"
+            sx={{
+              width: "50px",
+              input: { color: "white" },
+              mr: 2,
+            }}
             value={trailFrameNumber}
             type="number"
             onChange={(event, val) => setTrailFrameNumber(event.target.value)}
@@ -1067,6 +1143,7 @@ const NewTrackingEditor = () => {
           ref={canvasRef}
           canvas={JSON.stringify(canvas)}
           annotations={annotations.length}
+          playerList={JSON.stringify(playerList)}
           className="canvas"
           id="tracking-editor-canvas"
           width="1920"

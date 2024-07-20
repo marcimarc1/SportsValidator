@@ -35,7 +35,7 @@ class TrackListItemPlayer extends Component {
   };
 
   prevPlayerId = -1;
-
+  testId = "mergeSwapModal" + this.props.name;
   // componentDidUpdate(prevProps, prevState, snapshot) {
   //     // saving the previous playerId is necessary for detecting a swap of 2 players;
   //     // since the playerBox are not deep-copied, prevProps.playerBox and this.props.playerBox will point to the same object
@@ -223,6 +223,7 @@ class TrackListItemPlayer extends Component {
         <IconButton
           size="small"
           className={"TrackListItemMerge"}
+          data-testid={this.testId}
           onClick={this.handleClickMerge}
           aria-label="merge item"
         >

@@ -6,9 +6,10 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { fabric } from "fabric";
 import {
   faPlus,
-  faCheck,
   faExclamationTriangle,
   faInfoCircle,
+  faTrash,
+  faUpload,
 } from "@fortawesome/free-solid-svg-icons";
 
 class FileOverview extends Component {
@@ -20,32 +21,69 @@ class FileOverview extends Component {
   state = {
     fileListItems: [],
     uploadExpanded: false,
-    firstTime: true, // used to not trigger any animations when component is mounted
+    firstTime: true,
     fileSelectionVisible: false,
-    processedPlayers: null, // State variable for processed_players.csv
-    ballTracks: null, // State variable for ball_tracks.csv
-    homographies: null, // State variable for homographies.csv
-    log: null, // State variable for log.txt
-    video: null, // State variable for the video file,
-    fieldSize: null, // State variable for the field size
-    errorMessage: "", // To store error messages
+    errorMessage: "",
     infoMessage:
-      "Please upload the mandatory video file and processed players file. Ball tracks, homographies, and log files are optional.", // Updated informational message
+      "Please upload the mandatory video file and processed players file. Ball tracks, homographies, and log files are optional.",
+    selectedFiles: [],
+    requiredFilesUploaded: false,
   };
 
   fileInput;
 
-  // componentDidMount() {
-  //     // TODO BACKEND: files = BACKEND.getFiles();
-  //     let files = videofiles.files;
-  //     let fileListItems = [];
-  //     for(const f of files) {
-  //         fileListItems[f.id] = {name: f.name, videoName: f.videoName, duration: f.duration, notes: f.notes};
-  //     }
-  //     this.setState({fileListItems});
-  // }
+  fileHandler = async (event) => {
+    const files = Array.from(event.target.files);
 
-  //generate a poster to be displayed as file overview
+    // Check for duplicate files
+    const newFiles = files.filter(
+      (file) => !this.state.selectedFiles.find((f) => f.name === file.name),
+    );
+
+    if (newFiles.length === 0) {
+      this.setState({
+        errorMessage:
+          "Error: Duplicate files detected. Please select different files.",
+      });
+      return;
+    }
+
+    this.setState(
+      (prevState) => ({
+        selectedFiles: [...prevState.selectedFiles, ...newFiles],
+        errorMessage: "",
+      }),
+      this.checkRequiredFiles,
+    );
+  };
+
+  checkRequiredFiles = () => {
+    const { selectedFiles } = this.state;
+    const tempProcessedPlayers = selectedFiles.find(
+      (file) => file.name === "processed_players.csv",
+    );
+    const tempVideo = selectedFiles.find((file) =>
+      file.name.match(/\.(mp4|avi|mov|wmv)$/i),
+    );
+
+    const requiredFilesUploaded = tempProcessedPlayers && tempVideo;
+
+    if (!requiredFilesUploaded) {
+      this.setState({
+        errorMessage:
+          "Please make sure to upload at least the video file and processed_players.csv.",
+        infoMessage: "",
+        requiredFilesUploaded: false,
+      });
+    } else {
+      this.setState({
+        errorMessage: "",
+        infoMessage: "Files uploaded successfully!",
+        requiredFilesUploaded: true,
+      });
+    }
+  };
+
   generatePosterSrc = (videoFile) => {
     return new Promise((resolve, reject) => {
       const videoElement = document.createElement("video");
@@ -66,7 +104,6 @@ class FileOverview extends Component {
         canvas.add(poster);
         canvas.renderAll();
 
-        // Convert canvas content to data URL
         const posterSrc = canvas.toDataURL({
           format: "jpeg",
           quality: 1,
@@ -74,7 +111,6 @@ class FileOverview extends Component {
         resolve(posterSrc);
       });
 
-      // error handling
       videoElement.addEventListener("error", () => {
         reject(new Error("Failed to load video file"));
       });
@@ -82,32 +118,24 @@ class FileOverview extends Component {
   };
 
   changeName = (id, name) => {
-    // TODO BACKEND
-    // BACKEND.changeName(id, name)
     this.setState((prevState) => {
-      let updatedFileListItems = [...prevState.fileListItems]; // shallow copy which is fine here
+      let updatedFileListItems = [...prevState.fileListItems];
       updatedFileListItems[id].name = name;
       return { fileListItems: updatedFileListItems };
     });
   };
 
   changeNotes = (id, notes) => {
-    // TODO BACKEND
-    //BACKEND.changeNotes(id, notes); then rerender component so that uploaded file shows up in List
-
-    // not really required for rerender because EditTextArea from notes handles that itself, just here to keep the data consistent
     this.setState((prevState) => {
-      let updatedFileListItems = [...prevState.fileListItems]; // shallow copy which is fine here
+      let updatedFileListItems = [...prevState.fileListItems];
       updatedFileListItems[id].notes = notes;
       return { fileListItems: updatedFileListItems };
     });
   };
 
   delete = (id) => {
-    // TODO BACKEND
-    //BACKEND.deleteVideofile(id)
     this.setState((prevState) => {
-      let updatedFileListItems = [...prevState.fileListItems]; // shallow copy which is fine here
+      let updatedFileListItems = [...prevState.fileListItems];
       updatedFileListItems[id] = undefined;
       return { fileListItems: updatedFileListItems };
     });
@@ -128,57 +156,37 @@ class FileOverview extends Component {
     );
   };
 
-  fileHandler = async (event) => {
-    event.preventDefault();
-    const files = Array.from(this.fileInput.current.files);
+  fileSelectionHandler = (event) => {
+    const files = event.target.files;
+  };
 
-    let tempProcessedPlayers = null;
-    let tempBallTracks = null;
-    let tempHomographies = null;
-    let tempLog = null;
-    let tempVideo = null;
-    let tempFieldSize = null;
+  deleteSelectedFile = (fileName) => {
+    this.setState(
+      (prevState) => ({
+        selectedFiles: prevState.selectedFiles.filter(
+          (file) => file.name !== fileName,
+        ),
+      }),
+      this.checkRequiredFiles,
+    );
+  };
 
-    // Determine the type of each file
-    files.forEach((file) => {
-      switch (file.name) {
-        case "processed_players.csv":
-          tempProcessedPlayers = file;
-          break;
-        case "ball_tracks.csv":
-          tempBallTracks = file;
-          break;
-        case "homographies.json":
-          tempHomographies = file;
-          console.log("homographies.json");
-          break;
-        case "log.txt":
-          tempLog = file;
-          break;
-        case "homographiesoptimized_field_size.json":
-          tempFieldSize = file;
-        default:
-          if (file.name.match(/\.(mp4|avi|mov|wmv)$/i)) {
-            tempVideo = file;
-          }
-          break;
-      }
-    });
+  confirmUpload = async () => {
+    const { selectedFiles } = this.state;
 
-    // Check if the required files are present, and set an error message if not
-    if (!tempProcessedPlayers || !tempVideo) {
-      this.setState({
-        errorMessage:
-          "Error: Missing required files. Please make sure to upload at least the video file and processed_players.csv.",
-        infoMessage: "",
-      });
-      return; // Exit the function if required files are missing
-    } else {
-      this.setState({
-        errorMessage: "",
-        infoMessage: "Files uploaded successfully!",
-      });
-    }
+    let tempProcessedPlayers = selectedFiles.find(
+      (file) => file.name === "processed_players.csv",
+    );
+    let tempBallTracks = selectedFiles.find(
+      (file) => file.name === "ball_tracks.csv",
+    );
+    let tempHomographies = selectedFiles.find(
+      (file) => file.name === "homographies.csv",
+    );
+    let tempLog = selectedFiles.find((file) => file.name === "log.txt");
+    let tempVideo = selectedFiles.find((file) =>
+      file.name.match(/\.(mp4|avi|mov|wmv)$/i),
+    );
 
     const readCSV = (file, key) => {
       return new Promise((resolve, reject) => {
@@ -237,17 +245,15 @@ class FileOverview extends Component {
             video: tempVideo,
             fieldSize: tempFieldSize,
           };
-
-          // Add CSV content to the new object
           results.forEach((result) => {
             if (result) {
               newFileListItem[result.key] = result.content;
             }
           });
-
-          // Update the fileListItems state
           return {
             fileListItems: [...prevState.fileListItems, newFileListItem],
+            selectedFiles: [], // Clear selected files after confirmation
+            infoMessage: "Files uploaded and processed successfully!",
           };
         });
       })
@@ -269,27 +275,24 @@ class FileOverview extends Component {
       ? ""
       : " hide";
 
-    let fileListItemComponents = this.state.fileListItems.map(
-      // ternary operator to catch case where e is undefined
-      (e, id) =>
-        e ? (
-          <FileListItem
-            key={id}
-            videoName={e.videoName}
-            duration={e.duration}
-            notes={e.log}
-            processedPlayers={e.processedPlayers}
-            video={e.video}
-            ballTracks={e.ballTracks}
-            homographies={e.homographies}
-            fieldSize={e.fieldSize}
-            log={e.log}
-            poster={this.generatePosterSrc(e.video)}
-            changeName={this.changeName}
-            changeNotes={this.changeNotes}
-            delete={this.delete}
-          />
-        ) : undefined,
+    let fileListItemComponents = this.state.fileListItems.map((e, id) =>
+      e ? (
+        <FileListItem
+          key={id}
+          videoName={e.videoName}
+          duration={e.duration}
+          notes={e.log}
+          processedPlayers={e.processedPlayers}
+          video={e.video}
+          ballTracks={e.ballTracks}
+          homographies={e.homographies}
+          log={e.log}
+          poster={this.generatePosterSrc(e.video)}
+          changeName={this.changeName}
+          changeNotes={this.changeNotes}
+          delete={this.delete}
+        />
+      ) : undefined,
     );
 
     return (
@@ -309,48 +312,56 @@ class FileOverview extends Component {
             {this.state.infoMessage}
           </div>
         )}
+
         <div className="FileOverviewList">
           <div className="FileOverviewHeadingContainer">
-            <div
-              className={
-                "FileOverviewAddButtonContainer" + classNameExpansionPostfix
-              }
-            >
-              <div></div>{" "}
-              {/*dummy element so + / x button moves to the right of container with space-between*/}
-              <form
-                className={"FileInput" + classNameFileUploadPostfix}
-                onSubmit={this.fileHandler}
-              >
-                <input type="file" ref={this.fileInput} name="file" multiple />
-                {/*<input type="submit">*/}
-                <IconButton
-                  className="FileInputCheckmark"
-                  type="submit"
-                  size="medium"
-                  variant="contained"
-                  aria-label="upload selected file"
-                >
-                  <FontAwesomeIcon className="" icon={faCheck} />
-                </IconButton>
-                {/*</input>*/}
-              </form>
+            <h1 className={"FileOverviewHeading"}>File Overview</h1>
+            <div className="file-upload-container">
+              <label className="file-upload" for="file-upload">
+                Upload Files
+              </label>
+
+              <input
+                id="file-upload"
+                type="file"
+                ref={this.fileInput}
+                name="file"
+                multiple
+                onChange={this.fileHandler}
+              />
+            </div>
+          </div>
+          {this.state.selectedFiles.length > 0 && (
+            <div className="selected-files-list">
+              <div>Uploaded Files:</div>
+              <ul>
+                {this.state.selectedFiles.map((file, index) => (
+                  <li key={index}>
+                    {file.name}
+                    <IconButton
+                      size="small"
+                      variant="contained"
+                      aria-label="delete file"
+                      onClick={() => this.deleteSelectedFile(file.name)}
+                    >
+                      <FontAwesomeIcon icon={faTrash} />
+                    </IconButton>
+                  </li>
+                ))}
+              </ul>
               <IconButton
                 size="medium"
                 variant="contained"
-                className={"FileOverviewAddButton"}
-                onClick={this.addButtonClicked}
-                aria-label="upload new videofile"
+                aria-label="confirm upload"
+                color="default"
+                onClick={this.confirmUpload}
+                disabled={!this.state.requiredFilesUploaded}
               >
-                <FontAwesomeIcon
-                  className={"PlusIcon" + classNameExpansionPostfix}
-                  icon={faPlus}
-                />
+                <FontAwesomeIcon icon={faUpload} />
+                Confirm Upload
               </IconButton>
             </div>
-            <h1 className={"FileOverviewHeading"}>File Overview</h1>
-          </div>
-
+          )}
           {fileListItemComponents}
         </div>
       </div>
