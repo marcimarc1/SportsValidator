@@ -748,11 +748,10 @@ const NewTrackingEditor = () => {
         canvas.add(boundingBox);
         canvasBoxesBall.push(boundingBox);
         const boxColor = colorSetBall.get(boundingBox.my.key); //used in 'stroke' property of playerBox
-
         tempList = tempList.concat([
           <TrackListItemBall
             key={runningIndex++}
-            ballBox={activeObject}
+            ballBox={boundingBox}
             name={ballNameMap.get(boundingBox.my.key)}
             changeSelection={changeSelection}
             setName={setNameBall}
