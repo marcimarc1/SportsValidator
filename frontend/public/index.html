@@ -34,6 +34,12 @@
     -->
   <title>Game Tracker</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/numeric/1.2.6/numeric.min.js"></script>
+  <script>
+    function onOpenCvReady() {
+      console.log('OpenCV.js is ready.');
+    }
+  </script>
+  <script src="%PUBLIC_URL%/opencv.js" onload="onOpenCvReady();" type="text/javascript"></script>
 </head>
 
 <body>

@@ -1,6 +1,7 @@
 import { fabric } from "fabric";
 import { getTemplate } from "./templates";
 import * as math from "mathjs";
+import { calculateNewHomography } from './homographyUtils';
 
 export const trailsFullRedraw = (
   canvas,
@@ -61,14 +62,6 @@ function applyHomography(homography, point) {
   return { x: transformedX, y: transformedY };
 }
 
-const calculateNewHomography = (points) => {
-  //TODO: update this function to calculate the homography matrix
-  return [
-    [1, 0, 0],
-    [0, 1, 0],
-    [0, 0, 1],
-  ];
-};
 
 export const drawFieldPoints = (
   canvas,
@@ -84,13 +77,21 @@ export const drawFieldPoints = (
   let homography = homographies[frameNumber];
   let invHomography = math.inv(homography);
 
+  const originalFieldPoints = Object.values(points)
+    .flat()
+    .map((point, index) => ({
+      x: point.coords[0] * horizontalScalingFactor,
+      y: point.coords[1] * verticalScalingFactor,
+      id: point.id
+    }));
+
   const transformPoint = (point) => {
     let transformedPoint = applyHomography(invHomography, point.coords);
     return {
       id: point.id,
       x: transformedPoint.x * horizontalScalingFactor,
       y: transformedPoint.y * verticalScalingFactor,
-      originalCoords: point.coords, // Store original coordinates for homography calculation
+      originalCoords: point.coords,
     };
   };
 
@@ -240,21 +241,44 @@ export const drawFieldPoints = (
     drawCircle(points.penaltySpot[1].coords, 0.3, "red");
   }
 
-  // Function to update homography
   const updateHomography = () => {
-    // Collect current and original coordinates of points
-    const fieldPoints = canvas
+    const updatedFieldPoints = canvas
       .getObjects()
       .filter((obj) => obj.properties?.type === "fieldPoint")
       .map((obj) => ({
-        x: obj.left,
-        y: obj.top,
-        originalCoords: obj.originalCoords,
+        x: obj.left / horizontalScalingFactor,
+        y: obj.top / verticalScalingFactor,
+        id: obj.id,
       }));
 
-    homographies[frameNumber] = calculateNewHomography(fieldPoints);
 
-    console.log(homographies[frameNumber]);
+
+    const templatePoints = Object.values(points)
+      .flat()
+      .map(p => p.coords);
+
+    console.log('Original Field Points:', originalFieldPoints);
+    console.log('Updated Field Points:', updatedFieldPoints);
+    console.log('Template Points:', templatePoints);
+
+    try {
+      const newHomography = calculateNewHomography(
+        originalFieldPoints,
+        updatedFieldPoints,
+        templatePoints
+      );
+
+      console.log(newHomography);
+
+      // homographies[frameNumber] = newHomography;
+      Object.keys(homographies).forEach((frame) => {
+        homographies[frame] = newHomography;
+      });
+
+      console.log(homographies[frameNumber]);
+    } catch (error) {
+      console.error('Error updating homography:', error);
+    }
   };
 
   canvas.off("object:modified", updateHomography);
