@@ -1,7 +1,7 @@
 import { fabric } from "fabric";
 import { getTemplate } from "./templates";
 import * as math from "mathjs";
-import { calculateNewHomography } from './homographyUtils';
+import { calculateNewHomography, transformPoint } from './homographyUtils';
 
 export const trailsFullRedraw = (
   canvas,
@@ -51,17 +51,13 @@ export const trailsFullRedraw = (
   });
 };
 
-function applyHomography(homography, point) {
-  let [x, y] = point;
-  let w = homography[2][0] * x + homography[2][1] * y + homography[2][2];
-  let transformedX =
-    (homography[0][0] * x + homography[0][1] * y + homography[0][2]) / w;
-  let transformedY =
-    (homography[1][0] * x + homography[1][1] * y + homography[1][2]) / w;
-
-  return { x: transformedX, y: transformedY };
-}
-
+export const defineTrailBehaviour = (trail, setSelectedTrails) => {
+  trail.on("selected", () => {
+    setSelectedTrails((prevTrails) => {
+      return new Set(prevTrails.add(trail.properties.playerKey));
+    });
+  });
+};
 
 export const drawFieldPoints = (
   canvas,
@@ -79,24 +75,14 @@ export const drawFieldPoints = (
 
   const originalFieldPoints = Object.values(points)
     .flat()
-    .map((point, index) => ({
+    .map((point, _) => ({
       x: point.coords[0] * horizontalScalingFactor,
       y: point.coords[1] * verticalScalingFactor,
       id: point.id
-    }));
-
-  const transformPoint = (point) => {
-    let transformedPoint = applyHomography(invHomography, point.coords);
-    return {
-      id: point.id,
-      x: transformedPoint.x * horizontalScalingFactor,
-      y: transformedPoint.y * verticalScalingFactor,
-      originalCoords: point.coords,
-    };
-  };
+    }));  
 
   const drawPoint = (point, color, radius = 5) => {
-    const transformedPoint = transformPoint(point);
+    const transformedPoint = transformPoint(point, invHomography, horizontalScalingFactor, verticalScalingFactor);
 
     const circle = new fabric.Circle({
       left: transformedPoint.x,
@@ -105,7 +91,7 @@ export const drawFieldPoints = (
       fill: color,
       originX: "center",
       originY: "center",
-      selectable: true,
+      selectable: false,
       hasControls: false,
     });
 
@@ -173,7 +159,7 @@ export const drawFieldPoints = (
         return existingPoint;
       }
 
-      return drawPoint(point, color);
+      return drawPoint(point, color, 7);
     });
 
     for (let i = 0; i < pointObjects.length - 1; i++) {
@@ -182,7 +168,6 @@ export const drawFieldPoints = (
       drawLine(startPoint, endPoint, color);
     }
 
-    canvas.off("object:moving", updateLines);
     canvas.on("object:moving", updateLines);
   };
 
@@ -251,15 +236,9 @@ export const drawFieldPoints = (
         id: obj.id,
       }));
 
-
-
     const templatePoints = Object.values(points)
       .flat()
       .map(p => p.coords);
-
-    console.log('Original Field Points:', originalFieldPoints);
-    console.log('Updated Field Points:', updatedFieldPoints);
-    console.log('Template Points:', templatePoints);
 
     try {
       const newHomography = calculateNewHomography(
@@ -267,9 +246,7 @@ export const drawFieldPoints = (
         updatedFieldPoints,
         templatePoints
       );
-
-      console.log(newHomography);
-
+      
       var maxFrameToApply = Math.min(frameNumber + 240, Object.keys(homographies).length - 1);
       Object.keys(homographies).forEach((frame) => {
         if (frame < frameNumber || frame > maxFrameToApply) {
@@ -278,21 +255,16 @@ export const drawFieldPoints = (
 
         homographies[frame] = newHomography;
       });
-
+      console.log("Updated homography at frame", frameNumber);
       console.log(homographies[frameNumber]);
     } catch (error) {
       console.error('Error updating homography:', error);
     }
   };
 
-  canvas.off("object:modified", updateHomography);
   canvas.on("object:modified", updateHomography);
-};
-
-export const defineTrailBehaviour = (trail, setSelectedTrails) => {
-  trail.on("selected", () => {
-    setSelectedTrails((prevTrails) => {
-      return new Set(prevTrails.add(trail.properties.playerKey));
-    });
+  canvas.on("object:removed", () => {
+    canvas.off("object:modified", updateHomography);
+    canvas.off("object:moving", updateLines);
   });
 };

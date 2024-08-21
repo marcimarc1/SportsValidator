@@ -66,12 +66,12 @@ const NewTrackingEditor = () => {
   const [mergeModalState, setMergeModalState] = useState(false);
   const [playerChosenInList, setPlayerChosenInList] = useState("");
   const [showField, setShowField] = useState(true);
+  const [editField, setEditField] = useState(false);
   const logFile = parseLogFile(log);
   const [selectedTrails, setSelectedTrails] = useState(new Set());
   const [trailSize, setTrailSize] = useState(50);
   const [drawInField, setDrawInField] = useState(false);
   const [showApplyHomographyModal, setShowApplyHomographyModal] = useState(false);
-  const [isFieldEditingInProgress, setIsFieldEditingInProgress] = useState(true);
 
   const handleModalOpen = (playerInList) => {
     setPlayerChosenInList(playerInList);
@@ -895,7 +895,7 @@ const NewTrackingEditor = () => {
 
   const handlePlayPause = () => {
     if (videoElement && videoElement.readyState != 0 && !videoElement.ended) {
-      if(isFieldEditingInProgress) {
+      if(editField) {
         setShowApplyHomographyModal(true);
         return;
       }
@@ -1002,6 +1002,7 @@ const NewTrackingEditor = () => {
   const handleEnablingField = () => {
     if (showField) {
       setShowField(false);
+      setEditField(false);
       deleteFieldDrawing();
     } else {
       setShowField(true);
@@ -1009,8 +1010,25 @@ const NewTrackingEditor = () => {
     }
   };
 
+  const handleEnablingEditField = () => {
+    if (editField) {
+      setEditField(false);
+
+    } else {
+      setEditField(true);
+    }
+  };
+  
+  useEffect(() => {
+    canvas.getObjects().forEach((obj) => {
+      if (obj.properties?.type === "fieldPoint") {
+        obj.set({ selectable: editField});
+      }
+    });
+  }, [editField, canvas]);
+
   const deleteFieldDrawing = () => {
-    console.log("deleting field drawing", "frameNumber", getCurrentTimestampFrame());
+    console.log("deleting field drawing", "frameNumber", getCurrentTimestampFrame() - 1);
     canvas.remove(
       ...canvas.getObjects().filter((obj) => obj.properties?.type === "field" || obj.properties?.type === "fieldPoint"),
     );
@@ -1018,6 +1036,8 @@ const NewTrackingEditor = () => {
 
   const drawField = () => {
     console.log("drawing field", "frameNumber", getCurrentTimestampFrame());
+    // var homographyToApply = editedHomographies ? editedHomographies[getCurrentTimestampFrame()] : homographies[getCurrentTimestampFrame()];
+    // console.log("homography to apply", homographyToApply);
     drawFieldPoints(
       canvas,
       getCurrentTimestampFrame(),
@@ -1028,10 +1048,26 @@ const NewTrackingEditor = () => {
       fieldSize?.length || 0,
       fieldSize?.width || 0,
     );
+
   };
 
   const handleSwitchingTrailSize = (event) => {
     setTrailSize(event.target.value);
+  };
+
+  const handleApplyHomography = () => {
+    const frameNumber = getCurrentTimestampFrame();
+    deleteFieldDrawing();
+    drawField();
+    setShowApplyHomographyModal(false);
+  };
+
+  const handleContinueWithoutApplyingHomographies = async () => {
+    console.log("Continuing without applying homographies");
+    setShowApplyHomographyModal(false);
+    handleEnablingEditField();
+    videoElement.play();
+    setIsPlaying(true);
   };
 
   return (
@@ -1039,6 +1075,8 @@ const NewTrackingEditor = () => {
       <ApplyHomographyModal
         showApplyHomographyModal={showApplyHomographyModal}
         handleClose={() => setShowApplyHomographyModal(false)}
+        handleApply={() => handleApplyHomography()}
+        handleContinueWithoutApplying={() => handleContinueWithoutApplyingHomographies()}
       />
       <MergeAndSwapModal
         playerChosenInList={playerChosenInList}
@@ -1141,7 +1179,7 @@ const NewTrackingEditor = () => {
             type="number"
             onChange={(event, val) => setTrailFrameNumber(event.target.value)}
           />
-          <Typography sx={{ marginLeft: "10px" }}>Edit Field </Typography>
+          <Typography sx={{ marginLeft: "10px" }}>Show Field </Typography>
           <FormGroup>
             <FormControlLabel
               control={
@@ -1149,6 +1187,18 @@ const NewTrackingEditor = () => {
                   checked={showField}
                   onChange={handleEnablingField}
                   disabled={!videoElement?.paused}
+                />
+              }
+            />
+          </FormGroup>
+          <Typography sx={{ marginLeft: "10px" }}>Edit Field </Typography>
+          <FormGroup>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={editField}
+                  onChange={handleEnablingEditField}
+                  disabled={!videoElement?.paused || showField === false}
                 />
               }
             />

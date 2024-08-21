@@ -3,24 +3,12 @@ import Box from "@material-ui/core/Box";
 import Button from "@material-ui/core/Button";
 import Typography from "@material-ui/core/Typography";
 import Modal from "@material-ui/core/Modal";
-import InputLabel from "@material-ui/core/InputLabel";
-import MenuItem from "@material-ui/core/MenuItem";
-import FormControl from "@material-ui/core/FormControl";
-import Select from "@material-ui/core/Select";
-import RadioGroup from "@material-ui/core/RadioGroup";
-import Radio from "@material-ui/core/Radio";
-import FormControlLabel from "@material-ui/core/FormControlLabel";
-
-import { useState } from "react";
-import { mergePlayerData, swapPlayerData } from "../../../utils/validation";
-import { useMemo } from "react";
 
 const style = {
   position: "absolute",
   top: "50%",
   left: "50%",
   transform: "translate(-50%, -50%)",
-  width: 400,
   bgcolor: "background.paper",
   border: "2px solid #000",
   boxShadow: 24,
@@ -31,6 +19,7 @@ export default function ApplyHomographyModal({
   showApplyHomographyModal,
   handleClose,
   handleApply,
+  handleContinueWithoutApplying
 }) {
   return (
     <div>
@@ -49,8 +38,16 @@ export default function ApplyHomographyModal({
                 variant="contained"
                 onClick={handleClose}
                 sx={{ marginRight: 2 }}
+                style={{marginRight: "10px"}}
               >
                 Cancel
+              </Button>
+              <Button 
+                variant="contained" 
+                onClick={handleContinueWithoutApplying}
+                style={{marginRight: "10px"}}
+              >
+                Continue without applying
               </Button>
               <Button variant="contained" onClick={handleApply}>
                 Apply
