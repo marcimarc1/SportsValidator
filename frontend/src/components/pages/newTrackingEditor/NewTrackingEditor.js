@@ -28,6 +28,7 @@ import TextField from "@mui/material/TextField";
 import TrackList from "../newTrackingEditor/TrackList";
 import TrackListItemPlayer from "./TrackListItemPlayer";
 import MergeAndSwapModal from "./MergeAndSwapModal";
+import ApplyHomographyModal from "./ApplyHomographyModal";
 import {
   trailsFullRedraw,
   drawFieldPoints,
@@ -69,6 +70,8 @@ const NewTrackingEditor = () => {
   const [selectedTrails, setSelectedTrails] = useState(new Set());
   const [trailSize, setTrailSize] = useState(50);
   const [drawInField, setDrawInField] = useState(false);
+  const [showApplyHomographyModal, setShowApplyHomographyModal] = useState(false);
+  const [isFieldEditingInProgress, setIsFieldEditingInProgress] = useState(true);
 
   const handleModalOpen = (playerInList) => {
     setPlayerChosenInList(playerInList);
@@ -600,16 +603,7 @@ const NewTrackingEditor = () => {
       ...canvas.getObjects().filter((obj) => obj.properties?.type === "field"),
     );
     if (showField) {
-      drawFieldPoints(
-        canvas,
-        frameNumber,
-        homographies,
-        horizontalScalingFactor,
-        verticalScalingFactor,
-        logFile.Sport,
-        fieldSize?.length || 0,
-        fieldSize?.width || 0,
-      );
+      drawField();
     }
 
     setPlayerList(tempList);
@@ -865,8 +859,10 @@ const NewTrackingEditor = () => {
       const nextFrame = frameNumber + 1;
       const referenceTimestamp = getReferenceTimestampForFrame(nextFrame);
       videoElement.currentTime = referenceTimestamp;
+      deleteFieldDrawing();
       setFrameNumber(nextFrame);
       setTimestamp(referenceTimestamp);
+      drawField();
     }
   };
 
@@ -875,8 +871,10 @@ const NewTrackingEditor = () => {
       const previousFrame = frameNumber - 1;
       const referenceTimestamp = getReferenceTimestampForFrame(previousFrame);
       videoElement.currentTime = referenceTimestamp;
+      deleteFieldDrawing();
       setFrameNumber(previousFrame);
       setTimestamp(referenceTimestamp);
+      drawField();
     }
   };
 
@@ -897,6 +895,10 @@ const NewTrackingEditor = () => {
 
   const handlePlayPause = () => {
     if (videoElement && videoElement.readyState != 0 && !videoElement.ended) {
+      if(isFieldEditingInProgress) {
+        setShowApplyHomographyModal(true);
+        return;
+      }
       if (videoElement.paused) {
         setIsPlaying(true);
         videoElement.play();
@@ -1000,9 +1002,32 @@ const NewTrackingEditor = () => {
   const handleEnablingField = () => {
     if (showField) {
       setShowField(false);
+      deleteFieldDrawing();
     } else {
       setShowField(true);
+      drawField();
     }
+  };
+
+  const deleteFieldDrawing = () => {
+    console.log("deleting field drawing", "frameNumber", getCurrentTimestampFrame());
+    canvas.remove(
+      ...canvas.getObjects().filter((obj) => obj.properties?.type === "field" || obj.properties?.type === "fieldPoint"),
+    );
+  };
+
+  const drawField = () => {
+    console.log("drawing field", "frameNumber", getCurrentTimestampFrame());
+    drawFieldPoints(
+      canvas,
+      getCurrentTimestampFrame(),
+      homographies,
+      canvas.width / 3840,
+      canvas.height / 2160,
+      logFile.Sport,
+      fieldSize?.length || 0,
+      fieldSize?.width || 0,
+    );
   };
 
   const handleSwitchingTrailSize = (event) => {
@@ -1011,6 +1036,10 @@ const NewTrackingEditor = () => {
 
   return (
     <div>
+      <ApplyHomographyModal
+        showApplyHomographyModal={showApplyHomographyModal}
+        handleClose={() => setShowApplyHomographyModal(false)}
+      />
       <MergeAndSwapModal
         playerChosenInList={playerChosenInList}
         playerNameMap={playerNameMap}
@@ -1112,7 +1141,7 @@ const NewTrackingEditor = () => {
             type="number"
             onChange={(event, val) => setTrailFrameNumber(event.target.value)}
           />
-          <Typography sx={{ marginLeft: "10px" }}>Show Field </Typography>
+          <Typography sx={{ marginLeft: "10px" }}>Edit Field </Typography>
           <FormGroup>
             <FormControlLabel
               control={

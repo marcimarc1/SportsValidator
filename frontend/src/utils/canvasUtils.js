@@ -270,8 +270,12 @@ export const drawFieldPoints = (
 
       console.log(newHomography);
 
-      // homographies[frameNumber] = newHomography;
+      var maxFrameToApply = Math.min(frameNumber + 240, Object.keys(homographies).length - 1);
       Object.keys(homographies).forEach((frame) => {
+        if (frame < frameNumber || frame > maxFrameToApply) {
+          return;
+        }
+
         homographies[frame] = newHomography;
       });
 
