@@ -74,19 +74,19 @@ export const drawFieldPoints = (
   let invHomography = math.inv(homography);
 
   const originalFieldPoints = Object.values(points)
-  .flat()
-  .map((point, index) => {
-    if (!point.coords || point.coords.length < 2) {
-      return null;
-    }
-    return {
-      x: point.coords[0] * horizontalScalingFactor,
-      y: point.coords[1] * verticalScalingFactor,
-      id: point.id,
-    };
-  })
-  .filter((p) => p !== null);
-  
+    .flat()
+    .map((point, index) => {
+      if (!point.coords || point.coords.length < 2) {
+        return null;
+      }
+      return {
+        x: point.coords[0] * horizontalScalingFactor,
+        y: point.coords[1] * verticalScalingFactor,
+        id: point.id,
+      };
+    })
+    .filter((p) => p !== null);
+
   const drawPoint = (point, color, radius = 5) => {
     const transformedPoint = transformPoint(
       point,
@@ -187,7 +187,7 @@ export const drawFieldPoints = (
       { coords: center },
       invHomography,
       horizontalScalingFactor,
-      verticalScalingFactor
+      verticalScalingFactor,
     );
 
     const radiusPointX = [center[0] + radius, center[1]];
@@ -197,13 +197,13 @@ export const drawFieldPoints = (
       { coords: radiusPointX },
       invHomography,
       horizontalScalingFactor,
-      verticalScalingFactor
+      verticalScalingFactor,
     );
     const transformedRadiusPointY = transformPoint(
       { coords: radiusPointY },
       invHomography,
       horizontalScalingFactor,
-      verticalScalingFactor
+      verticalScalingFactor,
     );
 
     // Calculate the transformed radii
