@@ -1049,6 +1049,9 @@ const NewTrackingEditor = () => {
     // var homographyToApply = editedHomographies ? editedHomographies[getCurrentTimestampFrame()] : homographies[getCurrentTimestampFrame()];
     // console.log("homography to apply", homographyToApply);
     //log the field size
+    if(!homographies){
+      return;
+    }
     drawFieldPoints(
       canvas,
       getCurrentTimestampFrame(),
