@@ -142,7 +142,7 @@ describe("merge and swap functionality", () => {
     expect(initialNumber).toEqual("3");
 
     // playerList has player1 and player2 since those are in the 0th frame
-    const prevPlayerList = JSON.parse(canvasElement.getAttribute("playerList"));
+    const prevPlayerList = JSON.parse(canvasElement.getAttribute("playerlist"));
     expect(prevPlayerList.length).toEqual(2);
     expect(prevPlayerList[0].props.name).toEqual("player1");
     expect(prevPlayerList[1].props.name).toEqual("player2");
@@ -171,7 +171,7 @@ describe("merge and swap functionality", () => {
     // Number of annotations should be the same
     expect(newNumber).toEqual("3");
     // The order of the players should be swapped
-    const newPlayerList = JSON.parse(canvasElement.getAttribute("playerList"));
+    const newPlayerList = JSON.parse(canvasElement.getAttribute("playerlist"));
     expect(newPlayerList.length).toEqual(2);
     // playerList has player1 and player3 since player2 and player3 are swapped
     expect(newPlayerList[0].props.name).toEqual("player1");
