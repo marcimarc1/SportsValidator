@@ -19,7 +19,7 @@ export default function ApplyHomographyModal({
   showApplyHomographyModal,
   handleClose,
   handleApply,
-  handleContinueWithoutApplying
+  handleContinueWithoutApplying,
 }) {
   return (
     <div>
@@ -30,29 +30,29 @@ export default function ApplyHomographyModal({
         aria-describedby="modal-modal-description"
       >
         <Box textAlign="center" sx={style}>
-            <Typography variant="h6" id="demo-simple-select-label">
-              {"Do you want to apply the homography to the next 240 frames?"}
-            </Typography>
-            <Box marginTop={2}>
-              <Button
-                variant="contained"
-                onClick={handleClose}
-                sx={{ marginRight: 2 }}
-                style={{marginRight: "10px"}}
-              >
-                Cancel
-              </Button>
-              <Button 
-                variant="contained" 
-                onClick={handleContinueWithoutApplying}
-                style={{marginRight: "10px"}}
-              >
-                Continue without applying
-              </Button>
-              <Button variant="contained" onClick={handleApply}>
-                Apply
-              </Button>
-            </Box>
+          <Typography variant="h6" id="demo-simple-select-label">
+            {"Do you want to apply the homography to the next 240 frames?"}
+          </Typography>
+          <Box marginTop={2}>
+            <Button
+              variant="contained"
+              onClick={handleClose}
+              sx={{ marginRight: 2 }}
+              style={{ marginRight: "10px" }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="contained"
+              onClick={handleContinueWithoutApplying}
+              style={{ marginRight: "10px" }}
+            >
+              Continue without applying
+            </Button>
+            <Button variant="contained" onClick={handleApply}>
+              Apply
+            </Button>
+          </Box>
         </Box>
       </Modal>
     </div>

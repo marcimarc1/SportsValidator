@@ -305,7 +305,7 @@ function createUltimateTemplate() {
   };
 }
 
-export const getTemplate = (key = "Soccer", length = 100, width = 50) => {
+export const getTemplate = (key, length = 103, width = 68) => {
   switch (key) {
     case "Soccer":
       return createSoccerTemplate(length, width);

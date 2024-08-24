@@ -1,7 +1,7 @@
 import { fabric } from "fabric";
 import { getTemplate } from "./templates";
 import * as math from "mathjs";
-import { calculateNewHomography, transformPoint } from './homographyUtils';
+import { calculateNewHomography, transformPoint } from "./homographyUtils";
 
 export const trailsFullRedraw = (
   canvas,
@@ -74,15 +74,26 @@ export const drawFieldPoints = (
   let invHomography = math.inv(homography);
 
   const originalFieldPoints = Object.values(points)
-    .flat()
-    .map((point, _) => ({
+  .flat()
+  .map((point, index) => {
+    if (!point.coords || point.coords.length < 2) {
+      return null;
+    }
+    return {
       x: point.coords[0] * horizontalScalingFactor,
       y: point.coords[1] * verticalScalingFactor,
-      id: point.id
-    }));  
-
+      id: point.id,
+    };
+  })
+  .filter((p) => p !== null);
+  
   const drawPoint = (point, color, radius = 5) => {
-    const transformedPoint = transformPoint(point, invHomography, horizontalScalingFactor, verticalScalingFactor);
+    const transformedPoint = transformPoint(
+      point,
+      invHomography,
+      horizontalScalingFactor,
+      verticalScalingFactor,
+    );
 
     const circle = new fabric.Circle({
       left: transformedPoint.x,
@@ -172,13 +183,28 @@ export const drawFieldPoints = (
   };
 
   const drawCircle = (center, radius, color) => {
-    const transformedCenter = transformPoint({ coords: center });
+    const transformedCenter = transformPoint(
+      { coords: center },
+      invHomography,
+      horizontalScalingFactor,
+      verticalScalingFactor
+    );
 
     const radiusPointX = [center[0] + radius, center[1]];
     const radiusPointY = [center[0], center[1] + radius];
 
-    const transformedRadiusPointX = transformPoint({ coords: radiusPointX });
-    const transformedRadiusPointY = transformPoint({ coords: radiusPointY });
+    const transformedRadiusPointX = transformPoint(
+      { coords: radiusPointX },
+      invHomography,
+      horizontalScalingFactor,
+      verticalScalingFactor
+    );
+    const transformedRadiusPointY = transformPoint(
+      { coords: radiusPointY },
+      invHomography,
+      horizontalScalingFactor,
+      verticalScalingFactor
+    );
 
     // Calculate the transformed radii
     const transformedRadiusX = Math.abs(
@@ -238,16 +264,19 @@ export const drawFieldPoints = (
 
     const templatePoints = Object.values(points)
       .flat()
-      .map(p => p.coords);
+      .map((p) => p.coords);
 
     try {
       const newHomography = calculateNewHomography(
         originalFieldPoints,
         updatedFieldPoints,
-        templatePoints
+        templatePoints,
       );
-      
-      var maxFrameToApply = Math.min(frameNumber + 240, Object.keys(homographies).length - 1);
+
+      var maxFrameToApply = Math.min(
+        frameNumber + 240,
+        Object.keys(homographies).length - 1,
+      );
       Object.keys(homographies).forEach((frame) => {
         if (frame < frameNumber || frame > maxFrameToApply) {
           return;
@@ -258,7 +287,7 @@ export const drawFieldPoints = (
       console.log("Updated homography at frame", frameNumber);
       console.log(homographies[frameNumber]);
     } catch (error) {
-      console.error('Error updating homography:', error);
+      console.error("Error updating homography:", error);
     }
   };
 

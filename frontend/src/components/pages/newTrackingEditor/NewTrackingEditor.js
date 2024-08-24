@@ -71,7 +71,8 @@ const NewTrackingEditor = () => {
   const [selectedTrails, setSelectedTrails] = useState(new Set());
   const [trailSize, setTrailSize] = useState(50);
   const [drawInField, setDrawInField] = useState(false);
-  const [showApplyHomographyModal, setShowApplyHomographyModal] = useState(false);
+  const [showApplyHomographyModal, setShowApplyHomographyModal] =
+    useState(false);
 
   const handleModalOpen = (playerInList) => {
     setPlayerChosenInList(playerInList);
@@ -895,7 +896,7 @@ const NewTrackingEditor = () => {
 
   const handlePlayPause = () => {
     if (videoElement && videoElement.readyState != 0 && !videoElement.ended) {
-      if(editField) {
+      if (editField) {
         setShowApplyHomographyModal(true);
         return;
       }
@@ -1013,24 +1014,33 @@ const NewTrackingEditor = () => {
   const handleEnablingEditField = () => {
     if (editField) {
       setEditField(false);
-
     } else {
       setEditField(true);
     }
   };
-  
+
   useEffect(() => {
     canvas.getObjects().forEach((obj) => {
       if (obj.properties?.type === "fieldPoint") {
-        obj.set({ selectable: editField});
+        obj.set({ selectable: editField });
       }
     });
   }, [editField, canvas]);
 
   const deleteFieldDrawing = () => {
-    console.log("deleting field drawing", "frameNumber", getCurrentTimestampFrame() - 1);
+    console.log(
+      "deleting field drawing",
+      "frameNumber",
+      getCurrentTimestampFrame() - 1,
+    );
     canvas.remove(
-      ...canvas.getObjects().filter((obj) => obj.properties?.type === "field" || obj.properties?.type === "fieldPoint"),
+      ...canvas
+        .getObjects()
+        .filter(
+          (obj) =>
+            obj.properties?.type === "field" ||
+            obj.properties?.type === "fieldPoint",
+        ),
     );
   };
 
@@ -1038,6 +1048,7 @@ const NewTrackingEditor = () => {
     console.log("drawing field", "frameNumber", getCurrentTimestampFrame());
     // var homographyToApply = editedHomographies ? editedHomographies[getCurrentTimestampFrame()] : homographies[getCurrentTimestampFrame()];
     // console.log("homography to apply", homographyToApply);
+    //log the field size
     drawFieldPoints(
       canvas,
       getCurrentTimestampFrame(),
@@ -1048,7 +1059,6 @@ const NewTrackingEditor = () => {
       fieldSize?.length || 0,
       fieldSize?.width || 0,
     );
-
   };
 
   const handleSwitchingTrailSize = (event) => {
@@ -1076,7 +1086,9 @@ const NewTrackingEditor = () => {
         showApplyHomographyModal={showApplyHomographyModal}
         handleClose={() => setShowApplyHomographyModal(false)}
         handleApply={() => handleApplyHomography()}
-        handleContinueWithoutApplying={() => handleContinueWithoutApplyingHomographies()}
+        handleContinueWithoutApplying={() =>
+          handleContinueWithoutApplyingHomographies()
+        }
       />
       <MergeAndSwapModal
         playerChosenInList={playerChosenInList}
