@@ -1056,8 +1056,8 @@ const NewTrackingEditor = () => {
       canvas.width / 3840,
       canvas.height / 2160,
       logFile.Sport,
-      fieldSize?.length || 0,
-      fieldSize?.width || 0,
+      fieldSize?.length,
+      fieldSize?.width,
     );
   };
 
