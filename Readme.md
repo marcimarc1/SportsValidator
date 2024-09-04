@@ -9,3 +9,35 @@ There are multiple interception points, where developers can start exploring the
 - ´backend/developer-guide.md´ is containing information regarding the docker setup and developing the frontend without rebuilding the backend
 - ´backend/documentations.md´ is a conundrum of sources
 -  for the developers (as long as the repo is private), please run the github actions with https://github.com/nektos/act before making a PR. I pay for the runner minutes privately.
+
+
+
+### Guide for Player Validation
+Point of our project is to give the user an interface for finding errors within the data and give them the tools to fix the issues. One of the errors in data that we see is that a single player being represented by multiple PlayerKey's in the data, we can detect this by looking at the trails 
+What are trails? Trails are the points that we see appearing behind the players, and they represent the history of the players position. Colors are different for each player.
+
+![image](https://github.com/marcimarc1/SportsValidator/assets/57864903/cf347a4d-0b09-4943-8091-e88a0f1bebd0)
+
+We see in the above image that even though this is a single player, multiple colors exist in the trails. This is an error in the data, where a single player is represented as multiple players. In this case, we can use merging to fix the data.
+
+There are also cases where we need swapping, for example, in a case where the algorithm mixed up the data for two different players:
+
+![image](https://github.com/marcimarc1/SportsValidator/assets/57864903/52675da9-df9b-496d-91c6-d953b8b4de59)
+
+In this case, we should go to the frame where the issue started, and use the swap functionality, and end up with correct data like this:
+
+![image](https://github.com/marcimarc1/SportsValidator/assets/57864903/e33f0a82-2970-4891-a843-72b5f1dcc5b2)
+
+Our project has two ways for player validation, multi-select merge and the merge-swap menu.
+- For multi-select merge, select trails with different colors and click the merge button. This can be done by holding and dragging our mouse to cover multiple trails. 
+- Opening the merge-swap menu from the player list using the icon that looks like the "refresh" icon:
+- ![image](https://github.com/marcimarc1/SportsValidator/assets/57864903/fc290287-51be-4d30-b015-210d76e63158)
+
+- and choose swap or merge option, choose the player to be swapped or merged from the dropdown menu and hit "Apply changes".
+
+- ![image](https://github.com/marcimarc1/SportsValidator/assets/57864903/3b3a0ef6-d9dd-49cf-ac1d-c6c81ebd70ca)
+
+- Merging and swapping from the merge menu **only changes the data from the current frame and onwards**. This is what we always need for swapping, since the previous data is already correct. However, it could also prove to be useful for merging in certain situations. **In majority of cases though, multi-select merge would suffice for our merging needs.**
+
+
+
