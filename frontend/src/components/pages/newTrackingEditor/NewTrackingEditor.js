@@ -603,8 +603,24 @@ const NewTrackingEditor = () => {
     canvas.remove(
       ...canvas.getObjects().filter((obj) => obj.properties?.type === "field"),
     );
+
     if (showField) {
       drawField();
+    }
+
+    if (isShowingBox) {
+      boundingBoxesToDraw.forEach((a) => {
+        const fontSize = 12;
+        const scaledX = a.x1 * horizontalScalingFactor;
+        const scaledY = a.y1 * verticalScalingFactor - fontSize;
+        const playerKey = a.PlayerKey.toString();
+        let boxKey = new fabric.Text(playerKey, {
+          left: scaledX,
+          top: scaledY,
+          fontSize: fontSize,
+        });
+        canvas.add(boxKey);
+      });
     }
 
     setPlayerList(tempList);
