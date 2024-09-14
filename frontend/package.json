@@ -18,7 +18,6 @@
     "@types/jest": "29.5.11",
     "@types/react-edit-text": "^4.4.1",
     "axios": "^1.6.7",
-    "canvas": "^2.11.2",
     "chart.js": "^3.9.1",
     "chartjs": "^0.3.24",
     "fabric": "^5.3.0",
