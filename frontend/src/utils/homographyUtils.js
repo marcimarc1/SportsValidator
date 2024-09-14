@@ -1,4 +1,4 @@
-import * as math from "mathjs";
+import { inverse } from "./mathUtils";
 
 /**
  * Transform a point using a homography matrix.
@@ -112,7 +112,7 @@ function calculateNewHomography(
     [h.data64F[6], h.data64F[7], h.data64F[8]],
   ];
 
-  return math.inv(newHomography);
+  return inverse(newHomography);
 }
 
 export { applyHomography, calculateNewHomography, transformPoint };

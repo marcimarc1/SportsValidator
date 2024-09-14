@@ -1,5 +1,5 @@
 # "Compiling" the frontend down to static html/css/js files
-FROM node:18.20.4 as builder
+FROM node:16-alpine as builder
 WORKDIR /frontend
 COPY frontend .
 RUN npm install

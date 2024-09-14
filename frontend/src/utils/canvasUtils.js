@@ -1,7 +1,7 @@
 import { fabric } from "fabric";
 import { getTemplate } from "./templates";
-import * as math from "mathjs";
 import { calculateNewHomography, transformPoint } from "./homographyUtils";
+import { inverse } from "./mathUtils";
 
 export const trailsFullRedraw = (
   canvas,
@@ -71,7 +71,7 @@ export const drawFieldPoints = (
 ) => {
   const { points, lines } = getTemplate(sport, length, width);
   let homography = homographies[frameNumber];
-  let invHomography = math.inv(homography);
+  let invHomography = inverse(homography);
 
   const originalFieldPoints = Object.values(points)
     .flat()
