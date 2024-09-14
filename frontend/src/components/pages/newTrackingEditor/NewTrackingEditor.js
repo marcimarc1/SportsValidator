@@ -1028,11 +1028,6 @@ const NewTrackingEditor = () => {
   }, [editField, canvas]);
 
   const deleteFieldDrawing = () => {
-    console.log(
-      "deleting field drawing",
-      "frameNumber",
-      getCurrentTimestampFrame() - 1,
-    );
     canvas.remove(
       ...canvas
         .getObjects()
@@ -1061,6 +1056,7 @@ const NewTrackingEditor = () => {
       logFile.Sport,
       fieldSize?.length,
       fieldSize?.width,
+      videoElement,
     );
   };
 
@@ -1073,6 +1069,9 @@ const NewTrackingEditor = () => {
     deleteFieldDrawing();
     drawField();
     setShowApplyHomographyModal(false);
+    handleEnablingEditField();
+    setIsPlaying(true);
+    videoElement.play();
   };
 
   const handleContinueWithoutApplyingHomographies = async () => {
