@@ -289,6 +289,7 @@ class FileOverview extends Component {
           video={e.video}
           ballTracks={e.ballTracks}
           homographies={e.homographies}
+          fieldSize={e.fieldSize}
           log={e.log}
           poster={this.generatePosterSrc(e.video)}
           changeName={this.changeName}
