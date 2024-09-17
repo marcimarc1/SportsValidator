@@ -39,7 +39,7 @@ import Slider from "@mui/material/Slider";
 // TODO Take a video_id instead and have an endpoint on the server where we supply a video_id and get the corresponding video
 const NewTrackingEditor = () => {
   const location = useLocation();
-  const { processedPlayers, video, ballTracks, homographies, log } =
+  const { processedPlayers, video, processedBallTracks, homographies, log } =
     location.state || {};
   // ballTracks, homographies and log are not being used. Logic will be implemented in the future.
   const [annotations, setAnnotations] = useState([]);
