@@ -5,7 +5,10 @@ import { ReactComponent as PauseIcon } from "../../../icons/pause.svg";
 import { ReactComponent as ForwardStepIcon } from "../../../icons/forward-step.svg";
 import { ReactComponent as BackwardStepIcon } from "../../../icons/backward-step.svg";
 import { useLocation } from "react-router-dom";
-import { parseProcessedPlayers } from "../../../utils/csvParser";
+import {
+  parseProcessedPlayers,
+  parseProcessedBallTracks,
+} from "../../../utils/csvParser";
 import {
   convertBoxToAnnotation,
   convertAnnotationToBox,
@@ -41,7 +44,7 @@ const NewTrackingEditor = () => {
   const location = useLocation();
   const { processedPlayers, video, processedBallTracks, homographies, log } =
     location.state || {};
-  // ballTracks, homographies and log are not being used. Logic will be implemented in the future.
+  // homographies and log are not being used. Logic will be implemented in the future.
   const [annotations, setAnnotations] = useState([]);
   const [canvas, setCanvas] = useState(new fabric.Canvas());
   const [videoUrl, setVideoUrl] = useState("");
@@ -53,18 +56,24 @@ const NewTrackingEditor = () => {
   const [isDownloadingVideo, setIsDownloadingVideo] = useState(false);
   const [isShowingBox, setIsShowingBox] = useState(true);
   const [isShowingAnnotation, setIsShowingAnnotation] = useState(true);
-  const [playerList, setPlayerList] = useState([]);
-  const [canvasBoxes, setCanvasBoxes] = useState([]);
-  const [playerNameMap, setPlayerNameMap] = useState(new Map());
+  const [playerList, setPlayerList] = useState([]); //list of player TrackListItemPlayers
+  const [canvasBoxes, setCanvasBoxes] = useState([]); //list of canvas boxes for player
+  const [playerNameMap, setPlayerNameMap] = useState(new Map()); //map of playerkey to playername
   const [activeObject, setActiveObject] = useState(null);
   const [colorSet, setColorSet] = useState(new Map()); //map of playerkey to color
   const [trailsEnabled, setTrailsEnabled] = useState(true);
   const [trailFrameNumber, setTrailFrameNumber] = useState(50);
   const [mergeModalState, setMergeModalState] = useState(false);
-  const [playerChosenInList, setPlayerChosenInList] = useState("");
+  const [playerChosenInList, setPlayerChosenInList] = useState(""); //player which is selected in sidebar
   const [selectedTrails, setSelectedTrails] = useState(new Set());
   const [trailSize, setTrailSize] = useState(50);
   const [drawInField, setDrawInField] = useState(false);
+  const [annotationBallTracks, setAnnotationBallTracks] = useState([]);
+  const [ballList, setBallList] = useState([]); //list of ball TrackListItemBall
+  const [canvasBoxesBall, setCanvasBoxesBall] = useState([]); //list of canvas boxes for ball
+  const [ballNameMap, setBallNameMap] = useState(new Map()); //map of ballkey to ballname
+  const [colorSetBall, setColorSetBall] = useState(new Map()); //map of ballkey to color
+  const [ballChosenInList, setBallChosenInList] = useState(""); //ball which is selected in sidebar
 
   const handleModalOpen = (playerInList) => {
     setPlayerChosenInList(playerInList);
@@ -105,7 +114,7 @@ const NewTrackingEditor = () => {
       //this log is important for the test
       //test suite: describe data fetching
       //test: it receives correct annotation
-      console.log("retrieved annotation:", parsedData);
+      console.log("retrieved annotation:", parsedData[0]);
       // Setting the color set based on the parsed data
       setColorSet(boundingBoxColorSet(parsedData));
 
@@ -116,6 +125,13 @@ const NewTrackingEditor = () => {
         tempMap.set(key, playerName);
       });
       setPlayerNameMap(tempMap);
+    }
+
+    if (processedBallTracks) {
+      const parsedBallTracks = parseProcessedBallTracks(processedBallTracks);
+      setAnnotationBallTracks(parsedBallTracks);
+      //TODO: add Test for ball tracks
+      console.log("retrieved ball tracks:", parsedBallTracks[0]);
     }
   }, [processedPlayers, location.state]);
 

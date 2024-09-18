@@ -59,7 +59,6 @@ export const parseProcessedBallTracks = (csvContent) => {
   const result = [];
 
   const expectedOrder = [
-    "index",
     "FrameNo",
     "x1",
     "y1",
@@ -69,8 +68,6 @@ export const parseProcessedBallTracks = (csvContent) => {
     "detection",
     "x",
     "y",
-    "x_trans",
-    "y_trans",
   ];
   const headers = lines[0].split(",");
 
