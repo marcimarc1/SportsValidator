@@ -18,6 +18,12 @@ import fetchMock from "jest-fetch-mock";
 import NewTrackingEditor from "../components/pages/newTrackingEditor/NewTrackingEditor";
 import { useLocation } from "react-router-dom/cjs/react-router-dom";
 import { parseProcessedPlayers } from "../utils/csvParser";
+import {
+  mockCSV,
+  mockLog,
+  mockHomographies,
+  mockFieldSize,
+} from "./mocks/MockFiles";
 
 import userEvent from "@testing-library/user-event";
 
@@ -38,12 +44,6 @@ jest.mock("react-router", () => ({
 }));
 jest.spyOn(Router, "useParams").mockReturnValue({ videoName: "mockVideo" });
 
-const mockCSV =
-  ",PlayerKey,FrameNo,x,y,w,h,x2,y2,x1,y1,x_trans,y_trans\n" +
-  "0,1,0,377.03342250000003,50.19623244444445,86.61914,108.21205,2010.44047,201.42105500000002,1923.8213300000002,93.209005,12.295921059173809,-3.365857351237431\n" +
-  "1,2,0,377.7366666666667,49.605735555555555,95.00244,108.161766,2018.30122,199.662933,1923.2987799999999,91.50116700000001,12.33124457968784,-3.382238612728461\n" +
-  "2,2,1,377.9406,49.65448874074074,88.64612,110.22829,2016.18706,200.83927500000001,1927.54094,90.610985,12.334635147514817,-3.3870903957875074";
-
 describe("data fetching", () => {
   it("receives correct annotation", async () => {
     //given
@@ -54,8 +54,9 @@ describe("data fetching", () => {
         processedPlayers: mockCSV,
         video: undefined,
         ballTracks: undefined,
-        homographies: undefined,
-        log: undefined,
+        homographies: mockHomographies,
+        log: mockLog,
+        fieldSize: mockFieldSize,
       },
     });
     const logSpy = jest.spyOn(global.console, "log");
@@ -144,7 +145,7 @@ describe("merge and swap functionality", () => {
     expect(initialNumber).toEqual("3");
 
     // playerList has player1 and player2 since those are in the 0th frame
-    const prevPlayerList = JSON.parse(canvasElement.getAttribute("playerList"));
+    const prevPlayerList = JSON.parse(canvasElement.getAttribute("playerlist"));
     expect(prevPlayerList.length).toEqual(2);
     expect(prevPlayerList[0].props.name).toEqual("player1");
     expect(prevPlayerList[1].props.name).toEqual("player2");
@@ -173,7 +174,7 @@ describe("merge and swap functionality", () => {
     // Number of annotations should be the same
     expect(newNumber).toEqual("3");
     // The order of the players should be swapped
-    const newPlayerList = JSON.parse(canvasElement.getAttribute("playerList"));
+    const newPlayerList = JSON.parse(canvasElement.getAttribute("playerlist"));
     expect(newPlayerList.length).toEqual(2);
     // playerList has player1 and player3 since player2 and player3 are swapped
     expect(newPlayerList[0].props.name).toEqual("player1");
@@ -256,8 +257,9 @@ describe("player sidebar", () => {
         processedPlayers: mockCSV,
         video: undefined,
         ballTracks: undefined,
-        homographies: undefined,
-        log: undefined,
+        homographies: mockHomographies,
+        log: mockLog,
+        fieldSize: mockFieldSize,
       },
     });
     const { container } = render(<NewTrackingEditor />);
