@@ -38,7 +38,7 @@ import { multiPlayerMerge } from "../../../utils/validation";
 import { DownloadButton } from "./DownloadButton";
 import { parseLogFile } from "../../../utils/logFileParser";
 import Slider from "@mui/material/Slider";
-
+import { FieldDetailsButton } from "./field/FieldDetailsButton";
 // TODO Take a video_id instead and have an endpoint on the server where we supply a video_id and get the corresponding video
 const NewTrackingEditor = () => {
   const location = useLocation();
@@ -1209,30 +1209,14 @@ const NewTrackingEditor = () => {
             type="number"
             onChange={(event, val) => setTrailFrameNumber(event.target.value)}
           />
-          <Typography sx={{ marginLeft: "10px" }}>Show Field </Typography>
-          <FormGroup>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={showField}
-                  onChange={handleEnablingField}
-                  disabled={!videoElement?.paused}
-                />
-              }
-            />
-          </FormGroup>
-          <Typography sx={{ marginLeft: "10px" }}>Edit Field </Typography>
-          <FormGroup>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={editField}
-                  onChange={handleEnablingEditField}
-                  disabled={!videoElement?.paused || showField === false}
-                />
-              }
-            />
-          </FormGroup>
+          <FieldDetailsButton
+            handleEnablingField={handleEnablingField}
+            showField={showField}
+            editField={editField}
+            handleEnablingEditField={handleEnablingEditField}
+            videoElement={videoElement}
+            fieldSize={fieldSize}
+          />
           <div className="tests">
             <Button
               data-testid="from-annotation"
