@@ -1,6 +1,6 @@
 require("jest-fetch-mock").enableMocks();
 global.URL.createObjectURL = function () {};
-window.cv = {
+global.cv = {
   Mat: jest.fn().mockImplementation(() => ({
     data64F: {
       set: jest.fn(),
