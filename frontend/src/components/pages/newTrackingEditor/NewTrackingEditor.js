@@ -756,7 +756,7 @@ const NewTrackingEditor = () => {
     }
 
     if (isShowingBox) {
-      boundingBoxesToDraw.forEach((a) => {
+      playersToDraw.forEach((a) => {
         const fontSize = 12;
         const scaledX = a.x1 * horizontalScalingFactor;
         const scaledY = a.y1 * verticalScalingFactor - fontSize;
