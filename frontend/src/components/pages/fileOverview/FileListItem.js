@@ -121,6 +121,7 @@ class FileListItem extends Component {
                 video: this.props.video,
                 ballTracks: this.props.ballTracks,
                 homographies: this.props.homographies,
+                fieldSize: this.props.fieldSize,
                 log: this.props.log,
               },
             }}
