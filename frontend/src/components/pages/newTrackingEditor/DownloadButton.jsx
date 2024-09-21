@@ -1,7 +1,7 @@
 import { Box, Button, Menu, MenuItem, Paper } from "@mui/material";
 import React from "react";
 
-export const DownloadButton = ({ players, video }) => {
+export const DownloadButton = ({ players, video, homographies }) => {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const open = Boolean(anchorEl);
   const handleClick = (event) => {
@@ -57,6 +57,25 @@ export const DownloadButton = ({ players, video }) => {
     }
   };
 
+  const handleHomographyDownload = async () => {
+
+    const homographiesData = JSON.stringify(homographies, null, 2);
+
+    const blob = new Blob([homographiesData], { type: "application/json" });
+
+    const url = URL.createObjectURL(blob);
+
+    const element = document.createElement("a");
+
+    element.href = url;
+    element.download = "homographies2.json";
+
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div>
       <Button
@@ -95,6 +114,9 @@ export const DownloadButton = ({ players, video }) => {
           </MenuItem>
           <MenuItem onClick={handlePlayersDownload}>
             <Button>Players</Button>
+          </MenuItem>
+          <MenuItem onClick={handleHomographyDownload}>
+            <Button>Homographies</Button>
           </MenuItem>
         </Box>
       </Menu>

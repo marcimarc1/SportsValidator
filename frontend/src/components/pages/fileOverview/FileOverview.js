@@ -185,11 +185,14 @@ class FileOverview extends Component {
       (file) => file.name === "processed_ball.csv",
     );
     let tempHomographies = selectedFiles.find(
-      (file) => file.name === "homographies.csv",
+      (file) => file.name === "homographies.json",
     );
     let tempLog = selectedFiles.find((file) => file.name === "log.txt");
     let tempVideo = selectedFiles.find((file) =>
       file.name.match(/\.(mp4|avi|mov|wmv)$/i),
+    );
+    let tempFieldSize = selectedFiles.find(
+      (file) => file.name === "homographiesoptimized_field_size.json",
     );
 
     const readCSV = (file, key) => {
@@ -197,6 +200,17 @@ class FileOverview extends Component {
         const reader = new FileReader();
         reader.onload = (e) => {
           resolve({ key, content: e.target.result });
+        };
+        reader.onerror = (e) => reject(e);
+        reader.readAsText(file);
+      });
+    };
+
+    const readJson = (file, key) => {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          resolve({ key, content: JSON.parse(e.target.result) });
         };
         reader.onerror = (e) => reject(e);
         reader.readAsText(file);
@@ -217,9 +231,12 @@ class FileOverview extends Component {
       readCSV(tempProcessedPlayers, "processedPlayers"),
       readCSV(tempProcessedBallTracks, "processedBallTracks"),
       tempHomographies
-        ? readCSV(tempHomographies, "homographies")
+        ? readJson(tempHomographies, "homographies")
         : Promise.resolve(null),
       tempLog ? readCSV(tempLog, "log") : Promise.resolve(null),
+      tempFieldSize
+        ? readJson(tempFieldSize, "fieldSize")
+        : Promise.resolve(null),
     ])
       .then((results) => {
         this.setState((prevState) => {
@@ -231,6 +248,7 @@ class FileOverview extends Component {
             homographies: tempHomographies,
             log: tempLog,
             video: tempVideo,
+            fieldSize: tempFieldSize,
           };
           results.forEach((result) => {
             if (result) {
@@ -273,6 +291,7 @@ class FileOverview extends Component {
           video={e.video}
           processedBallTracks={e.processedBallTracks}
           homographies={e.homographies}
+          fieldSize={e.fieldSize}
           log={e.log}
           poster={this.generatePosterSrc(e.video)}
           changeName={this.changeName}
