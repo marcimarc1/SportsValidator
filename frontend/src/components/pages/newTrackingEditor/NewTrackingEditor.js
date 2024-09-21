@@ -30,6 +30,7 @@ import TextField from "@mui/material/TextField";
 
 import TrackList from "../newTrackingEditor/TrackList";
 import TrackListItemPlayer from "./TrackListItemPlayer";
+import TrackListItemBall from "./TrackListItemBall";
 import MergeAndSwapModal from "./MergeAndSwapModal";
 import ApplyHomographyModal from "./ApplyHomographyModal";
 import {
@@ -146,8 +147,17 @@ const NewTrackingEditor = () => {
       setAnnotationBallTracks(parsedBallTracks);
       //TODO: add Test for ball tracks
       console.log("retrieved ball tracks:", parsedBallTracks[0]);
+      setColorSetBall(boundingBoxColorSetBall(parsedBallTracks));
+
+      let ballKeys = parsedBallTracks.map((a) => a.trackNo);
+      let tempMap = new Map();
+      ballKeys.forEach((key) => {
+        let ballName = "ball" + key;
+        tempMap.set(key, ballName);
+      });
+      setBallNameMap(tempMap);
     }
-  }, [processedPlayers, location.state]);
+  }, [processedPlayers, processedBallTracks, location.state]);
 
   let wasVideoPlaying = false;
 
@@ -451,6 +461,18 @@ const NewTrackingEditor = () => {
     let colorSet = new Map();
 
     uniquePlayerKeys.forEach((key) => {
+      let color = generateColor(key);
+      colorSet.set(key, color);
+    });
+    return colorSet;
+  }
+  function boundingBoxColorSetBall(annotationBallList) {
+    let uniqueBallKeys = new Set(
+      annotationBallList.map((item) => item.trackNo),
+    );
+    let colorSet = new Map();
+
+    uniqueBallKeys.forEach((key) => {
       let color = generateColor(key);
       colorSet.set(key, color);
     });
@@ -1270,7 +1292,7 @@ const NewTrackingEditor = () => {
           style={{ display: "block", width: "100%", height: "auto" }}
         ></canvas>
         {/* <div className="sidebar">sidebar is here</div> */}
-        <TrackList>{playerList}</TrackList>
+        <TrackList children={playerList} groups={ballList}></TrackList>
       </div>
       <div className="controls">
         <SeekBar

@@ -44,8 +44,7 @@ class TrackList extends Component {
             place teams here.
           </div>
           <div className={this.state.activeTab == 2 ? "" : "inactive"}>
-            {/* {this.props.children.groups} */}
-            place ball data here.
+            {this.props.children.groups}
           </div>
         </div>
 
