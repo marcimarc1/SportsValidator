@@ -1,11 +1,13 @@
-from sqlalchemy import Column, Integer, Float
-from src.db.database import Base
+from sqlalchemy import Column, Integer, Float, ForeignKey
+from sqlalchemy.orm import relationship
+from db.database import Base
 
 
 class Annotation(Base):
     __tablename__ = 'annotations'
+    __table_args__ = {'extend_existing': True}
     id = Column(Integer, primary_key=True, index=True)
-    video_id = Column(Integer, nullable=False)
+    video_id = Column(Integer, ForeignKey("videos.id"), nullable=False)
     track_id = Column(Integer, nullable=False)
     frame_numer = Column(Integer, nullable=False)
     x = Column(Float, nullable=False)

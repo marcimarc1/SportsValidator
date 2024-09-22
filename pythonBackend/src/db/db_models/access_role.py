@@ -1,8 +1,9 @@
-from sqlalchemy import Column, ForeignKey, Integer, String
+from sqlalchemy import Column, ForeignKey, Integer
 from db.database import Base
 
 class Access_Role(Base):
     __tablename__ = 'access_roles'
-    username = Column(String, ForeignKey("users.username"))
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
     role_id = Column(Integer, ForeignKey("roles.id"))
-    team_id = Column(Integer, ForeignKey("team.id"))
+    team_id = Column(Integer, ForeignKey("teams.id"))

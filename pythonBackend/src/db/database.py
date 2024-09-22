@@ -4,7 +4,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.pool import QueuePool
 
 # Todo: Add Environment
-URL_DATABASE = 'postgresql://user:pass@localhost/db'
+URL_DATABASE = "postgresql+psycopg2://user:pass@localhost:5432/postgres"
 
 engine = create_engine(URL_DATABASE, poolclass=QueuePool)  # Future = true enables async
 

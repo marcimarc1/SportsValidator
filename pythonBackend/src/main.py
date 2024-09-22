@@ -1,13 +1,25 @@
 from typing import List
 import aiofiles
 from fastapi import FastAPI, UploadFile
-from src.db.database import engine
-from src.db.db_models import annotations
-from src.routers import annotation
+
+from db.db_models import annotations, access_role, game_history, H_key, player, player_history, roles, sport, teams, users, videos
+from db.database import engine
+from .routers import annotation
 
 # Table initialization for each DB model.
 annotations.Base.metadata.create_all(bind=engine)
+access_role.Base.metadata.create_all(bind=engine)
+game_history.Base.metadata.create_all(bind=engine)
+H_key.Base.metadata.create_all(bind=engine)
+player.Base.metadata.create_all(bind=engine)
+player_history.Base.metadata.create_all(bind=engine)
+roles.Base.metadata.create_all(bind=engine)
+sport.Base.metadata.create_all(bind=engine)
+teams.Base.metadata.create_all(bind=engine)
+users.Base.metadata.create_all(bind=engine)
+videos.Base.metadata.create_all(bind=engine)
 
+# App Creation
 app = FastAPI()
 
 # Bind Routers from Router Directory
