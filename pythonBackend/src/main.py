@@ -1,18 +1,25 @@
 from typing import List
 import aiofiles
 from fastapi import FastAPI, UploadFile
-from src.db.database import engine
-from src.db.db_models import annotations
-from src.routers import annotation
-
+from ..src.db.database import engine
+from ..src.db.db_models import annotations
+from ..src.routers import annotation
+import logging
 # Table initialization for each DB model.
 annotations.Base.metadata.create_all(bind=engine)
+
+logger = logging.getLogger('uvicorn.error')
+logger.setLevel(logging.DEBUG)
 
 app = FastAPI()
 
 # Bind Routers from Router Directory
 app.include_router(annotation.router)
 
+
+@app.get("/")
+async def check_app():
+    return "App Running!"
 
 @app.post("/upload")
 async def upload(files: List[UploadFile]):

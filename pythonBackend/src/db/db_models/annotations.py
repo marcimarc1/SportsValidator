@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, Float
-from src.db.database import Base
+from ..database import Base
 
 
 class Annotation(Base):
