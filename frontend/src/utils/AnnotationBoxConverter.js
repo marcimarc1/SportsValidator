@@ -65,3 +65,40 @@ export const convertBoxToAnnotation = (
     console.error("the data format of bounding box and annotation doesn't fit");
   }
 };
+
+export const convertAnnotationBallToBox = (
+  annotationBall,
+  horizontalScalingFactor,
+  verticalScalingFactor,
+) => {
+  try {
+    const scaledX = annotationBall.x1 * horizontalScalingFactor;
+    const scaledY = annotationBall.y1 * verticalScalingFactor;
+    const scaledWidth = 15 * horizontalScalingFactor;
+    const scaledHeight = 15 * verticalScalingFactor;
+    const boundingBox = new fabric.Rect({
+      left: scaledX,
+      top: scaledY,
+      fill: "rgba(0,0,0,0)",
+      width: scaledWidth,
+      height: scaledHeight,
+      dirty: false,
+
+      hasBorders: false, // disables the control borders (the lines connecting the controls the show up when object is selected
+      strokeWidth: 2,
+      strokeUniform: true, // to keep the bounding box a consisten thickness, independent of its size
+      padding: 0, // to make sure the pixel coordinates are correct
+      cornerSize: 10,
+      cornerStyle: "rect",
+      lockRotation: true,
+    });
+    boundingBox.my = {
+      selected: false,
+      key: annotationBall.trackNo,
+      frame: annotationBall.FrameNo,
+    };
+    return boundingBox;
+  } catch {
+    console.error("the data format of bounding box and annotation doesn't fit");
+  }
+};

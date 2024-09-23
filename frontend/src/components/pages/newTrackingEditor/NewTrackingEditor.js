@@ -12,6 +12,7 @@ import {
 import {
   convertBoxToAnnotation,
   convertAnnotationToBox,
+  convertAnnotationBallToBox,
 } from "../../../utils/AnnotationBoxConverter";
 // import tracking from "../../../data/tracking_data.json";
 // import tracking from "../../../data/tracking-data-for-test.json";
@@ -245,6 +246,26 @@ const NewTrackingEditor = () => {
     updateSidebar();
     canvas.discardActiveObject();
     canvas.remove(playerBox);
+    canvas.requestRenderAll();
+  }
+
+  function deleteBall(ballBox) {
+    canvas.setActiveObject(ballBox);
+    setActiveObject(ballBox);
+    setAnnotationBallTracks(
+      annotationBallTracks.filter((a) => a.trackNo != ballBox.my.trackNo),
+    );
+    setCanvasBoxesBall(
+      canvasBoxesBall.filter((a) => a.my.trackNo != ballBox.my.trackNo),
+    );
+
+    let newBallNameMap = new Map(ballNameMap);
+    newBallNameMap.delete(ballBox.my.trackNo);
+    setBallNameMap(newBallNameMap);
+
+    updateSidebar();
+    canvas.discardActiveObject();
+    canvas.remove(ballBox);
     canvas.requestRenderAll();
   }
 
@@ -575,6 +596,36 @@ const NewTrackingEditor = () => {
         defineTrailBehaviour(trail, setSelectedTrails);
         canvas.add(trail);
       });
+
+      const currentBallTrailsToDraw = annotationBallTracks.filter(
+        (a) => a.FrameNo === frameNumber,
+      );
+
+      currentBallTrailsToDraw.forEach((a) => {
+        const scaledX = a.x1 * horizontalScalingFactor;
+        const scaledY = a.y1 * verticalScalingFactor;
+        const scaledWidth = 15 * horizontalScalingFactor; //TODO think about ballsize to be not fixed
+        const scaledHeight = 15 * verticalScalingFactor;
+        const radius =
+          scaledWidth < scaledHeight ? scaledWidth / 4 : scaledHeight / 4;
+        const trailColor = colorSetBall.get(a.trackNo);
+        let trail = new fabric.Circle({
+          left: scaledX,
+          top: scaledY,
+          stroke: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
+          strokeWidth: 3,
+          fill: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
+          radius: (radius * trailSize) / 50,
+          visible: isShowingAnnotation,
+        });
+        trail.properties = {
+          frame: frameNumber,
+          ballKey: a.trackNo,
+        };
+        trail.hasRotatingPoint = false;
+        defineTrailBehaviour(trail, setSelectedTrails);
+        canvas.add(trail);
+      });
     }
 
     var boundingBoxesToDraw = drawInField
@@ -638,6 +689,65 @@ const NewTrackingEditor = () => {
               blink={blink}
               delete={deletePlayer}
               handleModalOpen={handleModalOpen}
+            />,
+          ]);
+        });
+      }
+    }
+
+    var boundingBoxesToDrawBall = canvasBoxesBall.filter(
+      (a) => a.my.FrameNo === frameNumber,
+    );
+    tempList = [];
+    runningIndex = 0;
+    if (boundingBoxesToDrawBall.length > 0) {
+      boundingBoxesToDrawBall.forEach((boundingBox) => {
+        canvas.add(boundingBox);
+        const boxColor = colorSetBall.get(boundingBox.my.trackNo);
+        tempList = tempList.concat([
+          <TrackListItemBall
+            key={runningIndex++}
+            ballBox={boundingBox}
+            name={ballNameMap.get(boundingBox.my.trackNo)}
+            changeSelection={changeSelection}
+            setName={setName}
+            blink={blink}
+            color={boxColor}
+            handleModalOpen={handleModalOpen}
+            delete={deleteBall}
+          />,
+        ]);
+      });
+    } else {
+      boundingBoxesToDrawBall = annotationBallTracks.filter(
+        (a) => a.FrameNo === frameNumber,
+      );
+      if (boundingBoxesToDrawBall.length > 0) {
+        //draw boxes
+        boundingBoxesToDrawBall.forEach((boundingBox) => {
+          const boxColor = colorSetBall.get(boundingBox.trackNo);
+          let ballBox = convertAnnotationBallToBox(
+            boundingBox,
+            horizontalScalingFactor,
+            verticalScalingFactor,
+          );
+          ballBox.visible = isShowingBox;
+          ballBox.stroke = `rgb(${boxColor.r}, ${boxColor.g}, ${boxColor.b})`;
+          ballBox.setControlVisible("mtr", false);
+          ballBox = defineBoxBehavior(ballBox); //TODO: implement this function
+          canvas.add(ballBox);
+
+          tempList = tempList.concat([
+            <TrackListItemBall
+              key={runningIndex++}
+              ballBox={ballBox}
+              color={boxColor}
+              name={ballNameMap.get(boundingBox.trackNo)}
+              changeSelection={changeSelection}
+              setName={setName}
+              blink={blink}
+              handleModalOpen={handleModalOpen}
+              delete={deleteBall}
             />,
           ]);
         });
