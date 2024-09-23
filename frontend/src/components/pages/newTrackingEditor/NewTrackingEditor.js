@@ -11,7 +11,7 @@ import {
   convertAnnotationToBox,
 } from "../../../utils/AnnotationBoxConverter";
 // import tracking from "../../../data/tracking_data.json";
-// import tracking from "../../../data/tracking-data-for-test.json";
+// import tracking from "../../../data/tracking-data-for-tests.json";
 import { fabric } from "fabric";
 import "./NewTrackingEditor.css";
 import SeekBar from "./SeekBar";
@@ -102,9 +102,9 @@ const NewTrackingEditor = () => {
     if (processedPlayers) {
       const parsedData = parseProcessedPlayers(processedPlayers);
       setAnnotations(parsedData);
-      //this log is important for the test
-      //test suite: describe data fetching
-      //test: it receives correct annotation
+      //this log is important for the tests
+      //tests suite: describe data fetching
+      //tests: it receives correct annotation
       console.log("retrieved annotation:", parsedData);
       // Setting the color set based on the parsed data
       setColorSet(boundingBoxColorSet(parsedData));
