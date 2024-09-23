@@ -1,10 +1,10 @@
-from sqlalchemy import Column, Integer, ForeignKey, VARCHAR
-from pythonBackend.src.db.database import Base
-from sqlalchemy.orm import relationship
+from sqlalchemy import Column, Integer, ForeignKey, String
+from db.database import Base
 
 
 class Video(Base):
     __tablename__ = 'videos'
-    video_id = Column(Integer, unique=True, primary_key=True)
-    video_path = Column(VARCHAR(255), unique=True, nullable=False)
-    uploaded_by = Column(VARCHAR(50), ForeignKey("users.username"))
+    __table_args__ = {'extend_existing': True}
+    id = Column(Integer, unique=True, primary_key=True)
+    video_path = Column(String(255), unique=True, nullable=False)
+    uploaded_by = Column(Integer, ForeignKey("users.id"), nullable=False)

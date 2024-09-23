@@ -9,9 +9,10 @@ logger = logging.getLogger('pg.error')
 logger.setLevel(logging.DEBUG)
 
 try:
-    URL_DATABASE = os.environ.get('DATABASE_URL', 'postgresql+psycopg2://user:pass@localhost:5432')
+    URL_DATABASE = os.environ.get('DATABASE_URL', 'postgresql+psycopg2://user:pass@localhost:5432/postgres')
 except KeyError:
     logger.debug("Environment variable for Database does not exist")
+
 
 engine = create_engine(URL_DATABASE, poolclass=QueuePool)  # Future = true enables async
 

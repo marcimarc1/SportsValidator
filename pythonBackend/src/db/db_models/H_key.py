@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Float, Integer,ForeignKey
-from database import Base
+from db.database import Base
+
 
 class H_Key(Base):
     __tablename__ = 'h_keys'
