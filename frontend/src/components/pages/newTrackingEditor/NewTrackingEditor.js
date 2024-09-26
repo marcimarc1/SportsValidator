@@ -130,7 +130,7 @@ const NewTrackingEditor = () => {
       //this log is important for the test
       //test suite: describe data fetching
       //test: it receives correct annotation
-      console.log("retrieved annotation:", parsedData[0]);
+      console.log("retrieved annotation:", parsedData);
       // Setting the color set based on the parsed data
       setColorSet(boundingBoxColorSet(parsedData));
 
@@ -147,7 +147,7 @@ const NewTrackingEditor = () => {
       const parsedBallTracks = parseProcessedBallTracks(processedBallTracks);
       setAnnotationBallTracks(parsedBallTracks);
       //TODO: add Test for ball tracks
-      console.log("retrieved ball tracks:", parsedBallTracks[0]);
+      console.log("retrieved ball tracks:", parsedBallTracks);
       setColorSetBall(boundingBoxColorSetBall(parsedBallTracks));
 
       let ballKeys = parsedBallTracks.map((a) => a.trackNo);
