@@ -989,7 +989,7 @@ const NewTrackingEditor = () => {
     }
   }, [videoElement?.seeking]);
 
-  //triggered when new player is added, or when merge or swap happens //TODO: remember to check
+  //triggered when new player is added, or when merge or swap happens
   useEffect(() => {
     //remove old canvas objects
     canvas.remove(...canvas.getObjects());
@@ -1053,6 +1053,44 @@ const NewTrackingEditor = () => {
           ]);
         });
         setPlayerList(tempList);
+      }
+    }
+    if (annotationBallTracks.length > 0) {
+      var boundingBoxesToDrawBall = annotationBallTracks.filter(
+        (a) => a.FrameNo === frameNumber,
+      );
+      tempList = [];
+      runningIndex = 0;
+      if (boundingBoxesToDrawBall.length > 0) {
+        //draw boxes
+        boundingBoxesToDrawBall.forEach((boundingBox) => {
+          const boxColor = colorSetBall.get(boundingBox.trackNo);
+          let ballBox = convertAnnotationBallToBox(
+            boundingBox,
+            horizontalScalingFactor,
+            verticalScalingFactor,
+          );
+          ballBox.visible = isShowingBox;
+          ballBox.stroke = `rgb(${boxColor.r}, ${boxColor.g}, ${boxColor.b})`;
+          ballBox.setControlVisible("mtr", false);
+          ballBox = defineBoxBehavior(ballBox); //TODO: implement this function
+          canvas.add(ballBox);
+
+          tempList = tempList.concat([
+            <TrackListItemBall
+              key={runningIndex++}
+              ballBox={ballBox}
+              color={boxColor}
+              name={ballNameMap.get(boundingBox.trackNo)}
+              changeSelection={changeSelection}
+              setName={setNameBall}
+              blink={blink}
+              handleModalOpen={handleModalOpen}
+              delete={deleteBall}
+            />,
+          ]);
+        });
+        setBallList(tempList);
       }
     }
   }, [
