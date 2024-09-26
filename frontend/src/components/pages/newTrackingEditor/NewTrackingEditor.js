@@ -91,6 +91,7 @@ const NewTrackingEditor = () => {
   const [ballNameMap, setBallNameMap] = useState(new Map()); //map of ballkey to ballname
   const [colorSetBall, setColorSetBall] = useState(new Map()); //map of ballkey to color
   const [ballChosenInList, setBallChosenInList] = useState(""); //ball which is selected in sidebar
+  const [mergeModalBallState, setMergeModalBallState] = useState(false);
 
   const handleModalOpen = (playerInList) => {
     setPlayerChosenInList(playerInList);
@@ -99,11 +100,13 @@ const NewTrackingEditor = () => {
 
   const handleModalBallOpen = (ballInList) => {
     setBallChosenInList(ballInList);
-    setMergeModalState(true);
+    setMergeModalBallState(true);
+    console.log("test2");
   };
 
-  const handleModalClose = () => {
+  const handleModalsClose = () => {
     setMergeModalState(false);
+    setMergeModalBallState(false);
   };
 
   const handleMultiSelectMerge = () => {
@@ -781,7 +784,6 @@ const NewTrackingEditor = () => {
         });
       }
     }
-
     setPlayerList(tempList);
 
     var boundingBoxesToDrawBall = canvasBoxesBall.filter(
@@ -1061,6 +1063,7 @@ const NewTrackingEditor = () => {
         setPlayerList(tempList);
       }
     }
+
     if (annotationBallTracks.length > 0) {
       var boundingBoxesToDrawBall = annotationBallTracks.filter(
         (a) => a.FrameNo === frameNumber,
@@ -1101,7 +1104,9 @@ const NewTrackingEditor = () => {
     }
   }, [
     annotations,
+    annotationBallTracks,
     playerNameMap,
+    ballNameMap,
     trailsEnabled,
     trailSize,
     trailFrameNumber,
@@ -1395,7 +1400,7 @@ const NewTrackingEditor = () => {
         setAnnotations={setAnnotations}
         frameNumber={frameNumber}
         mergeModalState={mergeModalState}
-        handleClose={handleModalClose}
+        handleClose={handleModalsClose}
       />
       <MergeAndSwapModalBall
         ballChosenInList={ballChosenInList}
@@ -1404,8 +1409,8 @@ const NewTrackingEditor = () => {
         annotationBallTracks={annotationBallTracks}
         setAnnotationBallTracks={setAnnotationBallTracks}
         frameNumber={frameNumber}
-        mergeModalState={mergeModalState}
-        handleClose={handleModalClose}
+        mergeModalBallState={mergeModalBallState}
+        handleClose={handleModalsClose}
       />
       <div className="controls">
         <Box id="tools-container" sx={{ display: "flex", gap: "10px" }}>

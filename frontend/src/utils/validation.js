@@ -144,3 +144,41 @@ export const swapPlayerData = (
   });
   setAnnotations(swappedAnnotations);
 };
+
+export const swapBallData = (
+  secondBallName,
+  ballNameMap,
+  ballChosenInList,
+  annotationBallTracks,
+  setAnnotationBallTracks,
+  frameNumber,
+) => {
+  const nameToKeyMap = new Map();
+  ballNameMap.forEach((value, key) => {
+    nameToKeyMap.set(value, key);
+  });
+  const firstBallKey = nameToKeyMap.get(ballChosenInList);
+  const secondBallKey = nameToKeyMap.get(secondBallName);
+
+  if (firstBallKey == undefined || secondBallKey == undefined) {
+    console.log("balls are not mapped");
+    return;
+  }
+
+  const swappedAnnotationBallTracks = annotationBallTracks.map((annotation) => {
+    if (
+      annotation.trackNo == firstBallKey &&
+      annotation.FrameNo >= frameNumber
+    ) {
+      return { ...annotation, trackNo: secondBallKey };
+    }
+    if (
+      annotation.trackNo == secondBallKey &&
+      annotation.FrameNo >= frameNumber
+    ) {
+      return { ...annotation, trackNo: firstBallKey };
+    }
+    return annotation;
+  });
+  setAnnotationBallTracks(swappedAnnotationBallTracks);
+};
