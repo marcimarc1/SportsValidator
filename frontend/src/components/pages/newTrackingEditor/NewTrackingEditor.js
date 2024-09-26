@@ -187,6 +187,31 @@ const NewTrackingEditor = () => {
       runningIndex++;
     });
     setPlayerList(tempList);
+
+    tempList = [];
+    runningIndex = 0;
+    let ballBoxes = canvasBoxesBall.filter(
+      (box) => box.my.frame == getCurrentTimestampFrame(),
+    );
+    ballBoxes.forEach((box) => {
+      const boxColor = colorSetBall.get(box.my.key);
+
+      tempList = tempList.concat([
+        <TrackListItemBall
+          key={runningIndex++}
+          ballBox={box}
+          name={ballNameMap.get(box.my.key)}
+          changeSelection={changeSelection}
+          setName={setNameBall}
+          blink={blink}
+          delete={deleteBall}
+          color={boxColor}
+          handleModalOpen={handleModalOpen}
+        />,
+      ]);
+      runningIndex++;
+    });
+    setBallList(tempList);
   }
 
   function blink(playerBox) {
@@ -252,15 +277,16 @@ const NewTrackingEditor = () => {
   function deleteBall(ballBox) {
     canvas.setActiveObject(ballBox);
     setActiveObject(ballBox);
+    console.log(annotationBallTracks);
     setAnnotationBallTracks(
-      annotationBallTracks.filter((a) => a.trackNo != ballBox.my.trackNo),
+      annotationBallTracks.filter((a) => a.trackNo != ballBox.my.key),
     );
     setCanvasBoxesBall(
-      canvasBoxesBall.filter((a) => a.my.trackNo != ballBox.my.trackNo),
+      canvasBoxesBall.filter((a) => a.my.key != ballBox.my.key),
     );
 
     let newBallNameMap = new Map(ballNameMap);
-    newBallNameMap.delete(ballBox.my.trackNo);
+    newBallNameMap.delete(ballBox.my.key);
     setBallNameMap(newBallNameMap);
 
     updateSidebar();
@@ -412,7 +438,7 @@ const NewTrackingEditor = () => {
   };
 
   useEffect(() => {
-    //rerender the sidebar when another player is chosen
+    //rerender the sidebar when another item is selected
     if (activeObject) {
       let tempList = [];
 
@@ -454,6 +480,44 @@ const NewTrackingEditor = () => {
         }
       });
       setPlayerList(tempList);
+
+      tempList = [];
+      ballList.forEach((item) => {
+        if (item.props.ballBox.my.key == activeObject.my.key) {
+          const boxColor = colorSetBall.get(activeObject.my.key);
+          tempList = tempList.concat([
+            <TrackListItemBall
+              key={item.key}
+              ballBox={activeObject}
+              name={ballNameMap.get(activeObject.my.key)}
+              changeSelection={changeSelection}
+              setName={setNameBall}
+              blink={blink}
+              color={boxColor}
+              delete={deleteBall}
+              handleModalOpen={handleModalOpen}
+            />,
+          ]);
+        } else {
+          let tempBox = item.props.ballBox;
+          tempBox.my.selected = false;
+          const boxColor = colorSetBall.get(tempBox.my.key);
+          tempList = tempList.concat([
+            <TrackListItemBall
+              key={item.key}
+              ballBox={tempBox}
+              name={ballNameMap.get(tempBox.my.key)}
+              changeSelection={changeSelection}
+              setName={setNameBall}
+              blink={blink}
+              color={boxColor}
+              delete={deleteBall}
+              handleModalOpen={handleModalOpen}
+            />,
+          ]);
+        }
+      });
+      setBallList(tempList);
     }
   }, [activeObject]);
 
@@ -715,19 +779,19 @@ const NewTrackingEditor = () => {
     setPlayerList(tempList);
 
     var boundingBoxesToDrawBall = canvasBoxesBall.filter(
-      (a) => a.my.FrameNo === frameNumber,
+      (a) => a.my.frame === frameNumber,
     );
     tempList = [];
     runningIndex = 0;
     if (boundingBoxesToDrawBall.length > 0) {
       boundingBoxesToDrawBall.forEach((boundingBox) => {
         canvas.add(boundingBox);
-        const boxColor = colorSetBall.get(boundingBox.my.trackNo);
+        const boxColor = colorSetBall.get(boundingBox.my.key);
         tempList = tempList.concat([
           <TrackListItemBall
             key={runningIndex++}
             ballBox={boundingBox}
-            name={ballNameMap.get(boundingBox.my.trackNo)}
+            name={ballNameMap.get(boundingBox.my.key)}
             changeSelection={changeSelection}
             setName={setNameBall}
             blink={blink}
