@@ -7,7 +7,7 @@ import "react-edit-text/dist/index.css";
 import "./NewTrackingEditor.css";
 import { ReactComponent as Highlight } from "../../../icons/highlight.svg";
 import { ReactComponent as Delete } from "../../../icons/delete.svg";
-import { ReactComponent as Merge } from "../../../icons/merge.svg";
+import { ReactComponent as Swap } from "../../../icons/swap.svg";
 
 class TrackListItemBall extends Component {
   testId = "mergeSwapModal" + this.props.name;
@@ -83,7 +83,7 @@ class TrackListItemBall extends Component {
           onClick={this.handleClickMerge}
           aria-label="merge item"
         >
-          <Merge />
+          <Swap />
         </IconButton>
 
         <div className="staticText">Ball name: </div>

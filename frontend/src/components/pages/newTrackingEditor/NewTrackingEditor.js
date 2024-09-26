@@ -33,6 +33,7 @@ import TrackList from "../newTrackingEditor/TrackList";
 import TrackListItemPlayer from "./TrackListItemPlayer";
 import TrackListItemBall from "./TrackListItemBall";
 import MergeAndSwapModal from "./MergeAndSwapModal";
+import MergeAndSwapModalBall from "./MergeAndSwapModalBall";
 import ApplyHomographyModal from "./ApplyHomographyModal";
 import {
   trailsFullRedraw,
@@ -93,6 +94,11 @@ const NewTrackingEditor = () => {
 
   const handleModalOpen = (playerInList) => {
     setPlayerChosenInList(playerInList);
+    setMergeModalState(true);
+  };
+
+  const handleModalBallOpen = (ballInList) => {
+    setBallChosenInList(ballInList);
     setMergeModalState(true);
   };
 
@@ -206,7 +212,7 @@ const NewTrackingEditor = () => {
           blink={blink}
           delete={deleteBall}
           color={boxColor}
-          handleModalOpen={handleModalOpen}
+          handleModalOpen={handleModalBallOpen}
         />,
       ]);
       runningIndex++;
@@ -495,7 +501,7 @@ const NewTrackingEditor = () => {
               blink={blink}
               color={boxColor}
               delete={deleteBall}
-              handleModalOpen={handleModalOpen}
+              handleModalOpen={handleModalBallOpen}
             />,
           ]);
         } else {
@@ -512,7 +518,7 @@ const NewTrackingEditor = () => {
               blink={blink}
               color={boxColor}
               delete={deleteBall}
-              handleModalOpen={handleModalOpen}
+              handleModalOpen={handleModalBallOpen}
             />,
           ]);
         }
@@ -796,7 +802,7 @@ const NewTrackingEditor = () => {
             setName={setNameBall}
             blink={blink}
             color={boxColor}
-            handleModalOpen={handleModalOpen}
+            handleModalOpen={handleModalBallOpen}
             delete={deleteBall}
           />,
         ]);
@@ -829,7 +835,7 @@ const NewTrackingEditor = () => {
               changeSelection={changeSelection}
               setName={setNameBall}
               blink={blink}
-              handleModalOpen={handleModalOpen}
+              handleModalOpen={handleModalBallOpen}
               delete={deleteBall}
             />,
           ]);
@@ -1085,7 +1091,7 @@ const NewTrackingEditor = () => {
               changeSelection={changeSelection}
               setName={setNameBall}
               blink={blink}
-              handleModalOpen={handleModalOpen}
+              handleModalOpen={handleModalBallOpen}
               delete={deleteBall}
             />,
           ]);
@@ -1387,6 +1393,16 @@ const NewTrackingEditor = () => {
         setPlayerNameMap={setPlayerNameMap}
         annotations={annotations}
         setAnnotations={setAnnotations}
+        frameNumber={frameNumber}
+        mergeModalState={mergeModalState}
+        handleClose={handleModalClose}
+      />
+      <MergeAndSwapModalBall
+        ballChosenInList={ballChosenInList}
+        ballNameMap={ballNameMap}
+        setBallNameMap={setBallNameMap}
+        annotationBallTracks={annotationBallTracks}
+        setAnnotationBallTracks={setAnnotationBallTracks}
         frameNumber={frameNumber}
         mergeModalState={mergeModalState}
         handleClose={handleModalClose}
