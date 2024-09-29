@@ -286,7 +286,6 @@ const NewTrackingEditor = () => {
   function deleteBall(ballBox) {
     canvas.setActiveObject(ballBox);
     setActiveObject(ballBox);
-    console.log(annotationBallTracks);
     setAnnotationBallTracks(
       annotationBallTracks.filter((a) => a.trackNo != ballBox.my.key),
     );
@@ -967,9 +966,11 @@ const NewTrackingEditor = () => {
     };
   }, [
     annotations,
+    annotationBallTracks,
     videoElement,
     isShowingBox,
     playerNameMap,
+    ballNameMap,
     trailFrameNumber,
     trailsEnabled,
     showField,
