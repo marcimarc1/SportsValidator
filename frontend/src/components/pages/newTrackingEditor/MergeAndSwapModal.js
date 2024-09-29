@@ -45,7 +45,7 @@ export default function MergeAndSwapModal({
         if (name !== playerChosenInList) {
           const testid = "menuitem" + name;
           return (
-            <MenuItem data-testid={testid} value={name}>
+            <MenuItem key={name} data-testid={testid} value={name}>
               {name}
             </MenuItem>
           );
