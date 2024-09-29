@@ -12,7 +12,7 @@ import Radio from "@material-ui/core/Radio";
 import FormControlLabel from "@material-ui/core/FormControlLabel";
 
 import { useState } from "react";
-import { mergePlayerData, swapBallData } from "../../../utils/validation";
+import { mergeBallData, swapBallData } from "../../../utils/validation";
 import { useMemo } from "react";
 
 const style = {
@@ -69,7 +69,15 @@ export default function MergeAndSwapModalBall({
         setAnnotationBallTracks,
         frameNumber,
       );
-    else console.log("merge");
+    else
+      mergeBallData(
+        selectedBall,
+        ballNameMap,
+        setBallNameMap,
+        ballChosenInList,
+        annotationBallTracks,
+        setAnnotationBallTracks,
+      );
     handleClose();
   };
 
