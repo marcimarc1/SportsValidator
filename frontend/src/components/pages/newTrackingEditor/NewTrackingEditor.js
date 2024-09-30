@@ -986,6 +986,8 @@ const NewTrackingEditor = () => {
       trailsFullRedraw(
         canvas,
         annotations,
+        annotationBallTracks,
+        colorSetBall,
         frameNumber,
         trailFrameNumber,
         isShowingAnnotation,
@@ -1013,6 +1015,8 @@ const NewTrackingEditor = () => {
       trailsFullRedraw(
         canvas,
         annotations,
+        annotationBallTracks,
+        colorSetBall,
         frameNumber,
         trailFrameNumber,
         isShowingAnnotation,
