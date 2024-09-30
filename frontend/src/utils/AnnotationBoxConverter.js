@@ -66,7 +66,7 @@ export const convertBoxToAnnotation = (
   }
 };
 
-export const convertAnnotationBallToBox = (
+export const convertAnnotationBallToBallbox = (
   annotationBall,
   horizontalScalingFactor,
   verticalScalingFactor,
@@ -100,5 +100,29 @@ export const convertAnnotationBallToBox = (
     return boundingBox;
   } catch {
     console.error("the data format of bounding box and annotation doesn't fit");
+  }
+};
+
+export const convertBallboxToAnnotationBall = (
+  boundingBox,
+  horizontalScalingFactor,
+  verticalScalingFactor,
+) => {
+  try {
+    return {
+      FrameNo: boundingBox.my.frame,
+      trackNo: boundingBox.my.key,
+      x1: boundingBox.left / horizontalScalingFactor,
+      y1: boundingBox.top / verticalScalingFactor,
+      x2: 0,
+      y2: 0,
+      detection: 1,
+      x: 0,
+      y: 0,
+    };
+  } catch {
+    console.error(
+      "the data format of bounding box ball and annotationBallTracks doesn't fit",
+    );
   }
 };

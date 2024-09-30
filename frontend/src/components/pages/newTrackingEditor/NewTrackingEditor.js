@@ -12,7 +12,8 @@ import {
 import {
   convertBoxToAnnotation,
   convertAnnotationToBox,
-  convertAnnotationBallToBox,
+  convertAnnotationBallToBallbox,
+  convertBallboxToAnnotationBall,
 } from "../../../utils/AnnotationBoxConverter";
 // import tracking from "../../../data/tracking_data.json";
 // import tracking from "../../../data/tracking-data-for-test.json";
@@ -365,56 +366,87 @@ const NewTrackingEditor = () => {
     }
   }
 
-  function defineBoxBehavior(playerBox) {
-    playerBox.on({
+  function defineBoxBehavior(box, is_playerBox = true) {
+    box.on({
       selected: () => {},
       mousedown: () => {},
       mouseover: () => {},
     });
 
-    playerBox.on({
+    box.on({
       deselected: () => {},
       mouseout: () => {},
     });
 
-    playerBox.on({
-      modified: () => {
-        var boundingRect = playerBox.getBoundingRect();
-        var scaleX = playerBox.scaleX; // Save current scale factors
-        var scaleY = playerBox.scaleY;
-        // Calculate actual width and height based on scale factors
-        //when scaling the box, only scaleX and scaleY change, while width and height not
-        var actualWidth = (boundingRect.width - playerBox.strokeWidth) / scaleX;
-        var actualHeight =
-          (boundingRect.height - playerBox.strokeWidth) / scaleY;
-        playerBox.left = boundingRect.left;
-        playerBox.top = boundingRect.top;
-        playerBox.width = actualWidth;
-        playerBox.height = actualHeight;
+    if (is_playerBox) {
+      box.on({
+        modified: () => {
+          var boundingRect = box.getBoundingRect();
+          var scaleX = box.scaleX; // Save current scale factors
+          var scaleY = box.scaleY;
+          // Calculate actual width and height based on scale factors
+          //when scaling the box, only scaleX and scaleY change, while width and height not
+          var actualWidth = (boundingRect.width - box.strokeWidth) / scaleX;
+          var actualHeight = (boundingRect.height - box.strokeWidth) / scaleY;
+          box.left = boundingRect.left;
+          box.top = boundingRect.top;
+          box.width = actualWidth;
+          box.height = actualHeight;
 
-        const horizontalScalingFactor = canvas.width / 3840;
-        const verticalScalingFactor = canvas.height / 2160;
-        const modifiedAnnotation = convertBoxToAnnotation(
-          playerBox,
-          horizontalScalingFactor,
-          verticalScalingFactor,
-        );
-        console.log(modifiedAnnotation);
-        const annotationToReplace = annotations.findIndex(
-          (a) =>
-            a.FrameNo == playerBox.my.frame && a.PlayerKey == playerBox.my.key,
-        );
-        if (annotationToReplace == -1) {
-          console.error(
-            "the modified bounding box doesn't exist in annotations.",
+          const horizontalScalingFactor = canvas.width / 3840;
+          const verticalScalingFactor = canvas.height / 2160;
+          const modifiedAnnotation = convertBoxToAnnotation(
+            box,
+            horizontalScalingFactor,
+            verticalScalingFactor,
           );
-        }
-        annotations.splice(annotationToReplace, 1, modifiedAnnotation);
-        canvas.renderAll();
-      },
-    });
+          console.log(modifiedAnnotation);
+          const annotationToReplace = annotations.findIndex(
+            (a) => a.FrameNo == box.my.frame && a.PlayerKey == box.my.key,
+          );
+          if (annotationToReplace == -1) {
+            console.error(
+              "the modified bounding box doesn't exist in annotations.",
+            );
+          }
+          annotations.splice(annotationToReplace, 1, modifiedAnnotation);
+          canvas.renderAll();
+        },
+      });
+    } else {
+      console.log("ball modified");
+      box.on({
+        modified: () => {
+          var boundingRect = box.getBoundingRect();
+          box.left = boundingRect.left;
+          box.top = boundingRect.top;
 
-    return playerBox;
+          const horizontalScalingFactor = canvas.width / 3840;
+          const verticalScalingFactor = canvas.height / 2160;
+          const modifiedAnnotation = convertBallboxToAnnotationBall(
+            box,
+            horizontalScalingFactor,
+            verticalScalingFactor,
+          );
+          console.log(modifiedAnnotation);
+          const annotationToReplace = annotationBallTracks.findIndex(
+            (a) => a.FrameNo == box.my.frame && a.trackNo == box.my.key,
+          );
+          if (annotationToReplace == -1) {
+            console.error(
+              "the modified bounding box doesn't exist in annotationBallTracks.",
+            );
+          }
+          annotationBallTracks.splice(
+            annotationToReplace,
+            1,
+            modifiedAnnotation,
+          );
+          canvas.renderAll();
+        },
+      });
+    }
+    return box;
   }
 
   // For changing video source file
@@ -815,8 +847,9 @@ const NewTrackingEditor = () => {
       if (boundingBoxesToDrawBall.length > 0) {
         //draw boxes
         boundingBoxesToDrawBall.forEach((boundingBox) => {
+          console.log("drawing ball boxes", boundingBox);
           const boxColor = colorSetBall.get(boundingBox.trackNo);
-          let ballBox = convertAnnotationBallToBox(
+          let ballBox = convertAnnotationBallToBallbox(
             boundingBox,
             horizontalScalingFactor,
             verticalScalingFactor,
@@ -824,7 +857,7 @@ const NewTrackingEditor = () => {
           ballBox.visible = isShowingBox;
           ballBox.stroke = `rgb(${boxColor.r}, ${boxColor.g}, ${boxColor.b})`;
           ballBox.setControlVisible("mtr", false);
-          ballBox = defineBoxBehavior(ballBox); //TODO: implement this function
+          ballBox = defineBoxBehavior(ballBox, false); //false indicates that this is a ball box
           canvas.add(ballBox);
 
           tempList = tempList.concat([
@@ -1079,7 +1112,7 @@ const NewTrackingEditor = () => {
         //draw boxes
         boundingBoxesToDrawBall.forEach((boundingBox) => {
           const boxColor = colorSetBall.get(boundingBox.trackNo);
-          let ballBox = convertAnnotationBallToBox(
+          let ballBox = convertAnnotationBallToBallbox(
             boundingBox,
             horizontalScalingFactor,
             verticalScalingFactor,
@@ -1087,7 +1120,7 @@ const NewTrackingEditor = () => {
           ballBox.visible = isShowingBox;
           ballBox.stroke = `rgb(${boxColor.r}, ${boxColor.g}, ${boxColor.b})`;
           ballBox.setControlVisible("mtr", false);
-          ballBox = defineBoxBehavior(ballBox); //TODO: implement this function
+          ballBox = defineBoxBehavior(ballBox, false); //false indicates that this is a ball box
           canvas.add(ballBox);
 
           tempList = tempList.concat([
