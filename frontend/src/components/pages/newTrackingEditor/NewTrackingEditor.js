@@ -1330,6 +1330,26 @@ const NewTrackingEditor = () => {
     );
   }
 
+  function handleAddBall() {
+    const newBallKey = ballNameMap.size;
+    const boxColor = generateColor(newBallKey);
+    setColorSetBall(colorSetBall.set(newBallKey, boxColor));
+    setAnnotationBallTracks(
+      annotationBallTracks.concat({
+        FrameNo: frameNumber,
+        trackNo: newBallKey,
+        x1: 0,
+        x2: 0,
+        y1: 0,
+        y2: 0,
+        detection: 1,
+        x: 0,
+        y: 0,
+      }),
+    );
+    setBallNameMap(new Map(ballNameMap.set(newBallKey, "ball" + newBallKey)));
+  }
+
   const handleEnablingTrails = () => {
     if (trailsEnabled) {
       setTrailsEnabled(false);
@@ -1486,6 +1506,17 @@ const NewTrackingEditor = () => {
             }}
           >
             Add player
+          </Button>
+          <Button
+            data-testid="add-ball-button"
+            variant="contained"
+            onClick={handleAddBall}
+            sx={{
+              backgroundColor: "#BBC3C9 !important",
+              color: "#1b1f22 !important",
+            }}
+          >
+            Add Ball
           </Button>
           <Button
             data-testid="merge-button"
