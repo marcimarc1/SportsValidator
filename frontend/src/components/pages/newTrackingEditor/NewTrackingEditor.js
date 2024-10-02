@@ -601,7 +601,7 @@ const NewTrackingEditor = () => {
     }
 
     canvas.remove(
-      ...canvas.getObjects().filter((obj) => obj.properties?.type === "field"),
+      ...canvas.getObjects().filter((obj) => obj.properties?.type === "field" || obj.properties?.type === "fieldPoint"),
     );
 
     if (showField) {
@@ -756,7 +756,7 @@ const NewTrackingEditor = () => {
   //triggered when new player is added, or when merge or swap happens
   useEffect(() => {
     //remove old canvas objects
-    canvas.remove(...canvas.getObjects());
+    canvas.remove(...canvas.getObjects().filter((obj) => obj?.properties?.type !== "fieldPoint" && obj?.properties?.type !== "field"));
 
     const horizontalScalingFactor = canvas.width / 3840;
     const verticalScalingFactor = canvas.height / 2160;
