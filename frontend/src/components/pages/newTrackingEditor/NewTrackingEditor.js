@@ -767,7 +767,7 @@ const NewTrackingEditor = () => {
         .getObjects()
         .filter(
           (obj) =>
-            obj?.properties?.type !== "fieldPoint" &&
+            obj?.properties?.type !== "fieldPoint" ||
             obj?.properties?.type !== "field",
         ),
     );
