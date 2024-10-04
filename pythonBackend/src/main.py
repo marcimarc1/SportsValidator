@@ -2,8 +2,8 @@ from typing import List
 import aiofiles
 from fastapi import FastAPI, UploadFile
 
-from db.db_models import annotations, access_role, game_history, H_key, player, player_history, roles, sport, teams, users, videos
-from db.database import engine
+from .db.db_models import annotations, access_role, game_history, H_key, player, player_history, roles, sport, teams, users, videos
+from .db.database import engine
 from .routers import annotation
 import logging
 # Table initialization for each DB model.

@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Date, Integer, ForeignKey, String
-from db.database import Base
+from ..database import Base
 
 class GamesHistory(Base):
     __tablename__ = 'games_history'

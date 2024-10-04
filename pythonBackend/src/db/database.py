@@ -9,7 +9,7 @@ logger = logging.getLogger('pg.error')
 logger.setLevel(logging.DEBUG)
 
 try:
-    URL_DATABASE = os.environ.get('DATABASE_URL', 'postgresql+psycopg2://user:pass@localhost:5432/postgres')
+    URL_DATABASE = os.environ.get('DATABASE_URL', 'postgresql://user:pass@localhost:5432/db')
 except KeyError:
     logger.debug("Environment variable for Database does not exist")
 

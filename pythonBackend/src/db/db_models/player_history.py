@@ -1,5 +1,5 @@
 from sqlalchemy import Column, ForeignKey, Integer, Float, String
-from db.database import Base
+from ..database import Base
 
 
 class PlayerHistory(Base):
