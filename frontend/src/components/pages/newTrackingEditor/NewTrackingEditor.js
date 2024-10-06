@@ -95,7 +95,7 @@ const NewTrackingEditor = () => {
   const [ballChosenInList, setBallChosenInList] = useState(""); //ball which is selected in sidebar
   const [mergeModalBallState, setMergeModalBallState] = useState(false);
   const [isShowingBallBox, setIsShowingBallBox] = useState(true);
-  const [isShowingBallTracks, setIsShowingBallTracks] = useState(true);
+  const [isShowingBallTrails, setIsShowingBallTrails] = useState(true);
 
   const handleModalOpen = (playerInList) => {
     setPlayerChosenInList(playerInList);
@@ -417,7 +417,6 @@ const NewTrackingEditor = () => {
         },
       });
     } else {
-      console.log("ball modified");
       box.on({
         modified: () => {
           var boundingRect = box.getBoundingRect();
@@ -850,18 +849,18 @@ const NewTrackingEditor = () => {
       if (boundingBoxesToDrawBall.length > 0) {
         //draw boxes
         boundingBoxesToDrawBall.forEach((boundingBox) => {
-          console.log("drawing ball boxes", boundingBox);
           const boxColor = colorSetBall.get(boundingBox.trackNo);
           let ballBox = convertAnnotationBallToBallbox(
             boundingBox,
             horizontalScalingFactor,
             verticalScalingFactor,
           );
-          ballBox.visible = isShowingBox;
+          ballBox.visible = isShowingBallBox;
           ballBox.stroke = `rgb(${boxColor.r}, ${boxColor.g}, ${boxColor.b})`;
           ballBox.setControlVisible("mtr", false);
           ballBox = defineBoxBehavior(ballBox, false); //false indicates that this is a ball box
-          canvas.add(ballBox);
+          console.log("is ball box", isShowingBallBox);
+          if (isShowingBallBox) canvas.add(ballBox);
 
           tempList = tempList.concat([
             <TrackListItemBall
@@ -1005,6 +1004,7 @@ const NewTrackingEditor = () => {
     annotationBallTracks,
     videoElement,
     isShowingBox,
+    isShowingBallBox,
     playerNameMap,
     ballNameMap,
     trailFrameNumber,
@@ -1120,7 +1120,7 @@ const NewTrackingEditor = () => {
             horizontalScalingFactor,
             verticalScalingFactor,
           );
-          ballBox.visible = isShowingBox;
+          ballBox.visible = isShowingBallBox;
           ballBox.stroke = `rgb(${boxColor.r}, ${boxColor.g}, ${boxColor.b})`;
           ballBox.setControlVisible("mtr", false);
           ballBox = defineBoxBehavior(ballBox, false); //false indicates that this is a ball box
@@ -1381,6 +1381,7 @@ const NewTrackingEditor = () => {
   };
 
   const handleShowBallBox = () => {
+    console.log("showing ball box", isShowingBallBox);
     if (isShowingBallBox) {
       setIsShowingBallBox(false);
     } else {
@@ -1388,11 +1389,11 @@ const NewTrackingEditor = () => {
     }
   };
 
-  const handleShowBallTracks = () => {
-    if (isShowingBallTracks) {
-      setIsShowingBallTracks(false);
+  const handleShowBallTrails = () => {
+    if (isShowingBallTrails) {
+      setIsShowingBallTrails(false);
     } else {
-      setIsShowingBallTracks(true);
+      setIsShowingBallTrails(true);
     }
   };
 
@@ -1590,9 +1591,9 @@ const NewTrackingEditor = () => {
           />
           <SettingsBallButton
             isShowingBallBox={isShowingBallBox}
-            isShowingBallTracks={isShowingBallTracks}
+            isShowingBallTrails={isShowingBallTrails}
             handleShowBallBox={handleShowBallBox}
-            handleShowBallTracks={handleShowBallTracks}
+            handleShowBallTrails={handleShowBallTrails}
             handleAddBall={handleAddBall}
           />
           <div className="tests">
