@@ -46,6 +46,7 @@ import { DownloadButton } from "./DownloadButton";
 import { parseLogFile } from "../../../utils/logFileParser";
 import Slider from "@mui/material/Slider";
 import { FieldDetailsButton } from "./field/FieldDetailsButton";
+import { SettingsBallButton } from "./SettingsBallButton";
 // TODO Take a video_id instead and have an endpoint on the server where we supply a video_id and get the corresponding video
 const NewTrackingEditor = () => {
   const location = useLocation();
@@ -78,7 +79,7 @@ const NewTrackingEditor = () => {
   const [trailFrameNumber, setTrailFrameNumber] = useState(50);
   const [mergeModalState, setMergeModalState] = useState(false);
   const [playerChosenInList, setPlayerChosenInList] = useState("");
-  const [showField, setShowField] = useState(true);
+  const [showField, setShowField] = useState(false);
   const [editField, setEditField] = useState(false);
   const logFile = parseLogFile(log);
   const [selectedTrails, setSelectedTrails] = useState(new Set());
@@ -93,6 +94,8 @@ const NewTrackingEditor = () => {
   const [colorSetBall, setColorSetBall] = useState(new Map()); //map of ballkey to color
   const [ballChosenInList, setBallChosenInList] = useState(""); //ball which is selected in sidebar
   const [mergeModalBallState, setMergeModalBallState] = useState(false);
+  const [isShowingBallBox, setIsShowingBallBox] = useState(true);
+  const [isShowingBallTracks, setIsShowingBallTracks] = useState(true);
 
   const handleModalOpen = (playerInList) => {
     setPlayerChosenInList(playerInList);
@@ -1331,7 +1334,7 @@ const NewTrackingEditor = () => {
   }
 
   function handleAddBall() {
-    const newBallKey = ballNameMap.size;
+    const newBallKey = ballNameMap.size + 1; //ball keys start from 1
     const boxColor = generateColor(newBallKey);
     setColorSetBall(colorSetBall.set(newBallKey, boxColor));
     setAnnotationBallTracks(
@@ -1374,6 +1377,22 @@ const NewTrackingEditor = () => {
       setEditField(false);
     } else {
       setEditField(true);
+    }
+  };
+
+  const handleShowBallBox = () => {
+    if (isShowingBallBox) {
+      setIsShowingBallBox(false);
+    } else {
+      setIsShowingBallBox(true);
+    }
+  };
+
+  const handleShowBallTracks = () => {
+    if (isShowingBallTracks) {
+      setIsShowingBallTracks(false);
+    } else {
+      setIsShowingBallTracks(true);
     }
   };
 
@@ -1508,17 +1527,6 @@ const NewTrackingEditor = () => {
             Add player
           </Button>
           <Button
-            data-testid="add-ball-button"
-            variant="contained"
-            onClick={handleAddBall}
-            sx={{
-              backgroundColor: "#BBC3C9 !important",
-              color: "#1b1f22 !important",
-            }}
-          >
-            Add Ball
-          </Button>
-          <Button
             data-testid="merge-button"
             variant="contained"
             onClick={handleMultiSelectMerge}
@@ -1579,6 +1587,13 @@ const NewTrackingEditor = () => {
             handleEnablingEditField={handleEnablingEditField}
             videoElement={videoElement}
             fieldSize={fieldSize}
+          />
+          <SettingsBallButton
+            isShowingBallBox={isShowingBallBox}
+            isShowingBallTracks={isShowingBallTracks}
+            handleShowBallBox={handleShowBallBox}
+            handleShowBallTracks={handleShowBallTracks}
+            handleAddBall={handleAddBall}
           />
           <div className="tests">
             <Button
