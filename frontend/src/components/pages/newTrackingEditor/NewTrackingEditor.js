@@ -87,6 +87,7 @@ const NewTrackingEditor = () => {
   const [drawInField, setDrawInField] = useState(false);
   const [showApplyHomographyModal, setShowApplyHomographyModal] =
     useState(false);
+  const [isShowingPlayerTrails, setIsShowingPlayerTrails] = useState(true);
   const [annotationBallTracks, setAnnotationBallTracks] = useState([]);
   const [ballList, setBallList] = useState([]); //list of ball TrackListItemBall
   const [canvasBoxesBall, setCanvasBoxesBall] = useState([]); //list of canvas boxes for ball
@@ -689,67 +690,72 @@ const NewTrackingEditor = () => {
               frameNumber - obj.properties.frame < 0,
           ),
       );
-      const currentTrailsToDraw = drawInField
-        ? annotations.filter(
-            (a) => a.FrameNo === frameNumber && isInField(a.in_field),
-          )
-        : annotations.filter((a) => a.FrameNo === frameNumber);
+      if (isShowingPlayerTrails) {
+        const currentTrailsToDraw = drawInField
+          ? annotations.filter(
+              (a) => a.FrameNo === frameNumber && isInField(a.in_field),
+            )
+          : annotations.filter((a) => a.FrameNo === frameNumber);
 
-      currentTrailsToDraw.forEach((a) => {
-        const scaledX = a.x1 * horizontalScalingFactor;
-        const scaledY = a.y1 * verticalScalingFactor;
-        const scaledWidth = a.w * horizontalScalingFactor;
-        const scaledHeight = a.h * verticalScalingFactor;
-        const radius =
-          scaledWidth < scaledHeight ? scaledWidth / 4 : scaledHeight / 4;
-        const trailColor = colorSet.get(a.PlayerKey);
-        let trail = new fabric.Circle({
-          left: scaledX,
-          top: scaledY,
-          stroke: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
-          strokeWidth: 3,
-          fill: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
-          radius: (radius * trailSize) / 50,
-          visible: isShowingAnnotation,
+        currentTrailsToDraw.forEach((a) => {
+          const scaledX = a.x1 * horizontalScalingFactor;
+          const scaledY = a.y1 * verticalScalingFactor;
+          const scaledWidth = a.w * horizontalScalingFactor;
+          const scaledHeight = a.h * verticalScalingFactor;
+          const radius =
+            scaledWidth < scaledHeight ? scaledWidth / 4 : scaledHeight / 4;
+          const trailColor = colorSet.get(a.PlayerKey);
+          let trail = new fabric.Circle({
+            left: scaledX,
+            top: scaledY,
+            stroke: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
+            strokeWidth: 3,
+            fill: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
+            radius: (radius * trailSize) / 50,
+            visible: isShowingAnnotation,
+          });
+          trail.properties = {
+            frame: frameNumber,
+            playerKey: a.PlayerKey,
+            isPlayerBox: true,
+          };
+          trail.hasRotatingPoint = false;
+          defineTrailBehaviour(trail, setSelectedTrails);
+          canvas.add(trail);
         });
-        trail.properties = {
-          frame: frameNumber,
-          playerKey: a.PlayerKey,
-        };
-        trail.hasRotatingPoint = false;
-        defineTrailBehaviour(trail, setSelectedTrails);
-        canvas.add(trail);
-      });
+      }
+      if (isShowingBallTrails) {
+        const currentBallTrailsToDraw = annotationBallTracks.filter(
+          (a) => a.FrameNo === frameNumber,
+        );
 
-      const currentBallTrailsToDraw = annotationBallTracks.filter(
-        (a) => a.FrameNo === frameNumber,
-      );
-
-      currentBallTrailsToDraw.forEach((a) => {
-        const scaledX = a.x1 * horizontalScalingFactor;
-        const scaledY = a.y1 * verticalScalingFactor;
-        const scaledWidth = 15 * horizontalScalingFactor; //TODO think about ballsize to be not fixed
-        const scaledHeight = 15 * verticalScalingFactor;
-        const radius =
-          scaledWidth < scaledHeight ? scaledWidth / 4 : scaledHeight / 4;
-        const trailColor = colorSetBall.get(a.trackNo);
-        let trail = new fabric.Circle({
-          left: scaledX,
-          top: scaledY,
-          stroke: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
-          strokeWidth: 3,
-          fill: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
-          radius: (radius * trailSize) / 50,
-          visible: isShowingAnnotation,
+        currentBallTrailsToDraw.forEach((a) => {
+          const scaledX = a.x1 * horizontalScalingFactor;
+          const scaledY = a.y1 * verticalScalingFactor;
+          const scaledWidth = 15 * horizontalScalingFactor; //TODO think about ballsize to be not fixed
+          const scaledHeight = 15 * verticalScalingFactor;
+          const radius =
+            scaledWidth < scaledHeight ? scaledWidth / 4 : scaledHeight / 4;
+          const trailColor = colorSetBall.get(a.trackNo);
+          let trail = new fabric.Circle({
+            left: scaledX,
+            top: scaledY,
+            stroke: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
+            strokeWidth: 3,
+            fill: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
+            radius: (radius * trailSize) / 50,
+            visible: isShowingAnnotation,
+          });
+          trail.properties = {
+            frame: frameNumber,
+            ballKey: a.trackNo,
+            isPlayerBox: false,
+          };
+          trail.hasRotatingPoint = false;
+          defineTrailBehaviour(trail, setSelectedTrails);
+          canvas.add(trail);
         });
-        trail.properties = {
-          frame: frameNumber,
-          ballKey: a.trackNo,
-        };
-        trail.hasRotatingPoint = false;
-        defineTrailBehaviour(trail, setSelectedTrails);
-        canvas.add(trail);
-      });
+      }
     }
 
     var boundingBoxesToDraw = drawInField
@@ -859,7 +865,6 @@ const NewTrackingEditor = () => {
           ballBox.stroke = `rgb(${boxColor.r}, ${boxColor.g}, ${boxColor.b})`;
           ballBox.setControlVisible("mtr", false);
           ballBox = defineBoxBehavior(ballBox, false); //false indicates that this is a ball box
-          console.log("is ball box", isShowingBallBox);
           if (isShowingBallBox) canvas.add(ballBox);
 
           tempList = tempList.concat([
@@ -1005,6 +1010,8 @@ const NewTrackingEditor = () => {
     videoElement,
     isShowingBox,
     isShowingBallBox,
+    isShowingBallTrails,
+    isShowingPlayerTrails,
     playerNameMap,
     ballNameMap,
     trailFrameNumber,
@@ -1032,6 +1039,8 @@ const NewTrackingEditor = () => {
         canvas.height / 2160,
         setSelectedTrails,
         trailSize,
+        isShowingBallTrails,
+        isShowingPlayerTrails,
       );
     }
   }, [videoElement?.seeking]);
@@ -1061,6 +1070,8 @@ const NewTrackingEditor = () => {
         verticalScalingFactor,
         setSelectedTrails,
         trailSize,
+        isShowingBallTrails,
+        isShowingPlayerTrails,
       );
     }
 
@@ -1397,6 +1408,14 @@ const NewTrackingEditor = () => {
     }
   };
 
+  const handleShowPlayerTrails = () => {
+    if (isShowingPlayerTrails) {
+      setIsShowingPlayerTrails(false);
+    } else {
+      setIsShowingPlayerTrails(true);
+    }
+  };
+
   useEffect(() => {
     canvas.getObjects().forEach((obj) => {
       if (obj.properties?.type === "fieldPoint") {
@@ -1545,6 +1564,14 @@ const NewTrackingEditor = () => {
             checked={trailsEnabled}
             disabled={!videoElement?.paused}
             onChange={handleEnablingTrails}
+          />
+          <Typography sx={{ marginLeft: "10px" }}>Playertrails </Typography>
+
+          <Switch
+            color="default"
+            checked={isShowingPlayerTrails}
+            disabled={!videoElement?.paused}
+            onChange={handleShowPlayerTrails}
           />
           <Typography>Trails Size </Typography>
           <Slider

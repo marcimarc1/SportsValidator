@@ -16,74 +16,82 @@ export const trailsFullRedraw = (
   verticalScalingFactor,
   setSelectedTrails,
   trailSize,
+  isShowingBallTrails,
+  isShowingPlayerTrails,
 ) => {
-  const pastTrailsToDraw = annotations.filter((a) => {
-    return (
-      a.FrameNo > frameNumber - trailFrameNumber &&
-      a.FrameNo < frameNumber &&
-      (a.in_field || a.in_field === null)
-    );
-  });
-
-  pastTrailsToDraw.forEach((a) => {
-    const scaledX = a.x1 * horizontalScalingFactor;
-    const scaledY = a.y1 * verticalScalingFactor;
-    const scaledWidth = a.w * horizontalScalingFactor;
-    const scaledHeight = a.h * verticalScalingFactor;
-    const radius =
-      scaledWidth < scaledHeight ? scaledWidth / 4 : scaledHeight / 4;
-    const trailColor = colorSet.get(a.PlayerKey);
-    let trail = new fabric.Circle({
-      left: scaledX,
-      top: scaledY,
-      stroke: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
-      strokeWidth: 3,
-      fill: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
-      radius: (radius * trailSize) / 50,
-      visible: isShowingAnnotation,
+  if (isShowingPlayerTrails) {
+    const pastTrailsToDraw = annotations.filter((a) => {
+      return (
+        a.FrameNo > frameNumber - trailFrameNumber &&
+        a.FrameNo < frameNumber &&
+        (a.in_field || a.in_field === null)
+      );
     });
-    trail.properties = {
-      type: "trail",
-      frame: a.FrameNo,
-      playerKey: a.PlayerKey,
-    };
-    trail.hasRotatingPoint = false;
-    defineTrailBehaviour(trail, setSelectedTrails);
-    canvas.add(trail);
-  });
 
-  const pastBallTrailsToDraw = annotationBallTracks.filter((a) => {
-    return (
-      a.FrameNo > frameNumber - trailFrameNumber && a.FrameNo < frameNumber
-    );
-  });
-
-  pastBallTrailsToDraw.forEach((a) => {
-    const scaledX = a.x1 * horizontalScalingFactor;
-    const scaledY = a.y1 * verticalScalingFactor;
-    const scaledWidth = 15 * horizontalScalingFactor;
-    const scaledHeight = 15 * verticalScalingFactor;
-    const radius =
-      scaledWidth < scaledHeight ? scaledWidth / 4 : scaledHeight / 4;
-    const trailColor = colorSetBall.get(a.trackNo);
-    let trail = new fabric.Circle({
-      left: scaledX,
-      top: scaledY,
-      stroke: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
-      strokeWidth: 3,
-      fill: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
-      radius: (radius * trailSize) / 50,
-      visible: isShowingAnnotation,
+    pastTrailsToDraw.forEach((a) => {
+      const scaledX = a.x1 * horizontalScalingFactor;
+      const scaledY = a.y1 * verticalScalingFactor;
+      const scaledWidth = a.w * horizontalScalingFactor;
+      const scaledHeight = a.h * verticalScalingFactor;
+      const radius =
+        scaledWidth < scaledHeight ? scaledWidth / 4 : scaledHeight / 4;
+      const trailColor = colorSet.get(a.PlayerKey);
+      let trail = new fabric.Circle({
+        left: scaledX,
+        top: scaledY,
+        stroke: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
+        strokeWidth: 3,
+        fill: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
+        radius: (radius * trailSize) / 50,
+        visible: isShowingAnnotation,
+      });
+      trail.properties = {
+        type: "trail",
+        frame: a.FrameNo,
+        playerKey: a.PlayerKey,
+        isPlayerBox: true,
+      };
+      trail.hasRotatingPoint = false;
+      defineTrailBehaviour(trail, setSelectedTrails);
+      canvas.add(trail);
     });
-    trail.properties = {
-      type: "trail",
-      frame: a.FrameNo,
-      ballKey: a.trackNo,
-    };
-    trail.hasRotatingPoint = false;
-    defineTrailBehaviour(trail, setSelectedTrails);
-    canvas.add(trail);
-  });
+  }
+  if (isShowingBallTrails) {
+    console.log("Drawing ball trails", isShowingBallTrails);
+    const pastBallTrailsToDraw = annotationBallTracks.filter((a) => {
+      return (
+        a.FrameNo > frameNumber - trailFrameNumber && a.FrameNo < frameNumber
+      );
+    });
+
+    pastBallTrailsToDraw.forEach((a) => {
+      const scaledX = a.x1 * horizontalScalingFactor;
+      const scaledY = a.y1 * verticalScalingFactor;
+      const scaledWidth = 15 * horizontalScalingFactor;
+      const scaledHeight = 15 * verticalScalingFactor;
+      const radius =
+        scaledWidth < scaledHeight ? scaledWidth / 4 : scaledHeight / 4;
+      const trailColor = colorSetBall.get(a.trackNo);
+      let trail = new fabric.Circle({
+        left: scaledX,
+        top: scaledY,
+        stroke: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
+        strokeWidth: 3,
+        fill: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
+        radius: (radius * trailSize) / 50,
+        visible: isShowingAnnotation,
+      });
+      trail.properties = {
+        type: "trail",
+        frame: a.FrameNo,
+        ballKey: a.trackNo,
+        isPlayerBox: false,
+      };
+      trail.hasRotatingPoint = false;
+      defineTrailBehaviour(trail, setSelectedTrails);
+      canvas.add(trail);
+    });
+  }
 };
 
 export const defineTrailBehaviour = (trail, setSelectedTrails) => {
