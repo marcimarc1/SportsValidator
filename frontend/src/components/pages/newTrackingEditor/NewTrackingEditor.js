@@ -1173,6 +1173,8 @@ const NewTrackingEditor = () => {
     playerNameMap,
     ballNameMap,
     trailsEnabled,
+    isShowingBallTrails,
+    isShowingPlayerTrails,
     trailSize,
     trailFrameNumber,
     drawInField,
