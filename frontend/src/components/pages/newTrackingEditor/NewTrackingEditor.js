@@ -1640,7 +1640,7 @@ const NewTrackingEditor = () => {
               className="tests"
               onClick={() => drawBoundingBoxes(frameNumber)}
             >
-              draw players from annotation
+              draw players from annotation and Ball tracks
             </Button>
           </div>
           <DownloadButton

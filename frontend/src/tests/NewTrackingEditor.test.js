@@ -383,3 +383,34 @@ describe("add ball button", () => {
     expect(updatedRowNumber).toEqual(1);
   });
 });
+
+describe("ball sidebar", () => {
+  it("displays ball in current frame", async () => {
+    //given
+    useLocation.mockReturnValue({
+      state: {
+        //up to now only necessary to mock processedPlayers
+        //should render ball 1 in frame0, discard ball2 in frame1
+        processedPlayers: mockCSV,
+        video: undefined,
+        processedBallTracks: mockCSVBall,
+        homographies: mockHomographies,
+        log: mockLog,
+        fieldSize: mockFieldSize,
+      },
+    });
+    const { container } = render(<NewTrackingEditor />);
+    const button = screen.getByTestId("from-annotation");
+
+    //when
+    fireEvent.click(button);
+
+    //then
+    //as the sidebar contains 3 lists(player, team, ball), the playerList is chosen.
+    const ballList = container.querySelector(".TrackListList").children[2];
+    expect(ballList.childElementCount).toEqual(1);
+    expect(
+      getNodeText(ballList.children[0].querySelector(".TrackListItemName")),
+    ).toEqual("ball1");
+  });
+});
