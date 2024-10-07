@@ -1023,7 +1023,7 @@ const NewTrackingEditor = () => {
       deleteFieldDrawing();
     } else {
       setShowField(true);
-      drawField();
+      drawField(true);
     }
   };
 
@@ -1055,25 +1055,24 @@ const NewTrackingEditor = () => {
     );
   };
 
-  const drawField = () => {
-    console.log("drawing field", "frameNumber", getCurrentTimestampFrame());
-    // var homographyToApply = editedHomographies ? editedHomographies[getCurrentTimestampFrame()] : homographies[getCurrentTimestampFrame()];
-    // console.log("homography to apply", homographyToApply);
-    //log the field size
+  const drawField = (forceDraw = false) => {
     if (!homographies) {
       return;
     }
-    drawFieldPoints(
-      canvas,
-      getCurrentTimestampFrame(),
-      homographies,
-      canvas.width / 3840,
-      canvas.height / 2160,
-      logFile.Sport,
-      fieldSize?.length,
-      fieldSize?.width,
-      videoElement,
-    );
+
+    if (showField || forceDraw) {
+      drawFieldPoints(
+        canvas,
+        getCurrentTimestampFrame(),
+        homographies,
+        canvas.width / 3840,
+        canvas.height / 2160,
+        logFile.Sport,
+        fieldSize?.length,
+        fieldSize?.width,
+        videoElement,
+      );
+    }
   };
 
   const handleSwitchingTrailSize = (event) => {
@@ -1081,7 +1080,6 @@ const NewTrackingEditor = () => {
   };
 
   const handleApplyHomography = () => {
-    const frameNumber = getCurrentTimestampFrame();
     deleteFieldDrawing();
     drawField();
     setShowApplyHomographyModal(false);
