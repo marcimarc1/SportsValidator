@@ -160,7 +160,6 @@ const NewTrackingEditor = () => {
     if (processedBallTracks) {
       const parsedBallTracks = parseProcessedBallTracks(processedBallTracks);
       setAnnotationBallTracks(parsedBallTracks);
-      //TODO: add Test for ball tracks
       console.log("retrieved ball tracks:", parsedBallTracks);
       setColorSetBall(boundingBoxColorSetBall(parsedBallTracks));
 
@@ -732,7 +731,7 @@ const NewTrackingEditor = () => {
         currentBallTrailsToDraw.forEach((a) => {
           const scaledX = a.x1 * horizontalScalingFactor;
           const scaledY = a.y1 * verticalScalingFactor;
-          const scaledWidth = 15 * horizontalScalingFactor; //TODO think about ballsize to be not fixed
+          const scaledWidth = 15 * horizontalScalingFactor;
           const scaledHeight = 15 * verticalScalingFactor;
           const radius =
             scaledWidth < scaledHeight ? scaledWidth / 4 : scaledHeight / 4;
