@@ -57,7 +57,6 @@ export const trailsFullRedraw = (
     });
   }
   if (isShowingBallTrails) {
-    console.log("Drawing ball trails", isShowingBallTrails);
     const pastBallTrailsToDraw = annotationBallTracks.filter((a) => {
       return (
         a.FrameNo > frameNumber - trailFrameNumber && a.FrameNo < frameNumber

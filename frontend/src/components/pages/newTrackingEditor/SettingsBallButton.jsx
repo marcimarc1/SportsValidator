@@ -24,6 +24,7 @@ export const SettingsBallButton = ({
       <Button
         variant="contained"
         id="basic-button"
+        data-testid="settings-ball-button"
         aria-controls={open ? "basic-menu" : undefined}
         aria-haspopup="true"
         aria-expanded={open ? "true" : undefined}
