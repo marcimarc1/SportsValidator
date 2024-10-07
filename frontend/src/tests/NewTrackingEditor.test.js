@@ -14,9 +14,13 @@ import "@testing-library/jest-dom/extend-expect";
 import fetchMock from "jest-fetch-mock";
 import NewTrackingEditor from "../components/pages/newTrackingEditor/NewTrackingEditor";
 import { useLocation } from "react-router-dom/cjs/react-router-dom";
-import { parseProcessedPlayers } from "../utils/csvParser";
+import {
+  parseProcessedPlayers,
+  parseProcessedBallTracks,
+} from "../utils/csvParser";
 import {
   mockCSV,
+  mockCSVBall,
   mockLog,
   mockHomographies,
   mockFieldSize,
@@ -275,5 +279,35 @@ describe("player sidebar", () => {
     expect(
       getNodeText(playerList.children[1].querySelector(".TrackListItemName")),
     ).toEqual("player2");
+  });
+});
+
+describe("data fetching ball", () => {
+  it("receives correct ballTracks annotation", async () => {
+    //given
+    useLocation.mockReturnValue({
+      state: {
+        //up to now only necessary to mock processedPlayers
+        //should render player 1, 2 in frame0, discard player2 in frame1
+        processedPlayers: mockCSV,
+        video: undefined,
+        processedBallTracks: mockCSVBall,
+        homographies: mockHomographies,
+        log: mockLog,
+        fieldSize: mockFieldSize,
+      },
+    });
+    const logSpy = jest.spyOn(global.console, "log");
+    const mockAnnotationBall = parseProcessedBallTracks(mockCSVBall);
+    //when
+    render(<NewTrackingEditor />);
+
+    //then
+    await waitFor(() => {
+      expect(logSpy).toHaveBeenCalledWith(
+        "retrieved ball tracks:",
+        mockAnnotationBall,
+      );
+    });
   });
 });
