@@ -1215,7 +1215,9 @@ const NewTrackingEditor = () => {
       deleteFieldDrawing();
       setFrameNumber(nextFrame);
       setTimestamp(referenceTimestamp);
-      drawField();
+      if (showField) {
+        drawField();
+      }
     }
   };
 
@@ -1227,7 +1229,9 @@ const NewTrackingEditor = () => {
       deleteFieldDrawing();
       setFrameNumber(previousFrame);
       setTimestamp(referenceTimestamp);
-      drawField();
+      if (showField) {
+        drawField();
+      }
     }
   };
 
