@@ -1650,7 +1650,7 @@ const NewTrackingEditor = () => {
           ref={canvasRef}
           canvas={JSON.stringify(canvas)}
           annotations={annotations.length}
-          annotationBallTracks={annotationBallTracks.length}
+          annotationballtracks={annotationBallTracks.length}
           playerlist={JSON.stringify(playerList)}
           className="canvas"
           id="tracking-editor-canvas"

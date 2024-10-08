@@ -322,14 +322,14 @@ describe("add ball button", () => {
     fireEvent.click(SettingsBallButton);
     const button = screen.getByTestId("add-ball-button");
 
-    const initialNumber = canvasElement.getAttribute("annotationBallTracks");
+    const initialNumber = canvasElement.getAttribute("annotationballtracks");
     expect(initialNumber).toEqual("0");
 
     //when
     fireEvent.click(button);
 
     //then
-    const updatedNumber = canvasElement.getAttribute("annotationBallTracks");
+    const updatedNumber = canvasElement.getAttribute("annotationballtracks");
     expect(updatedNumber).toEqual("1");
   });
 
