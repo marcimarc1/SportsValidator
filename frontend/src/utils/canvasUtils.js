@@ -15,6 +15,7 @@ export const trailsFullRedraw = (
   horizontalScalingFactor,
   verticalScalingFactor,
   setSelectedTrails,
+  setSelectedTrailsBall,
   trailSize,
   isShowingBallTrails,
   isShowingPlayerTrails,
@@ -87,7 +88,7 @@ export const trailsFullRedraw = (
         isPlayerBox: false,
       };
       trail.hasRotatingPoint = false;
-      defineTrailBehaviour(trail, setSelectedTrails);
+      defineTrailBehaviourBall(trail, setSelectedTrailsBall);
       canvas.add(trail);
     });
   }
@@ -96,13 +97,15 @@ export const trailsFullRedraw = (
 export const defineTrailBehaviour = (trail, setSelectedTrails) => {
   trail.on("selected", () => {
     setSelectedTrails((prevTrails) => {
-      return new Set(
-        prevTrails.add(
-          trail.properties.playerKey
-            ? trail.properties.playerKey
-            : trail.properties.ballKey,
-        ),
-      );
+      return new Set(prevTrails.add(trail.properties.playerKey));
+    });
+  });
+};
+
+export const defineTrailBehaviourBall = (trail, setSelectedTrailsBall) => {
+  trail.on("selected", () => {
+    setSelectedTrailsBall((prevTrails) => {
+      return new Set(prevTrails.add(trail.properties.ballKey));
     });
   });
 };

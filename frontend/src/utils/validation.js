@@ -255,3 +255,41 @@ export const swapBallData = (
   });
   setAnnotationBallTracks(swappedAnnotationBallTracks);
 };
+
+export const multiBallMerge = (
+  ballKeyArray,
+  annotationBallTracks,
+  setAnnotationBallTracks,
+  ballNameMap,
+  setBallNameMap,
+) => {
+  function removeDuplicates(array) {
+    const uniquePairs = {};
+    const result = [];
+
+    array.forEach((obj) => {
+      const key = obj.trackNo + "," + obj.FrameNo;
+      if (!uniquePairs[key]) {
+        result.push(obj);
+        uniquePairs[key] = true;
+      }
+    });
+
+    return result;
+  }
+
+  const newAnnotationBallTracks = annotationBallTracks.map((a) => {
+    if (ballKeyArray.includes(a.trackNo)) {
+      a.trackNo = ballKeyArray[0];
+      return a;
+    }
+    return a;
+  });
+  setAnnotationBallTracks(removeDuplicates(newAnnotationBallTracks));
+  let newBallNameMap = new Map(ballNameMap);
+  ballKeyArray.shift();
+  ballKeyArray.forEach((key) => {
+    newBallNameMap.delete(key);
+  });
+  setBallNameMap(newBallNameMap);
+};

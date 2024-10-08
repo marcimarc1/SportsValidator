@@ -40,8 +40,9 @@ import {
   trailsFullRedraw,
   drawFieldPoints,
   defineTrailBehaviour,
+  defineTrailBehaviourBall,
 } from "../../../utils/canvasUtils";
-import { multiPlayerMerge } from "../../../utils/validation";
+import { multiPlayerMerge, multiBallMerge } from "../../../utils/validation";
 import { DownloadButton } from "./DownloadButton";
 import { parseLogFile } from "../../../utils/logFileParser";
 import Slider from "@mui/material/Slider";
@@ -98,6 +99,7 @@ const NewTrackingEditor = () => {
   const [mergeModalBallState, setMergeModalBallState] = useState(false);
   const [isShowingBallBox, setIsShowingBallBox] = useState(true);
   const [isShowingBallTrails, setIsShowingBallTrails] = useState(true);
+  const [selectedTrailsBall, setSelectedTrailsBall] = useState(new Set());
 
   const handleModalOpen = (playerInList) => {
     setPlayerChosenInList(playerInList);
@@ -126,6 +128,19 @@ const NewTrackingEditor = () => {
       setPlayerNameMap,
     );
     setSelectedTrails(new Set());
+  };
+
+  const handleMultiSelectMergeBall = () => {
+    console.log("Multiplayer merge ball");
+    console.log(Array.from(selectedTrailsBall));
+    multiBallMerge(
+      Array.from(selectedTrailsBall),
+      annotationBallTracks,
+      setAnnotationBallTracks,
+      ballNameMap,
+      setBallNameMap,
+    );
+    setSelectedTrailsBall(new Set());
   };
 
   let { videoName } = useParams();
@@ -752,7 +767,7 @@ const NewTrackingEditor = () => {
             isPlayerBox: false,
           };
           trail.hasRotatingPoint = false;
-          defineTrailBehaviour(trail, setSelectedTrails);
+          defineTrailBehaviourBall(trail, setSelectedTrailsBall);
           canvas.add(trail);
         });
       }
@@ -1044,6 +1059,7 @@ const NewTrackingEditor = () => {
         canvas.width / 3840,
         canvas.height / 2160,
         setSelectedTrails,
+        setSelectedTrailsBall,
         trailSize,
         isShowingBallTrails,
         isShowingPlayerTrails,
@@ -1083,6 +1099,7 @@ const NewTrackingEditor = () => {
         horizontalScalingFactor,
         verticalScalingFactor,
         setSelectedTrails,
+        setSelectedTrailsBall,
         trailSize,
         isShowingBallTrails,
         isShowingPlayerTrails,
@@ -1570,7 +1587,18 @@ const NewTrackingEditor = () => {
               color: "#1b1f22 !important",
             }}
           >
-            Merge
+            Merge Player
+          </Button>
+          <Button
+            data-testid="merge-button-ball"
+            variant="contained"
+            onClick={handleMultiSelectMergeBall}
+            sx={{
+              backgroundColor: "#BBC3C9 !important",
+              color: "#1b1f22 !important",
+            }}
+          >
+            Merge Ball
           </Button>
           <FieldDetailsButton
             handleEnablingField={handleEnablingField}
