@@ -732,7 +732,6 @@ const NewTrackingEditor = () => {
           trail.properties = {
             frame: frameNumber,
             playerKey: a.PlayerKey,
-            isPlayerBox: true,
           };
           trail.hasRotatingPoint = false;
           defineTrailBehaviour(trail, setSelectedTrails);
@@ -764,7 +763,6 @@ const NewTrackingEditor = () => {
           trail.properties = {
             frame: frameNumber,
             ballKey: a.trackNo,
-            isPlayerBox: false,
           };
           trail.hasRotatingPoint = false;
           defineTrailBehaviourBall(trail, setSelectedTrailsBall);

@@ -50,7 +50,6 @@ export const trailsFullRedraw = (
         type: "trail",
         frame: a.FrameNo,
         playerKey: a.PlayerKey,
-        isPlayerBox: true,
       };
       trail.hasRotatingPoint = false;
       defineTrailBehaviour(trail, setSelectedTrails);
@@ -85,7 +84,6 @@ export const trailsFullRedraw = (
         type: "trail",
         frame: a.FrameNo,
         ballKey: a.trackNo,
-        isPlayerBox: false,
       };
       trail.hasRotatingPoint = false;
       defineTrailBehaviourBall(trail, setSelectedTrailsBall);
