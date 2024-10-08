@@ -2,10 +2,9 @@ import { Box, Button, Menu, Typography, FormGroup, FormControlLabel, Switch } fr
 import React from "react";
 
 export const SettingsBallButton = ({
+    disabled,
     isShowingBallBox, 
-    isShowingBallTrails, 
     handleShowBallBox,
-    handleShowBallTrails,
     handleAddBall,
 }) => {
     const [anchorEl, setAnchorEl] = React.useState(null);
@@ -24,6 +23,7 @@ export const SettingsBallButton = ({
       <Button
         variant="contained"
         id="basic-button"
+        disabled={disabled}
         data-testid="settings-ball-button"
         aria-controls={open ? "basic-menu" : undefined}
         aria-haspopup="true"
@@ -61,19 +61,6 @@ export const SettingsBallButton = ({
                   <Switch
                     checked={isShowingBallBox}
                     onChange={handleShowBallBox}
-                  />
-                }
-              />
-            </FormGroup>
-          </div>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 16px" }} onClick={handleShowBallTrails}>
-            <Typography>Show Ball Tracks</Typography>
-            <FormGroup sx={{ width: "130px" }}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={isShowingBallTrails}
-                    onChange={handleShowBallTrails}
                   />
                 }
               />

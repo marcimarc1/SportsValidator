@@ -23,7 +23,6 @@ class TrackListItemBall extends Component {
   };
 
   handleClickMerge = () => {
-    //TODO: only open merge modal -> needs to be implemented // check if neccessary
     this.props.handleModalOpen(this.props.name);
   };
 

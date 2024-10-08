@@ -59,7 +59,6 @@ export default function MergeAndSwapModalBall({
   };
 
   const handleClick = () => {
-    //TODO add functionality
     if (operation === "swap")
       swapBallData(
         selectedBall,

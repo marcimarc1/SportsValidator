@@ -47,6 +47,7 @@ import { parseLogFile } from "../../../utils/logFileParser";
 import Slider from "@mui/material/Slider";
 import { FieldDetailsButton } from "./field/FieldDetailsButton";
 import { SettingsBallButton } from "./SettingsBallButton";
+import { SettingsTrailsButton } from "./SettingsTrailsButton";
 // TODO Take a video_id instead and have an endpoint on the server where we supply a video_id and get the corresponding video
 const NewTrackingEditor = () => {
   const location = useLocation();
@@ -1175,6 +1176,7 @@ const NewTrackingEditor = () => {
     trailsEnabled,
     isShowingBallTrails,
     isShowingPlayerTrails,
+    isShowingBallBox,
     trailSize,
     trailFrameNumber,
     drawInField,
@@ -1570,57 +1572,6 @@ const NewTrackingEditor = () => {
           >
             Merge
           </Button>
-          <Typography sx={{ marginLeft: "10px" }}>Trails </Typography>
-
-          <Switch
-            color="default"
-            checked={trailsEnabled}
-            disabled={!videoElement?.paused}
-            onChange={handleEnablingTrails}
-          />
-          <Typography sx={{ marginLeft: "10px" }}>Playertrails </Typography>
-
-          <Switch
-            color="default"
-            checked={isShowingPlayerTrails}
-            disabled={!videoElement?.paused}
-            onChange={handleShowPlayerTrails}
-          />
-          <Typography>Trails Size </Typography>
-          <Slider
-            sx={{
-              width: "60px",
-              "& .MuiSlider-thumb": {
-                color: "white",
-              },
-              "& .MuiSlider-track": {
-                color: "var(--accent)",
-              },
-              "& .MuiSlider-rail": {
-                color: "var(--main-bg)",
-              },
-            }}
-            value={trailSize}
-            disabled={!videoElement?.paused}
-            onChange={handleSwitchingTrailSize}
-            min={10}
-            max={100}
-            step={10}
-            aria-label="Default"
-            valueLabelDisplay="auto"
-          />
-          <Typography sx={{ marginLeft: "10px" }}>Trail frames: </Typography>
-          <TextField
-            variant="standard"
-            sx={{
-              width: "50px",
-              input: { color: "white" },
-              mr: 2,
-            }}
-            value={trailFrameNumber}
-            type="number"
-            onChange={(event, val) => setTrailFrameNumber(event.target.value)}
-          />
           <FieldDetailsButton
             handleEnablingField={handleEnablingField}
             showField={showField}
@@ -1630,11 +1581,23 @@ const NewTrackingEditor = () => {
             fieldSize={fieldSize}
           />
           <SettingsBallButton
+            disabled={!videoElement?.paused}
             isShowingBallBox={isShowingBallBox}
-            isShowingBallTrails={isShowingBallTrails}
             handleShowBallBox={handleShowBallBox}
-            handleShowBallTrails={handleShowBallTrails}
             handleAddBall={handleAddBall}
+          />
+          <SettingsTrailsButton
+            disabled={!videoElement?.paused}
+            trailsEnabled={trailsEnabled}
+            handleEnablingTrails={handleEnablingTrails}
+            isShowingPlayerTrails={isShowingPlayerTrails}
+            handleShowPlayerTrails={handleShowPlayerTrails}
+            isShowingBallTrails={isShowingBallTrails}
+            handleShowBallTrails={handleShowBallTrails}
+            trailSize={trailSize}
+            handleSwitchingTrailSize={handleSwitchingTrailSize}
+            trailFrameNumber={trailFrameNumber}
+            setTrailFrameNumber={setTrailFrameNumber}
           />
           <div className="tests">
             <Button
