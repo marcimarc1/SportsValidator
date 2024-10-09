@@ -6,7 +6,8 @@ from .db.db_models import annotations, access_role, game_history, H_key, player,
 from .db.database import engine
 from .routers import annotation
 import logging
-# Table initialization for each DB model.
+
+# Table initialization for each DB model.(replaced by alembic migrations)
 annotations.Base.metadata.create_all(bind=engine)
 access_role.Base.metadata.create_all(bind=engine)
 game_history.Base.metadata.create_all(bind=engine)
@@ -31,7 +32,7 @@ app.include_router(annotation.router)
 
 @app.get("/")
 async def check_app():
-    return "App Running!"
+    return {"status": "App Running!"}
 
 @app.post("/upload")
 async def upload(files: List[UploadFile]):
