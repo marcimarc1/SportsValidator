@@ -228,7 +228,7 @@ export const drawFieldPoints = (
     });
 
     ellipse.properties = {
-      type: "field",
+      type: "fieldPoint",
       frame: frameNumber,
     };
 
@@ -296,4 +296,8 @@ export const drawFieldPoints = (
     canvas.off("object:modified", updateHomography);
     canvas.off("object:moving", updateLines);
   });
+
+  return canvas
+    .getObjects()
+    .filter((obj) => obj.properties?.type === "fieldPoint");
 };

@@ -23,7 +23,7 @@ export const FieldDetailsButton = ({
     <div>
       <Button
         variant="contained"
-        id="basic-button"
+        data-testid="field-details-button"
         aria-controls={open ? "basic-menu" : undefined}
         aria-haspopup="true"
         aria-expanded={open ? "true" : undefined}
@@ -36,7 +36,8 @@ export const FieldDetailsButton = ({
         Field Details
       </Button>
       <Menu
-        id="basic-menu"
+        id="field-details-menu"
+        data-testid="field-details-menu"
         anchorEl={anchorEl}
         open={open}
         onClose={handleClose}
@@ -58,6 +59,7 @@ export const FieldDetailsButton = ({
               <FormControlLabel
                 control={
                   <Switch
+                    data-testid="show-field-switch"
                     checked={showField}
                     onChange={handleEnablingField}
                     disabled={!videoElement?.paused}
@@ -85,11 +87,15 @@ export const FieldDetailsButton = ({
             <>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 16px" }}>
                 <Typography>Field Width: </Typography>
-                <Typography sx={{ width: "100px", marginLeft: "10px" }}>{fieldSize.width.toFixed(2)}</Typography>
+                <Typography data-testid="field-menu-width" sx={{ width: "100px", marginLeft: "10px" }}>
+                  {fieldSize.width.toFixed(2)}
+                </Typography>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 16px" }}>
                 <Typography>Field Length: </Typography>
-                <Typography sx={{ width: "100px", marginLeft: "10px" }}>{fieldSize.length.toFixed(2)}</Typography>
+                <Typography data-testid="field-menu-length" sx={{ width: "100px", marginLeft: "10px" }}>
+                  {fieldSize.length.toFixed(2)}
+                </Typography>
               </div>
             </>
           )}

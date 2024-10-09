@@ -17,10 +17,13 @@ import { useLocation } from "react-router-dom/cjs/react-router-dom";
 import { parseProcessedPlayers } from "../utils/csvParser";
 import {
   mockCSV,
-  mockLog,
+  mockLogSoccer,
+  mockLogTennis,
   mockHomographies,
   mockFieldSize,
 } from "./mocks/MockFiles";
+
+import { getTemplate } from "../utils/templates";
 
 import userEvent from "@testing-library/user-event";
 
@@ -52,7 +55,7 @@ describe("data fetching", () => {
         video: undefined,
         ballTracks: undefined,
         homographies: mockHomographies,
-        log: mockLog,
+        log: mockLogSoccer,
         fieldSize: mockFieldSize,
       },
     });
@@ -255,7 +258,7 @@ describe("player sidebar", () => {
         video: undefined,
         ballTracks: undefined,
         homographies: mockHomographies,
-        log: mockLog,
+        log: mockLogSoccer,
         fieldSize: mockFieldSize,
       },
     });
@@ -275,5 +278,164 @@ describe("player sidebar", () => {
     expect(
       getNodeText(playerList.children[1].querySelector(".TrackListItemName")),
     ).toEqual("player2");
+  });
+});
+
+describe("field details", () => {
+  it("displays field details button", () => {
+    useLocation.mockReturnValue({
+      state: {
+        processedPlayers: mockCSV,
+        video: undefined,
+        ballTracks: undefined,
+        homographies: mockHomographies,
+        log: mockLogSoccer,
+        fieldSize: mockFieldSize,
+      },
+    });
+
+    render(<NewTrackingEditor />);
+
+    const fieldDetailsButton = screen.getByTestId("field-details-button");
+    expect(fieldDetailsButton).toBeInTheDocument();
+  });
+
+  it("opens field details bar", () => {
+    useLocation.mockReturnValue({
+      state: {
+        processedPlayers: mockCSV,
+        video: undefined,
+        ballTracks: undefined,
+        homographies: mockHomographies,
+        log: mockLogSoccer,
+        fieldSize: mockFieldSize,
+      },
+    });
+    render(<NewTrackingEditor />);
+
+    const fieldDetailsButton = screen.getByTestId("field-details-button");
+    fireEvent.click(fieldDetailsButton);
+
+    const fieldDetailsMenu = screen.getByTestId("field-details-menu");
+    expect(fieldDetailsMenu).toBeInTheDocument();
+  });
+
+  it("given the detail, displays field details", () => {
+    useLocation.mockReturnValue({
+      state: {
+        processedPlayers: mockCSV,
+        video: undefined,
+        ballTracks: undefined,
+        homographies: mockHomographies,
+        log: mockLogSoccer,
+        fieldSize: mockFieldSize,
+      },
+    });
+    render(<NewTrackingEditor />);
+
+    const fieldDetailsButton = screen.getByTestId("field-details-button");
+    fireEvent.click(fieldDetailsButton);
+
+    const fieldWidth = screen.getByTestId("field-menu-width");
+    const fieldLength = screen.getByTestId("field-menu-length");
+
+    expect(fieldWidth).toHaveTextContent(mockFieldSize.width.toFixed(2));
+    expect(fieldLength).toHaveTextContent(mockFieldSize.length.toFixed(2));
+  });
+
+  it("draws field on canvas", () => {
+    useLocation.mockReturnValue({
+      state: {
+        processedPlayers: mockCSV,
+        video: undefined,
+        ballTracks: undefined,
+        homographies: mockHomographies,
+        log: mockLogSoccer,
+        fieldSize: mockFieldSize,
+      },
+    });
+    render(<NewTrackingEditor />);
+
+    const nextFrameButton = screen.getByTestId("next-frame-button");
+    fireEvent.click(nextFrameButton);
+
+    const fieldDetailsButton = screen.getByTestId("field-details-button");
+    fireEvent.click(fieldDetailsButton);
+
+    const showFieldSwitch = screen.getByTestId("show-field-switch");
+    fireEvent.click(showFieldSwitch);
+
+    const canvasElement = screen.getByTestId("fabric-canvas");
+    const canvasObjectsStringified = canvasElement.getAttribute("fieldPoints");
+    var canvasObjects = JSON.parse(canvasObjectsStringified);
+
+    expect(canvasObjects.length).toBeGreaterThan(0);
+  });
+
+  it("has correct number of field points for soccer", () => {
+    useLocation.mockReturnValue({
+      state: {
+        processedPlayers: mockCSV,
+        video: undefined,
+        ballTracks: undefined,
+        homographies: mockHomographies,
+        log: mockLogSoccer,
+        fieldSize: mockFieldSize,
+      },
+    });
+    render(<NewTrackingEditor />);
+
+    const nextFrameButton = screen.getByTestId("next-frame-button");
+    fireEvent.click(nextFrameButton);
+
+    const fieldDetailsButton = screen.getByTestId("field-details-button");
+    fireEvent.click(fieldDetailsButton);
+
+    const showFieldSwitch = screen.getByTestId("show-field-switch");
+    fireEvent.click(showFieldSwitch);
+
+    const canvasElement = screen.getByTestId("fabric-canvas");
+    const canvasObjectsStringified = canvasElement.getAttribute("fieldPoints");
+    var canvasObjects = JSON.parse(canvasObjectsStringified);
+
+    const template = getTemplate("Soccer");
+
+    console.log("template", template);
+
+    var pointsFlattened = Object.values(template.points).flat();
+
+    expect(canvasObjects.length).toEqual(pointsFlattened.length);
+  });
+
+  it("has correct number of field points for tennis", () => {
+    useLocation.mockReturnValue({
+      state: {
+        processedPlayers: mockCSV,
+        video: undefined,
+        ballTracks: undefined,
+        homographies: mockHomographies,
+        log: mockLogTennis,
+        fieldSize: mockFieldSize,
+      },
+    });
+    render(<NewTrackingEditor />);
+
+    const nextFrameButton = screen.getByTestId("next-frame-button");
+    fireEvent.click(nextFrameButton);
+
+    const fieldDetailsButton = screen.getByTestId("field-details-button");
+    fireEvent.click(fieldDetailsButton);
+
+    const showFieldSwitch = screen.getByTestId("show-field-switch");
+    fireEvent.click(showFieldSwitch);
+
+    const canvasElement = screen.getByTestId("fabric-canvas");
+    const canvasObjectsStringified = canvasElement.getAttribute("fieldPoints");
+    var canvasObjects = JSON.parse(canvasObjectsStringified);
+
+    const template = getTemplate("Tennis");
+    var pointsFlattened = Object.values(template.points).flat();
+
+    expect(canvasObjects.length).toEqual(pointsFlattened.length);
   });
 });
