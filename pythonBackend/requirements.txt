@@ -7,3 +7,4 @@ multipart>=0.1.0, <0.3.0
 pydantic_csv>=0.1.0, <0.2.0
 aiofiles>=24.1.0, <24.2.0
 pytest>= 8.3.0, <8.4
+setuptools >= 75.1.0,<76.0.0
