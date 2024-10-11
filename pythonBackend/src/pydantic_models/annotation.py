@@ -16,3 +16,6 @@ class AnnotationDto(BaseModel):
     y1: float
     x_trans: float
     y_trans: float
+
+    class Config:
+        orm_mode = True

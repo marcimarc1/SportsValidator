@@ -1,7 +1,7 @@
 import fastapi
 from fastapi import HTTPException, Depends
 from sqlalchemy.orm import Session
-from ..logic.annotation_logic import get_annotations_by_video_id, save_annotation_by_csv_path
+from ..logic.annotation_logic import *
 from ..db.database import get_db
 
 router = fastapi.APIRouter(
