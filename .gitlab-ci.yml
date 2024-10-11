@@ -25,18 +25,18 @@ image: "rust:latest"
 #   - apt-get update -yqq
 #   - apt-get install -yqq --no-install-recommends build-essential
 
-# Use cargo to test the project
+# Use cargo to tests the project
 test:cargo:
   script:
     - rustc --version && cargo --version  # Print version info for debugging
-    - cargo test --workspace --verbose
+    - cargo tests --workspace --verbose
 
 # Optional: Use a third party library to generate gitlab junit reports
-# test:junit-report:
+# tests:junit-report:
 #   script:
 #     Should be specified in Cargo.toml
 #     - cargo install junitify
-#     - cargo test -- --format=json -Z unstable-options --report-time | junitify --out $CI_PROJECT_DIR/tests/
+#     - cargo tests -- --format=json -Z unstable-options --report-time | junitify --out $CI_PROJECT_DIR/tests/
 #   artifacts:
 #     when: always
 #     reports:
@@ -48,19 +48,19 @@ deploy:
   environment: production
 
 
-# run unit tests in test stage
+# run unit tests in tests stage
 # https://about.gitlab.com/blog/2022/11/01/how-to-automate-testing-for-a-react-application-with-gitlab/
 stages:
-  - test
+  - tests
   - deploy
 
 unit-test:
   image: node:latest
-  stage: test
+  stage: tests
   before_script:
     - npm install
   script:
-    - npm run test:ci
+    - npm run tests:ci
   coverage: /All files[^|]*\|[^|]*\s+([\d\.]+)/
   artifacts:
     paths:

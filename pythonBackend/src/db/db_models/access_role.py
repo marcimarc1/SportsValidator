@@ -1,5 +1,5 @@
 from sqlalchemy import Column, ForeignKey, Integer
-from db.database import Base
+from ..database import Base
 
 class Access_Role(Base):
     __tablename__ = 'access_roles'

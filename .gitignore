@@ -16,3 +16,4 @@ backend/react-app
 *.egg-info/
 __pycache__/
 .idea/
+myproject.bundle

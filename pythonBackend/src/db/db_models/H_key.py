@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Float, Integer,ForeignKey
-from db.database import Base
+from ..database import Base
 
 
 class H_Key(Base):

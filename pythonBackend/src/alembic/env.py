@@ -8,8 +8,8 @@ from sqlalchemy import pool
 
 from alembic import context
 
-from db.database import Base
-from db.db_models import annotations, access_role, player, player_history, game_history, teams, users,videos,roles, sport
+from ..db.database import Base
+from ..db.db_models import annotations, access_role, player, player_history, game_history, teams, users,videos,roles, sport
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

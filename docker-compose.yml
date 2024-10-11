@@ -1,32 +1,28 @@
-version: '3'
 services:
   api:
-    image: rust_backend
+    image: python_backend
+    build: .
     environment:
-      DATABASE_URL: "postgres://user:pass@db:5432"
-    build:
-      context: .
-      dockerfile: Dockerfile
+     - DATABASE_URL=postgresql://user:pass@localhost:5432/db
     ports:
-      - "80:3030" # Is going to forward whatever comes on the left port to the right one inside the container
+      - "8080:80"
     depends_on:
       - db
+#    links:
+#      - db
+    network_mode: host
   db:
     image: postgres:15.2-alpine
-    restart: always
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
     environment:
       - POSTGRES_USER=user
       - POSTGRES_PASSWORD=pass
+      - POSTGRES_DB=db
+      - POSTGRES_PORT=5432
     ports:
       - "5432:5432"
-  api2:
-    image: python_backend
-    environment:
-      DATABASE_URL: "postgresql://user:pass@db:5432"
-    build:
-      context: ./pythonBackend
-      dockerfile: Dockerfile
-    ports:
-      - "80:3030" # Is going to forward whatever comes on the left port to the right one inside the container
-    depends_on:
-      - db
+    expose:
+      - 5432
+volumes:
+  postgres_data:

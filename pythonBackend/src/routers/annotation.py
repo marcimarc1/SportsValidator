@@ -3,6 +3,7 @@ from fastapi import HTTPException, Depends
 from sqlalchemy.orm import Session
 from ..logic.annotation_logic import *
 from ..db.database import get_db
+from ..pydantic_models.point_update_dto import PointUpdate
 
 router = fastapi.APIRouter(
     prefix="/annotation"
@@ -20,3 +21,9 @@ async def get_annotations(video_id: int, db: Session = Depends(get_db)):
     if not annotations:
         raise HTTPException(status_code=404, detail="No annotations for video")
     return annotations
+
+@router.post("/update_points")
+async def update_points(dto: PointUpdate):
+    if dto is not None:
+        return "received"
+

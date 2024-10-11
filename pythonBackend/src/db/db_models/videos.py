@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, ForeignKey, String
-from db.database import Base
+from ..database import Base
 
 
 class Video(Base):
