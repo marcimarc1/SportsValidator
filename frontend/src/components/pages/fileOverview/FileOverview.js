@@ -25,7 +25,7 @@ class FileOverview extends Component {
     fileSelectionVisible: false,
     errorMessage: "",
     infoMessage:
-      "Please upload the mandatory video file, processed ball and processed players file. Homographies and log files are optional.",
+      "Please upload the mandatory video file and processed players file. Homographies, processed ball and log files are optional.",
     selectedFiles: [],
     requiredFilesUploaded: false,
   };
@@ -69,15 +69,21 @@ class FileOverview extends Component {
       file.name.match(/\.(mp4|avi|mov|wmv)$/i),
     );
 
-    const requiredFilesUploaded =
-      tempProcessedPlayers && tempProcessedBallTracks && tempVideo;
+    const requiredFilesUploaded = tempProcessedPlayers && tempVideo;
 
     if (!requiredFilesUploaded) {
       this.setState({
         errorMessage:
-          "Please make sure to upload at least the video file, processed_ball.csv and processed_players.csv.",
+          "Please make sure to upload at least the video file and processed_players.csv.",
         infoMessage: "",
         requiredFilesUploaded: false,
+      });
+    } else if (!tempProcessedBallTracks) {
+      this.setState({
+        errorMessage: "",
+        infoMessage:
+          "Files uploaded successfully! Is it intentional not uploading processed_ball.csv?",
+        requiredFilesUploaded: true,
       });
     } else {
       this.setState({
@@ -229,7 +235,9 @@ class FileOverview extends Component {
 
     Promise.all([
       readCSV(tempProcessedPlayers, "processedPlayers"),
-      readCSV(tempProcessedBallTracks, "processedBallTracks"),
+      tempProcessedBallTracks
+        ? readCSV(tempProcessedBallTracks, "processedBallTracks")
+        : Promise.resolve(null),
       tempHomographies
         ? readJson(tempHomographies, "homographies")
         : Promise.resolve(null),
