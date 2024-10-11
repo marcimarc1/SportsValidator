@@ -66,8 +66,8 @@ export const trailsFullRedraw = (
     pastBallTrailsToDraw.forEach((a) => {
       const scaledX = a.x1 * horizontalScalingFactor;
       const scaledY = a.y1 * verticalScalingFactor;
-      const scaledWidth = 15 * horizontalScalingFactor;
-      const scaledHeight = 15 * verticalScalingFactor;
+      const scaledWidth = (a.x2 - a.x1) * horizontalScalingFactor;
+      const scaledHeight = (a.y2 - a.y1) * verticalScalingFactor;
       const radius =
         scaledWidth < scaledHeight ? scaledWidth / 4 : scaledHeight / 4;
       const trailColor = colorSetBall.get(a.trackNo);

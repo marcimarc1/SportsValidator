@@ -74,8 +74,10 @@ export const convertAnnotationBallToBallbox = (
   try {
     const scaledX = annotationBall.x1 * horizontalScalingFactor;
     const scaledY = annotationBall.y1 * verticalScalingFactor;
-    const scaledWidth = 15 * horizontalScalingFactor;
-    const scaledHeight = 15 * verticalScalingFactor;
+    const scaledWidth =
+      (annotationBall.x2 - annotationBall.x1) * horizontalScalingFactor;
+    const scaledHeight =
+      (annotationBall.y2 - annotationBall.y1) * verticalScalingFactor;
     const boundingBox = new fabric.Rect({
       left: scaledX,
       top: scaledY,
@@ -109,13 +111,17 @@ export const convertBallboxToAnnotationBall = (
   verticalScalingFactor,
 ) => {
   try {
+    const x1 = boundingBox.left / horizontalScalingFactor;
+    const y1 = boundingBox.top / verticalScalingFactor;
     return {
       FrameNo: boundingBox.my.frame,
       trackNo: boundingBox.my.key,
-      x1: boundingBox.left / horizontalScalingFactor,
-      y1: boundingBox.top / verticalScalingFactor,
-      x2: 0,
-      y2: 0,
+      x1: x1,
+      y1: y1,
+      x2:
+        (boundingBox.width * boundingBox.scaleX) / horizontalScalingFactor + x1,
+      y2:
+        (boundingBox.height * boundingBox.scaleY) / verticalScalingFactor + y1,
       detection: 1,
       x: 0,
       y: 0,

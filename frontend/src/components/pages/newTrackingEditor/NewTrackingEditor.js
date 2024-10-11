@@ -436,8 +436,16 @@ const NewTrackingEditor = () => {
       box.on({
         modified: () => {
           var boundingRect = box.getBoundingRect();
+          var scaleX = box.scaleX; // Save current scale factors
+          var scaleY = box.scaleY;
+          // Calculate actual width and height based on scale factors
+          //when scaling the box, only scaleX and scaleY change, while width and height not
+          var actualWidth = (boundingRect.width - box.strokeWidth) / scaleX;
+          var actualHeight = (boundingRect.height - box.strokeWidth) / scaleY;
           box.left = boundingRect.left;
           box.top = boundingRect.top;
+          box.width = actualWidth;
+          box.height = actualHeight;
 
           const horizontalScalingFactor = canvas.width / 3840;
           const verticalScalingFactor = canvas.height / 2160;
@@ -746,8 +754,8 @@ const NewTrackingEditor = () => {
         currentBallTrailsToDraw.forEach((a) => {
           const scaledX = a.x1 * horizontalScalingFactor;
           const scaledY = a.y1 * verticalScalingFactor;
-          const scaledWidth = 15 * horizontalScalingFactor;
-          const scaledHeight = 15 * verticalScalingFactor;
+          const scaledWidth = (a.x2 - a.x1) * horizontalScalingFactor;
+          const scaledHeight = (a.y2 - a.y1) * verticalScalingFactor;
           const radius =
             scaledWidth < scaledHeight ? scaledWidth / 4 : scaledHeight / 4;
           const trailColor = colorSetBall.get(a.trackNo);
