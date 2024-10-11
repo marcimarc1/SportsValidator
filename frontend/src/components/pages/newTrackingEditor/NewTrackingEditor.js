@@ -1638,6 +1638,7 @@ const NewTrackingEditor = () => {
             players={annotations}
             video={video}
             homographies={homographies}
+            balls={annotationBallTracks}
           />
         </Box>
       </div>
