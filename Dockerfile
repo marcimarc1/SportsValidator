@@ -14,6 +14,7 @@ WORKDIR /backend
 COPY pythonBackend/requirements.txt .
 RUN pip install --upgrade -r requirements.txt
 COPY /pythonBackend/src /backend/src
-# RUN chmod +x entrypoint.sh
-# ENTRYPOINT["/backend/src/entrypoint.sh"]
-CMD ["fastapi", "run", "/backend/src/main.py","--host", "0.0.0.0", "--port", "80"]
+WORKDIR /backend/src
+RUN pip install .
+WORKDIR /backend
+CMD ["fastapi", "dev", "/backend/src/main.py","--host", "0.0.0.0", "--port", "80"]

@@ -3,6 +3,7 @@ from ..database import Base
 
 class GamesHistory(Base):
     __tablename__ = 'games_history'
+    __table_args__ = {'extend_existing': True}
     id = Column(Integer, primary_key=True, index=True)
     # game_id = Column(Integer, ForeignKey("games.id"), nullable=False) TODO: Add Game model
     team1_id = Column(Integer, ForeignKey("teams.id"), nullable= False)
