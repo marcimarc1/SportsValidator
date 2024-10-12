@@ -18,6 +18,14 @@ export const SettingsBallButton = ({
         setAnchorEl(null);
     };
 
+    const handleAddBallButton = () => {
+      //can be removed if user is know to this tool
+      if (window.confirm("To add a ball, click on the field")) {
+        handleClose();
+        handleAddBall();
+    }   
+    };
+
     return (
     <div>
       <Button
@@ -70,7 +78,8 @@ export const SettingsBallButton = ({
           <Button
             data-testid="add-ball-button"
             variant="contained"
-            onClick={handleAddBall}
+            onClick={handleAddBallButton}
+            title="After clicked on this button, click on the field to add a ball"
             sx={{
               backgroundColor: "#BBC3C9 !important",
               color: "#1b1f22 !important",

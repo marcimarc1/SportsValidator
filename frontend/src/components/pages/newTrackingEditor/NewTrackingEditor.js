@@ -1400,8 +1400,13 @@ const NewTrackingEditor = () => {
       new Map(playerNameMap.set(newPlayerKey, "player" + newPlayerKey)),
     );
   }
-
-  function handleAddBall() {
+  function addBoundingBoxBallAtMousePosition(event) {
+    const pointer = canvas.getPointer(event.e);
+    const horizontalScalingFactor = canvas.width / 3840;
+    const verticalScalingFactor = canvas.height / 2160;
+    const x = pointer.x / horizontalScalingFactor;
+    const y = pointer.y / verticalScalingFactor;
+    //console.log(`Mouse clicked at: (${x}, ${y})`);
     const newBallKey = ballNameMap.size + 1; //ball keys start from 1
     const boxColor = generateColor(newBallKey);
     setColorSetBall(colorSetBall.set(newBallKey, boxColor));
@@ -1409,16 +1414,24 @@ const NewTrackingEditor = () => {
       annotationBallTracks.concat({
         FrameNo: frameNumber,
         trackNo: newBallKey,
-        x1: 0,
-        x2: 20,
-        y1: 0,
-        y2: 20,
+        x1: x,
+        x2: x + 30,
+        y1: y,
+        y2: y + 30,
         detection: 1,
         x: 0,
         y: 0,
       }),
     );
     setBallNameMap(new Map(ballNameMap.set(newBallKey, "ball" + newBallKey)));
+
+    canvas.off("mouse:down");
+  }
+
+  function handleAddBall() {
+    canvas.on("mouse:down", function (e) {
+      addBoundingBoxBallAtMousePosition(e);
+    });
   }
 
   const handleEnablingTrails = () => {
