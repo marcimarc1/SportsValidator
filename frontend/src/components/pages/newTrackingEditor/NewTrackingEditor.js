@@ -42,7 +42,11 @@ import {
   defineTrailBehaviour,
   defineTrailBehaviourBall,
 } from "../../../utils/canvasUtils";
-import { multiPlayerMerge, multiBallMerge } from "../../../utils/validation";
+import {
+  multiPlayerMerge,
+  multiBallMerge,
+  multiBallTrailsDelete,
+} from "../../../utils/validation";
 import { DownloadButton } from "./DownloadButton";
 import { parseLogFile } from "../../../utils/logFileParser";
 import Slider from "@mui/material/Slider";
@@ -99,7 +103,7 @@ const NewTrackingEditor = () => {
   const [mergeModalBallState, setMergeModalBallState] = useState(false);
   const [isShowingBallBox, setIsShowingBallBox] = useState(true);
   const [isShowingBallTrails, setIsShowingBallTrails] = useState(true);
-  const [selectedTrailsBall, setSelectedTrailsBall] = useState(new Set());
+  const [selectedTrailsBall, setSelectedTrailsBall] = useState([]);
 
   const handleModalOpen = (playerInList) => {
     setPlayerChosenInList(playerInList);
@@ -127,7 +131,7 @@ const NewTrackingEditor = () => {
       playerNameMap,
       setPlayerNameMap,
     );
-    setSelectedTrails(new Set());
+    setSelectedTrails(new Array());
   };
 
   const handleMultiSelectMergeBall = () => {
@@ -140,7 +144,20 @@ const NewTrackingEditor = () => {
       ballNameMap,
       setBallNameMap,
     );
-    setSelectedTrailsBall(new Set());
+    setSelectedTrailsBall(new Array());
+  };
+
+  const handleMultiBallTrailsDelete = () => {
+    console.log("Multiplayer delete ball trails");
+    console.log(Array.from(selectedTrailsBall));
+    multiBallTrailsDelete(
+      Array.from(selectedTrailsBall),
+      annotationBallTracks,
+      setAnnotationBallTracks,
+      ballNameMap,
+      setBallNameMap,
+    );
+    setSelectedTrailsBall(new Array());
   };
 
   let { videoName } = useParams();
@@ -1605,6 +1622,17 @@ const NewTrackingEditor = () => {
             }}
           >
             Merge Ball
+          </Button>
+          <Button
+            data-testid="delete-ball-trails-button"
+            variant="contained"
+            onClick={handleMultiBallTrailsDelete}
+            sx={{
+              backgroundColor: "#BBC3C9 !important",
+              color: "#1b1f22 !important",
+            }}
+          >
+            Del selected Balltrails
           </Button>
           <FieldDetailsButton
             handleEnablingField={handleEnablingField}

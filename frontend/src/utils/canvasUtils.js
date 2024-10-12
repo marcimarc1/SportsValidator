@@ -102,9 +102,10 @@ export const defineTrailBehaviour = (trail, setSelectedTrails) => {
 
 export const defineTrailBehaviourBall = (trail, setSelectedTrailsBall) => {
   trail.on("selected", () => {
-    setSelectedTrailsBall((prevTrails) => {
-      return new Set(prevTrails.add(trail.properties.ballKey));
-    });
+    setSelectedTrailsBall((prevTrails) => [
+      ...prevTrails,
+      { ballKey: trail.properties.ballKey, frame: trail.properties.frame },
+    ]);
   });
 };
 

@@ -279,17 +279,34 @@ export const multiBallMerge = (
   }
 
   const newAnnotationBallTracks = annotationBallTracks.map((a) => {
-    if (ballKeyArray.includes(a.trackNo)) {
-      a.trackNo = ballKeyArray[0];
+    if (ballKeyArray.some((item) => item.ballKey === a.trackNo)) {
+      a.trackNo = ballKeyArray[0].ballKey;
       return a;
     }
     return a;
   });
   setAnnotationBallTracks(removeDuplicates(newAnnotationBallTracks));
   let newBallNameMap = new Map(ballNameMap);
-  ballKeyArray.shift();
-  ballKeyArray.forEach((key) => {
-    newBallNameMap.delete(key);
+  if (ballKeyArray.length === 1) {
+    let ballKeyForMerge = ballKeyArray[0].ballKey;
+    ballKeyArray
+      .filter((item) => item.ballKey !== ballKeyForMerge)
+      .forEach((item) => {
+        newBallNameMap.delete(item.ballKey);
+      });
+    setBallNameMap(newBallNameMap);
+  }
+};
+
+export const multiBallTrailsDelete = (
+  ballKeyArray,
+  setAnnotationBallTracks,
+) => {
+  ballKeyArray.forEach((item) => {
+    setAnnotationBallTracks((prevTracks) =>
+      prevTracks.filter(
+        (a) => a.trackNo !== item.ballKey || a.FrameNo !== item.frame,
+      ),
+    );
   });
-  setBallNameMap(newBallNameMap);
 };
