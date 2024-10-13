@@ -25,7 +25,7 @@ export default function ApplyHomographyModal({
   const [frameNumber, setFrameNumber] = React.useState(240);
 
   const applyHomography = () => {
-    if(frameNumber < 1 || isNaN(frameNumber)) {
+    if (frameNumber < 1 || isNaN(frameNumber)) {
       alert("Frame number must be greater than 0");
       return;
     }
@@ -44,15 +44,15 @@ export default function ApplyHomographyModal({
           <Typography variant="h6" id="demo-simple-select-label">
             {"Do you want to apply the homography to the next frames?"}
           </Typography>
-            <Box marginTop={1}>
-              <Input
-                type="number"
-                value={frameNumber}
-                onChange={(e) => setFrameNumber(e.target.value)}
-                style={{ width: '120px' }}
-              />
-              {" frames"}
-            </Box>
+          <Box marginTop={1}>
+            <Input
+              type="number"
+              value={frameNumber}
+              onChange={(e) => setFrameNumber(e.target.value)}
+              style={{ width: "120px" }}
+            />
+            {" frames"}
+          </Box>
           <Box marginTop={2}>
             <Button
               variant="contained"
