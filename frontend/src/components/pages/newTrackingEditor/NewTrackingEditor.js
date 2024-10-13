@@ -28,12 +28,15 @@ import TextField from "@mui/material/TextField";
 import TrackList from "../newTrackingEditor/TrackList";
 import TrackListItemPlayer from "./TrackListItemPlayer";
 import MergeAndSwapModal from "./MergeAndSwapModal";
+import ApplyHomographyModal from "./ApplyHomographyModal";
 import {
   trailsFullRedraw,
+  drawFieldPoints,
   defineTrailBehaviour,
 } from "../../../utils/canvasUtils";
 import { multiPlayerMerge } from "../../../utils/validation";
 import { DownloadButton } from "./DownloadButton";
+import { parseLogFile } from "../../../utils/logFileParser";
 import Slider from "@mui/material/Slider";
 import { FieldDetailsButton } from "./field/FieldDetailsButton";
 import api from "../../../api/api";
@@ -41,7 +44,7 @@ import api from "../../../api/api";
 // TODO Take a video_id instead and have an endpoint on the server where we supply a video_id and get the corresponding video
 const NewTrackingEditor = () => {
   const location = useLocation();
-  const { processedPlayers, video, ballTracks, homographies, log } =
+  const { processedPlayers, video, ballTracks, homographies, log, fieldSize } =
     location.state || {};
   // ballTracks, homographies and log are not being used. Logic will be implemented in the future.
   const [annotations, setAnnotations] = useState([]);
@@ -64,9 +67,14 @@ const NewTrackingEditor = () => {
   const [trailFrameNumber, setTrailFrameNumber] = useState(50);
   const [mergeModalState, setMergeModalState] = useState(false);
   const [playerChosenInList, setPlayerChosenInList] = useState("");
+  const [showField, setShowField] = useState(true);
+  const [editField, setEditField] = useState(false);
+  const logFile = parseLogFile(log);
   const [selectedTrails, setSelectedTrails] = useState(new Set());
   const [trailSize, setTrailSize] = useState(50);
   const [drawInField, setDrawInField] = useState(false);
+  const [showApplyHomographyModal, setShowApplyHomographyModal] =
+    useState(false);
 
   const handleModalOpen = (playerInList) => {
     setPlayerChosenInList(playerInList);
@@ -593,8 +601,37 @@ const NewTrackingEditor = () => {
         });
       }
     }
+
+    canvas.remove(
+      ...canvas
+        .getObjects()
+        .filter(
+          (obj) =>
+            obj.properties?.type === "field" ||
+            obj.properties?.type === "fieldPoint",
+        ),
+    );
+
+    if (showField) {
+      drawField();
+    }
+
+    if (isShowingBox) {
+      boundingBoxesToDraw.forEach((a) => {
+        const fontSize = 12;
+        const scaledX = a.x1 * horizontalScalingFactor;
+        const scaledY = a.y1 * verticalScalingFactor - fontSize;
+        const playerKey = a.PlayerKey.toString();
+        let boxKey = new fabric.Text(playerKey, {
+          left: scaledX,
+          top: scaledY,
+          fontSize: fontSize,
+        });
+        canvas.add(boxKey);
+      });
+    }
+
     setPlayerList(tempList);
-    canvas.renderAll();
   };
 
   useEffect(() => {
@@ -699,6 +736,7 @@ const NewTrackingEditor = () => {
     playerNameMap,
     trailFrameNumber,
     trailsEnabled,
+    showField,
     trailSize,
     drawInField,
   ]);
@@ -726,7 +764,15 @@ const NewTrackingEditor = () => {
   //triggered when new player is added, or when merge or swap happens
   useEffect(() => {
     //remove old canvas objects
-    canvas.remove(...canvas.getObjects());
+    canvas.remove(
+      ...canvas
+        .getObjects()
+        .filter(
+          (obj) =>
+            obj?.properties?.type !== "fieldPoint" &&
+            obj?.properties?.type !== "field",
+        ),
+    );
 
     const horizontalScalingFactor = canvas.width / 3840;
     const verticalScalingFactor = canvas.height / 2160;
@@ -846,8 +892,10 @@ const NewTrackingEditor = () => {
       const nextFrame = frameNumber + 1;
       const referenceTimestamp = getReferenceTimestampForFrame(nextFrame);
       videoElement.currentTime = referenceTimestamp;
+      deleteFieldDrawing();
       setFrameNumber(nextFrame);
       setTimestamp(referenceTimestamp);
+      drawField();
     }
   };
 
@@ -856,8 +904,10 @@ const NewTrackingEditor = () => {
       const previousFrame = frameNumber - 1;
       const referenceTimestamp = getReferenceTimestampForFrame(previousFrame);
       videoElement.currentTime = referenceTimestamp;
+      deleteFieldDrawing();
       setFrameNumber(previousFrame);
       setTimestamp(referenceTimestamp);
+      drawField();
     }
   };
 
@@ -878,6 +928,10 @@ const NewTrackingEditor = () => {
 
   const handlePlayPause = () => {
     if (videoElement && videoElement.readyState != 0 && !videoElement.ended) {
+      if (editField) {
+        setShowApplyHomographyModal(true);
+        return;
+      }
       if (videoElement.paused) {
         setIsPlaying(true);
         videoElement.play();
@@ -975,6 +1029,65 @@ const NewTrackingEditor = () => {
       setTrailsEnabled(false);
     } else {
       setTrailsEnabled(true);
+    }
+  };
+
+  const handleEnablingField = () => {
+    if (showField) {
+      setShowField(false);
+      setEditField(false);
+      deleteFieldDrawing();
+    } else {
+      setShowField(true);
+      drawField(true);
+    }
+  };
+
+  const handleEnablingEditField = () => {
+    if (editField) {
+      setEditField(false);
+    } else {
+      setEditField(true);
+    }
+  };
+
+  useEffect(() => {
+    canvas.getObjects().forEach((obj) => {
+      if (obj.properties?.type === "fieldPoint") {
+        obj.set({ selectable: editField });
+      }
+    });
+  }, [editField, canvas]);
+
+  const deleteFieldDrawing = () => {
+    canvas.remove(
+      ...canvas
+        .getObjects()
+        .filter(
+          (obj) =>
+            obj.properties?.type === "field" ||
+            obj.properties?.type === "fieldPoint",
+        ),
+    );
+  };
+
+  const drawField = (forceDraw = false) => {
+    if (!homographies) {
+      return;
+    }
+
+    if (showField || forceDraw) {
+      drawFieldPoints(
+        canvas,
+        getCurrentTimestampFrame(),
+        homographies,
+        canvas.width / 3840,
+        canvas.height / 2160,
+        logFile.Sport,
+        fieldSize?.length,
+        fieldSize?.width,
+        videoElement,
+      );
     }
   };
 
@@ -1111,7 +1224,6 @@ const NewTrackingEditor = () => {
             valueLabelDisplay="auto"
           />
           <Typography sx={{ marginLeft: "10px" }}>Trail frames: </Typography>
-
           <TextField
             variant="standard"
             sx={{
@@ -1123,6 +1235,14 @@ const NewTrackingEditor = () => {
             type="number"
             onChange={(event, val) => setTrailFrameNumber(event.target.value)}
           />
+          <FieldDetailsButton
+            handleEnablingField={handleEnablingField}
+            showField={showField}
+            editField={editField}
+            handleEnablingEditField={handleEnablingEditField}
+            videoElement={videoElement}
+            fieldSize={fieldSize}
+          />
           <div className="tests">
             <Button
               data-testid="from-annotation"
@@ -1132,7 +1252,11 @@ const NewTrackingEditor = () => {
               draw players from annotation
             </Button>
           </div>
-          <DownloadButton players={annotations} video={video} />
+          <DownloadButton
+            players={annotations}
+            video={video}
+            homographies={homographies}
+          />
         </Box>
       </div>
 
@@ -1142,7 +1266,7 @@ const NewTrackingEditor = () => {
           ref={canvasRef}
           canvas={JSON.stringify(canvas)}
           annotations={annotations.length}
-          playerList={JSON.stringify(playerList)}
+          playerlist={JSON.stringify(playerList)}
           className="canvas"
           id="tracking-editor-canvas"
           width="1920"
