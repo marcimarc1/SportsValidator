@@ -1098,8 +1098,9 @@ const NewTrackingEditor = () => {
   const handleApplyHomography = (frameNumber) => {
     console.log("Applying homography for ", frameNumber, " frames");
     var currentFrame = getCurrentTimestampFrame();
-    api.post("/track", {
-      video_id: video.id,
+    var boundingBoxes = canvas.getObjects().filter(obj => obj.properties?.type === "playerBox");
+    api.post("/annotation/track", {
+      video_id: video.name,
       start_frame: currentFrame,
       end_frame: currentFrame + frameNumber,
       points: [],

@@ -3,6 +3,7 @@ import Box from "@material-ui/core/Box";
 import Button from "@material-ui/core/Button";
 import Typography from "@material-ui/core/Typography";
 import Modal from "@material-ui/core/Modal";
+import Input from "@material-ui/core/Input";
 
 const style = {
   position: "absolute",
@@ -21,6 +22,16 @@ export default function ApplyHomographyModal({
   handleApply,
   handleContinueWithoutApplying,
 }) {
+  const [frameNumber, setFrameNumber] = React.useState(240);
+
+  const applyHomography = () => {
+    if(frameNumber < 1 || isNaN(frameNumber)) {
+      alert("Frame number must be greater than 0");
+      return;
+    }
+    handleApply(frameNumber);
+  };
+
   return (
     <div>
       <Modal
@@ -31,8 +42,17 @@ export default function ApplyHomographyModal({
       >
         <Box textAlign="center" sx={style}>
           <Typography variant="h6" id="demo-simple-select-label">
-            {"Do you want to apply the homography to the next 240 frames?"}
+            {"Do you want to apply the homography to the next frames?"}
           </Typography>
+            <Box marginTop={1}>
+              <Input
+                type="number"
+                value={frameNumber}
+                onChange={(e) => setFrameNumber(e.target.value)}
+                style={{ width: '120px' }}
+              />
+              {" frames"}
+            </Box>
           <Box marginTop={2}>
             <Button
               variant="contained"
@@ -49,7 +69,7 @@ export default function ApplyHomographyModal({
             >
               Continue without applying
             </Button>
-            <Button variant="contained" onClick={handleApply}>
+            <Button variant="contained" onClick={applyHomography}>
               Apply
             </Button>
           </Box>
