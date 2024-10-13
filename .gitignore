@@ -17,3 +17,5 @@ backend/react-app
 __pycache__/
 .idea/
 myproject.bundle
+.venv
+__pycache__

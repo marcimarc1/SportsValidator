@@ -35,6 +35,8 @@ import {
 import { multiPlayerMerge } from "../../../utils/validation";
 import { DownloadButton } from "./DownloadButton";
 import Slider from "@mui/material/Slider";
+import { FieldDetailsButton } from "./field/FieldDetailsButton";
+import api from "../../../api/api";
 
 // TODO Take a video_id instead and have an endpoint on the server where we supply a video_id and get the corresponding video
 const NewTrackingEditor = () => {
@@ -980,8 +982,45 @@ const NewTrackingEditor = () => {
     setTrailSize(event.target.value);
   };
 
+  const handleApplyHomography = (frameNumber) => {
+    console.log("Applying homography for ", frameNumber, " frames");
+    var currentFrame = getCurrentTimestampFrame();
+    api.post("/track", {
+      video_id: video.id,
+      start_frame: currentFrame,
+      end_frame: currentFrame + frameNumber,
+      points: [],
+      player_boxes: [],
+    }).then((response) => {
+      console.log(response.data);
+    });
+
+    deleteFieldDrawing();
+    drawField();
+    setShowApplyHomographyModal(false);
+    handleEnablingEditField();
+    setIsPlaying(true);
+    videoElement.play();
+  };
+
+  const handleContinueWithoutApplyingHomographies = async () => {
+    console.log("Continuing without applying homographies");
+    setShowApplyHomographyModal(false);
+    handleEnablingEditField();
+    videoElement.play();
+    setIsPlaying(true);
+  };
+
   return (
     <div>
+      <ApplyHomographyModal
+        showApplyHomographyModal={showApplyHomographyModal}
+        handleClose={() => setShowApplyHomographyModal(false)}
+        handleApply={handleApplyHomography}
+        handleContinueWithoutApplying={() =>
+          handleContinueWithoutApplyingHomographies()
+        }
+      />
       <MergeAndSwapModal
         playerChosenInList={playerChosenInList}
         playerNameMap={playerNameMap}
