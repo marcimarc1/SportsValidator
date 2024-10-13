@@ -2,9 +2,9 @@ from typing import List
 from pydantic import BaseModel
 
 class Point(BaseModel):
-    id: int
-    x: int
-    y: int
+    id: str
+    x: float
+    y: float
 
 class PointUpdate(BaseModel):
     video_id: int
@@ -15,5 +15,7 @@ class PointUpdate(BaseModel):
     class Config:
         orm_mode = True
 
-
-
+class TrackingResult(BaseModel):
+    tracked_points: List[List[Point]]
+    start_frame: int
+    end_frame: int
