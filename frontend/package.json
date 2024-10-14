@@ -50,7 +50,8 @@
     "moduleNameMapper": {
       "\\.(css|less)$": "<rootDir>/src/tests/transforms/cssTransform.js",
       "\\.(svg)$": "<rootDir>/src/tests/transforms/svgTransform.js",
-      "\\.(jpg|ico|jpeg|png|gif|eot|otf|webp|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$": "<rootDir>/src/tests/transforms/fileTransform.js"
+      "\\.(jpg|ico|jpeg|png|gif|eot|otf|webp|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$": "<rootDir>/src/tests/transforms/fileTransform.js",
+      "^axios$": "axios/dist/node/axios.cjs"
     },
     "setupFiles": [
       "./jestConfig.js"
