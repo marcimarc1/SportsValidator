@@ -1096,22 +1096,38 @@ const NewTrackingEditor = () => {
   };
 
   const handleApplyHomography = (frameNumber) => {
-    console.log("Applying homography for ", frameNumber, " frames");
-    var currentFrame = getCurrentTimestampFrame();
-    var boundingBoxes = canvas
+    frameNumber = parseInt(frameNumber);
+    var currentFrame = parseInt(getCurrentTimestampFrame());
+    var fieldPoints = canvas
       .getObjects()
-      .filter((obj) => obj.properties?.type === "playerBox");
+      .filter((obj) => obj.properties?.type === "fieldPoint")
+      .map((obj) => ({
+        id: obj.id,
+        x: obj.left,
+        y: obj.top,
+      }));
+    console.log("Field points: ", fieldPoints);
     api
       .post("/annotation/track", {
         video_id: video.name,
         start_frame: currentFrame,
         end_frame: currentFrame + frameNumber,
-        points: [],
-        player_boxes: [],
+        points: fieldPoints,
+        player_boxes: annotations
+          .filter(
+            (a) =>
+              a.FrameNo >= currentFrame &&
+              a.FrameNo <= currentFrame + frameNumber,
+          )
+          .map((a) => ({
+            frame_no: a.FrameNo,
+            x_1: a.x1,
+            y_1: a.y1,
+            x_2: a.x2,
+            y_2: a.y2,
+          })),
       })
-      .then((response) => {
-        console.log(response.data);
-      });
+      .then((response) => {});
 
     deleteFieldDrawing();
     drawField();

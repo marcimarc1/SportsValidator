@@ -182,7 +182,7 @@ export const drawFieldPoints = (
     canvas.on("object:moving", updateLines);
   };
 
-  const drawCircle = (center, radius, color) => {
+  const drawCircle = (center, radius, color, id) => {
     const transformedCenter = transformPoint(
       { coords: center },
       invHomography,
@@ -225,10 +225,11 @@ export const drawFieldPoints = (
       originX: "center",
       originY: "center",
       selectable: true,
+      id: id,
     });
 
     ellipse.properties = {
-      type: "field",
+      type: "fieldPoint",
       frame: frameNumber,
     };
 
@@ -245,11 +246,12 @@ export const drawFieldPoints = (
       points.middleCircle.center,
       points.middleCircle.radius,
       "yellow",
+      "middle-circle",
     );
   }
   if (points.penaltySpot) {
-    drawCircle(points.penaltySpot[0].coords, 0.3, "red");
-    drawCircle(points.penaltySpot[1].coords, 0.3, "red");
+    drawCircle(points.penaltySpot[0].coords, 0.3, "red", "penalty-spot-1");
+    drawCircle(points.penaltySpot[1].coords, 0.3, "red", "penalty-spot-2");
   }
 
   const updateHomography = () => {
