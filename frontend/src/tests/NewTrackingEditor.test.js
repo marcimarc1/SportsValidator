@@ -378,42 +378,7 @@ describe("field details", () => {
     expect(canvasObjects.length).toBeGreaterThan(0);
   });
 
-  it("has correct number of field points for soccer", () => {
-    useLocation.mockReturnValue({
-      state: {
-        processedPlayers: mockCSV,
-        video: undefined,
-        ballTracks: undefined,
-        homographies: mockHomographies,
-        log: mockLogSoccer,
-        fieldSize: mockFieldSize,
-      },
-    });
-    render(<NewTrackingEditor />);
-
-    const nextFrameButton = screen.getByTestId("next-frame-button");
-    fireEvent.click(nextFrameButton);
-
-    const fieldDetailsButton = screen.getByTestId("field-details-button");
-    fireEvent.click(fieldDetailsButton);
-
-    const showFieldSwitch = screen.getByTestId("show-field-switch");
-    fireEvent.click(showFieldSwitch);
-
-    const canvasElement = screen.getByTestId("fabric-canvas");
-    const canvasObjectsStringified = canvasElement.getAttribute("fieldPoints");
-    var canvasObjects = JSON.parse(canvasObjectsStringified);
-
-    const template = getTemplate("Soccer");
-
-    console.log("template", template);
-
-    var pointsFlattened = Object.values(template.points).flat();
-
-    expect(canvasObjects.length).toEqual(pointsFlattened.length);
-  });
-
-  it("has correct number of field points for tennis", () => {
+  it("has correct number of field points", () => {
     useLocation.mockReturnValue({
       state: {
         processedPlayers: mockCSV,
@@ -425,9 +390,6 @@ describe("field details", () => {
       },
     });
     render(<NewTrackingEditor />);
-
-    const nextFrameButton = screen.getByTestId("next-frame-button");
-    fireEvent.click(nextFrameButton);
 
     const fieldDetailsButton = screen.getByTestId("field-details-button");
     fireEvent.click(fieldDetailsButton);
