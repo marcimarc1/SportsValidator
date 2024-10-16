@@ -119,7 +119,7 @@ class FileListItem extends Component {
               state: {
                 processedPlayers: this.props.processedPlayers,
                 video: this.props.video,
-                ballTracks: this.props.ballTracks,
+                processedBallTracks: this.props.processedBallTracks,
                 homographies: this.props.homographies,
                 fieldSize: this.props.fieldSize,
                 log: this.props.log,

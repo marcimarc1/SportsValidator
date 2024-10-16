@@ -1,7 +1,7 @@
 import { Box, Button, Menu, MenuItem, Paper } from "@mui/material";
 import React from "react";
 
-export const DownloadButton = ({ players, video, homographies }) => {
+export const DownloadButton = ({ players, video, homographies , balls}) => {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const open = Boolean(anchorEl);
   const handleClick = (event) => {
@@ -56,6 +56,36 @@ export const DownloadButton = ({ players, video, homographies }) => {
       console.log("No players to download");
     }
   };
+
+  const handleBallDownload = async()=>{
+    if(balls && balls.length > 0){
+      const csvRows = [];
+      const headers = Object.keys(balls[0]);
+      csvRows.push(headers.join(","));
+
+      for (const row of balls){
+        const values = headers.map((header) => {
+          const escaped = (""+row[header]).replace(/"/g, '\\"');
+          return `"${escaped}"`;
+        });
+        csvRows.push(values.join(","));
+      }
+
+      const csvData = csvRows.join("\n");
+      const blob = new Blob([csvData], {type: "text/csv"});
+      const url = URL.createObjectURL(blob);
+
+      const element = document.createElement("a");
+      element.href = url;
+      element.download = "ball.csv";
+      document.body.appendChild(element);
+      element.click();
+      document.body.appendChild(element);
+      URL.revokeObjectURL(url);
+    } else{
+      console.log("No balls to download");
+    }
+  }
 
   const handleHomographyDownload = async () => {
 
@@ -117,6 +147,9 @@ export const DownloadButton = ({ players, video, homographies }) => {
           </MenuItem>
           <MenuItem onClick={handleHomographyDownload}>
             <Button>Homographies</Button>
+          </MenuItem>
+          <MenuItem onClick={handleBallDownload}>
+            <Button>Balls</Button>
           </MenuItem>
         </Box>
       </Menu>
