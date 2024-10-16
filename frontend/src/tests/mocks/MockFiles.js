@@ -28,7 +28,7 @@ Num of Classes: 4
 Postprocessing: True
 `;
 
-const mockCSVBall =`
+const mockCSVBall = `
   ",FrameNo,x1,y1,x2,y2,trackNo,detection,x_trans,y_trans\n" +
   "0,0.0,3615.6838379617143,1219.6369629513051,3626.97998039766,1229.2790526736949,1.0,0.0,28.162951705869556,6.633583458584172\n" +
   "1,2.0,3600.3629313792726,1220.7755145256108,3612.2013923732343,1230.779882572945,2.0,0.0,28.01090059588595,6.6342544667894\n" +
@@ -56,8 +56,8 @@ const mockFieldSize = {
 export {
   mockCSV,
   mockLogSoccer,
-  mockCSVBall, mockLogTennis,
+  mockCSVBall,
+  mockLogTennis,
   mockHomographies,
   mockFieldSize,
 };
-
