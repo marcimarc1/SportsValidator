@@ -25,7 +25,7 @@ class FileOverview extends Component {
     fileSelectionVisible: false,
     errorMessage: "",
     infoMessage:
-      "Please upload the mandatory video file and processed players file. Ball tracks, homographies, and log files are optional.",
+      "Please upload the mandatory video file and processed players file. Homographies, processed ball and log files are optional.",
     selectedFiles: [],
     requiredFilesUploaded: false,
   };
@@ -62,6 +62,9 @@ class FileOverview extends Component {
     const tempProcessedPlayers = selectedFiles.find(
       (file) => file.name === "processed_players.csv",
     );
+    const tempProcessedBallTracks = selectedFiles.find(
+      (file) => file.name === "processed_ball.csv",
+    );
     const tempVideo = selectedFiles.find((file) =>
       file.name.match(/\.(mp4|avi|mov|wmv)$/i),
     );
@@ -74,6 +77,13 @@ class FileOverview extends Component {
           "Please make sure to upload at least the video file and processed_players.csv.",
         infoMessage: "",
         requiredFilesUploaded: false,
+      });
+    } else if (!tempProcessedBallTracks) {
+      this.setState({
+        errorMessage: "",
+        infoMessage:
+          "Files uploaded successfully! Is it intentional not uploading processed_ball.csv?",
+        requiredFilesUploaded: true,
       });
     } else {
       this.setState({
@@ -177,8 +187,8 @@ class FileOverview extends Component {
     let tempProcessedPlayers = selectedFiles.find(
       (file) => file.name === "processed_players.csv",
     );
-    let tempBallTracks = selectedFiles.find(
-      (file) => file.name === "ball_tracks.csv",
+    let tempProcessedBallTracks = selectedFiles.find(
+      (file) => file.name === "processed_ball.csv",
     );
     let tempHomographies = selectedFiles.find(
       (file) => file.name === "homographies.json",
@@ -225,8 +235,8 @@ class FileOverview extends Component {
 
     Promise.all([
       readCSV(tempProcessedPlayers, "processedPlayers"),
-      tempBallTracks
-        ? readCSV(tempBallTracks, "ballTracks")
+      tempProcessedBallTracks
+        ? readCSV(tempProcessedBallTracks, "processedBallTracks")
         : Promise.resolve(null),
       tempHomographies
         ? readJson(tempHomographies, "homographies")
@@ -242,7 +252,7 @@ class FileOverview extends Component {
             videoName: tempVideo.name,
             duration: videoDuration,
             processedPlayers: tempProcessedPlayers,
-            ballTracks: tempBallTracks,
+            processedBallTracks: tempProcessedBallTracks,
             homographies: tempHomographies,
             log: tempLog,
             video: tempVideo,
@@ -287,7 +297,7 @@ class FileOverview extends Component {
           notes={e.log}
           processedPlayers={e.processedPlayers}
           video={e.video}
-          ballTracks={e.ballTracks}
+          processedBallTracks={e.processedBallTracks}
           homographies={e.homographies}
           fieldSize={e.fieldSize}
           log={e.log}
