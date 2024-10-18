@@ -5,11 +5,11 @@ const mockCSV =
   "2,2,1,377.9406,49.65448874074074,88.64612,110.22829,2016.18706,200.83927500000001,1927.54094,90.610985,12.334635147514817,-3.3870903957875074";
 
 const mockLogSoccer = `Sport: Soccer
-Video Path: D:\\SoccerVideos'\\Haching\\compressed_videos\\9.MP4
-Save Path: D:\\SoccerVideos\\Haching\\compressed_videos\\Results\\run_18
+Video Path:
+Save Path:
 Tracker: byte
-Player Model: C:\\Users\\ga38vud\\Desktop\\DroneTracking/trained_models/yolo_player_small_best_v8.pt
-Ball Model: C:\\Users\\ga38vud\\Desktop\\DroneTracking/trained_models/yolo_ball_best_v8.pt
+Player Model:
+Ball Model:
 Replay Length: 9223372036854775807
 Disable Court Detection: False
 Num of Classes: 4
@@ -17,11 +17,11 @@ Postprocessing: True
 `;
 
 const mockLogTennis = `Sport: Tennis
-Video Path: D:\\SoccerVideos'\\Haching\\compressed_videos\\9.MP4
-Save Path: D:\\SoccerVideos\\Haching\\compressed_videos\\Results\\run_18
+Video Path:
+Save Path:
 Tracker: byte
-Player Model: C:\\Users\\ga38vud\\Desktop\\DroneTracking/trained_models/yolo_player_small_best_v8.pt
-Ball Model: C:\\Users\\ga38vud\\Desktop\\DroneTracking/trained_models/yolo_ball_best_v8.pt
+Player Model:
+Ball Model:
 Replay Length: 9223372036854775807
 Disable Court Detection: False
 Num of Classes: 4
