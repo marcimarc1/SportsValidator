@@ -8,7 +8,7 @@ export const parseLogFile = (text) => {
 
   lines.forEach((line) => {
     const [key, value] = line.split(": ");
-    result[key] = value.trim();
+    result[key] = value?.trim() || "";
   });
 
   return result;
