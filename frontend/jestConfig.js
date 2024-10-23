@@ -10,3 +10,6 @@ window.cv = {
   DECOMP_LU: "DECOMP_LU",
   CV_64F: "CV_64F",
 };
+module.exports = {
+  testEnvironment: "jsdom",
+};

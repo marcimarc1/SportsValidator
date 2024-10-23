@@ -69,6 +69,79 @@ export const mergePlayerData = (
   setPlayerNameMap(newPlayerNameMap);
 };
 
+export const mergeBallData = (
+  mainBallName,
+  ballNameMap,
+  setBallNameMap,
+  ballChosenInList,
+  annotationBallTracks,
+  setAnnotationBallTracks,
+) => {
+  const nameToKeyMap = new Map();
+  ballNameMap.forEach((value, key) => {
+    nameToKeyMap.set(value, key);
+  });
+  const firstBallKey = nameToKeyMap.get(mainBallName);
+  const secondBallKey = nameToKeyMap.get(ballChosenInList);
+  if (firstBallKey == undefined || secondBallKey == undefined) {
+    console.log("balls are not mapped");
+    return;
+  }
+
+  //by default, the ball with the higher frame number is the merged ball
+  //and the ball with the lower frame number is the main ball, which will be kept
+  const firstBallMaxFrame = Math.max(
+    ...annotationBallTracks
+      .filter((a) => a.trackNo == firstBallKey)
+      .map((a) => a.FrameNo),
+  );
+  const secondBallMaxFrame = Math.max(
+    ...annotationBallTracks
+      .filter((a) => a.trackNo == secondBallKey)
+      .map((a) => a.FrameNo),
+  );
+
+  let mergedBallKey;
+  let mainBallKey;
+
+  if (firstBallMaxFrame > secondBallMaxFrame) {
+    mergedBallKey = firstBallKey;
+    mainBallKey = secondBallKey;
+  } else {
+    mergedBallKey = secondBallKey;
+    mainBallKey = firstBallKey;
+  }
+
+  //filter out duplicate annotations between main and merged ball that has the same frame number
+  let filteredAnnotationBallTracks = annotationBallTracks.filter(
+    (a) => a.trackNo != mergedBallKey,
+  );
+  const mainBallAnnotations = annotationBallTracks.filter(
+    (a) => a.trackNo == mainBallKey,
+  );
+  const mergedBallAnnotations = annotationBallTracks.filter(
+    (a) => a.trackNo == mergedBallKey,
+  );
+  filteredAnnotationBallTracks = filteredAnnotationBallTracks.concat(
+    mergedBallAnnotations.filter((a) =>
+      mainBallAnnotations.every((b) => b.FrameNo != a.FrameNo),
+    ),
+  );
+
+  const mergedAnnotationBallTracks = filteredAnnotationBallTracks.map(
+    (annotation) => {
+      if (annotation.trackNo == mergedBallKey) {
+        return { ...annotation, trackNo: mainBallKey };
+      }
+      return annotation;
+    },
+  );
+  setAnnotationBallTracks(mergedAnnotationBallTracks);
+  let newBallNameMap = new Map(ballNameMap);
+  newBallNameMap.delete(mergedBallKey);
+  setBallNameMap(newBallNameMap);
+};
+
 export const multiPlayerMerge = (
   playerKeyArray,
   annotations,
@@ -143,4 +216,97 @@ export const swapPlayerData = (
     return annotation;
   });
   setAnnotations(swappedAnnotations);
+};
+
+export const swapBallData = (
+  secondBallName,
+  ballNameMap,
+  ballChosenInList,
+  annotationBallTracks,
+  setAnnotationBallTracks,
+  frameNumber,
+) => {
+  const nameToKeyMap = new Map();
+  ballNameMap.forEach((value, key) => {
+    nameToKeyMap.set(value, key);
+  });
+  const firstBallKey = nameToKeyMap.get(ballChosenInList);
+  const secondBallKey = nameToKeyMap.get(secondBallName);
+
+  if (firstBallKey == undefined || secondBallKey == undefined) {
+    console.log("balls are not mapped");
+    return;
+  }
+
+  const swappedAnnotationBallTracks = annotationBallTracks.map((annotation) => {
+    if (
+      annotation.trackNo == firstBallKey &&
+      annotation.FrameNo >= frameNumber
+    ) {
+      return { ...annotation, trackNo: secondBallKey };
+    }
+    if (
+      annotation.trackNo == secondBallKey &&
+      annotation.FrameNo >= frameNumber
+    ) {
+      return { ...annotation, trackNo: firstBallKey };
+    }
+    return annotation;
+  });
+  setAnnotationBallTracks(swappedAnnotationBallTracks);
+};
+
+export const multiBallMerge = (
+  ballKeyArray,
+  annotationBallTracks,
+  setAnnotationBallTracks,
+  ballNameMap,
+  setBallNameMap,
+) => {
+  function removeDuplicates(array) {
+    const uniquePairs = {};
+    const result = [];
+
+    array.forEach((obj) => {
+      const key = obj.trackNo + "," + obj.FrameNo;
+      if (!uniquePairs[key]) {
+        result.push(obj);
+        uniquePairs[key] = true;
+      }
+    });
+
+    return result;
+  }
+
+  const newAnnotationBallTracks = annotationBallTracks.map((a) => {
+    if (ballKeyArray.some((item) => item.ballKey === a.trackNo)) {
+      a.trackNo = ballKeyArray[0].ballKey;
+      return a;
+    }
+    return a;
+  });
+  setAnnotationBallTracks(removeDuplicates(newAnnotationBallTracks));
+  let newBallNameMap = new Map(ballNameMap);
+  if (ballKeyArray.length === 1) {
+    let ballKeyForMerge = ballKeyArray[0].ballKey;
+    ballKeyArray
+      .filter((item) => item.ballKey !== ballKeyForMerge)
+      .forEach((item) => {
+        newBallNameMap.delete(item.ballKey);
+      });
+    setBallNameMap(newBallNameMap);
+  }
+};
+
+export const multiBallTrailsDelete = (
+  ballKeyArray,
+  setAnnotationBallTracks,
+) => {
+  ballKeyArray.forEach((item) => {
+    setAnnotationBallTracks((prevTracks) =>
+      prevTracks.filter(
+        (a) => a.trackNo !== item.ballKey || a.FrameNo !== item.frame,
+      ),
+    );
+  });
 };
