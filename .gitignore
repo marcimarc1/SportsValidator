@@ -11,3 +11,6 @@ backend/react-app
 
 /frontend/junit.xml
 .vscode/*
+
+.venv
+__pycache__

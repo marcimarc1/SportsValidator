@@ -18,13 +18,18 @@ import {
   parseProcessedPlayers,
   parseProcessedBallTracks,
 } from "../utils/csvParser";
+
 import {
   mockCSV,
+  mockLogSoccer,
+  mockLogTennis,
   mockCSVBall,
   mockLog,
   mockHomographies,
   mockFieldSize,
 } from "./mocks/MockFiles";
+
+import { getTemplate } from "../utils/templates";
 
 import userEvent from "@testing-library/user-event";
 
@@ -56,7 +61,7 @@ describe("data fetching", () => {
         video: undefined,
         ballTracks: undefined,
         homographies: mockHomographies,
-        log: mockLog,
+        log: mockLogSoccer,
         fieldSize: mockFieldSize,
       },
     });
@@ -259,7 +264,7 @@ describe("player sidebar", () => {
         video: undefined,
         ballTracks: undefined,
         homographies: mockHomographies,
-        log: mockLog,
+        log: mockLogSoccer,
         fieldSize: mockFieldSize,
       },
     });
@@ -279,6 +284,158 @@ describe("player sidebar", () => {
     expect(
       getNodeText(playerList.children[1].querySelector(".TrackListItemName")),
     ).toEqual("player2");
+  });
+});
+
+describe("field details", () => {
+  it("displays field details button", () => {
+    useLocation.mockReturnValue({
+      state: {
+        processedPlayers: mockCSV,
+        video: undefined,
+        ballTracks: undefined,
+        homographies: mockHomographies,
+        log: mockLogSoccer,
+        fieldSize: mockFieldSize,
+      },
+    });
+
+    render(<NewTrackingEditor />);
+
+    const fieldDetailsButton = screen.getByTestId("field-details-button");
+    expect(fieldDetailsButton).toBeInTheDocument();
+  });
+
+  it("opens field details bar", () => {
+    useLocation.mockReturnValue({
+      state: {
+        processedPlayers: mockCSV,
+        video: undefined,
+        ballTracks: undefined,
+        homographies: mockHomographies,
+        log: mockLogSoccer,
+        fieldSize: mockFieldSize,
+      },
+    });
+    render(<NewTrackingEditor />);
+
+    const fieldDetailsButton = screen.getByTestId("field-details-button");
+    fireEvent.click(fieldDetailsButton);
+
+    const fieldDetailsMenu = screen.getByTestId("field-details-menu");
+    expect(fieldDetailsMenu).toBeInTheDocument();
+  });
+
+  it("given the detail, displays field details", () => {
+    useLocation.mockReturnValue({
+      state: {
+        processedPlayers: mockCSV,
+        video: undefined,
+        ballTracks: undefined,
+        homographies: mockHomographies,
+        log: mockLogSoccer,
+        fieldSize: mockFieldSize,
+      },
+    });
+    render(<NewTrackingEditor />);
+
+    const fieldDetailsButton = screen.getByTestId("field-details-button");
+    fireEvent.click(fieldDetailsButton);
+
+    const fieldWidth = screen.getByTestId("field-menu-width");
+    const fieldLength = screen.getByTestId("field-menu-length");
+
+    expect(fieldWidth).toHaveTextContent(mockFieldSize.width.toFixed(2));
+    expect(fieldLength).toHaveTextContent(mockFieldSize.length.toFixed(2));
+  });
+
+  it("draws field on canvas", () => {
+    useLocation.mockReturnValue({
+      state: {
+        processedPlayers: mockCSV,
+        video: undefined,
+        ballTracks: undefined,
+        homographies: mockHomographies,
+        log: mockLogSoccer,
+        fieldSize: mockFieldSize,
+      },
+    });
+    render(<NewTrackingEditor />);
+
+    const nextFrameButton = screen.getByTestId("next-frame-button");
+    fireEvent.click(nextFrameButton);
+
+    const fieldDetailsButton = screen.getByTestId("field-details-button");
+    fireEvent.click(fieldDetailsButton);
+
+    const showFieldSwitch = screen.getByTestId("show-field-switch");
+    fireEvent.click(showFieldSwitch);
+
+    const canvasElement = screen.getByTestId("fabric-canvas");
+    const canvasObjectsStringified = canvasElement.getAttribute("fieldPoints");
+    var canvasObjects = JSON.parse(canvasObjectsStringified);
+
+    expect(canvasObjects.length).toBeGreaterThan(0);
+  });
+
+  it("has correct number of field points", () => {
+    useLocation.mockReturnValue({
+      state: {
+        processedPlayers: mockCSV,
+        video: undefined,
+        ballTracks: undefined,
+        homographies: mockHomographies,
+        log: mockLogTennis,
+        fieldSize: mockFieldSize,
+      },
+    });
+    render(<NewTrackingEditor />);
+
+    const fieldDetailsButton = screen.getByTestId("field-details-button");
+    fireEvent.click(fieldDetailsButton);
+
+    const showFieldSwitch = screen.getByTestId("show-field-switch");
+    fireEvent.click(showFieldSwitch);
+
+    const canvasElement = screen.getByTestId("fabric-canvas");
+    const canvasObjectsStringified = canvasElement.getAttribute("fieldPoints");
+    var canvasObjects = JSON.parse(canvasObjectsStringified);
+
+    const template = getTemplate("Tennis");
+    var pointsFlattened = Object.values(template.points).flat();
+
+    expect(canvasObjects.length).toEqual(pointsFlattened.length);
+  });
+});
+
+describe("ball sidebar", () => {
+  it("displays ball in current frame", async () => {
+    //given
+    useLocation.mockReturnValue({
+      state: {
+        //up to now only necessary to mock processedPlayers
+        //should render ball 1 in frame0, discard ball2 in frame1
+        processedPlayers: mockCSV,
+        video: undefined,
+        processedBallTracks: mockCSVBall,
+        homographies: mockHomographies,
+        log: mockLog,
+        fieldSize: mockFieldSize,
+      },
+    });
+    const { container } = render(<NewTrackingEditor />);
+    const button = screen.getByTestId("from-annotation");
+
+    //when
+    fireEvent.click(button);
+
+    //then
+    //as the sidebar contains 3 lists(player, team, ball), the playerList is chosen.
+    const ballList = container.querySelector(".TrackListList").children[2];
+    expect(ballList.childElementCount).toEqual(1);
+    expect(
+      getNodeText(ballList.children[0].querySelector(".TrackListItemName")),
+    ).toEqual("ball1");
   });
 });
 
@@ -383,34 +540,3 @@ describe("data fetching ball", () => {
 //    expect(updatedRowNumber).toEqual(1);
 //  });
 //});
-
-describe("ball sidebar", () => {
-  it("displays ball in current frame", async () => {
-    //given
-    useLocation.mockReturnValue({
-      state: {
-        //up to now only necessary to mock processedPlayers
-        //should render ball 1 in frame0, discard ball2 in frame1
-        processedPlayers: mockCSV,
-        video: undefined,
-        processedBallTracks: mockCSVBall,
-        homographies: mockHomographies,
-        log: mockLog,
-        fieldSize: mockFieldSize,
-      },
-    });
-    const { container } = render(<NewTrackingEditor />);
-    const button = screen.getByTestId("from-annotation");
-
-    //when
-    fireEvent.click(button);
-
-    //then
-    //as the sidebar contains 3 lists(player, team, ball), the playerList is chosen.
-    const ballList = container.querySelector(".TrackListList").children[2];
-    expect(ballList.childElementCount).toEqual(1);
-    expect(
-      getNodeText(ballList.children[0].querySelector(".TrackListItemName")),
-    ).toEqual("ball1");
-  });
-});

@@ -93,6 +93,7 @@ const NewTrackingEditor = () => {
   const [drawInField, setDrawInField] = useState(false);
   const [showApplyHomographyModal, setShowApplyHomographyModal] =
     useState(false);
+  const [fieldPoints, setFieldPoints] = useState([]);
   const [isShowingPlayerTrails, setIsShowingPlayerTrails] = useState(true);
   const [annotationBallTracks, setAnnotationBallTracks] = useState([]);
   const [ballList, setBallList] = useState([]); //list of ball TrackListItemBall
@@ -1512,7 +1513,7 @@ const NewTrackingEditor = () => {
     }
 
     if (showField || forceDraw) {
-      drawFieldPoints(
+      const newFieldPoints = drawFieldPoints(
         canvas,
         getCurrentTimestampFrame(),
         homographies,
@@ -1523,6 +1524,8 @@ const NewTrackingEditor = () => {
         fieldSize?.width,
         videoElement,
       );
+      setFieldPoints(newFieldPoints);
+      console.log("newFieldPoints", newFieldPoints);
     }
   };
 
@@ -1700,6 +1703,7 @@ const NewTrackingEditor = () => {
           annotations={annotations.length}
           annotationballtracks={annotationBallTracks.length}
           playerlist={JSON.stringify(playerList)}
+          fieldPoints={JSON.stringify(fieldPoints)}
           className="canvas"
           id="tracking-editor-canvas"
           width="1920"
@@ -1721,7 +1725,11 @@ const NewTrackingEditor = () => {
             <BackwardStepIcon className="icon" />
           </button>
           <span id="frame-number-display">Frame {frameNumber}</span>
-          <button className="icon-button" onClick={handleNextFrame}>
+          <button
+            className="icon-button"
+            data-testid="next-frame-button"
+            onClick={handleNextFrame}
+          >
             <ForwardStepIcon className="icon" />
           </button>
           <button className="icon-button" onClick={handlePlayPause}>
