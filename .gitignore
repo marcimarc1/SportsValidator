@@ -12,5 +12,12 @@ backend/react-app
 /frontend/junit.xml
 .vscode/*
 
+/pythonBackend/env/*
+*.egg-info/
+__pycache__/
+.idea/
+myproject.bundle
 .venv
 __pycache__
+
+.venv

@@ -16,7 +16,7 @@ import {
   convertBallboxToAnnotationBall,
 } from "../../../utils/AnnotationBoxConverter";
 // import tracking from "../../../data/tracking_data.json";
-// import tracking from "../../../data/tracking-data-for-test.json";
+// import tracking from "../../../data/tracking-data-for-tests.json";
 import { fabric } from "fabric";
 import "./NewTrackingEditor.css";
 import SeekBar from "./SeekBar";
@@ -51,8 +51,10 @@ import { DownloadButton } from "./DownloadButton";
 import { parseLogFile } from "../../../utils/logFileParser";
 import Slider from "@mui/material/Slider";
 import { FieldDetailsButton } from "./field/FieldDetailsButton";
+import api from "../../../api/api";
 import { SettingsBallButton } from "./SettingsBallButton";
 import { SettingsTrailsButton } from "./SettingsTrailsButton";
+
 // TODO Take a video_id instead and have an endpoint on the server where we supply a video_id and get the corresponding video
 const NewTrackingEditor = () => {
   const location = useLocation();
@@ -175,9 +177,9 @@ const NewTrackingEditor = () => {
     if (processedPlayers) {
       const parsedData = parseProcessedPlayers(processedPlayers);
       setAnnotations(parsedData);
-      //this log is important for the test
-      //test suite: describe data fetching
-      //test: it receives correct annotation
+      //this log is important for the tests
+      //tests suite: describe data fetching
+      //tests: it receives correct annotation
       console.log("retrieved annotation:", parsedData);
       // Setting the color set based on the parsed data
       setColorSet(boundingBoxColorSet(parsedData));
@@ -1533,7 +1535,40 @@ const NewTrackingEditor = () => {
     setTrailSize(event.target.value);
   };
 
-  const handleApplyHomography = () => {
+  const handleApplyHomography = (frameNumber) => {
+    frameNumber = parseInt(frameNumber);
+    var currentFrame = parseInt(getCurrentTimestampFrame());
+    var fieldPoints = canvas
+      .getObjects()
+      .filter((obj) => obj.properties?.type === "fieldPoint")
+      .map((obj) => ({
+        id: obj.id,
+        x: obj.left,
+        y: obj.top,
+      }));
+    console.log("Field points: ", fieldPoints);
+    api
+      .post("/annotation/track", {
+        video_id: video.name,
+        start_frame: currentFrame,
+        end_frame: currentFrame + frameNumber,
+        points: fieldPoints,
+        player_boxes: annotations
+          .filter(
+            (a) =>
+              a.FrameNo >= currentFrame &&
+              a.FrameNo <= currentFrame + frameNumber,
+          )
+          .map((a) => ({
+            frame_no: a.FrameNo,
+            x_1: a.x1,
+            y_1: a.y1,
+            x_2: a.x2,
+            y_2: a.y2,
+          })),
+      })
+      .then((response) => {});
+
     deleteFieldDrawing();
     drawField();
     setShowApplyHomographyModal(false);
@@ -1555,7 +1590,7 @@ const NewTrackingEditor = () => {
       <ApplyHomographyModal
         showApplyHomographyModal={showApplyHomographyModal}
         handleClose={() => setShowApplyHomographyModal(false)}
-        handleApply={() => handleApplyHomography()}
+        handleApply={handleApplyHomography}
         handleContinueWithoutApplying={() =>
           handleContinueWithoutApplyingHomographies()
         }
