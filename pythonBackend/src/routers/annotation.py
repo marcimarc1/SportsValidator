@@ -27,3 +27,16 @@ async def update_points(dto: PointUpdate):
     if dto is not None:
         return "received"
 
+@router.post("/upload")
+async def upload(dto: ImportRequestDto,  db: Session = Depends(get_db)):
+    if dto is not None:
+        return
+
+@router.get("export_game/{game_id}")
+async def export_by_game_id(game_id: int, db: Session = Depends(get_db)):
+    return export_annotation_by_game_id(game_id, db)
+
+@router.get("export_video/{video_id}")
+async def export_by_video_id(video_id: int, db: Session = Depends(get_db)):
+    return export_annotation_by_video_id(video_id, db)
+

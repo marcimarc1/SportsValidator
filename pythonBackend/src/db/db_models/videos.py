@@ -8,3 +8,5 @@ class Video(Base):
     id = Column(Integer, unique=True, primary_key=True)
     video_path = Column(String(255), unique=True, nullable=False)
     uploaded_by = Column(Integer, ForeignKey("users.id"), nullable=False)
+    game_id = Column(Integer, ForeignKey("games.id"), nullable=False)
+    sequence_number = Column(Integer, nullable=False)

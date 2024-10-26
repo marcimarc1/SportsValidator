@@ -1,5 +1,5 @@
 # Compiling the pythonBackend
-FROM python:3.9
+FROM python:3.11
 WORKDIR /pythonBackend
 COPY ./requirements.txt /pythonBackend/requirements.txt
 RUN pip install --no-cache-dir --upgrade -r /pythonBackend/requirements.txt

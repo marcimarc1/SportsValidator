@@ -4,10 +4,13 @@ services:
     build: .
     environment:
      - DATABASE_URL=postgresql://user:pass@db/db
+     - APP_DATA_PATH=/var/lib/docker/volumes/api
     ports:
       - "8080:80"
     depends_on:
       - db
+    volumes:
+      - api_data:/var/lib/docker/volumes/api
   db:
     image: postgres:15.2-alpine
     volumes:
@@ -19,3 +22,4 @@ services:
       - POSTGRES_PORT=5432
 volumes:
   postgres_data:
+  api_data:
