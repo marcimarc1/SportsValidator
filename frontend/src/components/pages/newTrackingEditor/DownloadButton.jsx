@@ -1,7 +1,7 @@
 import { Box, Button, Menu, MenuItem, Paper } from "@mui/material";
 import React from "react";
 
-export const DownloadButton = ({ players, video }) => {
+export const DownloadButton = ({ players, video, homographies , balls}) => {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const open = Boolean(anchorEl);
   const handleClick = (event) => {
@@ -57,6 +57,55 @@ export const DownloadButton = ({ players, video }) => {
     }
   };
 
+  const handleBallDownload = async()=>{
+    if(balls && balls.length > 0){
+      const csvRows = [];
+      const headers = Object.keys(balls[0]);
+      csvRows.push(headers.join(","));
+
+      for (const row of balls){
+        const values = headers.map((header) => {
+          const escaped = (""+row[header]).replace(/"/g, '\\"');
+          return `"${escaped}"`;
+        });
+        csvRows.push(values.join(","));
+      }
+
+      const csvData = csvRows.join("\n");
+      const blob = new Blob([csvData], {type: "text/csv"});
+      const url = URL.createObjectURL(blob);
+
+      const element = document.createElement("a");
+      element.href = url;
+      element.download = "ball.csv";
+      document.body.appendChild(element);
+      element.click();
+      document.body.appendChild(element);
+      URL.revokeObjectURL(url);
+    } else{
+      console.log("No balls to download");
+    }
+  }
+
+  const handleHomographyDownload = async () => {
+
+    const homographiesData = JSON.stringify(homographies, null, 2);
+
+    const blob = new Blob([homographiesData], { type: "application/json" });
+
+    const url = URL.createObjectURL(blob);
+
+    const element = document.createElement("a");
+
+    element.href = url;
+    element.download = "homographies2.json";
+
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div>
       <Button
@@ -95,6 +144,12 @@ export const DownloadButton = ({ players, video }) => {
           </MenuItem>
           <MenuItem onClick={handlePlayersDownload}>
             <Button>Players</Button>
+          </MenuItem>
+          <MenuItem onClick={handleHomographyDownload}>
+            <Button>Homographies</Button>
+          </MenuItem>
+          <MenuItem onClick={handleBallDownload}>
+            <Button>Balls</Button>
           </MenuItem>
         </Box>
       </Menu>

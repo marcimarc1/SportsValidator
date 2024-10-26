@@ -12,7 +12,7 @@ import Radio from "@material-ui/core/Radio";
 import FormControlLabel from "@material-ui/core/FormControlLabel";
 
 import { useState } from "react";
-import { mergePlayerData, swapPlayerData } from "../../../utils/validation";
+import { mergeBallData, swapBallData } from "../../../utils/validation";
 import { useMemo } from "react";
 
 const style = {
@@ -27,22 +27,22 @@ const style = {
   p: 4,
 };
 
-export default function MergeAndSwapModal({
-  playerChosenInList,
-  playerNameMap,
-  setPlayerNameMap,
-  annotations,
-  setAnnotations,
+export default function MergeAndSwapModalBall({
+  ballChosenInList,
+  ballNameMap,
+  setBallNameMap,
+  annotationBallTracks,
+  setAnnotationBallTracks,
   frameNumber,
-  mergeModalState,
+  mergeModalBallState,
   handleClose,
 }) {
-  const [selectedPlayer, setSelectedPlayer] = useState("");
+  const [selectedBall, setSelectedBall] = useState("");
   const [operation, setOperation] = useState("swap");
   const menuItems = useMemo(
     () =>
-      Array.from(playerNameMap.values()).map((name) => {
-        if (name !== playerChosenInList) {
+      Array.from(ballNameMap.values()).map((name) => {
+        if (name !== ballChosenInList) {
           const testid = "menuitem" + name;
           return (
             <MenuItem key={name} data-testid={testid} value={name}>
@@ -51,31 +51,31 @@ export default function MergeAndSwapModal({
           );
         }
       }),
-    [playerNameMap, playerChosenInList],
+    [ballNameMap, ballChosenInList],
   );
 
   const handleChange = (event) => {
-    setSelectedPlayer(event.target.value);
+    setSelectedBall(event.target.value);
   };
 
   const handleClick = () => {
     if (operation === "swap")
-      swapPlayerData(
-        selectedPlayer,
-        playerNameMap,
-        playerChosenInList,
-        annotations,
-        setAnnotations,
+      swapBallData(
+        selectedBall,
+        ballNameMap,
+        ballChosenInList,
+        annotationBallTracks,
+        setAnnotationBallTracks,
         frameNumber,
       );
     else
-      mergePlayerData(
-        selectedPlayer,
-        playerNameMap,
-        setPlayerNameMap,
-        playerChosenInList,
-        annotations,
-        setAnnotations,
+      mergeBallData(
+        selectedBall,
+        ballNameMap,
+        setBallNameMap,
+        ballChosenInList,
+        annotationBallTracks,
+        setAnnotationBallTracks,
       );
     handleClose();
   };
@@ -83,7 +83,7 @@ export default function MergeAndSwapModal({
   return (
     <div>
       <Modal
-        open={mergeModalState}
+        open={mergeModalBallState}
         onClose={handleClose}
         aria-labelledby="modal-modal-title"
         aria-describedby="modal-modal-description"
@@ -91,7 +91,7 @@ export default function MergeAndSwapModal({
         <Box textAlign="center" sx={style}>
           <FormControl component="fieldset">
             <Typography variant="h6" id="demo-simple-select-label">
-              {"Choose Operation for " + playerChosenInList}{" "}
+              {"Choose Operation for " + ballChosenInList}{" "}
             </Typography>
             <RadioGroup
               sx={{ ml: 2 }}
@@ -121,22 +121,22 @@ export default function MergeAndSwapModal({
             variant="h6"
             component="h2"
           >
-            Choose player to {operation === "swap" ? "swap" : "merge"} with.
+            Choose ball to {operation === "swap" ? "swap" : "merge"} with.
           </Typography>
           <Typography sx={{ mt: 2 }} id="modal-modal-title" component="h2">
             {operation === "swap"
               ? "This will swap " +
-                playerChosenInList +
-                " and the chosen player below from this frame and onwards"
-              : "This will merge the player with frames that come later into the player with frames that come earlier to one in all frames, deleting the one that comes later."}
+                ballChosenInList +
+                " and the chosen ball below from this frame and onwards"
+              : "This will merge the ball with frames that come later into the ball with frames that come earlier to one in all frames, deleting the one that comes later."}
           </Typography>
           <FormControl fullWidth>
-            <InputLabel id="demo-simple-select-label">Choose Player</InputLabel>
+            <InputLabel id="demo-simple-select-label">Choose Ball</InputLabel>
             <Select
               labelId="demo-simple-select-label"
               id="demo-simple-select"
-              value={selectedPlayer}
-              label="Choose Player"
+              value={selectedBall}
+              label="Choose Ball"
               data-testid="select-element"
               onChange={handleChange}
             >

@@ -65,3 +65,70 @@ export const convertBoxToAnnotation = (
     console.error("the data format of bounding box and annotation doesn't fit");
   }
 };
+
+export const convertAnnotationBallToBallbox = (
+  annotationBall,
+  horizontalScalingFactor,
+  verticalScalingFactor,
+) => {
+  try {
+    const scaledX = annotationBall.x1 * horizontalScalingFactor;
+    const scaledY = annotationBall.y1 * verticalScalingFactor;
+    const scaledWidth =
+      (annotationBall.x2 - annotationBall.x1) * horizontalScalingFactor;
+    const scaledHeight =
+      (annotationBall.y2 - annotationBall.y1) * verticalScalingFactor;
+    const boundingBox = new fabric.Rect({
+      left: scaledX,
+      top: scaledY,
+      fill: "rgba(0,0,0,0)",
+      width: scaledWidth,
+      height: scaledHeight,
+      dirty: false,
+
+      hasBorders: false, // disables the control borders (the lines connecting the controls the show up when object is selected
+      strokeWidth: 2,
+      strokeUniform: true, // to keep the bounding box a consisten thickness, independent of its size
+      padding: 0, // to make sure the pixel coordinates are correct
+      cornerSize: 10,
+      cornerStyle: "rect",
+      lockRotation: true,
+    });
+    boundingBox.my = {
+      selected: false,
+      key: annotationBall.trackNo,
+      frame: annotationBall.FrameNo,
+    };
+    return boundingBox;
+  } catch {
+    console.error("the data format of bounding box and annotation doesn't fit");
+  }
+};
+
+export const convertBallboxToAnnotationBall = (
+  boundingBox,
+  horizontalScalingFactor,
+  verticalScalingFactor,
+) => {
+  try {
+    const x1 = boundingBox.left / horizontalScalingFactor;
+    const y1 = boundingBox.top / verticalScalingFactor;
+    return {
+      FrameNo: boundingBox.my.frame,
+      trackNo: boundingBox.my.key,
+      x1: x1,
+      y1: y1,
+      x2:
+        (boundingBox.width * boundingBox.scaleX) / horizontalScalingFactor + x1,
+      y2:
+        (boundingBox.height * boundingBox.scaleY) / verticalScalingFactor + y1,
+      detection: 1,
+      x: 0,
+      y: 0,
+    };
+  } catch {
+    console.error(
+      "the data format of bounding box ball and annotationBallTracks doesn't fit",
+    );
+  }
+};

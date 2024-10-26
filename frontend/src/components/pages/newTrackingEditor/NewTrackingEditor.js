@@ -5,10 +5,15 @@ import { ReactComponent as PauseIcon } from "../../../icons/pause.svg";
 import { ReactComponent as ForwardStepIcon } from "../../../icons/forward-step.svg";
 import { ReactComponent as BackwardStepIcon } from "../../../icons/backward-step.svg";
 import { useLocation } from "react-router-dom";
-import { parseProcessedPlayers } from "../../../utils/csvParser";
+import {
+  parseProcessedPlayers,
+  parseProcessedBallTracks,
+} from "../../../utils/csvParser";
 import {
   convertBoxToAnnotation,
   convertAnnotationToBox,
+  convertAnnotationBallToBallbox,
+  convertBallboxToAnnotationBall,
 } from "../../../utils/AnnotationBoxConverter";
 // import tracking from "../../../data/tracking_data.json";
 // import tracking from "../../../data/tracking-data-for-tests.json";
@@ -27,21 +32,41 @@ import TextField from "@mui/material/TextField";
 
 import TrackList from "../newTrackingEditor/TrackList";
 import TrackListItemPlayer from "./TrackListItemPlayer";
+import TrackListItemBall from "./TrackListItemBall";
 import MergeAndSwapModal from "./MergeAndSwapModal";
+import MergeAndSwapModalBall from "./MergeAndSwapModalBall";
+import ApplyHomographyModal from "./ApplyHomographyModal";
 import {
   trailsFullRedraw,
+  drawFieldPoints,
   defineTrailBehaviour,
+  defineTrailBehaviourBall,
 } from "../../../utils/canvasUtils";
-import { multiPlayerMerge } from "../../../utils/validation";
+import {
+  multiPlayerMerge,
+  multiBallMerge,
+  multiBallTrailsDelete,
+} from "../../../utils/validation";
 import { DownloadButton } from "./DownloadButton";
+import { parseLogFile } from "../../../utils/logFileParser";
 import Slider from "@mui/material/Slider";
+import { FieldDetailsButton } from "./field/FieldDetailsButton";
+import api from "../../../api/api";
+import { SettingsBallButton } from "./SettingsBallButton";
+import { SettingsTrailsButton } from "./SettingsTrailsButton";
 
 // TODO Take a video_id instead and have an endpoint on the server where we supply a video_id and get the corresponding video
 const NewTrackingEditor = () => {
   const location = useLocation();
-  const { processedPlayers, video, ballTracks, homographies, log } =
-    location.state || {};
-  // ballTracks, homographies and log are not being used. Logic will be implemented in the future.
+  const {
+    processedPlayers,
+    video,
+    processedBallTracks,
+    homographies,
+    log,
+    fieldSize,
+  } = location.state || {};
+  // homographies and log are not being used. Logic will be implemented in the future.
   const [annotations, setAnnotations] = useState([]);
   const [canvas, setCanvas] = useState(new fabric.Canvas());
   const [videoUrl, setVideoUrl] = useState("");
@@ -53,26 +78,50 @@ const NewTrackingEditor = () => {
   const [isDownloadingVideo, setIsDownloadingVideo] = useState(false);
   const [isShowingBox, setIsShowingBox] = useState(true);
   const [isShowingAnnotation, setIsShowingAnnotation] = useState(true);
-  const [playerList, setPlayerList] = useState([]);
-  const [canvasBoxes, setCanvasBoxes] = useState([]);
-  const [playerNameMap, setPlayerNameMap] = useState(new Map());
+  const [playerList, setPlayerList] = useState([]); //list of player TrackListItemPlayers
+  const [canvasBoxes, setCanvasBoxes] = useState([]); //list of canvas boxes for player
+  const [playerNameMap, setPlayerNameMap] = useState(new Map()); //map of playerkey to playername
   const [activeObject, setActiveObject] = useState(null);
   const [colorSet, setColorSet] = useState(new Map()); //map of playerkey to color
   const [trailsEnabled, setTrailsEnabled] = useState(true);
   const [trailFrameNumber, setTrailFrameNumber] = useState(50);
   const [mergeModalState, setMergeModalState] = useState(false);
   const [playerChosenInList, setPlayerChosenInList] = useState("");
+  const [showField, setShowField] = useState(false);
+  const [editField, setEditField] = useState(false);
+  const logFile = parseLogFile(log);
   const [selectedTrails, setSelectedTrails] = useState(new Set());
   const [trailSize, setTrailSize] = useState(50);
   const [drawInField, setDrawInField] = useState(false);
+  const [showApplyHomographyModal, setShowApplyHomographyModal] =
+    useState(false);
+  const [fieldPoints, setFieldPoints] = useState([]);
+  const [isShowingPlayerTrails, setIsShowingPlayerTrails] = useState(true);
+  const [annotationBallTracks, setAnnotationBallTracks] = useState([]);
+  const [ballList, setBallList] = useState([]); //list of ball TrackListItemBall
+  const [canvasBoxesBall, setCanvasBoxesBall] = useState([]); //list of canvas boxes for ball
+  const [ballNameMap, setBallNameMap] = useState(new Map()); //map of ballkey to ballname
+  const [colorSetBall, setColorSetBall] = useState(new Map()); //map of ballkey to color
+  const [ballChosenInList, setBallChosenInList] = useState(""); //ball which is selected in sidebar
+  const [mergeModalBallState, setMergeModalBallState] = useState(false);
+  const [isShowingBallBox, setIsShowingBallBox] = useState(true);
+  const [isShowingBallTrails, setIsShowingBallTrails] = useState(true);
+  const [selectedTrailsBall, setSelectedTrailsBall] = useState([]);
 
   const handleModalOpen = (playerInList) => {
     setPlayerChosenInList(playerInList);
     setMergeModalState(true);
   };
 
-  const handleModalClose = () => {
+  const handleModalBallOpen = (ballInList) => {
+    setBallChosenInList(ballInList);
+    setMergeModalBallState(true);
+    console.log("test2");
+  };
+
+  const handleModalsClose = () => {
     setMergeModalState(false);
+    setMergeModalBallState(false);
   };
 
   const handleMultiSelectMerge = () => {
@@ -85,7 +134,33 @@ const NewTrackingEditor = () => {
       playerNameMap,
       setPlayerNameMap,
     );
-    setSelectedTrails(new Set());
+    setSelectedTrails(new Array());
+  };
+
+  const handleMultiSelectMergeBall = () => {
+    console.log("Multiplayer merge ball");
+    console.log(Array.from(selectedTrailsBall));
+    multiBallMerge(
+      Array.from(selectedTrailsBall),
+      annotationBallTracks,
+      setAnnotationBallTracks,
+      ballNameMap,
+      setBallNameMap,
+    );
+    setSelectedTrailsBall(new Array());
+  };
+
+  const handleMultiBallTrailsDelete = () => {
+    console.log("Multiplayer delete ball trails");
+    console.log(Array.from(selectedTrailsBall));
+    multiBallTrailsDelete(
+      Array.from(selectedTrailsBall),
+      annotationBallTracks,
+      setAnnotationBallTracks,
+      ballNameMap,
+      setBallNameMap,
+    );
+    setSelectedTrailsBall(new Array());
   };
 
   let { videoName } = useParams();
@@ -117,7 +192,22 @@ const NewTrackingEditor = () => {
       });
       setPlayerNameMap(tempMap);
     }
-  }, [processedPlayers, location.state]);
+
+    if (processedBallTracks) {
+      const parsedBallTracks = parseProcessedBallTracks(processedBallTracks);
+      setAnnotationBallTracks(parsedBallTracks);
+      console.log("retrieved ball tracks:", parsedBallTracks);
+      setColorSetBall(boundingBoxColorSetBall(parsedBallTracks));
+
+      let ballKeys = parsedBallTracks.map((a) => a.trackNo);
+      let tempMap = new Map();
+      ballKeys.forEach((key) => {
+        let ballName = "ball" + key;
+        tempMap.set(key, ballName);
+      });
+      setBallNameMap(tempMap);
+    }
+  }, [processedPlayers, processedBallTracks, location.state]);
 
   let wasVideoPlaying = false;
 
@@ -146,6 +236,31 @@ const NewTrackingEditor = () => {
       runningIndex++;
     });
     setPlayerList(tempList);
+
+    tempList = [];
+    runningIndex = 0;
+    let ballBoxes = canvasBoxesBall.filter(
+      (box) => box.my.frame == getCurrentTimestampFrame(),
+    );
+    ballBoxes.forEach((box) => {
+      const boxColor = colorSetBall.get(box.my.key);
+
+      tempList = tempList.concat([
+        <TrackListItemBall
+          key={runningIndex++}
+          ballBox={box}
+          name={ballNameMap.get(box.my.key)}
+          changeSelection={changeSelection}
+          setName={setNameBall}
+          blink={blink}
+          delete={deleteBall}
+          color={boxColor}
+          handleModalOpen={handleModalBallOpen}
+        />,
+      ]);
+      runningIndex++;
+    });
+    setBallList(tempList);
   }
 
   function blink(playerBox) {
@@ -208,6 +323,26 @@ const NewTrackingEditor = () => {
     canvas.requestRenderAll();
   }
 
+  function deleteBall(ballBox) {
+    canvas.setActiveObject(ballBox);
+    setActiveObject(ballBox);
+    setAnnotationBallTracks(
+      annotationBallTracks.filter((a) => a.trackNo != ballBox.my.key),
+    );
+    setCanvasBoxesBall(
+      canvasBoxesBall.filter((a) => a.my.key != ballBox.my.key),
+    );
+
+    let newBallNameMap = new Map(ballNameMap);
+    newBallNameMap.delete(ballBox.my.key);
+    setBallNameMap(newBallNameMap);
+
+    updateSidebar();
+    canvas.discardActiveObject();
+    canvas.remove(ballBox);
+    canvas.requestRenderAll();
+  }
+
   function setName(playerBox, name) {
     fabric.Object.prototype.objectCaching = false;
     let playerIndex = playerBox.my.key;
@@ -218,10 +353,25 @@ const NewTrackingEditor = () => {
     // the modified data is stored in canvasBoxes array
   }
 
-  function boxInCanvas(playerBox) {
+  function setNameBall(ballBox, name) {
+    fabric.Object.prototype.objectCaching = false;
+    let ballIndex = ballBox.my.key;
+    ballNameMap.set(ballIndex, name);
+    canvas.requestRenderAll();
+    // TODO BACKEND
+    // update data when leaving the page
+    // the modified data is stored in canvasBoxes array
+  }
+
+  function boxInCanvas(boxToCheck) {
     //check if the box is in the canvas
     canvasBoxes.forEach((box) => {
-      if (box == playerBox) {
+      if (box == boxToCheck) {
+        return true;
+      }
+    });
+    canvasBoxesBall.forEach((box) => {
+      if (box == boxToCheck) {
         return true;
       }
     });
@@ -235,73 +385,114 @@ const NewTrackingEditor = () => {
       box.my.selected = false;
       //this.setState({dummy: !this.state.dummy});
     });
+    canvasBoxesBall.forEach((box) => {
+      box.my.selected = false;
+    });
   }
 
-  function selectBBox(playerBox) {
-    canvas.setActiveObject(playerBox);
-    setActiveObject(playerBox);
-    playerBox.my.selected = true;
+  function selectBBox(box) {
+    canvas.setActiveObject(box);
+    setActiveObject(box);
+    box.my.selected = true;
   }
 
-  function changeSelection(playerBox) {
-    if (boxInCanvas(playerBox)) {
+  function changeSelection(box) {
+    if (boxInCanvas(box)) {
       //deselect all active boxes
       deselectAllBox();
       //set the new active box
-      selectBBox(playerBox);
+      selectBBox(box);
     }
   }
 
-  function defineBoxBehavior(playerBox) {
-    playerBox.on({
+  function defineBoxBehavior(box, is_playerBox = true) {
+    box.on({
       selected: () => {},
       mousedown: () => {},
       mouseover: () => {},
     });
 
-    playerBox.on({
+    box.on({
       deselected: () => {},
       mouseout: () => {},
     });
 
-    playerBox.on({
-      modified: () => {
-        var boundingRect = playerBox.getBoundingRect();
-        var scaleX = playerBox.scaleX; // Save current scale factors
-        var scaleY = playerBox.scaleY;
-        // Calculate actual width and height based on scale factors
-        //when scaling the box, only scaleX and scaleY change, while width and height not
-        var actualWidth = (boundingRect.width - playerBox.strokeWidth) / scaleX;
-        var actualHeight =
-          (boundingRect.height - playerBox.strokeWidth) / scaleY;
-        playerBox.left = boundingRect.left;
-        playerBox.top = boundingRect.top;
-        playerBox.width = actualWidth;
-        playerBox.height = actualHeight;
+    if (is_playerBox) {
+      box.on({
+        modified: () => {
+          var boundingRect = box.getBoundingRect();
+          var scaleX = box.scaleX; // Save current scale factors
+          var scaleY = box.scaleY;
+          // Calculate actual width and height based on scale factors
+          //when scaling the box, only scaleX and scaleY change, while width and height not
+          var actualWidth = (boundingRect.width - box.strokeWidth) / scaleX;
+          var actualHeight = (boundingRect.height - box.strokeWidth) / scaleY;
+          box.left = boundingRect.left;
+          box.top = boundingRect.top;
+          box.width = actualWidth;
+          box.height = actualHeight;
 
-        const horizontalScalingFactor = canvas.width / 3840;
-        const verticalScalingFactor = canvas.height / 2160;
-        const modifiedAnnotation = convertBoxToAnnotation(
-          playerBox,
-          horizontalScalingFactor,
-          verticalScalingFactor,
-        );
-        console.log(modifiedAnnotation);
-        const annotationToReplace = annotations.findIndex(
-          (a) =>
-            a.FrameNo == playerBox.my.frame && a.PlayerKey == playerBox.my.key,
-        );
-        if (annotationToReplace == -1) {
-          console.error(
-            "the modified bounding box doesn't exist in annotations.",
+          const horizontalScalingFactor = canvas.width / 3840;
+          const verticalScalingFactor = canvas.height / 2160;
+          const modifiedAnnotation = convertBoxToAnnotation(
+            box,
+            horizontalScalingFactor,
+            verticalScalingFactor,
           );
-        }
-        annotations.splice(annotationToReplace, 1, modifiedAnnotation);
-        canvas.renderAll();
-      },
-    });
+          console.log(modifiedAnnotation);
+          const annotationToReplace = annotations.findIndex(
+            (a) => a.FrameNo == box.my.frame && a.PlayerKey == box.my.key,
+          );
+          if (annotationToReplace == -1) {
+            console.error(
+              "the modified bounding box doesn't exist in annotations.",
+            );
+          }
+          annotations.splice(annotationToReplace, 1, modifiedAnnotation);
+          canvas.renderAll();
+        },
+      });
+    } else {
+      box.on({
+        modified: () => {
+          var boundingRect = box.getBoundingRect();
+          var scaleX = box.scaleX; // Save current scale factors
+          var scaleY = box.scaleY;
+          // Calculate actual width and height based on scale factors
+          //when scaling the box, only scaleX and scaleY change, while width and height not
+          var actualWidth = (boundingRect.width - box.strokeWidth) / scaleX;
+          var actualHeight = (boundingRect.height - box.strokeWidth) / scaleY;
+          box.left = boundingRect.left;
+          box.top = boundingRect.top;
+          box.width = actualWidth;
+          box.height = actualHeight;
 
-    return playerBox;
+          const horizontalScalingFactor = canvas.width / 3840;
+          const verticalScalingFactor = canvas.height / 2160;
+          const modifiedAnnotation = convertBallboxToAnnotationBall(
+            box,
+            horizontalScalingFactor,
+            verticalScalingFactor,
+          );
+          console.log(modifiedAnnotation);
+          const annotationToReplace = annotationBallTracks.findIndex(
+            (a) => a.FrameNo == box.my.frame && a.trackNo == box.my.key,
+          );
+          if (annotationToReplace == -1) {
+            console.error(
+              "the modified bounding box doesn't exist in annotationBallTracks.",
+            );
+          }
+          annotationBallTracks.splice(
+            annotationToReplace,
+            1,
+            modifiedAnnotation,
+          );
+          canvas.renderAll();
+        },
+      });
+    }
+    return box;
   }
 
   // For changing video source file
@@ -333,7 +524,7 @@ const NewTrackingEditor = () => {
   };
 
   useEffect(() => {
-    //rerender the sidebar when another player is chosen
+    //rerender the sidebar when another item is selected
     if (activeObject) {
       let tempList = [];
 
@@ -375,6 +566,44 @@ const NewTrackingEditor = () => {
         }
       });
       setPlayerList(tempList);
+
+      tempList = [];
+      ballList.forEach((item) => {
+        if (item.props.ballBox.my.key == activeObject.my.key) {
+          const boxColor = colorSetBall.get(activeObject.my.key);
+          tempList = tempList.concat([
+            <TrackListItemBall
+              key={item.key}
+              ballBox={activeObject}
+              name={ballNameMap.get(activeObject.my.key)}
+              changeSelection={changeSelection}
+              setName={setNameBall}
+              blink={blink}
+              color={boxColor}
+              delete={deleteBall}
+              handleModalOpen={handleModalBallOpen}
+            />,
+          ]);
+        } else {
+          let tempBox = item.props.ballBox;
+          tempBox.my.selected = false;
+          const boxColor = colorSetBall.get(tempBox.my.key);
+          tempList = tempList.concat([
+            <TrackListItemBall
+              key={item.key}
+              ballBox={tempBox}
+              name={ballNameMap.get(tempBox.my.key)}
+              changeSelection={changeSelection}
+              setName={setNameBall}
+              blink={blink}
+              color={boxColor}
+              delete={deleteBall}
+              handleModalOpen={handleModalBallOpen}
+            />,
+          ]);
+        }
+      });
+      setBallList(tempList);
     }
   }, [activeObject]);
 
@@ -421,6 +650,18 @@ const NewTrackingEditor = () => {
     let colorSet = new Map();
 
     uniquePlayerKeys.forEach((key) => {
+      let color = generateColor(key);
+      colorSet.set(key, color);
+    });
+    return colorSet;
+  }
+  function boundingBoxColorSetBall(annotationBallList) {
+    let uniqueBallKeys = new Set(
+      annotationBallList.map((item) => item.trackNo),
+    );
+    let colorSet = new Map();
+
+    uniqueBallKeys.forEach((key) => {
       let color = generateColor(key);
       colorSet.set(key, color);
     });
@@ -492,37 +733,70 @@ const NewTrackingEditor = () => {
               frameNumber - obj.properties.frame < 0,
           ),
       );
-      const currentTrailsToDraw = drawInField
-        ? annotations.filter(
-            (a) => a.FrameNo === frameNumber && isInField(a.in_field),
-          )
-        : annotations.filter((a) => a.FrameNo === frameNumber);
+      if (isShowingPlayerTrails) {
+        const currentTrailsToDraw = drawInField
+          ? annotations.filter(
+              (a) => a.FrameNo === frameNumber && isInField(a.in_field),
+            )
+          : annotations.filter((a) => a.FrameNo === frameNumber);
 
-      currentTrailsToDraw.forEach((a) => {
-        const scaledX = a.x1 * horizontalScalingFactor;
-        const scaledY = a.y1 * verticalScalingFactor;
-        const scaledWidth = a.w * horizontalScalingFactor;
-        const scaledHeight = a.h * verticalScalingFactor;
-        const radius =
-          scaledWidth < scaledHeight ? scaledWidth / 4 : scaledHeight / 4;
-        const trailColor = colorSet.get(a.PlayerKey);
-        let trail = new fabric.Circle({
-          left: scaledX,
-          top: scaledY,
-          stroke: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
-          strokeWidth: 3,
-          fill: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
-          radius: (radius * trailSize) / 50,
-          visible: isShowingAnnotation,
+        currentTrailsToDraw.forEach((a) => {
+          const scaledX = a.x1 * horizontalScalingFactor;
+          const scaledY = a.y1 * verticalScalingFactor;
+          const scaledWidth = a.w * horizontalScalingFactor;
+          const scaledHeight = a.h * verticalScalingFactor;
+          const radius =
+            scaledWidth < scaledHeight ? scaledWidth / 4 : scaledHeight / 4;
+          const trailColor = colorSet.get(a.PlayerKey);
+          let trail = new fabric.Circle({
+            left: scaledX,
+            top: scaledY,
+            stroke: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
+            strokeWidth: 3,
+            fill: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
+            radius: (radius * trailSize) / 50,
+            visible: isShowingAnnotation,
+          });
+          trail.properties = {
+            frame: frameNumber,
+            playerKey: a.PlayerKey,
+          };
+          trail.hasRotatingPoint = false;
+          defineTrailBehaviour(trail, setSelectedTrails);
+          canvas.add(trail);
         });
-        trail.properties = {
-          frame: frameNumber,
-          playerKey: a.PlayerKey,
-        };
-        trail.hasRotatingPoint = false;
-        defineTrailBehaviour(trail, setSelectedTrails);
-        canvas.add(trail);
-      });
+      }
+      if (isShowingBallTrails) {
+        const currentBallTrailsToDraw = annotationBallTracks.filter(
+          (a) => a.FrameNo === frameNumber,
+        );
+
+        currentBallTrailsToDraw.forEach((a) => {
+          const scaledX = a.x1 * horizontalScalingFactor;
+          const scaledY = a.y1 * verticalScalingFactor;
+          const scaledWidth = (a.x2 - a.x1) * horizontalScalingFactor;
+          const scaledHeight = (a.y2 - a.y1) * verticalScalingFactor;
+          const radius =
+            scaledWidth < scaledHeight ? scaledWidth / 4 : scaledHeight / 4;
+          const trailColor = colorSetBall.get(a.trackNo);
+          let trail = new fabric.Circle({
+            left: scaledX,
+            top: scaledY,
+            stroke: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
+            strokeWidth: 3,
+            fill: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
+            radius: (radius * trailSize) / 50,
+            visible: isShowingAnnotation,
+          });
+          trail.properties = {
+            frame: frameNumber,
+            ballKey: a.trackNo,
+          };
+          trail.hasRotatingPoint = false;
+          defineTrailBehaviourBall(trail, setSelectedTrailsBall);
+          canvas.add(trail);
+        });
+      }
     }
 
     var boundingBoxesToDraw = drawInField
@@ -561,7 +835,6 @@ const NewTrackingEditor = () => {
         : annotations.filter((a) => a.FrameNo === frameNumber);
 
       if (boundingBoxesToDraw.length > 0) {
-        //draw boxes
         boundingBoxesToDraw.forEach((boundingBox) => {
           const boxColor = colorSet.get(boundingBox.PlayerKey); //used in 'stroke' property of playerBox
           let playerBox = convertAnnotationToBox(
@@ -592,7 +865,95 @@ const NewTrackingEditor = () => {
       }
     }
     setPlayerList(tempList);
-    canvas.renderAll();
+
+    var boundingBoxesToDrawBall = canvasBoxesBall.filter(
+      (a) => a.my.frame === frameNumber,
+    );
+    tempList = [];
+    runningIndex = 0;
+    if (boundingBoxesToDrawBall.length > 0) {
+      boundingBoxesToDrawBall.forEach((boundingBox) => {
+        canvas.add(boundingBox);
+        const boxColor = colorSetBall.get(boundingBox.my.key);
+        tempList = tempList.concat([
+          <TrackListItemBall
+            key={runningIndex++}
+            ballBox={boundingBox}
+            name={ballNameMap.get(boundingBox.my.key)}
+            changeSelection={changeSelection}
+            setName={setNameBall}
+            blink={blink}
+            color={boxColor}
+            handleModalOpen={handleModalBallOpen}
+            delete={deleteBall}
+          />,
+        ]);
+      });
+    } else {
+      boundingBoxesToDrawBall = annotationBallTracks.filter(
+        (a) => a.FrameNo === frameNumber,
+      );
+      if (boundingBoxesToDrawBall.length > 0) {
+        //draw boxes
+        boundingBoxesToDrawBall.forEach((boundingBox) => {
+          const boxColor = colorSetBall.get(boundingBox.trackNo);
+          let ballBox = convertAnnotationBallToBallbox(
+            boundingBox,
+            horizontalScalingFactor,
+            verticalScalingFactor,
+          );
+          ballBox.visible = isShowingBallBox;
+          ballBox.stroke = `rgb(${boxColor.r}, ${boxColor.g}, ${boxColor.b})`;
+          ballBox.setControlVisible("mtr", false);
+          ballBox = defineBoxBehavior(ballBox, false); //false indicates that this is a ball box
+          if (isShowingBallBox) canvas.add(ballBox);
+
+          tempList = tempList.concat([
+            <TrackListItemBall
+              key={runningIndex++}
+              ballBox={ballBox}
+              color={boxColor}
+              name={ballNameMap.get(boundingBox.trackNo)}
+              changeSelection={changeSelection}
+              setName={setNameBall}
+              blink={blink}
+              handleModalOpen={handleModalBallOpen}
+              delete={deleteBall}
+            />,
+          ]);
+        });
+      }
+    }
+    setBallList(tempList);
+
+    canvas.remove(
+      ...canvas
+        .getObjects()
+        .filter(
+          (obj) =>
+            obj.properties?.type === "field" ||
+            obj.properties?.type === "fieldPoint",
+        ),
+    );
+
+    if (showField) {
+      drawField();
+    }
+
+    if (isShowingBox) {
+      boundingBoxesToDraw.forEach((a) => {
+        const fontSize = 12;
+        const scaledX = a.x1 * horizontalScalingFactor;
+        const scaledY = a.y1 * verticalScalingFactor - fontSize;
+        const playerKey = a.PlayerKey.toString();
+        let boxKey = new fabric.Text(playerKey, {
+          left: scaledX,
+          top: scaledY,
+          fontSize: fontSize,
+        });
+        canvas.add(boxKey);
+      });
+    }
   };
 
   useEffect(() => {
@@ -692,11 +1053,17 @@ const NewTrackingEditor = () => {
     };
   }, [
     annotations,
+    annotationBallTracks,
     videoElement,
     isShowingBox,
+    isShowingBallBox,
+    isShowingBallTrails,
+    isShowingPlayerTrails,
     playerNameMap,
+    ballNameMap,
     trailFrameNumber,
     trailsEnabled,
+    showField,
     trailSize,
     drawInField,
   ]);
@@ -709,6 +1076,8 @@ const NewTrackingEditor = () => {
       trailsFullRedraw(
         canvas,
         annotations,
+        annotationBallTracks,
+        colorSetBall,
         frameNumber,
         trailFrameNumber,
         isShowingAnnotation,
@@ -716,7 +1085,10 @@ const NewTrackingEditor = () => {
         canvas.width / 3840,
         canvas.height / 2160,
         setSelectedTrails,
+        setSelectedTrailsBall,
         trailSize,
+        isShowingBallTrails,
+        isShowingPlayerTrails,
       );
     }
   }, [videoElement?.seeking]);
@@ -724,11 +1096,18 @@ const NewTrackingEditor = () => {
   //triggered when new player is added, or when merge or swap happens
   useEffect(() => {
     //remove old canvas objects
-    canvas.remove(...canvas.getObjects());
+    canvas.remove(
+      ...canvas
+        .getObjects()
+        .filter(
+          (obj) =>
+            obj?.properties?.type !== "fieldPoint" &&
+            obj?.properties?.type !== "field",
+        ),
+    );
 
     const horizontalScalingFactor = canvas.width / 3840;
     const verticalScalingFactor = canvas.height / 2160;
-    let playerIndex = 0;
     var tempList = [];
     let runningIndex = 0;
 
@@ -737,6 +1116,8 @@ const NewTrackingEditor = () => {
       trailsFullRedraw(
         canvas,
         annotations,
+        annotationBallTracks,
+        colorSetBall,
         frameNumber,
         trailFrameNumber,
         isShowingAnnotation,
@@ -744,7 +1125,10 @@ const NewTrackingEditor = () => {
         horizontalScalingFactor,
         verticalScalingFactor,
         setSelectedTrails,
+        setSelectedTrailsBall,
         trailSize,
+        isShowingBallTrails,
+        isShowingPlayerTrails,
       );
     }
 
@@ -788,10 +1172,54 @@ const NewTrackingEditor = () => {
         setPlayerList(tempList);
       }
     }
+
+    if (annotationBallTracks.length > 0) {
+      var boundingBoxesToDrawBall = annotationBallTracks.filter(
+        (a) => a.FrameNo === frameNumber,
+      );
+      tempList = [];
+      runningIndex = 0;
+      if (boundingBoxesToDrawBall.length > 0) {
+        //draw boxes
+        boundingBoxesToDrawBall.forEach((boundingBox) => {
+          const boxColor = colorSetBall.get(boundingBox.trackNo);
+          let ballBox = convertAnnotationBallToBallbox(
+            boundingBox,
+            horizontalScalingFactor,
+            verticalScalingFactor,
+          );
+          ballBox.visible = isShowingBallBox;
+          ballBox.stroke = `rgb(${boxColor.r}, ${boxColor.g}, ${boxColor.b})`;
+          ballBox.setControlVisible("mtr", false);
+          ballBox = defineBoxBehavior(ballBox, false); //false indicates that this is a ball box
+          canvas.add(ballBox);
+
+          tempList = tempList.concat([
+            <TrackListItemBall
+              key={runningIndex++}
+              ballBox={ballBox}
+              color={boxColor}
+              name={ballNameMap.get(boundingBox.trackNo)}
+              changeSelection={changeSelection}
+              setName={setNameBall}
+              blink={blink}
+              handleModalOpen={handleModalBallOpen}
+              delete={deleteBall}
+            />,
+          ]);
+        });
+        setBallList(tempList);
+      }
+    }
   }, [
     annotations,
+    annotationBallTracks,
     playerNameMap,
+    ballNameMap,
     trailsEnabled,
+    isShowingBallTrails,
+    isShowingPlayerTrails,
+    isShowingBallBox,
     trailSize,
     trailFrameNumber,
     drawInField,
@@ -844,8 +1272,10 @@ const NewTrackingEditor = () => {
       const nextFrame = frameNumber + 1;
       const referenceTimestamp = getReferenceTimestampForFrame(nextFrame);
       videoElement.currentTime = referenceTimestamp;
+      deleteFieldDrawing();
       setFrameNumber(nextFrame);
       setTimestamp(referenceTimestamp);
+      drawField();
     }
   };
 
@@ -854,8 +1284,10 @@ const NewTrackingEditor = () => {
       const previousFrame = frameNumber - 1;
       const referenceTimestamp = getReferenceTimestampForFrame(previousFrame);
       videoElement.currentTime = referenceTimestamp;
+      deleteFieldDrawing();
       setFrameNumber(previousFrame);
       setTimestamp(referenceTimestamp);
+      drawField();
     }
   };
 
@@ -876,6 +1308,10 @@ const NewTrackingEditor = () => {
 
   const handlePlayPause = () => {
     if (videoElement && videoElement.readyState != 0 && !videoElement.ended) {
+      if (editField) {
+        setShowApplyHomographyModal(true);
+        return;
+      }
       if (videoElement.paused) {
         setIsPlaying(true);
         videoElement.play();
@@ -967,6 +1403,39 @@ const NewTrackingEditor = () => {
       new Map(playerNameMap.set(newPlayerKey, "player" + newPlayerKey)),
     );
   }
+  function addBoundingBoxBallAtMousePosition(event) {
+    const pointer = canvas.getPointer(event.e);
+    const horizontalScalingFactor = canvas.width / 3840;
+    const verticalScalingFactor = canvas.height / 2160;
+    const x = pointer.x / horizontalScalingFactor;
+    const y = pointer.y / verticalScalingFactor;
+    //console.log(`Mouse clicked at: (${x}, ${y})`);
+    const newBallKey = ballNameMap.size + 1; //ball keys start from 1
+    const boxColor = generateColor(newBallKey);
+    setColorSetBall(colorSetBall.set(newBallKey, boxColor));
+    setAnnotationBallTracks(
+      annotationBallTracks.concat({
+        FrameNo: frameNumber,
+        trackNo: newBallKey,
+        x1: x,
+        x2: x + 30,
+        y1: y,
+        y2: y + 30,
+        detection: 1,
+        x: 0,
+        y: 0,
+      }),
+    );
+    setBallNameMap(new Map(ballNameMap.set(newBallKey, "ball" + newBallKey)));
+
+    canvas.off("mouse:down");
+  }
+
+  function handleAddBall() {
+    canvas.on("mouse:down", function (e) {
+      addBoundingBoxBallAtMousePosition(e);
+    });
+  }
 
   const handleEnablingTrails = () => {
     if (trailsEnabled) {
@@ -976,12 +1445,156 @@ const NewTrackingEditor = () => {
     }
   };
 
+  const handleEnablingField = () => {
+    if (showField) {
+      setShowField(false);
+      setEditField(false);
+      deleteFieldDrawing();
+    } else {
+      setShowField(true);
+      drawField(true);
+    }
+  };
+
+  const handleEnablingEditField = () => {
+    if (editField) {
+      setEditField(false);
+    } else {
+      setEditField(true);
+    }
+  };
+
+  const handleShowBallBox = () => {
+    console.log("showing ball box", isShowingBallBox);
+    if (isShowingBallBox) {
+      setIsShowingBallBox(false);
+    } else {
+      setIsShowingBallBox(true);
+    }
+  };
+
+  const handleShowBallTrails = () => {
+    if (isShowingBallTrails) {
+      setIsShowingBallTrails(false);
+    } else {
+      setIsShowingBallTrails(true);
+    }
+  };
+
+  const handleShowPlayerTrails = () => {
+    if (isShowingPlayerTrails) {
+      setIsShowingPlayerTrails(false);
+    } else {
+      setIsShowingPlayerTrails(true);
+    }
+  };
+
+  useEffect(() => {
+    canvas.getObjects().forEach((obj) => {
+      if (obj.properties?.type === "fieldPoint") {
+        obj.set({ selectable: editField });
+      }
+    });
+  }, [editField, canvas]);
+
+  const deleteFieldDrawing = () => {
+    canvas.remove(
+      ...canvas
+        .getObjects()
+        .filter(
+          (obj) =>
+            obj.properties?.type === "field" ||
+            obj.properties?.type === "fieldPoint",
+        ),
+    );
+  };
+
+  const drawField = (forceDraw = false) => {
+    if (!homographies) {
+      return;
+    }
+
+    if (showField || forceDraw) {
+      const newFieldPoints = drawFieldPoints(
+        canvas,
+        getCurrentTimestampFrame(),
+        homographies,
+        canvas.width / 3840,
+        canvas.height / 2160,
+        logFile.Sport,
+        fieldSize?.length,
+        fieldSize?.width,
+        videoElement,
+      );
+      setFieldPoints(newFieldPoints);
+      console.log("newFieldPoints", newFieldPoints);
+    }
+  };
+
   const handleSwitchingTrailSize = (event) => {
     setTrailSize(event.target.value);
   };
 
+  const handleApplyHomography = (frameNumber) => {
+    frameNumber = parseInt(frameNumber);
+    var currentFrame = parseInt(getCurrentTimestampFrame());
+    var fieldPoints = canvas
+      .getObjects()
+      .filter((obj) => obj.properties?.type === "fieldPoint")
+      .map((obj) => ({
+        id: obj.id,
+        x: obj.left,
+        y: obj.top,
+      }));
+    console.log("Field points: ", fieldPoints);
+    api
+      .post("/annotation/track", {
+        video_id: video.name,
+        start_frame: currentFrame,
+        end_frame: currentFrame + frameNumber,
+        points: fieldPoints,
+        player_boxes: annotations
+          .filter(
+            (a) =>
+              a.FrameNo >= currentFrame &&
+              a.FrameNo <= currentFrame + frameNumber,
+          )
+          .map((a) => ({
+            frame_no: a.FrameNo,
+            x_1: a.x1,
+            y_1: a.y1,
+            x_2: a.x2,
+            y_2: a.y2,
+          })),
+      })
+      .then((response) => {});
+
+    deleteFieldDrawing();
+    drawField();
+    setShowApplyHomographyModal(false);
+    handleEnablingEditField();
+    setIsPlaying(true);
+    videoElement.play();
+  };
+
+  const handleContinueWithoutApplyingHomographies = async () => {
+    console.log("Continuing without applying homographies");
+    setShowApplyHomographyModal(false);
+    handleEnablingEditField();
+    videoElement.play();
+    setIsPlaying(true);
+  };
+
   return (
     <div>
+      <ApplyHomographyModal
+        showApplyHomographyModal={showApplyHomographyModal}
+        handleClose={() => setShowApplyHomographyModal(false)}
+        handleApply={handleApplyHomography}
+        handleContinueWithoutApplying={() =>
+          handleContinueWithoutApplyingHomographies()
+        }
+      />
       <MergeAndSwapModal
         playerChosenInList={playerChosenInList}
         playerNameMap={playerNameMap}
@@ -990,7 +1603,17 @@ const NewTrackingEditor = () => {
         setAnnotations={setAnnotations}
         frameNumber={frameNumber}
         mergeModalState={mergeModalState}
-        handleClose={handleModalClose}
+        handleClose={handleModalsClose}
+      />
+      <MergeAndSwapModalBall
+        ballChosenInList={ballChosenInList}
+        ballNameMap={ballNameMap}
+        setBallNameMap={setBallNameMap}
+        annotationBallTracks={annotationBallTracks}
+        setAnnotationBallTracks={setAnnotationBallTracks}
+        frameNumber={frameNumber}
+        mergeModalBallState={mergeModalBallState}
+        handleClose={handleModalsClose}
       />
       <div className="controls">
         <Box id="tools-container" sx={{ display: "flex", gap: "10px" }}>
@@ -1038,51 +1661,56 @@ const NewTrackingEditor = () => {
               color: "#1b1f22 !important",
             }}
           >
-            Merge
+            Merge Player
           </Button>
-          <Typography sx={{ marginLeft: "10px" }}>Trails </Typography>
-
-          <Switch
-            color="default"
-            checked={trailsEnabled}
-            disabled={!videoElement?.paused}
-            onChange={handleEnablingTrails}
-          />
-          <Typography>Trails Size </Typography>
-          <Slider
+          <Button
+            data-testid="merge-button-ball"
+            variant="contained"
+            onClick={handleMultiSelectMergeBall}
             sx={{
-              width: "60px",
-              "& .MuiSlider-thumb": {
-                color: "white",
-              },
-              "& .MuiSlider-track": {
-                color: "var(--accent)",
-              },
-              "& .MuiSlider-rail": {
-                color: "var(--main-bg)",
-              },
+              backgroundColor: "#BBC3C9 !important",
+              color: "#1b1f22 !important",
             }}
-            value={trailSize}
-            disabled={!videoElement?.paused}
-            onChange={handleSwitchingTrailSize}
-            min={10}
-            max={100}
-            step={10}
-            aria-label="Default"
-            valueLabelDisplay="auto"
-          />
-          <Typography sx={{ marginLeft: "10px" }}>Trail frames: </Typography>
-
-          <TextField
-            variant="standard"
+          >
+            Merge Ball
+          </Button>
+          <Button
+            data-testid="delete-ball-trails-button"
+            variant="contained"
+            onClick={handleMultiBallTrailsDelete}
             sx={{
-              width: "50px",
-              input: { color: "white" },
-              mr: 2,
+              backgroundColor: "#BBC3C9 !important",
+              color: "#1b1f22 !important",
             }}
-            value={trailFrameNumber}
-            type="number"
-            onChange={(event, val) => setTrailFrameNumber(event.target.value)}
+          >
+            Del selected Balltrails
+          </Button>
+          <FieldDetailsButton
+            handleEnablingField={handleEnablingField}
+            showField={showField}
+            editField={editField}
+            handleEnablingEditField={handleEnablingEditField}
+            videoElement={videoElement}
+            fieldSize={fieldSize}
+          />
+          <SettingsBallButton
+            disabled={!videoElement?.paused}
+            isShowingBallBox={isShowingBallBox}
+            handleShowBallBox={handleShowBallBox}
+            handleAddBall={handleAddBall}
+          />
+          <SettingsTrailsButton
+            disabled={!videoElement?.paused}
+            trailsEnabled={trailsEnabled}
+            handleEnablingTrails={handleEnablingTrails}
+            isShowingPlayerTrails={isShowingPlayerTrails}
+            handleShowPlayerTrails={handleShowPlayerTrails}
+            isShowingBallTrails={isShowingBallTrails}
+            handleShowBallTrails={handleShowBallTrails}
+            trailSize={trailSize}
+            handleSwitchingTrailSize={handleSwitchingTrailSize}
+            trailFrameNumber={trailFrameNumber}
+            setTrailFrameNumber={setTrailFrameNumber}
           />
           <div className="tests">
             <Button
@@ -1090,10 +1718,15 @@ const NewTrackingEditor = () => {
               className="tests"
               onClick={() => drawBoundingBoxes(frameNumber)}
             >
-              draw players from annotation
+              draw players from annotation and Ball tracks
             </Button>
           </div>
-          <DownloadButton players={annotations} video={video} />
+          <DownloadButton
+            players={annotations}
+            video={video}
+            homographies={homographies}
+            balls={annotationBallTracks}
+          />
         </Box>
       </div>
 
@@ -1103,7 +1736,9 @@ const NewTrackingEditor = () => {
           ref={canvasRef}
           canvas={JSON.stringify(canvas)}
           annotations={annotations.length}
-          playerList={JSON.stringify(playerList)}
+          annotationballtracks={annotationBallTracks.length}
+          playerlist={JSON.stringify(playerList)}
+          fieldPoints={JSON.stringify(fieldPoints)}
           className="canvas"
           id="tracking-editor-canvas"
           width="1920"
@@ -1111,7 +1746,7 @@ const NewTrackingEditor = () => {
           style={{ display: "block", width: "100%", height: "auto" }}
         ></canvas>
         {/* <div className="sidebar">sidebar is here</div> */}
-        <TrackList>{playerList}</TrackList>
+        <TrackList children={playerList} groups={ballList}></TrackList>
       </div>
       <div className="controls">
         <SeekBar
@@ -1125,7 +1760,11 @@ const NewTrackingEditor = () => {
             <BackwardStepIcon className="icon" />
           </button>
           <span id="frame-number-display">Frame {frameNumber}</span>
-          <button className="icon-button" onClick={handleNextFrame}>
+          <button
+            className="icon-button"
+            data-testid="next-frame-button"
+            onClick={handleNextFrame}
+          >
             <ForwardStepIcon className="icon" />
           </button>
           <button className="icon-button" onClick={handlePlayPause}>

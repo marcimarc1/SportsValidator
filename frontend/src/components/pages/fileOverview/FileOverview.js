@@ -25,7 +25,7 @@ class FileOverview extends Component {
     fileSelectionVisible: false,
     errorMessage: "",
     infoMessage:
-      "Please upload the mandatory video file and processed players file. Ball tracks, homographies, and log files are optional.",
+      "Please upload the mandatory video file and processed players file. Homographies, processed ball and log files are optional.",
     selectedFiles: [],
     requiredFilesUploaded: false,
   };
@@ -62,6 +62,9 @@ class FileOverview extends Component {
     const tempProcessedPlayers = selectedFiles.find(
       (file) => file.name === "processed_players.csv",
     );
+    const tempProcessedBallTracks = selectedFiles.find(
+      (file) => file.name === "processed_ball.csv",
+    );
     const tempVideo = selectedFiles.find((file) =>
       file.name.match(/\.(mp4|avi|mov|wmv)$/i),
     );
@@ -74,6 +77,13 @@ class FileOverview extends Component {
           "Please make sure to upload at least the video file and processed_players.csv.",
         infoMessage: "",
         requiredFilesUploaded: false,
+      });
+    } else if (!tempProcessedBallTracks) {
+      this.setState({
+        errorMessage: "",
+        infoMessage:
+          "Files uploaded successfully! Is it intentional not uploading processed_ball.csv?",
+        requiredFilesUploaded: true,
       });
     } else {
       this.setState({
@@ -177,15 +187,18 @@ class FileOverview extends Component {
     let tempProcessedPlayers = selectedFiles.find(
       (file) => file.name === "processed_players.csv",
     );
-    let tempBallTracks = selectedFiles.find(
-      (file) => file.name === "ball_tracks.csv",
+    let tempProcessedBallTracks = selectedFiles.find(
+      (file) => file.name === "processed_ball.csv",
     );
     let tempHomographies = selectedFiles.find(
-      (file) => file.name === "homographies.csv",
+      (file) => file.name === "homographies.json",
     );
     let tempLog = selectedFiles.find((file) => file.name === "log.txt");
     let tempVideo = selectedFiles.find((file) =>
       file.name.match(/\.(mp4|avi|mov|wmv)$/i),
+    );
+    let tempFieldSize = selectedFiles.find(
+      (file) => file.name === "homographiesoptimized_field_size.json",
     );
 
     const readCSV = (file, key) => {
@@ -193,6 +206,17 @@ class FileOverview extends Component {
         const reader = new FileReader();
         reader.onload = (e) => {
           resolve({ key, content: e.target.result });
+        };
+        reader.onerror = (e) => reject(e);
+        reader.readAsText(file);
+      });
+    };
+
+    const readJson = (file, key) => {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          resolve({ key, content: JSON.parse(e.target.result) });
         };
         reader.onerror = (e) => reject(e);
         reader.readAsText(file);
@@ -211,13 +235,16 @@ class FileOverview extends Component {
 
     Promise.all([
       readCSV(tempProcessedPlayers, "processedPlayers"),
-      tempBallTracks
-        ? readCSV(tempBallTracks, "ballTracks")
+      tempProcessedBallTracks
+        ? readCSV(tempProcessedBallTracks, "processedBallTracks")
         : Promise.resolve(null),
       tempHomographies
-        ? readCSV(tempHomographies, "homographies")
+        ? readJson(tempHomographies, "homographies")
         : Promise.resolve(null),
       tempLog ? readCSV(tempLog, "log") : Promise.resolve(null),
+      tempFieldSize
+        ? readJson(tempFieldSize, "fieldSize")
+        : Promise.resolve(null),
     ])
       .then((results) => {
         this.setState((prevState) => {
@@ -225,10 +252,11 @@ class FileOverview extends Component {
             videoName: tempVideo.name,
             duration: videoDuration,
             processedPlayers: tempProcessedPlayers,
-            ballTracks: tempBallTracks,
+            processedBallTracks: tempProcessedBallTracks,
             homographies: tempHomographies,
             log: tempLog,
             video: tempVideo,
+            fieldSize: tempFieldSize,
           };
           results.forEach((result) => {
             if (result) {
@@ -269,8 +297,9 @@ class FileOverview extends Component {
           notes={e.log}
           processedPlayers={e.processedPlayers}
           video={e.video}
-          ballTracks={e.ballTracks}
+          processedBallTracks={e.processedBallTracks}
           homographies={e.homographies}
+          fieldSize={e.fieldSize}
           log={e.log}
           poster={this.generatePosterSrc(e.video)}
           changeName={this.changeName}

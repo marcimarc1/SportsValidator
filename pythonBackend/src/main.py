@@ -1,9 +1,10 @@
 from contextlib import asynccontextmanager
 import os
-import aiofiles
+# import aiofiles
 import logging
 from typing import List
 from fastapi import FastAPI, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 from .routers import annotation, user
 from alembic.config import Config
 from alembic import command
@@ -22,12 +23,19 @@ def run_migrations():
 async def lifespan(app_: FastAPI):
     log.info("Starting up...")
     log.info("run migration")
-    run_migrations()
+    # run_migrations()
     yield
     log.info("Shutting down...")
 
 # App Creation
 app = FastAPI(lifespan=lifespan)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Bind Routers from Router Directory
 app.include_router(annotation.router)

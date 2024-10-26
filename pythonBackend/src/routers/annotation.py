@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from ..logic.annotation_logic import *
 from ..db.database import get_db
 from ..pydantic_models.point_update_dto import PointUpdate
+from ..logic.tracking.tracking_logic import track_points_logic
 
 router = fastapi.APIRouter(
     prefix="/annotation"
@@ -22,10 +23,12 @@ async def get_annotations(video_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="No annotations for video")
     return annotations
 
-@router.post("/update_points")
-async def update_points(dto: PointUpdate):
-    if dto is not None:
-        return "received"
+@router.post("/track")
+async def track_points(dto: PointUpdate, db: Session = Depends(get_db)):
+    try:
+        return await track_points_logic(dto)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 @router.post("/upload")
 async def upload(dto: ImportRequestDto,  db: Session = Depends(get_db)):
