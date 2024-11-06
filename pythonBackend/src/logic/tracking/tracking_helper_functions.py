@@ -1,5 +1,5 @@
 from typing import List
-from pythonBackend.src.pydantic_models.point_update_dto import PlayerBox, Point
+from ...pydantic_models.point_update_dto import PlayerBox, Point
 
 
 def smooth_points(points_history: List[List[Point]], window_size: int = 5, oscillation_threshold: float = 2.0) -> List[List[Point]]:
