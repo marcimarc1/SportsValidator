@@ -18,7 +18,7 @@ export const trailsFullRedraw = (
   setSelectedTrailsBall,
   trailSize,
   isShowingBallTrails,
-  isShowingPlayerTrails
+  isShowingPlayerTrails,
 ) => {
   if (isShowingPlayerTrails) {
     const pastTrailsToDraw = annotations.filter((a) => {
@@ -117,7 +117,7 @@ export const drawFieldPoints = (
   verticalScalingFactor,
   sport,
   length,
-  width
+  width,
 ) => {
   const { points, lines } = getTemplate(sport, length, width);
   let homography = homographies[frameNumber];
@@ -142,7 +142,7 @@ export const drawFieldPoints = (
       point,
       invHomography,
       horizontalScalingFactor,
-      verticalScalingFactor
+      verticalScalingFactor,
     );
 
     const circle = new fabric.Circle({
@@ -196,7 +196,7 @@ export const drawFieldPoints = (
         stroke: color,
         strokeWidth: 3,
         selectable: false,
-      }
+      },
     );
 
     line.properties = {
@@ -240,7 +240,7 @@ export const drawFieldPoints = (
       { coords: center },
       invHomography,
       horizontalScalingFactor,
-      verticalScalingFactor
+      verticalScalingFactor,
     );
 
     const radiusPointX = [center[0] + radius, center[1]];
@@ -250,21 +250,21 @@ export const drawFieldPoints = (
       { coords: radiusPointX },
       invHomography,
       horizontalScalingFactor,
-      verticalScalingFactor
+      verticalScalingFactor,
     );
     const transformedRadiusPointY = transformPoint(
       { coords: radiusPointY },
       invHomography,
       horizontalScalingFactor,
-      verticalScalingFactor
+      verticalScalingFactor,
     );
 
     // Calculate the transformed radii
     const transformedRadiusX = Math.abs(
-      transformedRadiusPointX.x - transformedCenter.x
+      transformedRadiusPointX.x - transformedCenter.x,
     );
     const transformedRadiusY = Math.abs(
-      transformedRadiusPointY.y - transformedCenter.y
+      transformedRadiusPointY.y - transformedCenter.y,
     );
 
     const ellipse = new fabric.Ellipse({
@@ -299,7 +299,7 @@ export const drawFieldPoints = (
       points.middleCircle.center,
       points.middleCircle.radius,
       "yellow",
-      "middle-circle"
+      "middle-circle",
     );
   }
   if (points.penaltySpot) {
@@ -320,7 +320,7 @@ export const updateHomography = (
   verticalScalingFactor,
   sport,
   length,
-  width
+  width,
 ) => {
   const { points } = getTemplate(sport, length, width);
 
@@ -355,7 +355,7 @@ export const updateHomography = (
     const newHomography = calculateNewHomography(
       originalFieldPoints,
       trackedPointsTransformed,
-      templatePoints
+      templatePoints,
     );
 
     homographies[frameNumber] = newHomography;
