@@ -317,3 +317,23 @@ export const getTemplate = (key, length = 103, width = 68) => {
       throw new Error("Template not found");
   }
 };
+
+export const getPointsToTrack = (key) => {
+  switch (key) {
+    case "Tennis":
+      return [
+        "outer-0",
+        "outer-1",
+        "outer-2",
+        "outer-3",
+        "baseline-center-0",
+        "baseline-center-2",
+        "single-net-0",
+        "single-net-1",
+      ];
+    case "Soccer":
+      return ["outer-0", "outer-1", "outer-2", "outer-3"];
+    default:
+      throw new Error("Template not found");
+  }
+};
