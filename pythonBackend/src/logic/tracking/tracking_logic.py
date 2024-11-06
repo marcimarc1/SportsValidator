@@ -15,8 +15,8 @@ FRAME_SKIP = 3
 async def track_points_logic(dto: PointUpdate):
     #TODO: update video path
     video_path = f"src/{dto.video_id}"
-    # if not is_valid_path(video_path):
-    #     raise ValueError(f"Video file {video_path} does not exist")
+    if not is_valid_path(video_path):
+        video_path = f"pythonBackend/src/{dto.video_id}"
 
     cap = cv2.VideoCapture(video_path)
 
