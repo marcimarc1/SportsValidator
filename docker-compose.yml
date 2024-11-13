@@ -10,7 +10,7 @@ services:
     depends_on:
       - db
     volumes:
-      - api_data:/var/lib/docker/volumes/api
+      - api_data:/var/lib/docker/volumes/api/
   db:
     image: postgres:15.2-alpine
     volumes:

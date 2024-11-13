@@ -16,6 +16,8 @@ class FileOverview extends Component {
   constructor(props) {
     super(props);
     this.fileInput = React.createRef();
+    this.isGameSelected=false;
+    this.isVideoSelected=false;
   }
 
   state = {
@@ -330,7 +332,11 @@ class FileOverview extends Component {
         <div className="FileOverviewList">
           <div className="FileOverviewHeadingContainer">
             <h1 className={"FileOverviewHeading"}>File Overview</h1>
+
+
             <div className="file-upload-container">
+
+
               <label className="file-upload" for="file-upload">
                 Upload Files
               </label>

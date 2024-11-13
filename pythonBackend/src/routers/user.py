@@ -29,5 +29,5 @@ async def update_points(user_id: int, dto: UserDto, db: Session = Depends(get_db
 
 @router.delete("/{user_id}", response_model=dict)
 async def delete(user_id: int, db: Session = Depends(get_db)):
-    await delete(user_id, db)
+    await delete_user(user_id, db)
     return {"message": "User deleted successfully"}

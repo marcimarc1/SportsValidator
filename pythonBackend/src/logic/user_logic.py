@@ -32,7 +32,7 @@ async def update_user(user_id: int, user_dto: UserDto, db: Session):
     return user
 
 
-async def delete(user_id: int, db: Session):
+async def delete_user(user_id: int, db: Session):
     qry = db.execute(select(User).filter(User.id == user_id))
     user = qry.scalars().first()
 

@@ -7,9 +7,9 @@ from ..pydantic_models.Import.import_request_dto import ImportRequestDto
 import os
 
 
-def add_video(dto: ImportRequestDto, game: Game, db: Session):
+def add_video(dto: ImportRequestDto, db: Session):
     video = Video(
-        game_id = game.id,
+        game_id = dto.game_id,
         video_path = "placeholder",
         uploaded_by = dto.upload_user,
         sequence_number = dto.sequence_number
@@ -32,7 +32,7 @@ def add_video(dto: ImportRequestDto, game: Game, db: Session):
     db.commit()
     return video
 
-def delete_video(video_id: int):
+def delete_video(video_id: int, db: Session):
     qry = db.execute(select(Video).filter(Video.id == video_id))
     video = qry.scalars().first()
     if video is None:
@@ -52,3 +52,8 @@ def delete_video(video_id: int):
     # Delete Folder
     if os.path.exists(path):
         shutil.rmtree(path)
+
+async def get_videos_by_game_id(game_id: int, db: Session):
+    videos = db.query(Video).filter(Video.game_id ==game_id).all()
+    return videos
+

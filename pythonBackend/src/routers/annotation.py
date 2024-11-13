@@ -30,11 +30,6 @@ async def track_points(dto: PointUpdate, db: Session = Depends(get_db)):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-@router.post("/upload")
-async def upload(dto: ImportRequestDto,  db: Session = Depends(get_db)):
-    if dto is not None:
-        return
-
 @router.get("export_game/{game_id}")
 async def export_by_game_id(game_id: int, db: Session = Depends(get_db)):
     return export_annotation_by_game_id(game_id, db)
