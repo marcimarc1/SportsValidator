@@ -21,14 +21,10 @@ import { fabric } from "fabric";
 import "./NewTrackingEditor.css";
 import SeekBar from "./SeekBar";
 import {
-  FormGroup,
   Switch,
-  FormControlLabel,
   Button,
   Box,
-  Typography,
 } from "@mui/material";
-import TextField from "@mui/material/TextField";
 
 import TrackList from "../newTrackingEditor/TrackList";
 import TrackListItemPlayer from "./TrackListItemPlayer";
@@ -54,6 +50,40 @@ import { FieldDetailsButton } from "./field/FieldDetailsButton";
 import api from "../../../api/api";
 import { SettingsBallButton } from "./SettingsBallButton";
 import { SettingsTrailsButton } from "./SettingsTrailsButton";
+import {
+  handleMultiSelectMerge,
+  handleMultiSelectMergeBall,
+  handleMultiBallTrailsDelete,
+} from './multiSelectHandlers';
+import {updateSidebar} from "./sidebarUpdater";
+import {
+  getCurrentTimestampFrame,
+  getReferenceTimestampForFrame,
+  updateTimestamp,
+  handleNextFrame,
+  handlePreviousFrame,
+  handlePreviousChunk,
+  handleNextChunk,
+  handlePlayPause,
+  handleSeekStart,
+  handleSeekPercent,
+  handleSeekEnd,
+  formatTime,
+  handleDisplayingBox,
+  handleDisplayingAnnotation,
+  handleAddPlayer
+} from './videoControls';
+import {generatePoster} from "./postGenerator";
+import {
+  blink,
+  deletePlayer,
+  deleteBall,
+  setName,
+  setNameBall
+} from './canvasUtils';
+import {modalBallOpen, modalOpen, modalsClose} from "./modalHandler";
+import useInitializeTrackingData from "./useInitializeTrackingData";
+import {generateColor} from "../../../utils/colorGenerator";
 
 // TODO Take a video_id instead and have an endpoint on the server where we supply a video_id and get the corresponding video
 const NewTrackingEditor = () => {
@@ -89,6 +119,7 @@ const NewTrackingEditor = () => {
   const [playerChosenInList, setPlayerChosenInList] = useState("");
   const [showField, setShowField] = useState(false);
   const [editField, setEditField] = useState(false);
+  const [wasVideoPlaying, setWasVideoPlaying] = useState(false);
   const logFile = parseLogFile(log);
   const [selectedTrails, setSelectedTrails] = useState(new Set());
   const [trailSize, setTrailSize] = useState(50);
@@ -108,60 +139,22 @@ const NewTrackingEditor = () => {
   const [isShowingBallTrails, setIsShowingBallTrails] = useState(true);
   const [selectedTrailsBall, setSelectedTrailsBall] = useState([]);
 
-  const handleModalOpen = (playerInList) => {
-    setPlayerChosenInList(playerInList);
-    setMergeModalState(true);
-  };
+  const handleModalOpen = modalOpen(setPlayerChosenInList, setMergeModalState);
+  const handleModalBallOpen = modalBallOpen(setBallChosenInList, setMergeModalBallState);
+  const handleModalsClose = modalsClose(setMergeModalState, setMergeModalBallState);
 
-  const handleModalBallOpen = (ballInList) => {
-    setBallChosenInList(ballInList);
-    setMergeModalBallState(true);
-    console.log("test2");
-  };
-
-  const handleModalsClose = () => {
-    setMergeModalState(false);
-    setMergeModalBallState(false);
-  };
-
-  const handleMultiSelectMerge = () => {
-    console.log("Multiplayer merge");
-    console.log(Array.from(selectedTrails));
-    multiPlayerMerge(
-      Array.from(selectedTrails),
-      annotations,
+  useInitializeTrackingData(
+      video,
+      processedPlayers,
+      processedBallTracks,
+      setVideoUrl,
       setAnnotations,
-      playerNameMap,
+      setColorSet,
       setPlayerNameMap,
-    );
-    setSelectedTrails(new Array());
-  };
-
-  const handleMultiSelectMergeBall = () => {
-    console.log("Multiplayer merge ball");
-    console.log(Array.from(selectedTrailsBall));
-    multiBallMerge(
-      Array.from(selectedTrailsBall),
-      annotationBallTracks,
       setAnnotationBallTracks,
-      ballNameMap,
-      setBallNameMap,
-    );
-    setSelectedTrailsBall(new Array());
-  };
-
-  const handleMultiBallTrailsDelete = () => {
-    console.log("Multiplayer delete ball trails");
-    console.log(Array.from(selectedTrailsBall));
-    multiBallTrailsDelete(
-      Array.from(selectedTrailsBall),
-      annotationBallTracks,
-      setAnnotationBallTracks,
-      ballNameMap,
-      setBallNameMap,
-    );
-    setSelectedTrailsBall(new Array());
-  };
+      setColorSetBall,
+      setBallNameMap
+  );
 
   let { videoName } = useParams();
 
@@ -169,199 +162,48 @@ const NewTrackingEditor = () => {
   const frameDuration = 1001 / 24000; // TODO Get this information from the backend
   // could be used to display annotations in canvas
 
-  useEffect(() => {
-    if (video) {
-      setVideoUrl(URL.createObjectURL(video));
-    }
 
-    if (processedPlayers) {
-      const parsedData = parseProcessedPlayers(processedPlayers);
-      setAnnotations(parsedData);
-      //this log is important for the tests
-      //tests suite: describe data fetching
-      //tests: it receives correct annotation
-      console.log("retrieved annotation:", parsedData);
-      // Setting the color set based on the parsed data
-      setColorSet(boundingBoxColorSet(parsedData));
-
-      let playerKeys = parsedData.map((a) => a.PlayerKey);
-      let tempMap = new Map();
-      playerKeys.forEach((key) => {
-        let playerName = "player" + key;
-        tempMap.set(key, playerName);
-      });
-      setPlayerNameMap(tempMap);
-    }
-
-    if (processedBallTracks) {
-      const parsedBallTracks = parseProcessedBallTracks(processedBallTracks);
-      setAnnotationBallTracks(parsedBallTracks);
-      console.log("retrieved ball tracks:", parsedBallTracks);
-      setColorSetBall(boundingBoxColorSetBall(parsedBallTracks));
-
-      let ballKeys = parsedBallTracks.map((a) => a.trackNo);
-      let tempMap = new Map();
-      ballKeys.forEach((key) => {
-        let ballName = "ball" + key;
-        tempMap.set(key, ballName);
-      });
-      setBallNameMap(tempMap);
-    }
-  }, [processedPlayers, processedBallTracks, location.state]);
-
-  let wasVideoPlaying = false;
-
-  function updateSidebar() {
-    let tempList = [];
-    let runningIndex = 0;
-    let boxes = canvasBoxes.filter(
-      (box) => box.my.frame == getCurrentTimestampFrame(),
-    );
-    boxes.forEach((box) => {
-      const boxColor = colorSet.get(box.my.key);
-
-      tempList = tempList.concat([
-        <TrackListItemPlayer
-          key={runningIndex++}
-          playerBox={box}
-          name={playerNameMap.get(box.my.key)}
-          changeSelection={changeSelection}
-          setName={setName}
-          blink={blink}
-          delete={deletePlayer}
-          color={boxColor}
-          handleModalOpen={handleModalOpen}
-        />,
-      ]);
-      runningIndex++;
+  const refreshSidebar = () => {
+    updateSidebar({
+      canvasBoxes,
+      canvasBoxesBall,
+      colorSet,
+      colorSetBall,
+      getCurrentTimestampFrame,
+      playerNameMap,
+      ballNameMap,
+      changeSelection,
+      handleSetName,
+      handleSetNameBall,
+      handleBlink,
+      handleDeletePlayer,
+      handleDeleteBall,
+      handleModalOpen,
+      handleModalBallOpen,
+      setPlayerList,
+      setBallList,
     });
-    setPlayerList(tempList);
+  };
 
-    tempList = [];
-    runningIndex = 0;
-    let ballBoxes = canvasBoxesBall.filter(
-      (box) => box.my.frame == getCurrentTimestampFrame(),
-    );
-    ballBoxes.forEach((box) => {
-      const boxColor = colorSetBall.get(box.my.key);
+  const handleBlink = (playerBox) => {
+    blink(canvas, playerBox, setActiveObject);
+  };
 
-      tempList = tempList.concat([
-        <TrackListItemBall
-          key={runningIndex++}
-          ballBox={box}
-          name={ballNameMap.get(box.my.key)}
-          changeSelection={changeSelection}
-          setName={setNameBall}
-          blink={blink}
-          delete={deleteBall}
-          color={boxColor}
-          handleModalOpen={handleModalBallOpen}
-        />,
-      ]);
-      runningIndex++;
-    });
-    setBallList(tempList);
-  }
+  const handleDeletePlayer = (playerBox) => {
+    deletePlayer(canvas, playerBox, setAnnotations, setCanvasBoxes, playerNameMap, setPlayerNameMap, refreshSidebar);
+  };
 
-  function blink(playerBox) {
-    canvas.discardActiveObject();
-    canvas.setActiveObject(playerBox);
-    setActiveObject(playerBox);
-    playerBox.my.selected = true;
-    let originalStrokeColor = playerBox.stroke;
-    let originalFillColor = playerBox.fill;
-    let repeats = 3;
-    let time = 0;
-    let interval = 400;
-    let blinkColor = "rgb(255, 255, 255, 0.6)";
+  const handleDeleteBall = (ballBox) => {
+    deleteBall(canvas, ballBox, setAnnotationBallTracks, setCanvasBoxesBall, ballNameMap, setBallNameMap, refreshSidebar);
+  };
 
-    if (originalStrokeColor !== blinkColor) {
-      // necessary because otherwise bBox could permanently be set to blinkColor
-      for (let i = repeats; i > 0; i--) {
-        setTimeout(() => {
-          playerBox.set({
-            fill: blinkColor,
-            stroke: blinkColor,
-          });
-          playerBox.setCoords();
-          canvas.renderAll();
-        }, time);
+  const handleSetName = (playerBox, name) => {
+    setName(canvas, playerBox, name, playerNameMap);
+  };
 
-        time += interval;
-        setTimeout(() => {
-          playerBox.set({
-            fill: originalFillColor,
-            stroke: originalStrokeColor,
-          });
-          playerBox.setCoords();
-          canvas.renderAll();
-        }, time);
-        time += interval;
-      }
-    }
-    playerBox.set({
-      fill: originalFillColor,
-      stroke: originalStrokeColor,
-    });
-    playerBox.setCoords();
-    canvas.discardActiveObject();
-  }
-
-  function deletePlayer(playerBox) {
-    canvas.setActiveObject(playerBox);
-    setActiveObject(playerBox);
-    setAnnotations(annotations.filter((a) => a.PlayerKey != playerBox.my.key));
-    setCanvasBoxes(canvasBoxes.filter((a) => a.my.key != playerBox.my.key));
-
-    let newPlayerNameMap = new Map(playerNameMap);
-    newPlayerNameMap.delete(playerBox.my.key);
-    setPlayerNameMap(newPlayerNameMap);
-
-    updateSidebar();
-    canvas.discardActiveObject();
-    canvas.remove(playerBox);
-    canvas.requestRenderAll();
-  }
-
-  function deleteBall(ballBox) {
-    canvas.setActiveObject(ballBox);
-    setActiveObject(ballBox);
-    setAnnotationBallTracks(
-      annotationBallTracks.filter((a) => a.trackNo != ballBox.my.key),
-    );
-    setCanvasBoxesBall(
-      canvasBoxesBall.filter((a) => a.my.key != ballBox.my.key),
-    );
-
-    let newBallNameMap = new Map(ballNameMap);
-    newBallNameMap.delete(ballBox.my.key);
-    setBallNameMap(newBallNameMap);
-
-    updateSidebar();
-    canvas.discardActiveObject();
-    canvas.remove(ballBox);
-    canvas.requestRenderAll();
-  }
-
-  function setName(playerBox, name) {
-    fabric.Object.prototype.objectCaching = false;
-    let playerIndex = playerBox.my.key;
-    playerNameMap.set(playerIndex, name);
-    canvas.requestRenderAll();
-    // TODO BACKEND
-    // update data when leaving the page
-    // the modified data is stored in canvasBoxes array
-  }
-
-  function setNameBall(ballBox, name) {
-    fabric.Object.prototype.objectCaching = false;
-    let ballIndex = ballBox.my.key;
-    ballNameMap.set(ballIndex, name);
-    canvas.requestRenderAll();
-    // TODO BACKEND
-    // update data when leaving the page
-    // the modified data is stored in canvasBoxes array
-  }
+  const handleSetNameBall = (ballBox, name) => {
+    setNameBall(canvas, ballBox, name, ballNameMap);
+  };
 
   function boxInCanvas(boxToCheck) {
     //check if the box is in the canvas
@@ -523,6 +365,7 @@ const NewTrackingEditor = () => {
     }
   };
 
+  // TODO: Move to hook
   useEffect(() => {
     //rerender the sidebar when another item is selected
     if (activeObject) {
@@ -538,10 +381,10 @@ const NewTrackingEditor = () => {
               playerBox={activeObject}
               name={playerNameMap.get(activeObject.my.key)}
               changeSelection={changeSelection}
-              setName={setName}
-              blink={blink}
+              setName={handleSetName}
+              blink={handleBlink}
               color={boxColor}
-              delete={deletePlayer}
+              delete={handleDeletePlayer}
               handleModalOpen={handleModalOpen}
             />,
           ]);
@@ -556,10 +399,10 @@ const NewTrackingEditor = () => {
               playerBox={tempBox}
               name={playerNameMap.get(tempBox.my.key)}
               changeSelection={changeSelection}
-              setName={setName}
-              blink={blink}
+              setName={handleSetName}
+              blink={handleBlink}
               color={boxColor}
-              delete={deletePlayer}
+              delete={handleDeletePlayer}
               handleModalOpen={handleModalOpen}
             />,
           ]);
@@ -577,10 +420,10 @@ const NewTrackingEditor = () => {
               ballBox={activeObject}
               name={ballNameMap.get(activeObject.my.key)}
               changeSelection={changeSelection}
-              setName={setNameBall}
-              blink={blink}
+              setName={handleSetNameBall}
+              blink={handleBlink}
               color={boxColor}
-              delete={deleteBall}
+              delete={handleDeleteBall}
               handleModalOpen={handleModalBallOpen}
             />,
           ]);
@@ -594,10 +437,10 @@ const NewTrackingEditor = () => {
               ballBox={tempBox}
               name={ballNameMap.get(tempBox.my.key)}
               changeSelection={changeSelection}
-              setName={setNameBall}
-              blink={blink}
+              setName={handleSetNameBall}
+              blink={handleBlink}
               color={boxColor}
-              delete={deleteBall}
+              delete={handleDeleteBall}
               handleModalOpen={handleModalBallOpen}
             />,
           ]);
@@ -630,59 +473,6 @@ const NewTrackingEditor = () => {
 
     setVideoElement(localVideoElement);
   }, [videoUrl]);
-
-  function seededRandom(seed) {
-    var x = Math.sin(seed++) * 10000;
-    return x - Math.floor(x);
-  }
-
-  function generateColor(value) {
-    var r = Math.floor(seededRandom(value) * 256);
-    var g = Math.floor(seededRandom(value + 1) * 256);
-    var b = Math.floor(seededRandom(value + 2) * 256);
-    return { r, g, b };
-  }
-
-  function boundingBoxColorSet(annotationList) {
-    let uniquePlayerKeys = new Set(
-      annotationList.map((item) => item.PlayerKey),
-    );
-    let colorSet = new Map();
-
-    uniquePlayerKeys.forEach((key) => {
-      let color = generateColor(key);
-      colorSet.set(key, color);
-    });
-    return colorSet;
-  }
-  function boundingBoxColorSetBall(annotationBallList) {
-    let uniqueBallKeys = new Set(
-      annotationBallList.map((item) => item.trackNo),
-    );
-    let colorSet = new Map();
-
-    uniqueBallKeys.forEach((key) => {
-      let color = generateColor(key);
-      colorSet.set(key, color);
-    });
-    return colorSet;
-  }
-
-  function generatePoster(videoElement) {
-    //if video cannot be played, simply return
-    if (videoElement.readyState == 0) return;
-    //get video content of first frame
-    videoElement.currentTime = frameDuration;
-    const poster = new fabric.Image(videoElement, {
-      left: 0,
-      top: 0,
-      width: videoElement.width,
-      height: videoElement.height,
-      selectable: true,
-    });
-    videoElement.currentTime = 0;
-    return poster;
-  }
 
   const isInField = (inField) => {
     return inField === true || inField === null;
@@ -819,10 +609,10 @@ const NewTrackingEditor = () => {
             playerBox={boundingBox}
             name={playerNameMap.get(boundingBox.my.key)}
             changeSelection={changeSelection}
-            setName={setName}
-            blink={blink}
+            setName={handleSetName}
+            blink={handleBlink}
             color={boxColor}
-            delete={deletePlayer}
+            delete={handleDeletePlayer}
             handleModalOpen={handleModalOpen}
           />,
         ]);
@@ -855,9 +645,9 @@ const NewTrackingEditor = () => {
               color={boxColor}
               name={playerNameMap.get(boundingBox.PlayerKey)}
               changeSelection={changeSelection}
-              setName={setName}
-              blink={blink}
-              delete={deletePlayer}
+              setName={handleSetName}
+              blink={handleBlink}
+              delete={handleDeletePlayer}
               handleModalOpen={handleModalOpen}
             />,
           ]);
@@ -881,11 +671,11 @@ const NewTrackingEditor = () => {
             ballBox={boundingBox}
             name={ballNameMap.get(boundingBox.my.key)}
             changeSelection={changeSelection}
-            setName={setNameBall}
-            blink={blink}
+            setName={handleSetNameBall}
+            blink={handleBlink}
             color={boxColor}
             handleModalOpen={handleModalBallOpen}
-            delete={deleteBall}
+            delete={handleDeleteBall}
           />,
         ]);
       });
@@ -915,10 +705,10 @@ const NewTrackingEditor = () => {
               color={boxColor}
               name={ballNameMap.get(boundingBox.trackNo)}
               changeSelection={changeSelection}
-              setName={setNameBall}
-              blink={blink}
+              setName={handleSetNameBall}
+              blink={handleBlink}
               handleModalOpen={handleModalBallOpen}
-              delete={deleteBall}
+              delete={handleDeleteBall}
             />,
           ]);
         });
@@ -956,6 +746,10 @@ const NewTrackingEditor = () => {
     }
   };
 
+  function handleUpdateTimeStamp(newTimestamp) {
+    updateTimestamp(newTimestamp, frameDuration, setTimestamp,setFrameNumber)
+  }
+
   useEffect(() => {
     if (!videoElement) return;
     // const canvasElement = canvasRef.current;
@@ -970,7 +764,7 @@ const NewTrackingEditor = () => {
     let previousFrameNumber = 0;
 
     const updateCanvas = () => {
-      const currentFrameNumber = getCurrentTimestampFrame();
+      const currentFrameNumber = getCurrentTimestampFrame(videoElement, frameDuration);
       drawVideo();
       drawBoundingBoxes(currentFrameNumber);
     };
@@ -987,7 +781,7 @@ const NewTrackingEditor = () => {
         return;
       }
 
-      const currentFrameNumber = getCurrentTimestampFrame();
+      const currentFrameNumber = getCurrentTimestampFrame(videoElement, frameDuration);
       if (currentFrameNumber != previousFrameNumber) {
         setFrameNumber(currentFrameNumber);
         setTimestamp(videoElement.currentTime);
@@ -1024,7 +818,7 @@ const NewTrackingEditor = () => {
 
     const onLoadedData = () => {
       console.log("Loaded data");
-      const poster = generatePoster(videoElement);
+      const poster = generatePoster(videoElement, frameDuration);
       if (poster) {
         canvas.add(poster);
       }
@@ -1161,9 +955,9 @@ const NewTrackingEditor = () => {
               playerBox={playerBox}
               name={playerNameMap.get(boundingBox.PlayerKey)}
               changeSelection={changeSelection}
-              setName={setName}
-              blink={blink}
-              delete={deletePlayer}
+              setName={handleSetName}
+              blink={handleBlink}
+              delete={handleDeletePlayer}
               color={boxColor}
               handleModalOpen={handleModalOpen}
             />,
@@ -1201,10 +995,10 @@ const NewTrackingEditor = () => {
               color={boxColor}
               name={ballNameMap.get(boundingBox.trackNo)}
               changeSelection={changeSelection}
-              setName={setNameBall}
-              blink={blink}
+              setName={handleSetNameBall}
+              blink={handleBlink}
               handleModalOpen={handleModalBallOpen}
-              delete={deleteBall}
+              delete={handleDeleteBall}
             />,
           ]);
         });
@@ -1228,19 +1022,26 @@ const NewTrackingEditor = () => {
   const handleKeyDown = (event) => {
     switch (event.keyCode) {
       case 74: // j
-        handlePreviousChunk();
+        handlePreviousChunk(videoElement, handleUpdateTimeStamp);
         break;
       case 75: // k
-        handlePlayPause();
+        handlePlayPause({videoElement, editField, setShowApplyHomographyModal, setIsPlaying});
         break;
       case 76: // l
-        handleNextChunk();
+        handleNextChunk(videoElement, handleUpdateTimeStamp);
         break;
       case 188: // ,
-        handlePreviousFrame();
+        handlePreviousFrame({
+          videoElement,
+          frameNumber,
+          getReferenceTimestampForFrame,
+          deleteFieldDrawing,
+          setFrameNumber,
+          setTimestamp,
+          drawField});
         break;
       case 190: // .
-        handleNextFrame();
+        handleNextFrame({videoElement, frameNumber, getReferenceTimestampForFrame, deleteFieldDrawing, setFrameNumber, setTimestamp, drawField});
         break;
     }
   };
@@ -1252,157 +1053,6 @@ const NewTrackingEditor = () => {
     };
   }, [handleKeyDown]);
 
-  const getCurrentTimestampFrame = () => {
-    // First frame is frame 0
-    return Math.floor(videoElement.currentTime / frameDuration);
-  };
-
-  const getReferenceTimestampForFrame = (n) => {
-    return n * frameDuration + frameDuration / 3;
-  };
-
-  const updateTimestamp = (newTimestamp) => {
-    const newFrameNumber = Math.floor(newTimestamp / frameDuration);
-    setTimestamp(newTimestamp);
-    setFrameNumber(newFrameNumber);
-  };
-
-  const handleNextFrame = () => {
-    if (videoElement) {
-      const nextFrame = frameNumber + 1;
-      const referenceTimestamp = getReferenceTimestampForFrame(nextFrame);
-      videoElement.currentTime = referenceTimestamp;
-      deleteFieldDrawing();
-      setFrameNumber(nextFrame);
-      setTimestamp(referenceTimestamp);
-      drawField();
-    }
-  };
-
-  const handlePreviousFrame = () => {
-    if (videoElement && frameNumber > 0) {
-      const previousFrame = frameNumber - 1;
-      const referenceTimestamp = getReferenceTimestampForFrame(previousFrame);
-      videoElement.currentTime = referenceTimestamp;
-      deleteFieldDrawing();
-      setFrameNumber(previousFrame);
-      setTimestamp(referenceTimestamp);
-      drawField();
-    }
-  };
-
-  const handlePreviousChunk = () => {
-    const newTimestamp = Math.max(0, videoElement.currentTime - 6);
-    videoElement.currentTime = newTimestamp;
-    updateTimestamp(newTimestamp);
-  };
-
-  const handleNextChunk = () => {
-    const newTimestamp = Math.min(
-      videoElement.duration,
-      videoElement.currentTime + 6,
-    );
-    videoElement.currentTime = newTimestamp;
-    updateTimestamp(newTimestamp);
-  };
-
-  const handlePlayPause = () => {
-    if (videoElement && videoElement.readyState != 0 && !videoElement.ended) {
-      if (editField) {
-        setShowApplyHomographyModal(true);
-        return;
-      }
-      if (videoElement.paused) {
-        setIsPlaying(true);
-        videoElement.play();
-      } else {
-        setIsPlaying(false);
-        videoElement.pause();
-      }
-    }
-  };
-
-  // Seeking
-
-  const handleSeekStart = () => {
-    if (videoElement && !videoElement.ended && !videoElement.paused) {
-      wasVideoPlaying = true;
-      videoElement.pause();
-    } else {
-      wasVideoPlaying = false;
-    }
-  };
-
-  const handleSeekPercent = (value) => {
-    setProgress(value);
-    const newTimestamp = (value / 100) * videoElement.duration;
-    videoElement.currentTime = newTimestamp;
-    updateTimestamp(newTimestamp);
-  };
-
-  const handleSeekEnd = () => {
-    if (wasVideoPlaying) {
-      videoElement.play();
-    }
-  };
-
-  const formatTime = (time) => {
-    const minutes = Math.floor(time / 60);
-    const seconds = time % 60;
-    return `${minutes}:${seconds.toFixed(5).padStart(2, "0")}`;
-  };
-
-  function handleDisplayingBox() {
-    if (isShowingBox) {
-      setIsShowingBox(false);
-      // if the box is hidden, the annotation shall be hidden too.
-      setIsShowingAnnotation(false);
-      if (!videoElement.paused) {
-        videoElement.pause();
-        videoElement.play();
-      }
-    } else {
-      setIsShowingBox(true);
-      if (!videoElement.paused) {
-        videoElement.pause();
-        videoElement.play();
-      }
-    }
-  }
-
-  function handleDisplayingAnnotation() {
-    if (isShowingAnnotation) {
-      setIsShowingAnnotation(false);
-    } else {
-      setIsShowingAnnotation(true);
-    }
-  }
-
-  function handleAddPlayer() {
-    const newPlayerKey = playerNameMap.size;
-    const boxColor = generateColor(newPlayerKey);
-    setColorSet(colorSet.set(newPlayerKey, boxColor));
-    setAnnotations(
-      annotations.concat({
-        FrameNo: frameNumber,
-        PlayerKey: newPlayerKey,
-        h: 100,
-        w: 100,
-        x: 500,
-        x1: 0,
-        x2: 0,
-        x_trans: 0,
-        y: 100,
-        y1: 0,
-        y2: 0,
-        y_trans: 0,
-        in_field: true,
-      }),
-    );
-    setPlayerNameMap(
-      new Map(playerNameMap.set(newPlayerKey, "player" + newPlayerKey)),
-    );
-  }
   function addBoundingBoxBallAtMousePosition(event) {
     const pointer = canvas.getPointer(event.e);
     const horizontalScalingFactor = canvas.width / 3840;
@@ -1517,7 +1167,7 @@ const NewTrackingEditor = () => {
     if (showField || forceDraw) {
       const newFieldPoints = drawFieldPoints(
         canvas,
-        getCurrentTimestampFrame(),
+        getCurrentTimestampFrame(videoElement, frameDuration),
         homographies,
         canvas.width / 3840,
         canvas.height / 2160,
@@ -1537,7 +1187,7 @@ const NewTrackingEditor = () => {
 
   const handleApplyHomography = (frameNumber) => {
     frameNumber = parseInt(frameNumber);
-    var currentFrame = parseInt(getCurrentTimestampFrame());
+    var currentFrame = getCurrentTimestampFrame(videoElement, frameDuration);
     var fieldPoints = canvas
       .getObjects()
       .filter((obj) => obj.properties?.type === "fieldPoint")
@@ -1622,7 +1272,7 @@ const NewTrackingEditor = () => {
           <Switch
             color="default"
             checked={isShowingAnnotation}
-            onChange={handleDisplayingAnnotation}
+            onChange={() => handleDisplayingAnnotation(isShowingAnnotation, setIsShowingAnnotation)}
           />
 
           <div>Show Player Box:</div>
@@ -1630,7 +1280,7 @@ const NewTrackingEditor = () => {
           <Switch
             color="default"
             checked={isShowingBox}
-            onChange={handleDisplayingBox}
+            onChange={() => handleDisplayingBox({isShowingBox, setIsShowingBox, setIsShowingAnnotation, videoElement})}
           />
           <div>Show In Field:</div>
 
@@ -1644,7 +1294,7 @@ const NewTrackingEditor = () => {
           <Button
             data-testid="add-player-button"
             variant="contained"
-            onClick={handleAddPlayer}
+            onClick={() => handleAddPlayer({playerNameMap, frameNumber, setColorSet, colorSet, setAnnotations, annotations, setPlayerNameMap, generateColor})}
             sx={{
               backgroundColor: "#BBC3C9 !important",
               color: "#1b1f22 !important",
@@ -1655,7 +1305,13 @@ const NewTrackingEditor = () => {
           <Button
             data-testid="merge-button"
             variant="contained"
-            onClick={handleMultiSelectMerge}
+            onClick={() => handleMultiSelectMerge(selectedTrails,
+                annotations,
+                setAnnotations,
+                playerNameMap,
+                setPlayerNameMap,
+                setSelectedTrails,
+                multiPlayerMerge)}
             sx={{
               backgroundColor: "#BBC3C9 !important",
               color: "#1b1f22 !important",
@@ -1666,7 +1322,16 @@ const NewTrackingEditor = () => {
           <Button
             data-testid="merge-button-ball"
             variant="contained"
-            onClick={handleMultiSelectMergeBall}
+            onClick={() =>
+                handleMultiSelectMergeBall(
+                    selectedTrailsBall,
+                    annotationBallTracks,
+                    setAnnotationBallTracks,
+                    ballNameMap,
+                    setBallNameMap,
+                    setSelectedTrailsBall,
+                    multiBallMerge
+                )}
             sx={{
               backgroundColor: "#BBC3C9 !important",
               color: "#1b1f22 !important",
@@ -1677,7 +1342,16 @@ const NewTrackingEditor = () => {
           <Button
             data-testid="delete-ball-trails-button"
             variant="contained"
-            onClick={handleMultiBallTrailsDelete}
+            onClick={() =>
+                handleMultiBallTrailsDelete(
+                    selectedTrailsBall,
+                    annotationBallTracks,
+                    setAnnotationBallTracks,
+                    ballNameMap,
+                    setBallNameMap,
+                    setSelectedTrailsBall,
+                    multiBallTrailsDelete
+                )}
             sx={{
               backgroundColor: "#BBC3C9 !important",
               color: "#1b1f22 !important",
@@ -1750,13 +1424,13 @@ const NewTrackingEditor = () => {
       </div>
       <div className="controls">
         <SeekBar
-          onSeekStart={handleSeekStart}
-          onSeekPercent={handleSeekPercent}
-          onSeekEnd={handleSeekEnd}
+          onSeekStart={() => handleSeekStart(videoElement, setWasVideoPlaying)}
+          onSeekPercent={(value) => console.log("Got here") || handleSeekPercent(value, videoElement, setProgress, handleUpdateTimeStamp)}
+          onSeekEnd={() => handleSeekEnd(wasVideoPlaying, videoElement)}
           progress={progress}
         />
         <div id="buttons-container">
-          <button className="icon-button" onClick={handlePreviousFrame}>
+          <button className="icon-button" onClick={() => handlePreviousFrame({videoElement, frameNumber, getReferenceTimestampForFrame, deleteFieldDrawing, setFrameNumber, setTimestamp, drawField})}>
             <BackwardStepIcon className="icon" />
           </button>
           <span id="frame-number-display">Frame {frameNumber}</span>
@@ -1767,7 +1441,7 @@ const NewTrackingEditor = () => {
           >
             <ForwardStepIcon className="icon" />
           </button>
-          <button className="icon-button" onClick={handlePlayPause}>
+          <button className="icon-button" onClick={() => handlePlayPause({videoElement, editField, setShowApplyHomographyModal, setIsPlaying})}>
             {isPlaying ? (
               <PauseIcon className="icon" />
             ) : (
