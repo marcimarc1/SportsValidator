@@ -95,7 +95,9 @@ export const trailsFullRedraw = (
 export const defineTrailBehaviour = (trail, setSelectedTrails) => {
   trail.on("selected", () => {
     setSelectedTrails((prevTrails) => {
-      return new Set(prevTrails.add(trail.properties.playerKey));
+      const newSet = new Set(prevTrails);
+      newSet.add(trail.properties.playerKey);
+      return newSet;
     });
   });
 };

@@ -1,7 +1,16 @@
 services:
+  ui:
+    image: frontend
+    build:
+      context: .
+      dockerfile: ./frontend/Dockerfile
+    ports:
+      - "3000:3000"
   api:
     image: python_backend
-    build: .
+    build:
+      context: .
+      dockerfile: ./pythonBackend/Dockerfile
     environment:
      - DATABASE_URL=postgresql://user:pass@db/db
     ports:
