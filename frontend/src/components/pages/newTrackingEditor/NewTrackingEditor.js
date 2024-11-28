@@ -4,6 +4,7 @@ import { ReactComponent as PlayIcon } from "../../../icons/play.svg";
 import { ReactComponent as PauseIcon } from "../../../icons/pause.svg";
 import { ReactComponent as ForwardStepIcon } from "../../../icons/forward-step.svg";
 import { ReactComponent as BackwardStepIcon } from "../../../icons/backward-step.svg";
+import { ReactComponent as AdjustSpeedIcon } from "../../../icons/adjust-speed.svg";
 import { useLocation } from "react-router-dom";
 import {
   parseProcessedPlayers,
@@ -100,6 +101,7 @@ const NewTrackingEditor = () => {
   const [isShowingBallBox, setIsShowingBallBox] = useState(true);
   const [isShowingBallTrails, setIsShowingBallTrails] = useState(true);
   const [selectedTrailsBall, setSelectedTrailsBall] = useState([]);
+  const [videoSpeed, setVideoSpeed] = useState(1);
 
   const handleModalOpen = (playerInList) => {
     setPlayerChosenInList(playerInList);
@@ -1315,6 +1317,20 @@ const NewTrackingEditor = () => {
     }
   };
 
+  const handleAdjustSpeed = () => {
+    const incrementBy = 0.25;
+
+    if (videoElement) {
+      if (videoSpeed == 2) {
+        setVideoSpeed(0.25);
+        videoElement.playbackRate = videoSpeed;
+      } else {
+        setVideoSpeed(videoSpeed + incrementBy);
+        videoElement.playbackRate = videoSpeed;
+      }
+    }
+  };
+
   // Seeking
 
   const handleSeekStart = () => {
@@ -1822,6 +1838,13 @@ const NewTrackingEditor = () => {
               <PlayIcon className="icon" />
             )}
           </button>
+
+          <button className="icon-button" onClick={handleAdjustSpeed}>
+            <AdjustSpeedIcon className="icon" />
+          </button>
+          <span id="video-speed-display">
+            {videoElement?.playbackRate || videoSpeed}x
+          </span>
           <span id="timestamp-display">
             {formatTime(timestamp)} / {formatTime(videoElement?.duration)}
           </span>
