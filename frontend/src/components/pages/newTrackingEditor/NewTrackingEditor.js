@@ -1862,12 +1862,12 @@ const NewTrackingEditor = () => {
               <PlayIcon className="icon" />
             )}
           </button>
-          <div className="zoom-mode-toggle">
-            <button onClick={() => setIsZoomModeEnabled(!isZoomModeEnabled)}>
+          <div>
+            <button  className="zoom-text-button" onClick={() => setIsZoomModeEnabled(!isZoomModeEnabled)}>
               {isZoomModeEnabled ? "Disable Zoom Mode" : "Enable Zoom Mode"}
             </button>
           </div>
-          <button onClick={handleZoomReset}>Reset Zoom</button>
+          <button  className="zoom-text-button" onClick={handleZoomReset}>Reset Zoom</button>
           <button className="icon-button" onClick={handleAdjustSpeed}>
             <AdjustSpeedIcon className="icon" />
           </button>
