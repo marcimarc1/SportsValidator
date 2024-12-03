@@ -1373,7 +1373,7 @@ const NewTrackingEditor = () => {
   };
 
   const handlePreviousChunk = () => {
-    const newTimestamp = Math.max(0, videoElement.currentTime - 6);
+    const newTimestamp = Math.max(0, videoElement.currentTime - 5);
     videoElement.currentTime = newTimestamp;
     updateTimestamp(newTimestamp);
   };
@@ -1381,7 +1381,7 @@ const NewTrackingEditor = () => {
   const handleNextChunk = () => {
     const newTimestamp = Math.min(
       videoElement.duration,
-      videoElement.currentTime + 6,
+      videoElement.currentTime + 5,
     );
     videoElement.currentTime = newTimestamp;
     updateTimestamp(newTimestamp);
@@ -1962,8 +1962,8 @@ const NewTrackingEditor = () => {
               <p><strong>Space:</strong> Play/Pause</p>
               <p><strong>,</strong>: Previous frame</p>
               <p><strong>.</strong>: Next frame</p>
-              <p><strong>←</strong>: Jump back 6 seconds</p>
-              <p><strong>→</strong>: Jump forward 6 seconds</p>
+              <p><strong>←</strong>: Jump back 5 seconds</p>
+              <p><strong>→</strong>: Jump forward 5 seconds</p>
             </div>
           </Tooltip>
           </button>

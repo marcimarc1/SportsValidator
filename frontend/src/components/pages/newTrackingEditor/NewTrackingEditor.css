@@ -271,6 +271,7 @@ for now just using style property of EditText component in JS code*/
   border: none;
   padding: 0;
   margin-right: 0.3rem;
+  
 }
 
 .icon-button:hover .icon {
@@ -285,8 +286,8 @@ for now just using style property of EditText component in JS code*/
 
 .tooltip {
   position: absolute;
-  bottom: 150%;
-  left: 50%;
+  bottom: 230%; 
+  right: -250%;
   transform: translateX(-50%);
   background-color: var(--secondary-bg);
   color: var(--main-text-color);
@@ -311,14 +312,7 @@ for now just using style property of EditText component in JS code*/
 }
 
 .tooltip::after {
-  content: "";
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  border-width: 5px;
-  border-style: solid;
-  border-color: var(--secondary-bg) transparent transparent transparent;
+  content: none;
 }
 
 #frame-number-display {
