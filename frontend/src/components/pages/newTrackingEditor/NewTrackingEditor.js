@@ -407,18 +407,12 @@ const NewTrackingEditor = () => {
   }
   const Tooltip = ({ isVisible, children }) => {
     return (
-      <div
-        className={`tooltip ${isVisible ? "visible" : ""}`}
-      >
-        {children}
-      </div>
+      <div className={`tooltip ${isVisible ? "visible" : ""}`}>{children}</div>
     );
   };
 
   const showTooltip = () => setTooltipVisible(true);
   const hideTooltip = () => setTooltipVisible(false);
-
-  
 
   function defineBoxBehavior(box, is_playerBox = true) {
     box.on({
@@ -1244,22 +1238,22 @@ const NewTrackingEditor = () => {
     if (!videoElement) return;
 
     switch (event.key) {
-      case " ": 
-        event.preventDefault();  
+      case " ":
+        event.preventDefault();
         handlePlayPause();
         break;
-      case ",": 
+      case ",":
         handlePreviousFrame();
         break;
-      case ".": 
+      case ".":
         handleNextFrame();
         break;
-      case "ArrowLeft": 
+      case "ArrowLeft":
         event.preventDefault();
         handlePreviousChunk();
         break;
-      case "ArrowRight": 
-        event.preventDefault(); 
+      case "ArrowRight":
+        event.preventDefault();
         handleNextChunk();
         break;
       default:
@@ -1951,21 +1945,31 @@ const NewTrackingEditor = () => {
             {formatTime(timestamp)} / {formatTime(videoElement?.duration)}
           </span>
           <button
-          className="icon-button"
-          style={{ marginLeft: "auto", position: "relative"}}
-          onMouseEnter={showTooltip}
-          onMouseLeave={hideTooltip}
+            className="icon-button"
+            style={{ marginLeft: "auto", position: "relative" }}
+            onMouseEnter={showTooltip}
+            onMouseLeave={hideTooltip}
           >
-          <QuestionIcon />
-          <Tooltip isVisible={isTooltipVisible}>
-            <div className="tooltip-content">
-              <p><strong>Space:</strong> Play/Pause</p>
-              <p><strong>,</strong>: Previous frame</p>
-              <p><strong>.</strong>: Next frame</p>
-              <p><strong>←</strong>: Jump back 5 seconds</p>
-              <p><strong>→</strong>: Jump forward 5 seconds</p>
-            </div>
-          </Tooltip>
+            <QuestionIcon />
+            <Tooltip isVisible={isTooltipVisible}>
+              <div className="tooltip-content">
+                <p>
+                  <strong>Space:</strong> Play/Pause
+                </p>
+                <p>
+                  <strong>,</strong>: Previous frame
+                </p>
+                <p>
+                  <strong>.</strong>: Next frame
+                </p>
+                <p>
+                  <strong>←</strong>: Jump back 5 seconds
+                </p>
+                <p>
+                  <strong>→</strong>: Jump forward 5 seconds
+                </p>
+              </div>
+            </Tooltip>
           </button>
         </div>
       </div>
