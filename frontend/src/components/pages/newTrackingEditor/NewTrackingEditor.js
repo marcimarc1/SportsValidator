@@ -5,6 +5,7 @@ import { ReactComponent as PauseIcon } from "../../../icons/pause.svg";
 import { ReactComponent as ForwardStepIcon } from "../../../icons/forward-step.svg";
 import { ReactComponent as BackwardStepIcon } from "../../../icons/backward-step.svg";
 import { ReactComponent as AdjustSpeedIcon } from "../../../icons/adjust-speed.svg";
+import { ReactComponent as QuestionIcon } from "../../../icons/question.svg";
 import { useLocation } from "react-router-dom";
 import {
   parseProcessedPlayers,
@@ -102,7 +103,11 @@ const NewTrackingEditor = () => {
   const [isShowingBallTrails, setIsShowingBallTrails] = useState(true);
   const [selectedTrailsBall, setSelectedTrailsBall] = useState([]);
   const [videoSpeed, setVideoSpeed] = useState(1);
+<<<<<<< HEAD
   const [isZoomModeEnabled, setIsZoomModeEnabled] = useState(false);
+=======
+  const [isTooltipVisible, setTooltipVisible] = useState(false);
+>>>>>>> bd12b09 (question mark svg button and the tooltip that shows shortcuts and the shortcuts itself are added only todo is to adjust css accordingly)
 
   const handleModalOpen = (playerInList) => {
     setPlayerChosenInList(playerInList);
@@ -400,6 +405,20 @@ const NewTrackingEditor = () => {
       selectBBox(box);
     }
   }
+  const Tooltip = ({ isVisible, children }) => {
+    return (
+      <div
+        className={`tooltip ${isVisible ? "visible" : ""}`}
+      >
+        {children}
+      </div>
+    );
+  };
+
+  const showTooltip = () => setTooltipVisible(true);
+  const hideTooltip = () => setTooltipVisible(false);
+
+  
 
   function defineBoxBehavior(box, is_playerBox = true) {
     box.on({
@@ -1931,6 +1950,23 @@ const NewTrackingEditor = () => {
           <span id="timestamp-display">
             {formatTime(timestamp)} / {formatTime(videoElement?.duration)}
           </span>
+          <button
+          className="icon-button"
+          style={{ marginLeft: "auto", position: "relative"}}
+          onMouseEnter={showTooltip}
+          onMouseLeave={hideTooltip}
+          >
+          <QuestionIcon />
+          <Tooltip isVisible={isTooltipVisible}>
+            <div className="tooltip-content">
+              <p><strong>Space:</strong> Play/Pause</p>
+              <p><strong>,</strong>: Previous frame</p>
+              <p><strong>.</strong>: Next frame</p>
+              <p><strong>←</strong>: Jump back 6 seconds</p>
+              <p><strong>→</strong>: Jump forward 6 seconds</p>
+            </div>
+          </Tooltip>
+          </button>
         </div>
       </div>
     </div>
