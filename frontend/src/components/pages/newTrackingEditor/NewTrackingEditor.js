@@ -1222,21 +1222,28 @@ const NewTrackingEditor = () => {
   ]);
 
   const handleKeyDown = (event) => {
-    switch (event.keyCode) {
-      case 74: // j
-        handlePreviousChunk();
-        break;
-      case 75: // k
+    if (!videoElement) return;
+
+    switch (event.key) {
+      case " ": 
+        event.preventDefault();  
         handlePlayPause();
         break;
-      case 76: // l
-        handleNextChunk();
-        break;
-      case 188: // ,
+      case ",": 
         handlePreviousFrame();
         break;
-      case 190: // .
+      case ".": 
         handleNextFrame();
+        break;
+      case "ArrowLeft": 
+        event.preventDefault();
+        handlePreviousChunk();
+        break;
+      case "ArrowRight": 
+        event.preventDefault(); 
+        handleNextChunk();
+        break;
+      default:
         break;
     }
   };
