@@ -106,7 +106,7 @@ const NewTrackingEditor = () => {
   const [videoSpeed, setVideoSpeed] = useState(1);
   const [isZoomModeEnabled, setIsZoomModeEnabled] = useState(false);
   const [isTooltipVisible, setTooltipVisible] = useState(false);
-  const [bindingAction, setBindingAction] = useState(null); 
+  const [bindingAction, setBindingAction] = useState(null);
   const [keyBindings, setKeyBindings] = useState({
     playPause: " ",
     nextFrame: ".",
@@ -412,12 +412,10 @@ const NewTrackingEditor = () => {
       selectBBox(box);
     }
   }
-  
+
   const Tooltip = ({ isVisible, children }) => {
     return (
-      <div className={`tooltip ${isVisible ? "visible" : ""}`}>
-        {children}
-      </div>
+      <div className={`tooltip ${isVisible ? "visible" : ""}`}>{children}</div>
     );
   };
 
@@ -426,13 +424,12 @@ const NewTrackingEditor = () => {
       videoElement.pause();
       setIsPlaying(false);
     }
-  
-    
+
     setTooltipVisible((prev) => !prev);
   };
-  
+
   const hideTooltip = () => {
-    setTooltipVisible(false); 
+    setTooltipVisible(false);
   };
 
   function defineBoxBehavior(box, is_playerBox = true) {
@@ -1256,29 +1253,25 @@ const NewTrackingEditor = () => {
   ]);
 
   const handleKeyPress = (event) => {
+    if (!videoElement) return;
+
     const { key } = event;
 
-    
     if (bindingAction) {
-     
       if (Object.values(keyBindings).includes(key)) {
-        alert("This key is already assigned to another action. Choose a different key.");
+        alert("This key is already bound to another action!");
+        setBindingAction(null);
         return;
       }
 
-      
       setKeyBindings((prevBindings) => ({
         ...prevBindings,
         [bindingAction]: key,
       }));
 
-      setBindingAction(null); 
+      setBindingAction(null);
       return;
     }
-  };
-  
-  const handleKeyDown = (event) => {
-    if (!videoElement) return;
 
     switch (event.key) {
       case keyBindings.playPause:
@@ -1304,18 +1297,27 @@ const NewTrackingEditor = () => {
     }
   };
 
-  useEffect(() => {
-    document.addEventListener("keydown", handleKeyDown);
-    document.addEventListener("keydown", handleKeyPress);
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-      document.removeEventListener("keydown", handleKeyPress);
-    };
-  }, [handleKeyDown,handleKeyPress]);
-  
-  
+  const handleClick = (e) => {
+    if (bindingAction) {
+      e.stopPropagation();
+      setBindingAction(null);
+      return;
+    }
+  };
 
-<<<<<<< HEAD
+  useEffect(() => {
+    document.addEventListener("keydown", handleKeyPress);
+
+    document.addEventListener("click", handleClick);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyPress);
+
+      document.addEventListener("click", handleClick);
+    };
+  }, [handleKeyPress]);
+
+
   useEffect(() => {
     if (!isZoomModeEnabled) return;
 
@@ -1375,13 +1377,13 @@ const NewTrackingEditor = () => {
     };
   }, [isZoomModeEnabled, canvas]);
 
-=======
+
   const startBindingKey = (action) => {
     setBindingAction(action);
   };
+
   
-  
->>>>>>> 3b38879 (binding functionalty added. need to change its css a bit)
+
   const getCurrentTimestampFrame = () => {
     // First frame is frame 0
     return Math.floor(videoElement.currentTime / frameDuration);
@@ -1405,11 +1407,11 @@ const NewTrackingEditor = () => {
       deleteFieldDrawing();
       setFrameNumber(nextFrame);
       setTimestamp(referenceTimestamp);
-  
-      
-      const currentProgress = (videoElement.currentTime / videoElement.duration) * 100;
+
+      const currentProgress =
+        (videoElement.currentTime / videoElement.duration) * 100;
       setProgress(currentProgress);
-  
+
       drawField();
     }
   };
@@ -1422,11 +1424,11 @@ const NewTrackingEditor = () => {
       deleteFieldDrawing();
       setFrameNumber(previousFrame);
       setTimestamp(referenceTimestamp);
-  
-      
-      const currentProgress = (videoElement.currentTime / videoElement.duration) * 100;
+
+      const currentProgress =
+        (videoElement.currentTime / videoElement.duration) * 100;
       setProgress(currentProgress);
-  
+
       drawField();
     }
   };
@@ -1480,10 +1482,11 @@ const NewTrackingEditor = () => {
 
   useEffect(() => {
     const updateProgressBar = () => {
-      const currentProgress = (videoElement.currentTime / videoElement.duration) * 100;
+      const currentProgress =
+        (videoElement.currentTime / videoElement.duration) * 100;
       setProgress(currentProgress);
     };
-  
+
     if (videoElement) {
       videoElement.addEventListener("timeupdate", updateProgressBar);
       return () => {
@@ -1507,7 +1510,8 @@ const NewTrackingEditor = () => {
     videoElement.currentTime = newTimestamp;
     updateTimestamp(newTimestamp);
 
-    const currentProgress = (videoElement.currentTime / videoElement.duration) * 100;
+    const currentProgress =
+      (videoElement.currentTime / videoElement.duration) * 100;
     setProgress(currentProgress);
   };
 
@@ -2030,14 +2034,13 @@ const NewTrackingEditor = () => {
             className="icon-button"
             style={{ marginLeft: "auto", position: "relative" }}
             onClick={toggleTooltip}
-            
           >
             <KeyboardIcon />
             <Tooltip isVisible={isTooltipVisible}>
               <div
                 className="tooltip-content"
                 onClick={(e) => {
-                  e.stopPropagation(); 
+                  e.stopPropagation();
                 }}
               >
                 {Object.keys(keyBindings).map((action) => (
@@ -2046,7 +2049,8 @@ const NewTrackingEditor = () => {
                     className={`key-binding-box ${bindingAction === action ? "binding" : ""}`}
                     onClick={() => startBindingKey(action)}
                   >
-                    {action}: {keyBindings[action]}
+                    {action}:{" "}
+                    {keyBindings[action] == " " ? "Space" : keyBindings[action]}
                   </div>
                 ))}
               </div>

@@ -296,7 +296,9 @@ for now just using style property of EditText component in JS code*/
   z-index: 100;
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out;
+  transition:
+    opacity 0.2s ease-in-out,
+    visibility 0.2s ease-in-out;
   white-space: nowrap;
 }
 
@@ -321,19 +323,19 @@ for now just using style property of EditText component in JS code*/
 }
 
 .binding {
-  border: 2px solid var(--accent);
+  border: 2px solid white;
   animation: pulse 1s infinite;
 }
 
 @keyframes pulse {
   0% {
-    border-color: var(--accent);
+    border-color: white;
   }
   50% {
     border-color: transparent;
   }
   100% {
-    border-color: var(--accent);
+    border-color: white;
   }
 }
 
@@ -342,11 +344,13 @@ for now just using style property of EditText component in JS code*/
   margin: 0.25rem 0;
   border: 1px solid var(--secondary-bg);
   cursor: pointer;
-  transition: background-color 0.2s, color 0.2s;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
 }
 
 .key-binding-box:hover {
-  background-color: var(--accent);
+  background-color: rgb(180, 180, 180);
   color: white;
 }
 
