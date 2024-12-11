@@ -6,6 +6,7 @@ import { ReactComponent as ForwardStepIcon } from "../../../icons/forward-step.s
 import { ReactComponent as BackwardStepIcon } from "../../../icons/backward-step.svg";
 import { ReactComponent as AdjustSpeedIcon } from "../../../icons/adjust-speed.svg";
 import { ReactComponent as QuestionIcon } from "../../../icons/question.svg";
+import { ReactComponent as KeyboardIcon } from "../../../icons/keyboard.svg";
 import { useLocation } from "react-router-dom";
 import {
   parseProcessedPlayers,
@@ -103,11 +104,17 @@ const NewTrackingEditor = () => {
   const [isShowingBallTrails, setIsShowingBallTrails] = useState(true);
   const [selectedTrailsBall, setSelectedTrailsBall] = useState([]);
   const [videoSpeed, setVideoSpeed] = useState(1);
-<<<<<<< HEAD
   const [isZoomModeEnabled, setIsZoomModeEnabled] = useState(false);
-=======
   const [isTooltipVisible, setTooltipVisible] = useState(false);
->>>>>>> bd12b09 (question mark svg button and the tooltip that shows shortcuts and the shortcuts itself are added only todo is to adjust css accordingly)
+  const [bindingAction, setBindingAction] = useState(null); 
+  const [keyBindings, setKeyBindings] = useState({
+    playPause: " ",
+    nextFrame: ".",
+    previousFrame: ",",
+    jumpForward: "ArrowRight",
+    jumpBackward: "ArrowLeft",
+  });
+
 
   const handleModalOpen = (playerInList) => {
     setPlayerChosenInList(playerInList);
@@ -405,14 +412,28 @@ const NewTrackingEditor = () => {
       selectBBox(box);
     }
   }
+  
   const Tooltip = ({ isVisible, children }) => {
     return (
-      <div className={`tooltip ${isVisible ? "visible" : ""}`}>{children}</div>
+      <div className={`tooltip ${isVisible ? "visible" : ""}`}>
+        {children}
+      </div>
     );
   };
 
-  const showTooltip = () => setTooltipVisible(true);
-  const hideTooltip = () => setTooltipVisible(false);
+  const toggleTooltip = () => {
+    if (videoElement && !videoElement.paused) {
+      videoElement.pause();
+      setIsPlaying(false);
+    }
+  
+    
+    setTooltipVisible((prev) => !prev);
+  };
+  
+  const hideTooltip = () => {
+    setTooltipVisible(false); 
+  };
 
   function defineBoxBehavior(box, is_playerBox = true) {
     box.on({
@@ -1234,25 +1255,47 @@ const NewTrackingEditor = () => {
     drawInField,
   ]);
 
+  const handleKeyPress = (event) => {
+    const { key } = event;
+
+    
+    if (bindingAction) {
+     
+      if (Object.values(keyBindings).includes(key)) {
+        alert("This key is already assigned to another action. Choose a different key.");
+        return;
+      }
+
+      
+      setKeyBindings((prevBindings) => ({
+        ...prevBindings,
+        [bindingAction]: key,
+      }));
+
+      setBindingAction(null); 
+      return;
+    }
+  };
+  
   const handleKeyDown = (event) => {
     if (!videoElement) return;
 
     switch (event.key) {
-      case " ":
+      case keyBindings.playPause:
         event.preventDefault();
         handlePlayPause();
         break;
-      case ",":
+      case keyBindings.previousFrame:
         handlePreviousFrame();
         break;
-      case ".":
+      case keyBindings.nextFrame:
         handleNextFrame();
         break;
-      case "ArrowLeft":
+      case keyBindings.jumpBackward:
         event.preventDefault();
         handlePreviousChunk();
         break;
-      case "ArrowRight":
+      case keyBindings.jumpForward:
         event.preventDefault();
         handleNextChunk();
         break;
@@ -1263,11 +1306,16 @@ const NewTrackingEditor = () => {
 
   useEffect(() => {
     document.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("keydown", handleKeyPress);
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("keydown", handleKeyPress);
     };
-  }, [handleKeyDown]);
+  }, [handleKeyDown,handleKeyPress]);
+  
+  
 
+<<<<<<< HEAD
   useEffect(() => {
     if (!isZoomModeEnabled) return;
 
@@ -1327,6 +1375,13 @@ const NewTrackingEditor = () => {
     };
   }, [isZoomModeEnabled, canvas]);
 
+=======
+  const startBindingKey = (action) => {
+    setBindingAction(action);
+  };
+  
+  
+>>>>>>> 3b38879 (binding functionalty added. need to change its css a bit)
   const getCurrentTimestampFrame = () => {
     // First frame is frame 0
     return Math.floor(videoElement.currentTime / frameDuration);
@@ -1350,6 +1405,11 @@ const NewTrackingEditor = () => {
       deleteFieldDrawing();
       setFrameNumber(nextFrame);
       setTimestamp(referenceTimestamp);
+  
+      
+      const currentProgress = (videoElement.currentTime / videoElement.duration) * 100;
+      setProgress(currentProgress);
+  
       drawField();
     }
   };
@@ -1362,6 +1422,11 @@ const NewTrackingEditor = () => {
       deleteFieldDrawing();
       setFrameNumber(previousFrame);
       setTimestamp(referenceTimestamp);
+  
+      
+      const currentProgress = (videoElement.currentTime / videoElement.duration) * 100;
+      setProgress(currentProgress);
+  
       drawField();
     }
   };
@@ -1413,6 +1478,20 @@ const NewTrackingEditor = () => {
 
   // Seeking
 
+  useEffect(() => {
+    const updateProgressBar = () => {
+      const currentProgress = (videoElement.currentTime / videoElement.duration) * 100;
+      setProgress(currentProgress);
+    };
+  
+    if (videoElement) {
+      videoElement.addEventListener("timeupdate", updateProgressBar);
+      return () => {
+        videoElement.removeEventListener("timeupdate", updateProgressBar);
+      };
+    }
+  }, [videoElement]);
+
   const handleSeekStart = () => {
     if (videoElement && !videoElement.ended && !videoElement.paused) {
       wasVideoPlaying = true;
@@ -1427,6 +1506,9 @@ const NewTrackingEditor = () => {
     const newTimestamp = (value / 100) * videoElement.duration;
     videoElement.currentTime = newTimestamp;
     updateTimestamp(newTimestamp);
+
+    const currentProgress = (videoElement.currentTime / videoElement.duration) * 100;
+    setProgress(currentProgress);
   };
 
   const handleSeekEnd = () => {
@@ -1947,27 +2029,26 @@ const NewTrackingEditor = () => {
           <button
             className="icon-button"
             style={{ marginLeft: "auto", position: "relative" }}
-            onMouseEnter={showTooltip}
-            onMouseLeave={hideTooltip}
+            onClick={toggleTooltip}
+            
           >
-            <QuestionIcon />
+            <KeyboardIcon />
             <Tooltip isVisible={isTooltipVisible}>
-              <div className="tooltip-content">
-                <p>
-                  <strong>Space:</strong> Play/Pause
-                </p>
-                <p>
-                  <strong>,</strong>: Previous frame
-                </p>
-                <p>
-                  <strong>.</strong>: Next frame
-                </p>
-                <p>
-                  <strong>←</strong>: Jump back 5 seconds
-                </p>
-                <p>
-                  <strong>→</strong>: Jump forward 5 seconds
-                </p>
+              <div
+                className="tooltip-content"
+                onClick={(e) => {
+                  e.stopPropagation(); 
+                }}
+              >
+                {Object.keys(keyBindings).map((action) => (
+                  <div
+                    key={action}
+                    className={`key-binding-box ${bindingAction === action ? "binding" : ""}`}
+                    onClick={() => startBindingKey(action)}
+                  >
+                    {action}: {keyBindings[action]}
+                  </div>
+                ))}
               </div>
             </Tooltip>
           </button>
