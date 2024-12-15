@@ -16,7 +16,7 @@ async def track_points_logic(dto: PointUpdate):
     #TODO: update video path
     video_path = f"src/{dto.video_id}"
     if not is_valid_path(video_path):
-        video_path = f"pythonBackend/src/{dto.video_id}"
+        video_path = f"backend/src/{dto.video_id}"
 
     cap = cv2.VideoCapture(video_path)
 
