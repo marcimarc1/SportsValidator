@@ -79,7 +79,9 @@ const NewTrackingEditor = () => {
   const [isDownloadingVideo, setIsDownloadingVideo] = useState(false);
   const [isShowingBox, setIsShowingBox] = useState(true);
   const [isShowingAnnotation, setIsShowingAnnotation] = useState(true);
-  const [playerList, setPlayerList] = useState([]); //list of player TrackListItemPlayers
+  const [playerList, setPlayerList] = useState([]); // list of player TrackListItemPlayers
+  const [players, setPlayers] = useState([]); // list of players 
+  const [teams, setTeams] = useState([]); 
   const [canvasBoxes, setCanvasBoxes] = useState([]); //list of canvas boxes for player
   const [playerNameMap, setPlayerNameMap] = useState(new Map()); //map of playerkey to playername
   const [activeObject, setActiveObject] = useState(null);
@@ -109,6 +111,8 @@ const NewTrackingEditor = () => {
   const [isShowingBallTrails, setIsShowingBallTrails] = useState(true);
   const [selectedTrailsBall, setSelectedTrailsBall] = useState([]);
   const [videoSpeed, setVideoSpeed] = useState(1);
+  
+
 
   const handleModalOpen = (playerInList) => {
     setPlayerChosenInList(playerInList);
@@ -151,6 +155,62 @@ const NewTrackingEditor = () => {
     );
     setSelectedTrailsBall(new Array());
   };
+
+  const addTeam = () => {
+    const newTeam = {
+      id: teams.length + 1,
+      name: `Team ${teams.length + 1}`,
+      players: [],
+    };
+    setTeams([...teams, newTeam]);
+  };
+  
+  const addPlayerToTeam = (teamId, playerId) => {
+ 
+    const isPlayerInAnyTeam = teams.some((team) =>
+      team.players.some((player) => player.id === parseInt(playerId))
+    );
+  
+    if (isPlayerInAnyTeam) {
+      alert("This player is already in a team!");
+      return; 
+    }
+  
+    
+    const selectedPlayer = players.find((p) => p.id === parseInt(playerId));
+    if (!selectedPlayer) return;
+  
+    
+    setTeams(
+      teams.map((team) =>
+        team.id === teamId
+          ? { ...team, players: [...team.players, selectedPlayer] }
+          : team
+      )
+    );
+  };
+  
+  useEffect(() => {
+   
+    const uniquePlayers = new Map();
+  
+    annotations.forEach((a) => {
+      const playerId = a.PlayerKey;
+      const playerName = playerNameMap.get(playerId) || `Player ${playerId}`;
+      
+      if (!uniquePlayers.has(playerId)) {
+        uniquePlayers.set(playerId, { id: playerId, name: playerName });
+      }
+    });
+  
+   
+    setPlayers(Array.from(uniquePlayers.values()));
+  }, [annotations, playerNameMap]);
+  
+  
+  
+  
+  
 
   const handleMultiBallTrailsDelete = () => {
     console.log("Multiplayer delete ball trails");
@@ -1762,7 +1822,18 @@ const NewTrackingEditor = () => {
           style={{ display: "block", width: "100%", height: "auto" }}
         ></canvas>
         {/* <div className="sidebar">sidebar is here</div> */}
-        <TrackList children={playerList} groups={ballList}></TrackList>
+        <TrackList
+  children={playerList}
+  groups={ballList}
+  teams={teams}
+  addTeam={addTeam}
+  addPlayerToTeam={addPlayerToTeam}
+  players={players}
+  colorSet={colorSet} 
+/>
+
+
+     
       </div>
       <div className="controls">
         <SeekBar
