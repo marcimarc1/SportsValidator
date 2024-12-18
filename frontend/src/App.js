@@ -4,11 +4,12 @@ import Start from "./components/pages/Start";
 import "./App.css";
 import { BrowserRouter as Router, Route } from "react-router-dom";
 import Demo from "./components/pages/Demo";
-import FileOverview from "./components/pages/fileOverview/FileOverview";
+import FileOverviewNew from "./components/pages/fileOverview/FileOverviewNew";
 import TrackingEditor from "./components/pages/trackingEditor/TrackingEditor";
 import Analysis from "./components/pages/analysis/Analysis";
 import NewTrackingEditor from "./components/pages/newTrackingEditor/NewTrackingEditor";
 import VideoUpload from "./components/pages/VideoUpload";
+import GameOverview from "./components/pages/fileOverview/GameOverview";
 // import TrackingEditor from './components/pages/trackingEditor/TrackingEditor';
 
 class App extends Component {
@@ -65,7 +66,7 @@ class App extends Component {
           </Route>
 
           <Route exact path="/games">
-            <FileOverview />
+            <GameOverview />
           </Route>
 
           <Route path="/upload-video">

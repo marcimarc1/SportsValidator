@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import FileListItem from "./FileListItem";
-import "./FileOverview.css";
+import "./GameOverview.css";
 import IconButton from "@material-ui/core/IconButton";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { fabric } from "fabric";

@@ -1,6 +1,4 @@
-import React, { Component } from "react";
-
-import {getGames} from "../../../controllers/game.controler";
+import React, {Component, useState} from "react";
 import FileListItem from "./FileListItem";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faExclamationTriangle, faInfoCircle, faTrash, faUpload} from "@fortawesome/free-solid-svg-icons";
@@ -27,12 +25,11 @@ class GameOverview extends React.Component{
           <div className="FileOverviewHeadingContainer">
             <h1 className={"FileOverviewHeading"}>Game Overview</h1>
             <div className="file-upload-container">
-              <label className="file-upload" for="file-upload">
+              <label className="file-upload" htmlFor="game-dialog-button">
                 Add Game
               </label>
-
               <input
-                id="file-upload"
+                id="game-dialog-button"
                 type="file"
                 ref={this.fileInput}
                 name="file"
@@ -46,3 +43,5 @@ class GameOverview extends React.Component{
     );
   }
 }
+
+export default FileOverviewNew;
