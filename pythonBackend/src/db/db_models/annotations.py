@@ -1,13 +1,16 @@
 from sqlalchemy import Column, Integer, Float, ForeignKey, Boolean, Enum, String
 from sqlalchemy.orm import relationship
+from sqlalchemy.dialects.postgresql import UUID
 from ..database import Base
-from ..db_models.enums import AnnotationType
+import uuid
+
+
 
 class Annotation(Base):
     __tablename__ = 'annotations'
     __table_args__ = {'extend_existing': True}
-    id = Column(Integer, primary_key=True, index=True)
-    video_id = Column(Integer, ForeignKey("videos.id"), nullable=False)
+    id = Column(UUID(as_uuid=True), primary_key=True, index=True, default=uuid.uuid4)
+    video_id = Column(UUID, ForeignKey("videos.id"), nullable=False)
     game_id = Column(Integer, ForeignKey("games.id"), nullable=False)
     frame_number = Column(Integer, nullable=False)
     x = Column(Float, nullable=False)
