@@ -4,14 +4,13 @@ from sqlalchemy import pool
 from alembic import context
 
 from db.database import Base
-from db.db_models import annotations, access_role, player, player_history, game_history, teams, users,videos,roles, sport
+from db.db_models import annotations, access_role, player, player_history, game_history, teams, users,videos,roles
 
 config = context.config
 
 target_metadata = Base.metadata
 
 def run_migrations_offline() -> None:
-
     url = config.get_main_option("sqlalchemy.url")
     context.configure(
         url=url,

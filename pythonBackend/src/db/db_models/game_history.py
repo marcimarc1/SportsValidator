@@ -1,9 +1,10 @@
 from sqlalchemy import Column, Date, ForeignKey, String, Enum
 from sqlalchemy.dialects.postgresql import UUID
 
-from .sport import SportType
 from ..database import Base
 import uuid
+from ..util.enums.sportType import SportType
+
 
 class GamesHistory(Base):
     __tablename__ = 'games_history'

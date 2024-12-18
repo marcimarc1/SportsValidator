@@ -1,7 +1,7 @@
 import cv2
 import os
 from ...pydantic_models.point_update_dto import PointUpdate, Point, TrackingResult
-from ...util import is_valid_path
+
 
 async def track_points_logic(dto: PointUpdate):
     #TODO: update video path
