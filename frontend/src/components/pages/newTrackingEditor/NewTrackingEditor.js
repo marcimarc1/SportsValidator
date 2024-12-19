@@ -4,6 +4,7 @@ import { ReactComponent as PlayIcon } from "../../../icons/play.svg";
 import { ReactComponent as PauseIcon } from "../../../icons/pause.svg";
 import { ReactComponent as ForwardStepIcon } from "../../../icons/forward-step.svg";
 import { ReactComponent as BackwardStepIcon } from "../../../icons/backward-step.svg";
+import { ReactComponent as AdjustSpeedIcon } from "../../../icons/adjust-speed.svg";
 import { useLocation } from "react-router-dom";
 import {
   parseProcessedPlayers,
@@ -115,7 +116,7 @@ const NewTrackingEditor = () => {
   const [playerChosenInList, setPlayerChosenInList] = useState("");
   const [showField, setShowField] = useState(false);
   const [editField, setEditField] = useState(false);
-  const [wasVideoPlaying, setWasVideoPlaying] = useState(false);
+  let [wasVideoPlaying, setWasVideoPlaying] = useState(false);
   const logFile = parseLogFile(log);
   const [selectedTrails, setSelectedTrails] = useState(new Set());
   const [trailSize, setTrailSize] = useState(50);
@@ -134,6 +135,7 @@ const NewTrackingEditor = () => {
   const [isShowingBallBox, setIsShowingBallBox] = useState(true);
   const [isShowingBallTrails, setIsShowingBallTrails] = useState(true);
   const [selectedTrailsBall, setSelectedTrailsBall] = useState([]);
+  const [videoSpeed, setVideoSpeed] = useState(1);
 
   const handleModalOpen = modalOpen(setPlayerChosenInList, setMergeModalState);
   const handleModalBallOpen = modalBallOpen(
@@ -1090,6 +1092,171 @@ const NewTrackingEditor = () => {
     };
   }, [handleKeyDown]);
 
+  const getCurrentTimestampFrame = () => {
+    // First frame is frame 0
+    return Math.floor(videoElement.currentTime / frameDuration);
+  };
+
+  const getReferenceTimestampForFrame = (n) => {
+    return n * frameDuration + frameDuration / 3;
+  };
+
+  const updateTimestamp = (newTimestamp) => {
+    const newFrameNumber = Math.floor(newTimestamp / frameDuration);
+    setTimestamp(newTimestamp);
+    setFrameNumber(newFrameNumber);
+  };
+
+  const handleNextFrame = () => {
+    if (videoElement) {
+      const nextFrame = frameNumber + 1;
+      const referenceTimestamp = getReferenceTimestampForFrame(nextFrame);
+      videoElement.currentTime = referenceTimestamp;
+      deleteFieldDrawing();
+      setFrameNumber(nextFrame);
+      setTimestamp(referenceTimestamp);
+      drawField();
+    }
+  };
+
+  const handlePreviousFrame = () => {
+    if (videoElement && frameNumber > 0) {
+      const previousFrame = frameNumber - 1;
+      const referenceTimestamp = getReferenceTimestampForFrame(previousFrame);
+      videoElement.currentTime = referenceTimestamp;
+      deleteFieldDrawing();
+      setFrameNumber(previousFrame);
+      setTimestamp(referenceTimestamp);
+      drawField();
+    }
+  };
+
+  const handlePreviousChunk = () => {
+    const newTimestamp = Math.max(0, videoElement.currentTime - 6);
+    videoElement.currentTime = newTimestamp;
+    updateTimestamp(newTimestamp);
+  };
+
+  const handleNextChunk = () => {
+    const newTimestamp = Math.min(
+      videoElement.duration,
+      videoElement.currentTime + 6,
+    );
+    videoElement.currentTime = newTimestamp;
+    updateTimestamp(newTimestamp);
+  };
+
+  const handlePlayPause = () => {
+    if (videoElement && videoElement.readyState != 0 && !videoElement.ended) {
+      if (editField) {
+        setShowApplyHomographyModal(true);
+        return;
+      }
+      if (videoElement.paused) {
+        setIsPlaying(true);
+        videoElement.play();
+      } else {
+        setIsPlaying(false);
+        videoElement.pause();
+      }
+    }
+  };
+
+  const handleAdjustSpeed = () => {
+    const incrementBy = 0.25;
+
+    if (videoElement) {
+      if (videoSpeed == 2) {
+        setVideoSpeed(0.25);
+        videoElement.playbackRate = videoSpeed;
+      } else {
+        setVideoSpeed(videoSpeed + incrementBy);
+        videoElement.playbackRate = videoSpeed;
+      }
+    }
+  };
+
+  // Seeking
+
+  const handleSeekStart = () => {
+    if (videoElement && !videoElement.ended && !videoElement.paused) {
+      wasVideoPlaying = true;
+      videoElement.pause();
+    } else {
+      wasVideoPlaying = false;
+    }
+  };
+
+  const handleSeekPercent = (value) => {
+    setProgress(value);
+    const newTimestamp = (value / 100) * videoElement.duration;
+    videoElement.currentTime = newTimestamp;
+    updateTimestamp(newTimestamp);
+  };
+
+  const handleSeekEnd = () => {
+    if (wasVideoPlaying) {
+      videoElement.play();
+    }
+  };
+
+  const formatTime = (time) => {
+    const minutes = Math.floor(time / 60);
+    const seconds = time % 60;
+    return `${minutes}:${seconds.toFixed(5).padStart(2, "0")}`;
+  };
+
+  function handleDisplayingBox() {
+    if (isShowingBox) {
+      setIsShowingBox(false);
+      // if the box is hidden, the annotation shall be hidden too.
+      setIsShowingAnnotation(false);
+      if (!videoElement.paused) {
+        videoElement.pause();
+        videoElement.play();
+      }
+    } else {
+      setIsShowingBox(true);
+      if (!videoElement.paused) {
+        videoElement.pause();
+        videoElement.play();
+      }
+    }
+  }
+
+  function handleDisplayingAnnotation() {
+    if (isShowingAnnotation) {
+      setIsShowingAnnotation(false);
+    } else {
+      setIsShowingAnnotation(true);
+    }
+  }
+
+  function handleAddPlayer() {
+    const newPlayerKey = playerNameMap.size;
+    const boxColor = generateColor(newPlayerKey);
+    setColorSet(colorSet.set(newPlayerKey, boxColor));
+    setAnnotations(
+      annotations.concat({
+        FrameNo: frameNumber,
+        PlayerKey: newPlayerKey,
+        h: 100,
+        w: 100,
+        x: 500,
+        x1: 0,
+        x2: 0,
+        x_trans: 0,
+        y: 100,
+        y1: 0,
+        y2: 0,
+        y_trans: 0,
+        in_field: true,
+      }),
+    );
+    setPlayerNameMap(
+      new Map(playerNameMap.set(newPlayerKey, "player" + newPlayerKey)),
+    );
+  }
   function addBoundingBoxBallAtMousePosition(event) {
     const pointer = canvas.getPointer(event.e);
     const horizontalScalingFactor = canvas.width / 3840;
@@ -1545,6 +1712,13 @@ const NewTrackingEditor = () => {
               <PlayIcon className="icon" />
             )}
           </button>
+
+          <button className="icon-button" onClick={handleAdjustSpeed}>
+            <AdjustSpeedIcon className="icon" />
+          </button>
+          <span id="video-speed-display">
+            {videoElement?.playbackRate || videoSpeed}x
+          </span>
           <span id="timestamp-display">
             {formatTime(timestamp)} / {formatTime(videoElement?.duration)}
           </span>
