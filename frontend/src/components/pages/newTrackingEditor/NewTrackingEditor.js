@@ -20,11 +20,7 @@ import {
 import { fabric } from "fabric";
 import "./NewTrackingEditor.css";
 import SeekBar from "./SeekBar";
-import {
-  Switch,
-  Button,
-  Box,
-} from "@mui/material";
+import { Switch, Button, Box } from "@mui/material";
 
 import TrackList from "../newTrackingEditor/TrackList";
 import TrackListItemPlayer from "./TrackListItemPlayer";
@@ -54,8 +50,8 @@ import {
   handleMultiSelectMerge,
   handleMultiSelectMergeBall,
   handleMultiBallTrailsDelete,
-} from './multiSelectHandlers';
-import {updateSidebar} from "./sidebarUpdater";
+} from "./multiSelectHandlers";
+import { updateSidebar } from "./sidebarUpdater";
 import {
   getCurrentTimestampFrame,
   getReferenceTimestampForFrame,
@@ -71,19 +67,19 @@ import {
   formatTime,
   handleDisplayingBox,
   handleDisplayingAnnotation,
-  handleAddPlayer
-} from './videoControls';
-import {generatePoster} from "./postGenerator";
+  handleAddPlayer,
+} from "./videoControls";
+import { generatePoster } from "./postGenerator";
 import {
   blink,
   deletePlayer,
   deleteBall,
   setName,
-  setNameBall
-} from './canvasUtils';
-import {modalBallOpen, modalOpen, modalsClose} from "./modalHandler";
+  setNameBall,
+} from "./canvasUtils";
+import { modalBallOpen, modalOpen, modalsClose } from "./modalHandler";
 import useInitializeTrackingData from "./useInitializeTrackingData";
-import {generateColor} from "../../../utils/colorGenerator";
+import { generateColor } from "../../../utils/colorGenerator";
 
 // TODO Take a video_id instead and have an endpoint on the server where we supply a video_id and get the corresponding video
 const NewTrackingEditor = () => {
@@ -140,20 +136,26 @@ const NewTrackingEditor = () => {
   const [selectedTrailsBall, setSelectedTrailsBall] = useState([]);
 
   const handleModalOpen = modalOpen(setPlayerChosenInList, setMergeModalState);
-  const handleModalBallOpen = modalBallOpen(setBallChosenInList, setMergeModalBallState);
-  const handleModalsClose = modalsClose(setMergeModalState, setMergeModalBallState);
+  const handleModalBallOpen = modalBallOpen(
+    setBallChosenInList,
+    setMergeModalBallState,
+  );
+  const handleModalsClose = modalsClose(
+    setMergeModalState,
+    setMergeModalBallState,
+  );
 
   useInitializeTrackingData(
-      video,
-      processedPlayers,
-      processedBallTracks,
-      setVideoUrl,
-      setAnnotations,
-      setColorSet,
-      setPlayerNameMap,
-      setAnnotationBallTracks,
-      setColorSetBall,
-      setBallNameMap
+    video,
+    processedPlayers,
+    processedBallTracks,
+    setVideoUrl,
+    setAnnotations,
+    setColorSet,
+    setPlayerNameMap,
+    setAnnotationBallTracks,
+    setColorSetBall,
+    setBallNameMap,
   );
 
   let { videoName } = useParams();
@@ -161,7 +163,6 @@ const NewTrackingEditor = () => {
   const canvasRef = useRef(null);
   const frameDuration = 1001 / 24000; // TODO Get this information from the backend
   // could be used to display annotations in canvas
-
 
   const refreshSidebar = () => {
     updateSidebar({
@@ -190,11 +191,27 @@ const NewTrackingEditor = () => {
   };
 
   const handleDeletePlayer = (playerBox) => {
-    deletePlayer(canvas, playerBox, setAnnotations, setCanvasBoxes, playerNameMap, setPlayerNameMap, refreshSidebar);
+    deletePlayer(
+      canvas,
+      playerBox,
+      setAnnotations,
+      setCanvasBoxes,
+      playerNameMap,
+      setPlayerNameMap,
+      refreshSidebar,
+    );
   };
 
   const handleDeleteBall = (ballBox) => {
-    deleteBall(canvas, ballBox, setAnnotationBallTracks, setCanvasBoxesBall, ballNameMap, setBallNameMap, refreshSidebar);
+    deleteBall(
+      canvas,
+      ballBox,
+      setAnnotationBallTracks,
+      setCanvasBoxesBall,
+      ballNameMap,
+      setBallNameMap,
+      refreshSidebar,
+    );
   };
 
   const handleSetName = (playerBox, name) => {
@@ -747,7 +764,7 @@ const NewTrackingEditor = () => {
   };
 
   function handleUpdateTimeStamp(newTimestamp) {
-    updateTimestamp(newTimestamp, frameDuration, setTimestamp,setFrameNumber)
+    updateTimestamp(newTimestamp, frameDuration, setTimestamp, setFrameNumber);
   }
 
   useEffect(() => {
@@ -764,7 +781,10 @@ const NewTrackingEditor = () => {
     let previousFrameNumber = 0;
 
     const updateCanvas = () => {
-      const currentFrameNumber = getCurrentTimestampFrame(videoElement, frameDuration);
+      const currentFrameNumber = getCurrentTimestampFrame(
+        videoElement,
+        frameDuration,
+      );
       drawVideo();
       drawBoundingBoxes(currentFrameNumber);
     };
@@ -781,7 +801,10 @@ const NewTrackingEditor = () => {
         return;
       }
 
-      const currentFrameNumber = getCurrentTimestampFrame(videoElement, frameDuration);
+      const currentFrameNumber = getCurrentTimestampFrame(
+        videoElement,
+        frameDuration,
+      );
       if (currentFrameNumber != previousFrameNumber) {
         setFrameNumber(currentFrameNumber);
         setTimestamp(videoElement.currentTime);
@@ -1025,7 +1048,12 @@ const NewTrackingEditor = () => {
         handlePreviousChunk(videoElement, handleUpdateTimeStamp);
         break;
       case 75: // k
-        handlePlayPause({videoElement, editField, setShowApplyHomographyModal, setIsPlaying});
+        handlePlayPause({
+          videoElement,
+          editField,
+          setShowApplyHomographyModal,
+          setIsPlaying,
+        });
         break;
       case 76: // l
         handleNextChunk(videoElement, handleUpdateTimeStamp);
@@ -1038,10 +1066,19 @@ const NewTrackingEditor = () => {
           deleteFieldDrawing,
           setFrameNumber,
           setTimestamp,
-          drawField});
+          drawField,
+        });
         break;
       case 190: // .
-        handleNextFrame({videoElement, frameNumber, getReferenceTimestampForFrame, deleteFieldDrawing, setFrameNumber, setTimestamp, drawField});
+        handleNextFrame({
+          videoElement,
+          frameNumber,
+          getReferenceTimestampForFrame,
+          deleteFieldDrawing,
+          setFrameNumber,
+          setTimestamp,
+          drawField,
+        });
         break;
     }
   };
@@ -1272,7 +1309,12 @@ const NewTrackingEditor = () => {
           <Switch
             color="default"
             checked={isShowingAnnotation}
-            onChange={() => handleDisplayingAnnotation(isShowingAnnotation, setIsShowingAnnotation)}
+            onChange={() =>
+              handleDisplayingAnnotation(
+                isShowingAnnotation,
+                setIsShowingAnnotation,
+              )
+            }
           />
 
           <div>Show Player Box:</div>
@@ -1280,7 +1322,14 @@ const NewTrackingEditor = () => {
           <Switch
             color="default"
             checked={isShowingBox}
-            onChange={() => handleDisplayingBox({isShowingBox, setIsShowingBox, setIsShowingAnnotation, videoElement})}
+            onChange={() =>
+              handleDisplayingBox({
+                isShowingBox,
+                setIsShowingBox,
+                setIsShowingAnnotation,
+                videoElement,
+              })
+            }
           />
           <div>Show In Field:</div>
 
@@ -1294,7 +1343,18 @@ const NewTrackingEditor = () => {
           <Button
             data-testid="add-player-button"
             variant="contained"
-            onClick={() => handleAddPlayer({playerNameMap, frameNumber, setColorSet, colorSet, setAnnotations, annotations, setPlayerNameMap, generateColor})}
+            onClick={() =>
+              handleAddPlayer({
+                playerNameMap,
+                frameNumber,
+                setColorSet,
+                colorSet,
+                setAnnotations,
+                annotations,
+                setPlayerNameMap,
+                generateColor,
+              })
+            }
             sx={{
               backgroundColor: "#BBC3C9 !important",
               color: "#1b1f22 !important",
@@ -1305,13 +1365,17 @@ const NewTrackingEditor = () => {
           <Button
             data-testid="merge-button"
             variant="contained"
-            onClick={() => handleMultiSelectMerge(selectedTrails,
+            onClick={() =>
+              handleMultiSelectMerge(
+                selectedTrails,
                 annotations,
                 setAnnotations,
                 playerNameMap,
                 setPlayerNameMap,
                 setSelectedTrails,
-                multiPlayerMerge)}
+                multiPlayerMerge,
+              )
+            }
             sx={{
               backgroundColor: "#BBC3C9 !important",
               color: "#1b1f22 !important",
@@ -1323,15 +1387,16 @@ const NewTrackingEditor = () => {
             data-testid="merge-button-ball"
             variant="contained"
             onClick={() =>
-                handleMultiSelectMergeBall(
-                    selectedTrailsBall,
-                    annotationBallTracks,
-                    setAnnotationBallTracks,
-                    ballNameMap,
-                    setBallNameMap,
-                    setSelectedTrailsBall,
-                    multiBallMerge
-                )}
+              handleMultiSelectMergeBall(
+                selectedTrailsBall,
+                annotationBallTracks,
+                setAnnotationBallTracks,
+                ballNameMap,
+                setBallNameMap,
+                setSelectedTrailsBall,
+                multiBallMerge,
+              )
+            }
             sx={{
               backgroundColor: "#BBC3C9 !important",
               color: "#1b1f22 !important",
@@ -1343,15 +1408,16 @@ const NewTrackingEditor = () => {
             data-testid="delete-ball-trails-button"
             variant="contained"
             onClick={() =>
-                handleMultiBallTrailsDelete(
-                    selectedTrailsBall,
-                    annotationBallTracks,
-                    setAnnotationBallTracks,
-                    ballNameMap,
-                    setBallNameMap,
-                    setSelectedTrailsBall,
-                    multiBallTrailsDelete
-                )}
+              handleMultiBallTrailsDelete(
+                selectedTrailsBall,
+                annotationBallTracks,
+                setAnnotationBallTracks,
+                ballNameMap,
+                setBallNameMap,
+                setSelectedTrailsBall,
+                multiBallTrailsDelete,
+              )
+            }
             sx={{
               backgroundColor: "#BBC3C9 !important",
               color: "#1b1f22 !important",
@@ -1425,12 +1491,33 @@ const NewTrackingEditor = () => {
       <div className="controls">
         <SeekBar
           onSeekStart={() => handleSeekStart(videoElement, setWasVideoPlaying)}
-          onSeekPercent={(value) => console.log("Got here") || handleSeekPercent(value, videoElement, setProgress, handleUpdateTimeStamp)}
+          onSeekPercent={(value) =>
+            console.log("Got here") ||
+            handleSeekPercent(
+              value,
+              videoElement,
+              setProgress,
+              handleUpdateTimeStamp,
+            )
+          }
           onSeekEnd={() => handleSeekEnd(wasVideoPlaying, videoElement)}
           progress={progress}
         />
         <div id="buttons-container">
-          <button className="icon-button" onClick={() => handlePreviousFrame({videoElement, frameNumber, getReferenceTimestampForFrame, deleteFieldDrawing, setFrameNumber, setTimestamp, drawField})}>
+          <button
+            className="icon-button"
+            onClick={() =>
+              handlePreviousFrame({
+                videoElement,
+                frameNumber,
+                getReferenceTimestampForFrame,
+                deleteFieldDrawing,
+                setFrameNumber,
+                setTimestamp,
+                drawField,
+              })
+            }
+          >
             <BackwardStepIcon className="icon" />
           </button>
           <span id="frame-number-display">Frame {frameNumber}</span>
@@ -1441,7 +1528,17 @@ const NewTrackingEditor = () => {
           >
             <ForwardStepIcon className="icon" />
           </button>
-          <button className="icon-button" onClick={() => handlePlayPause({videoElement, editField, setShowApplyHomographyModal, setIsPlaying})}>
+          <button
+            className="icon-button"
+            onClick={() =>
+              handlePlayPause({
+                videoElement,
+                editField,
+                setShowApplyHomographyModal,
+                setIsPlaying,
+              })
+            }
+          >
             {isPlaying ? (
               <PauseIcon className="icon" />
             ) : (
