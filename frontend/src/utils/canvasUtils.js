@@ -232,6 +232,9 @@ export const drawFieldPoints = (
     }
 
     canvas.on("object:moving", updateLines);
+    canvas.on("object:removed", () => {
+      canvas.off("object:moving", updateLines);
+    });
   };
 
   const drawCircle = (center, radius, color, id) => {
@@ -306,52 +309,59 @@ export const drawFieldPoints = (
     drawCircle(points.penaltySpot[1].coords, 0.3, "red", "penalty-spot-2");
   }
 
-  const updateHomography = () => {
-    const updatedFieldPoints = canvas
-      .getObjects()
-      .filter((obj) => obj.properties?.type === "fieldPoint")
-      .map((obj) => ({
-        x: obj.left / horizontalScalingFactor,
-        y: obj.top / verticalScalingFactor,
-        id: obj.id,
-      }));
-
-    const templatePoints = Object.values(points)
-      .flat()
-      .map((p) => p.coords);
-
-    try {
-      const newHomography = calculateNewHomography(
-        originalFieldPoints,
-        updatedFieldPoints,
-        templatePoints,
-      );
-
-      var maxFrameToApply = Math.min(
-        frameNumber + 240,
-        Object.keys(homographies).length - 1,
-      );
-      Object.keys(homographies).forEach((frame) => {
-        if (frame < frameNumber || frame > maxFrameToApply) {
-          return;
-        }
-
-        homographies[frame] = newHomography;
-      });
-      console.log("Updated homography at frame", frameNumber);
-      console.log(homographies[frameNumber]);
-    } catch (error) {
-      console.error("Error updating homography:", error);
-    }
-  };
-
-  canvas.on("object:modified", updateHomography);
-  canvas.on("object:removed", () => {
-    canvas.off("object:modified", updateHomography);
-    canvas.off("object:moving", updateLines);
-  });
-
   return canvas
     .getObjects()
     .filter((obj) => obj.properties?.type === "fieldPoint");
+};
+
+export const updateHomography = (
+  trackedPoints,
+  homographies,
+  frameNumber,
+  horizontalScalingFactor,
+  verticalScalingFactor,
+  sport,
+  length,
+  width,
+) => {
+  const { points } = getTemplate(sport, length, width);
+
+  const originalFieldPoints = Object.values(points)
+    .flat()
+    .map((point, index) => {
+      if (!point.coords || point.coords.length < 2) {
+        return null;
+      }
+      return {
+        x: point.coords[0] * horizontalScalingFactor,
+        y: point.coords[1] * verticalScalingFactor,
+        id: point.id,
+      };
+    })
+    .filter((p) => p !== null);
+
+  const templatePoints = Object.values(points)
+    .flat()
+    .map((p) => p.coords);
+
+  const trackedPointsTransformed = trackedPoints?.map((obj) => ({
+    x: obj.x / horizontalScalingFactor,
+    y: obj.y / verticalScalingFactor,
+    id: obj.id,
+  }));
+
+  if (!trackedPointsTransformed) {
+    return;
+  }
+  try {
+    const newHomography = calculateNewHomography(
+      originalFieldPoints,
+      trackedPointsTransformed,
+      templatePoints,
+    );
+
+    homographies[frameNumber] = newHomography;
+  } catch (error) {
+    console.log(error);
+  }
 };

@@ -21,15 +21,7 @@ import {
 import { fabric } from "fabric";
 import "./NewTrackingEditor.css";
 import SeekBar from "./SeekBar";
-import {
-  FormGroup,
-  Switch,
-  FormControlLabel,
-  Button,
-  Box,
-  Typography,
-} from "@mui/material";
-import TextField from "@mui/material/TextField";
+import { Switch, Button, Box } from "@mui/material";
 
 import TrackList from "../newTrackingEditor/TrackList";
 import TrackListItemPlayer from "./TrackListItemPlayer";
@@ -42,6 +34,7 @@ import {
   drawFieldPoints,
   defineTrailBehaviour,
   defineTrailBehaviourBall,
+  updateHomography,
 } from "../../../utils/canvasUtils";
 import {
   multiPlayerMerge,
@@ -50,11 +43,11 @@ import {
 } from "../../../utils/validation";
 import { DownloadButton } from "./DownloadButton";
 import { parseLogFile } from "../../../utils/logFileParser";
-import Slider from "@mui/material/Slider";
 import { FieldDetailsButton } from "./field/FieldDetailsButton";
 import api from "../../../api/api";
 import { SettingsBallButton } from "./SettingsBallButton";
 import { SettingsTrailsButton } from "./SettingsTrailsButton";
+import { getPointsToTrack } from "../../../utils/templates";
 
 // TODO Take a video_id instead and have an endpoint on the server where we supply a video_id and get the corresponding video
 const NewTrackingEditor = () => {
@@ -1543,7 +1536,6 @@ const NewTrackingEditor = () => {
         videoElement,
       );
       setFieldPoints(newFieldPoints);
-      console.log("newFieldPoints", newFieldPoints);
     }
   };
 
@@ -1551,24 +1543,57 @@ const NewTrackingEditor = () => {
     setTrailSize(event.target.value);
   };
 
-  const handleApplyHomography = (frameNumber) => {
+  const handleApplyHomography = (frameNumber, trackPoints) => {
     frameNumber = parseInt(frameNumber);
     var currentFrame = parseInt(getCurrentTimestampFrame());
     var fieldPoints = canvas
       .getObjects()
-      .filter((obj) => obj.properties?.type === "fieldPoint")
+      .filter(
+        (obj) =>
+          obj.properties?.type === "fieldPoint" &&
+          getPointsToTrack(logFile.Sport).includes(obj.id),
+      )
       .map((obj) => ({
         id: obj.id,
         x: obj.left,
         y: obj.top,
       }));
     console.log("Field points: ", fieldPoints);
+    if (!trackPoints) {
+      updateHomography(
+        fieldPoints,
+        homographies,
+        currentFrame,
+        canvas.width / 3840,
+        canvas.height / 2160,
+        logFile.Sport,
+        fieldSize?.length,
+        fieldSize?.width,
+      );
+      for (let i = 0; i <= frameNumber; i++) {
+        homographies[currentFrame + i] = homographies[currentFrame];
+      }
+
+      deleteFieldDrawing();
+      drawField();
+      setShowApplyHomographyModal(false);
+      handleEnablingEditField();
+      setIsPlaying(true);
+      videoElement.play();
+
+      return;
+    }
+
     api
       .post("/annotation/track", {
         video_id: video.name,
         start_frame: currentFrame,
         end_frame: currentFrame + frameNumber,
-        points: fieldPoints,
+        points: fieldPoints.map((point) => ({
+          ...point,
+          x: point.x / (canvas.width / 3840),
+          y: point.y / (canvas.height / 2160),
+        })),
         player_boxes: annotations
           .filter(
             (a) =>
@@ -1583,14 +1608,37 @@ const NewTrackingEditor = () => {
             y_2: a.y2,
           })),
       })
-      .then((response) => {});
+      .then((response) => {
+        const trackedPoints = response.data.tracked_points.map((points) =>
+          points.map((point) => ({
+            ...point,
+            x: point.x * (canvas.width / 3840),
+            y: point.y * (canvas.height / 2160),
+          })),
+        );
+        const startFrame = response.data.start_frame;
+        for (let i = 0; i <= trackedPoints.length; i++) {
+          console.log("trackedPoints", trackedPoints);
+          var framePoints = trackedPoints[i];
+          updateHomography(
+            framePoints,
+            homographies,
+            startFrame + i,
+            canvas.width / 3840,
+            canvas.height / 2160,
+            logFile.Sport,
+            fieldSize?.length,
+            fieldSize?.width,
+          );
+        }
 
-    deleteFieldDrawing();
-    drawField();
-    setShowApplyHomographyModal(false);
-    handleEnablingEditField();
-    setIsPlaying(true);
-    videoElement.play();
+        deleteFieldDrawing();
+        drawField();
+        setShowApplyHomographyModal(false);
+        handleEnablingEditField();
+        setIsPlaying(true);
+        videoElement.play();
+      });
   };
 
   const handleContinueWithoutApplyingHomographies = async () => {
