@@ -102,6 +102,7 @@ const NewTrackingEditor = () => {
   const [isShowingBallTrails, setIsShowingBallTrails] = useState(true);
   const [selectedTrailsBall, setSelectedTrailsBall] = useState([]);
   const [videoSpeed, setVideoSpeed] = useState(1);
+  const [isZoomModeEnabled, setIsZoomModeEnabled] = useState(false);
 
   const handleModalOpen = (playerInList) => {
     setPlayerChosenInList(playerInList);
@@ -1247,6 +1248,65 @@ const NewTrackingEditor = () => {
     };
   }, [handleKeyDown]);
 
+  useEffect(() => {
+    if (!isZoomModeEnabled) return;
+
+    const handleWheel = (event) => {
+      event.preventDefault();
+
+      let delta = event.deltaY;
+      let newZoomLevel = canvas.getZoom();
+
+      if (delta < 0) {
+        newZoomLevel = Math.min(newZoomLevel + 0.1, 3);
+      } else {
+        newZoomLevel = Math.max(newZoomLevel - 0.1, 0.5);
+      }
+
+      canvas.zoomToPoint({ x: event.offsetX, y: event.offsetY }, newZoomLevel);
+      canvas.renderAll();
+    };
+
+    const handleMouseDown = (event) => {
+      canvas.isDragging = true;
+      canvas.selection = false;
+      canvas.lastPosX = event.e.clientX;
+      canvas.lastPosY = event.e.clientY;
+    };
+
+    const handleMouseMove = (event) => {
+      if (canvas.isDragging) {
+        const deltaX = event.e.clientX - canvas.lastPosX;
+        const deltaY = event.e.clientY - canvas.lastPosY;
+
+        canvas.viewportTransform[4] += deltaX;
+        canvas.viewportTransform[5] += deltaY;
+
+        canvas.lastPosX = event.e.clientX;
+        canvas.lastPosY = event.e.clientY;
+
+        canvas.renderAll();
+      }
+    };
+
+    const handleMouseUp = () => {
+      canvas.isDragging = false;
+      canvas.selection = true;
+    };
+
+    canvas.wrapperEl.addEventListener("wheel", handleWheel);
+    canvas.on("mouse:down", handleMouseDown);
+    canvas.on("mouse:move", handleMouseMove);
+    canvas.on("mouse:up", handleMouseUp);
+
+    return () => {
+      canvas.wrapperEl.removeEventListener("wheel", handleWheel);
+      canvas.off("mouse:down", handleMouseDown);
+      canvas.off("mouse:move", handleMouseMove);
+      canvas.off("mouse:up", handleMouseUp);
+    };
+  }, [isZoomModeEnabled, canvas]);
+
   const getCurrentTimestampFrame = () => {
     // First frame is frame 0
     return Math.floor(videoElement.currentTime / frameDuration);
@@ -1496,6 +1556,12 @@ const NewTrackingEditor = () => {
     } else {
       setIsShowingPlayerTrails(true);
     }
+  };
+
+  const handleZoomReset = () => {
+    canvas.viewportTransform = [1, 0, 0, 1, 0, 0];
+    canvas.setZoom(1);
+    canvas.renderAll();
   };
 
   useEffect(() => {
@@ -1838,7 +1904,17 @@ const NewTrackingEditor = () => {
               <PlayIcon className="icon" />
             )}
           </button>
-
+          <div>
+            <button
+              className="zoom-text-button"
+              onClick={() => setIsZoomModeEnabled(!isZoomModeEnabled)}
+            >
+              {isZoomModeEnabled ? "Disable Zoom Mode" : "Enable Zoom Mode"}
+            </button>
+          </div>
+          <button className="zoom-text-button" onClick={handleZoomReset}>
+            Reset Zoom
+          </button>
           <button className="icon-button" onClick={handleAdjustSpeed}>
             <AdjustSpeedIcon className="icon" />
           </button>
