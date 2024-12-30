@@ -8,7 +8,7 @@ async def track_points_logic(dto: PointUpdate):
     video_path = f"{dto.video_id}"
     # if not is_valid_path(video_path):
     #     raise ValueError(f"Video file {video_path} does not exist")
-    
+
     print(os.getcwd())
 
     cap = cv2.VideoCapture(video_path)
@@ -59,6 +59,7 @@ async def track_points_logic(dto: PointUpdate):
                     x=(x + w / 2),
                     y=(y + h / 2),
                     id=dto.points[i].id,
+                    label=dto.points[i].label,
                 )
             )
 
