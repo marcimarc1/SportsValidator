@@ -115,7 +115,6 @@ const NewTrackingEditor = () => {
     jumpBackward: "ArrowLeft",
   });
 
-
   const handleModalOpen = (playerInList) => {
     setPlayerChosenInList(playerInList);
     setMergeModalState(true);
@@ -1317,7 +1316,6 @@ const NewTrackingEditor = () => {
     };
   }, [handleKeyPress]);
 
-
   useEffect(() => {
     if (!isZoomModeEnabled) return;
 
@@ -1377,12 +1375,9 @@ const NewTrackingEditor = () => {
     };
   }, [isZoomModeEnabled, canvas]);
 
-
   const startBindingKey = (action) => {
     setBindingAction(action);
   };
-
-  
 
   const getCurrentTimestampFrame = () => {
     // First frame is frame 0
