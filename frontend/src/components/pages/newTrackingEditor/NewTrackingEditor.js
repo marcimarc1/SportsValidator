@@ -5,6 +5,8 @@ import { ReactComponent as PauseIcon } from "../../../icons/pause.svg";
 import { ReactComponent as ForwardStepIcon } from "../../../icons/forward-step.svg";
 import { ReactComponent as BackwardStepIcon } from "../../../icons/backward-step.svg";
 import { ReactComponent as AdjustSpeedIcon } from "../../../icons/adjust-speed.svg";
+import { ReactComponent as QuestionIcon } from "../../../icons/question.svg";
+import { ReactComponent as KeyboardIcon } from "../../../icons/keyboard.svg";
 import { useLocation } from "react-router-dom";
 import {
   parseProcessedPlayers,
@@ -103,6 +105,15 @@ const NewTrackingEditor = () => {
   const [selectedTrailsBall, setSelectedTrailsBall] = useState([]);
   const [videoSpeed, setVideoSpeed] = useState(1);
   const [isZoomModeEnabled, setIsZoomModeEnabled] = useState(false);
+  const [isTooltipVisible, setTooltipVisible] = useState(false);
+  const [bindingAction, setBindingAction] = useState(null);
+  const [keyBindings, setKeyBindings] = useState({
+    playPause: " ",
+    nextFrame: ".",
+    previousFrame: ",",
+    jumpForward: "ArrowRight",
+    jumpBackward: "ArrowLeft",
+  });
 
   const handleModalOpen = (playerInList) => {
     setPlayerChosenInList(playerInList);
@@ -400,6 +411,25 @@ const NewTrackingEditor = () => {
       selectBBox(box);
     }
   }
+
+  const Tooltip = ({ isVisible, children }) => {
+    return (
+      <div className={`tooltip ${isVisible ? "visible" : ""}`}>{children}</div>
+    );
+  };
+
+  const toggleTooltip = () => {
+    if (videoElement && !videoElement.paused) {
+      videoElement.pause();
+      setIsPlaying(false);
+    }
+
+    setTooltipVisible((prev) => !prev);
+  };
+
+  const hideTooltip = () => {
+    setTooltipVisible(false);
+  };
 
   function defineBoxBehavior(box, is_playerBox = true) {
     box.on({
@@ -1221,32 +1251,70 @@ const NewTrackingEditor = () => {
     drawInField,
   ]);
 
-  const handleKeyDown = (event) => {
-    switch (event.keyCode) {
-      case 74: // j
-        handlePreviousChunk();
-        break;
-      case 75: // k
+  const handleKeyPress = (event) => {
+    if (!videoElement) return;
+
+    const { key } = event;
+
+    if (bindingAction) {
+      if (Object.values(keyBindings).includes(key)) {
+        alert("This key is already bound to another action!");
+        setBindingAction(null);
+        return;
+      }
+
+      setKeyBindings((prevBindings) => ({
+        ...prevBindings,
+        [bindingAction]: key,
+      }));
+
+      setBindingAction(null);
+      return;
+    }
+
+    switch (event.key) {
+      case keyBindings.playPause:
+        event.preventDefault();
         handlePlayPause();
         break;
-      case 76: // l
-        handleNextChunk();
-        break;
-      case 188: // ,
+      case keyBindings.previousFrame:
         handlePreviousFrame();
         break;
-      case 190: // .
+      case keyBindings.nextFrame:
         handleNextFrame();
+        break;
+      case keyBindings.jumpBackward:
+        event.preventDefault();
+        handlePreviousChunk();
+        break;
+      case keyBindings.jumpForward:
+        event.preventDefault();
+        handleNextChunk();
+        break;
+      default:
         break;
     }
   };
 
+  const handleClick = (e) => {
+    if (bindingAction) {
+      e.stopPropagation();
+      setBindingAction(null);
+      return;
+    }
+  };
+
   useEffect(() => {
-    document.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("keydown", handleKeyPress);
+
+    document.addEventListener("click", handleClick);
+
     return () => {
-      document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("keydown", handleKeyPress);
+
+      document.addEventListener("click", handleClick);
     };
-  }, [handleKeyDown]);
+  }, [handleKeyPress]);
 
   useEffect(() => {
     if (!isZoomModeEnabled) return;
@@ -1307,6 +1375,10 @@ const NewTrackingEditor = () => {
     };
   }, [isZoomModeEnabled, canvas]);
 
+  const startBindingKey = (action) => {
+    setBindingAction(action);
+  };
+
   const getCurrentTimestampFrame = () => {
     // First frame is frame 0
     return Math.floor(videoElement.currentTime / frameDuration);
@@ -1330,6 +1402,11 @@ const NewTrackingEditor = () => {
       deleteFieldDrawing();
       setFrameNumber(nextFrame);
       setTimestamp(referenceTimestamp);
+
+      const currentProgress =
+        (videoElement.currentTime / videoElement.duration) * 100;
+      setProgress(currentProgress);
+
       drawField();
     }
   };
@@ -1342,12 +1419,17 @@ const NewTrackingEditor = () => {
       deleteFieldDrawing();
       setFrameNumber(previousFrame);
       setTimestamp(referenceTimestamp);
+
+      const currentProgress =
+        (videoElement.currentTime / videoElement.duration) * 100;
+      setProgress(currentProgress);
+
       drawField();
     }
   };
 
   const handlePreviousChunk = () => {
-    const newTimestamp = Math.max(0, videoElement.currentTime - 6);
+    const newTimestamp = Math.max(0, videoElement.currentTime - 5);
     videoElement.currentTime = newTimestamp;
     updateTimestamp(newTimestamp);
   };
@@ -1355,7 +1437,7 @@ const NewTrackingEditor = () => {
   const handleNextChunk = () => {
     const newTimestamp = Math.min(
       videoElement.duration,
-      videoElement.currentTime + 6,
+      videoElement.currentTime + 5,
     );
     videoElement.currentTime = newTimestamp;
     updateTimestamp(newTimestamp);
@@ -1393,6 +1475,21 @@ const NewTrackingEditor = () => {
 
   // Seeking
 
+  useEffect(() => {
+    const updateProgressBar = () => {
+      const currentProgress =
+        (videoElement.currentTime / videoElement.duration) * 100;
+      setProgress(currentProgress);
+    };
+
+    if (videoElement) {
+      videoElement.addEventListener("timeupdate", updateProgressBar);
+      return () => {
+        videoElement.removeEventListener("timeupdate", updateProgressBar);
+      };
+    }
+  }, [videoElement]);
+
   const handleSeekStart = () => {
     if (videoElement && !videoElement.ended && !videoElement.paused) {
       wasVideoPlaying = true;
@@ -1407,6 +1504,10 @@ const NewTrackingEditor = () => {
     const newTimestamp = (value / 100) * videoElement.duration;
     videoElement.currentTime = newTimestamp;
     updateTimestamp(newTimestamp);
+
+    const currentProgress =
+      (videoElement.currentTime / videoElement.duration) * 100;
+    setProgress(currentProgress);
   };
 
   const handleSeekEnd = () => {
@@ -1924,6 +2025,32 @@ const NewTrackingEditor = () => {
           <span id="timestamp-display">
             {formatTime(timestamp)} / {formatTime(videoElement?.duration)}
           </span>
+          <button
+            className="icon-button"
+            style={{ marginLeft: "auto", position: "relative" }}
+            onClick={toggleTooltip}
+          >
+            <KeyboardIcon />
+            <Tooltip isVisible={isTooltipVisible}>
+              <div
+                className="tooltip-content"
+                onClick={(e) => {
+                  e.stopPropagation();
+                }}
+              >
+                {Object.keys(keyBindings).map((action) => (
+                  <div
+                    key={action}
+                    className={`key-binding-box ${bindingAction === action ? "binding" : ""}`}
+                    onClick={() => startBindingKey(action)}
+                  >
+                    {action}:{" "}
+                    {keyBindings[action] == " " ? "Space" : keyBindings[action]}
+                  </div>
+                ))}
+              </div>
+            </Tooltip>
+          </button>
         </div>
       </div>
     </div>

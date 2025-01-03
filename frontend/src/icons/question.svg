@@ -1,0 +1,16 @@
+<svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    width="24"
+    height="24"
+    className="icon"
+  >
+    <circle cx="12" cy="12" r="10" stroke="white" strokeWidth="2" fill="none" />
+    <path
+      d="M12 16v-1c0-1 2-2 2-4 0-1.5-1.5-2-2-2s-2 .5-2 2"
+      stroke="white"
+      strokeWidth="2"
+      fill="none"
+    />
+    <circle cx="12" cy="18" r="1" fill="white" />
+  </svg>
