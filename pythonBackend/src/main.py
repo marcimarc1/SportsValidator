@@ -5,7 +5,7 @@ import logging
 from typing import List
 from fastapi import FastAPI, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from .routers import annotation, user
+from .routers import annotation, user, game, sport, team, video
 from alembic.config import Config
 from alembic import command
 
@@ -40,6 +40,11 @@ app.add_middleware(
 # Bind Routers from Router Directory
 app.include_router(annotation.router)
 app.include_router(user.router)
+app.include_router(game.router)
+app.include_router(sport.router)
+app.include_router(team.router)
+app.include_router(video.router)
+
 
 
 @app.get("/")

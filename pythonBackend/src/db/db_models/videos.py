@@ -10,5 +10,5 @@ class Video(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, index=True, default=uuid.uuid4)
     name = Column(String)
     uploaded_by = Column(UUID, ForeignKey("users.id"), nullable=False)
-    game_id = Column(Integer, ForeignKey("games.id"), nullable=False)
-    sequence_number = Column(Integer, nullable=False)
+    game_id = Column(UUID, ForeignKey("games.id"), nullable=False)
+    sequence_number = Column(UUID, nullable=False)

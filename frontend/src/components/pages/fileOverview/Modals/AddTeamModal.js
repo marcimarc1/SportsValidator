@@ -22,14 +22,14 @@ const style = {
 const AddTeamModal = () => {
   const [open, setOpen] = React.useState(false);
   const [formData, setFormData] = useState({
-        name: '',
+        team_name: '',
     });
 
   const handleOpen = () => {
     setOpen(true);
     setFormData({
       ...formData,
-        name: ''
+        team_name: ''
     })
   };
 
@@ -66,7 +66,7 @@ const AddTeamModal = () => {
               <div className='mb-3 mt-3'>
                 <label htmlFor='name' className="form-label">Name:</label>
                 <input type='text' className='form-control' id='name' name='name'
-                       onChange={handleInputChange} value={formData.name}/>
+                       onChange={handleInputChange} value={formData.team_name}/>
               </div>
               <button className="FileButton" type='submit'>Save</button>
               <button className="FileButton" onClick={handleClose}>Close</button>

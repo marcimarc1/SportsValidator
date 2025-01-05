@@ -1,6 +1,8 @@
 import fastapi
 from fastapi import HTTPException, Depends
 from sqlalchemy.orm import Session
+
+from ..pydantic_models.video import VideoDto
 from ..logic.video_logic import *
 from ..db.database import get_db
 from ..pydantic_models.Import.import_request_dto import ImportRequestDto
@@ -9,7 +11,8 @@ router = fastapi.APIRouter(
     prefix="/video"
 )
 
-@router.post("/addVideo")
+
+@router.post("/addVideo", tags=["video"])
 async def upload(dto: ImportRequestDto,  db: Session = Depends(get_db)):
     try:
         await add_video(dto,db)
@@ -17,13 +20,13 @@ async def upload(dto: ImportRequestDto,  db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.delete("/{video_id}", response_model=dict)
+@router.delete("/{video_id}", response_model=dict, tags=["video"])
 async def delete(user_id: int, db: Session = Depends(get_db)):
     await delete_video(user_id, db)
     return {"message": "Video deleted successfully"}
 
 
-@router.get("/list/{game_id}", response_model=List[VideoDto])
+@router.get("/list/{game_id}", response_model=list[VideoDto], tags=["video"])
 async def get_videos_by_game_id(game_id: int, db: Session = Depends(get_db)):
     return await get_videos_by_game_id(game_id, db)
 

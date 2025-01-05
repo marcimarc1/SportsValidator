@@ -10,24 +10,27 @@ router = fastapi.APIRouter(
 )
 
 
-@router.get("/{team_id}", response_model=TeamDto)
+@router.get("/{team_id}", response_model=TeamDto, tags=["team"])
 async def get(team_id: int, db: Session = Depends(get_db)):
     team = await read_team(team_id, db)
     return team
 
+
 # Create
-@router.post("/",response_model=TeamDto)
+@router.post("/",response_model=TeamDto, tags=["team"])
 async def create(dto: TeamDto, db: Session = Depends(get_db)):
     team = await create_team(dto, db)
     return team
 
+
 # Update
-@router.put("/{team_id}", response_model=TeamDto)
+@router.put("/{team_id}", response_model=TeamDto, tags=["team"])
 async def update_points(team_id: int, dto: TeamDto, db: Session = Depends(get_db)):
     team = await update_team(team_id, dto, db)
     return team
 
-@router.delete("/{team_id}", response_model=dict)
+
+@router.delete("/{team_id}", response_model=dict, tags=["team"])
 async def delete(team_id: int, db: Session = Depends(get_db)):
     await delete_team(team_id, db)
     return {"message": "Game deleted successfully"}

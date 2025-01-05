@@ -4,11 +4,16 @@ from sqlalchemy.future import select
 from ..db.db_models.teams import Team
 from ..pydantic_models.team import TeamDto
 
+
+
 async def create_team(dto: TeamDto, db: Session):
+
     team = Team(**dto.model_dump())
+    print(team)
     db.add(team)
     db.commit()
     return team
+
 
 async def read_team(team_id: int, db: Session):
     qry = db.execute(select(Team).filter(Team.id == team_id))
@@ -18,6 +23,7 @@ async def read_team(team_id: int, db: Session):
         raise HTTPException(status_code=404, detail="Team not found")
 
     return team
+
 
 async def update_team(team_id: int, team_dto: TeamDto, db: Session):
     qry = db.execute(select(Team).filter(Team.id == team_id))

@@ -10,24 +10,27 @@ router = fastapi.APIRouter(
 )
 
 
-@router.get("/{user_id}", response_model=UserDto)
+@router.get("/{user_id}", response_model=UserDto, tags=["user"])
 async def get(user_id: int, db: Session = Depends(get_db)):
     user = await read_user(user_id, db)
     return user
 
+
 # Create
-@router.post("/",response_model=UserDto)
+@router.post("/",response_model=UserDto, tags=["user"])
 async def create(dto: UserDto, db: Session = Depends(get_db)):
     user = await create_user(dto, db)
     return user
 
+
 # Update
-@router.put("/{user_id}", response_model=UserDto)
+@router.put("/{user_id}", response_model=UserDto, tags=["user"])
 async def update_points(user_id: int, dto: UserDto, db: Session = Depends(get_db)):
     user = await update_user(user_id, dto, db)
     return user
 
-@router.delete("/{user_id}", response_model=dict)
+
+@router.delete("/{user_id}", response_model=dict, tags=["user"])
 async def delete(user_id: int, db: Session = Depends(get_db)):
     await delete_user(user_id, db)
     return {"message": "User deleted successfully"}

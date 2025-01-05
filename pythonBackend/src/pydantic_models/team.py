@@ -2,7 +2,7 @@ from pydantic import BaseModel
 
 
 class TeamDto(BaseModel):
-    id: int
+    id: str | None
     team_name: str
 
     class Config:
