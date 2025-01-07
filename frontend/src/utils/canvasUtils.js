@@ -111,6 +111,18 @@ export const defineTrailBehaviourBall = (trail, setSelectedTrailsBall) => {
   });
 };
 
+function createLabel(text, topCoordinate, leftCoordinate) {
+  return new fabric.IText(text, {
+    top: topCoordinate,
+    left: leftCoordinate,
+    originX: "left",
+    originY: "center",
+    editable: true,
+    fontSize: 14,
+    fill: "red",
+  });
+}
+
 export const drawFieldPoints = (
   canvas,
   frameNumber,
@@ -158,15 +170,37 @@ export const drawFieldPoints = (
       hasControls: false,
     });
 
-    circle.properties = {
+    // Create the label
+    const label = createLabel(point.id,
+        transformedPoint.y + 25,
+        transformedPoint.x + 50);
+
+
+    // Group the circle and label together
+    const group = new fabric.Group([circle, label], {
+      left: transformedPoint.x,
+      top: transformedPoint.y,
+      originX: "center",
+      originY: "center",
+      selectable: true,
+      hasBorder: true,
+      hasControls: false
+    });
+
+    group.id = point.id;
+    group._objects[0].top = 0
+    group._objects[0].left = 0
+
+    group.properties = {
       type: "fieldPoint",
       frame: frameNumber,
+      labelOffset: {
+        top: group._objects[1].top,
+        left: group._objects[1].left,
+      }
     };
-
-    circle.id = point.id;
-    circle.originalCoords = point.coords; // Store original coordinates in the circle object
-    canvas.add(circle);
-    return circle;
+    canvas.add(group);
+    return group;
   };
 
   const updateLines = () => {
@@ -180,10 +214,10 @@ export const drawFieldPoints = (
 
       if (startPoint && endPoint) {
         line.set({
-          x1: startPoint.left,
-          y1: startPoint.top,
-          x2: endPoint.left,
-          y2: endPoint.top,
+          x1: startPoint.left + startPoint._objects[0].left,
+          y1: startPoint.top + startPoint._objects[0].top,
+          x2: endPoint.left + endPoint._objects[0].left,
+          y2: endPoint.top + endPoint._objects[0].top,
         });
         line.setCoords();
       }
@@ -309,10 +343,78 @@ export const drawFieldPoints = (
     drawCircle(points.penaltySpot[1].coords, 0.3, "red", "penalty-spot-2");
   }
 
+  canvas.on("selection:created", (obj) => makeTextEditable(canvas, obj))
+  canvas.on("selection:cleared", () => exitEditingMode(curSelectedPreviousText, curSelectedLabel, originalGroup))
+
+  canvas.on("object:removed", () => {
+    canvas.off("selection:created", (obj) => makeTextEditable(canvas, obj))
+    canvas.off("selection:cleared", () => exitEditingMode(curSelectedPreviousText, curSelectedLabel, originalGroup))
+  });
+
   return canvas
     .getObjects()
     .filter((obj) => obj.properties?.type === "fieldPoint");
 };
+
+
+let curSelectedLabel = null;
+let curSelectedPreviousText = null;
+let originalGroup = null;
+
+const makeTextEditable = (canvas, obj) => {
+    // FabricJs can not handle multiple editable text boxes, so only a single element is allowed to be selected
+    if (obj === undefined ||
+        obj.selected === undefined ||
+        obj.selected.length !== 1 ||
+        obj.selected[0]._objects === undefined ||
+        obj.selected[0]._objects[1] === undefined
+    ) return;
+
+    const labelElem = obj.selected[0]._objects[1]; // The label is the second object in the group
+
+    if (labelElem === undefined) return;
+
+    // Store the original group if available (this is important for the re-adding part)
+    originalGroup = labelElem.group;
+
+    // If the label is inside a group, remove it temporarily from the group for editing
+    if (originalGroup) {
+        originalGroup.removeWithUpdate(labelElem); // Remove from group
+        canvas.add(labelElem); // Add to canvas temporarily
+    }
+
+    // Clear the current text to prepare for editing
+    const originalText = labelElem.text;
+    labelElem.text = ""; // Clear text to start fresh
+
+    // Start editing the label
+    labelElem.enterEditing();
+
+    // Set the label as the active editable text for tracking
+    curSelectedLabel = labelElem;
+    curSelectedPreviousText = originalText;
+}
+
+const exitEditingMode = (originalText, labelElem, originalGroup) => {
+    // Retrieve the text after editing
+    if (originalText == null || labelElem == null || originalGroup == null) return;
+
+    const newText = labelElem.text.trim();
+
+    // If the label was inside a group, re-add it to the group after editing
+    if (originalGroup) {
+        // Update the label position relative to the group
+        originalGroup.addWithUpdate(createLabel(newText || originalText,
+            originalGroup.top + originalGroup.properties.labelOffset.top,
+            originalGroup.left + originalGroup.properties.labelOffset.left,))
+    }
+    labelElem.visible = false
+    labelElem.exitEditing();
+
+    curSelectedLabel = null;
+    curSelectedPreviousText = null;
+    originalGroup = null;
+}
 
 export const updateHomography = (
   trackedPoints,
