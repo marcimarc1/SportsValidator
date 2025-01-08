@@ -121,17 +121,18 @@ class TrackList extends Component {
                 </div>
                 {/* Add player dropdown */}
                 <select
-                  onChange={(e) =>
-                    this.handleAddPlayerToTeam(team.id, e.target.value)
-                  }
-                >
-                  <option value="">Select Player</option>
-                  {players.map((player) => (
-                    <option key={player.id} value={player.id}>
-                      {player.name}
-                    </option>
-                  ))}
-                </select>
+  onChange={(e) =>
+    this.handleAddPlayerToTeam(team.id, e.target.value)
+  }
+>
+  <option value="">Select Player</option>
+  {players.map((player) => (
+    <option key={player.id} value={player.id}>
+      {player.name}
+    </option>
+  ))}
+</select>
+
               </div>
             ))}
             <Button onClick={addTeam}>Add Team</Button>

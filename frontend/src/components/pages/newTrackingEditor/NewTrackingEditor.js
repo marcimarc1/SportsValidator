@@ -408,14 +408,27 @@ const NewTrackingEditor = () => {
   function setName(playerBox, name) {
     fabric.Object.prototype.objectCaching = false;
     let playerIndex = playerBox.my.key;
+  
+    // Update the playerNameMap
     playerNameMap.set(playerIndex, name);
     console.log("Updated playerNameMap:", playerNameMap);
+  
+    // Update the players array
+    setPlayers((prevPlayers) =>
+      prevPlayers.map((player) =>
+        player.id === playerIndex ? { ...player, name: name } : player
+      )
+    );
+  
+    // Re-render the canvas
     canvas.requestRenderAll();
     drawBoundingBoxes(frameNumber);
+  
     // TODO BACKEND
-    // update data when leaving the page
-    // the modified data is stored in canvasBoxes array
+    // Update data when leaving the page
+    // The modified data is stored in the canvasBoxes array
   }
+  
 
   function setNameBall(ballBox, name) {
     fabric.Object.prototype.objectCaching = false;
