@@ -4,59 +4,16 @@ import { Button } from "@material-ui/core";
 import TrackListItemPlayer from "./TrackListItemPlayer";
 
 
-const generateRandomColor = (usedColors) => {
-  let color;
-  do {
-    color = {
-      r: Math.floor(Math.random() * 256),
-      g: Math.floor(Math.random() * 256),
-      b: Math.floor(Math.random() * 256),
-    };
-  } while (
-    usedColors.some(
-      (c) => c.r === color.r && c.g === color.g && c.b === color.b
-    )
-  );
-  return color;
-};
-
 class TrackList extends Component {
-  state = { activeTab: 0, teamColors: {} };
+  state = { activeTab: 0 };
 
   changeTab = (tabID) => () => {
     this.setState({ activeTab: tabID });
   };
 
-  handleAddPlayerToTeam = (teamId, playerId) => {
-    const { addPlayerToTeam, teams, players } = this.props;
-
-
-    addPlayerToTeam(teamId, playerId);
-
-
-    const usedColors = Object.values(this.state.teamColors);
-
-   
-    const newTeamColor = generateRandomColor(usedColors);
-
-   
-    this.setState((prevState) => ({
-      teamColors: {
-        ...prevState.teamColors,
-        [teamId]: prevState.teamColors[teamId] || newTeamColor,
-      },
-    }));
-
-  
-    const selectedPlayer = players.find((p) => p.id === parseInt(playerId));
-    if (selectedPlayer) {
-      selectedPlayer.color = this.state.teamColors[teamId] || newTeamColor;
-    }
-  };
-
   render() {
-    const { children, groups, teams, addTeam, players } = this.props;
-    const { teamColors } = this.state;
+    const { children, groups, teams, addTeam, addPlayerToTeam, players, teamColors } =
+      this.props;
 
     return (
       <div className="TrackList">
@@ -121,18 +78,17 @@ class TrackList extends Component {
                 </div>
                 {/* Add player dropdown */}
                 <select
-  onChange={(e) =>
-    this.handleAddPlayerToTeam(team.id, e.target.value)
-  }
->
-  <option value="">Select Player</option>
-  {players.map((player) => (
-    <option key={player.id} value={player.id}>
-      {player.name}
-    </option>
-  ))}
-</select>
-
+                  onChange={(e) =>
+                    addPlayerToTeam(team.id, e.target.value)
+                  }
+                >
+                  <option value="">Select Player</option>
+                  {players.map((player) => (
+                    <option key={player.id} value={player.id}>
+                      {player.name}
+                    </option>
+                  ))}
+                </select>
               </div>
             ))}
             <Button onClick={addTeam}>Add Team</Button>

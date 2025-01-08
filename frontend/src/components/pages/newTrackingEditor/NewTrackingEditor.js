@@ -80,7 +80,8 @@ const NewTrackingEditor = () => {
   const [isShowingBox, setIsShowingBox] = useState(true);
   const [isShowingAnnotation, setIsShowingAnnotation] = useState(true);
   const [playerList, setPlayerList] = useState([]); // list of player TrackListItemPlayers
-  const [players, setPlayers] = useState([]); // list of players 
+  const [players, setPlayers] = useState([]); // list of players
+  const [teamColors, setTeamColors] = useState({}); 
   const [teams, setTeams] = useState([]); 
   const [canvasBoxes, setCanvasBoxes] = useState([]); //list of canvas boxes for player
   const [playerNameMap, setPlayerNameMap] = useState(new Map()); //map of playerkey to playername
@@ -156,39 +157,112 @@ const NewTrackingEditor = () => {
     setSelectedTrailsBall(new Array());
   };
 
-  const addTeam = () => {
-    const newTeam = {
-      id: teams.length + 1,
-      name: `Team ${teams.length + 1}`,
-      players: [],
-    };
-    setTeams([...teams, newTeam]);
+  const generateRandomColor = (usedColors) => {
+    let color;
+    do {
+      color = {
+        r: Math.floor(Math.random() * 256),
+        g: Math.floor(Math.random() * 256),
+        b: Math.floor(Math.random() * 256),
+      };
+    } while (
+      usedColors.some(
+        (c) => c.r === color.r && c.g === color.g && c.b === color.b
+      )
+    );
+    return color;
   };
-  
+
+  const addTeam = () => {
+    const newTeamId = teams.length + 1;
+    const usedColors = Object.values(teamColors);
+    const newTeamColor = generateRandomColor(usedColors);
+
+    setTeams((prevTeams) => [
+      ...prevTeams,
+      { id: newTeamId, name: `Team ${newTeamId}`, players: [] },
+    ]);
+    setTeamColors((prevColors) => ({
+      ...prevColors,
+      [newTeamId]: newTeamColor,
+    }));
+  };
+
   const addPlayerToTeam = (teamId, playerId) => {
- 
     const isPlayerInAnyTeam = teams.some((team) =>
       team.players.some((player) => player.id === parseInt(playerId))
     );
   
     if (isPlayerInAnyTeam) {
       alert("This player is already in a team!");
-      return; 
+      return;
     }
   
-    
     const selectedPlayer = players.find((p) => p.id === parseInt(playerId));
     if (!selectedPlayer) return;
   
     
-    setTeams(
-      teams.map((team) =>
+    setTeams((prevTeams) =>
+      prevTeams.map((team) =>
         team.id === teamId
           ? { ...team, players: [...team.players, selectedPlayer] }
           : team
       )
     );
+  
+    
+    const teamColor = teamColors[teamId];
+  
+    
+    setAnnotations((prevAnnotations) =>
+      prevAnnotations.map((annotation) =>
+        annotation.PlayerKey === parseInt(playerId)
+          ? { ...annotation, color: teamColor }
+          : annotation
+      )
+    );
+  
+   
+    canvas.getObjects().forEach((obj) => {
+      if (obj.my && obj.my.key === parseInt(playerId)) {
+        obj.set("stroke", `rgb(${teamColor.r}, ${teamColor.g}, ${teamColor.b})`);
+      }
+    });
+  
+   
+    setPlayers((prevPlayers) =>
+      prevPlayers.map((player) =>
+        player.id === parseInt(playerId)
+          ? { ...player, color: teamColor }
+          : player
+      )
+    );
+  
+    
+    canvas.renderAll();
   };
+  
+  
+  const updatePlayerBoundingBoxColors = () => {
+    players.forEach((player) => {
+      const team = teams.find((team) =>
+        team.players.some((teamPlayer) => teamPlayer.id === player.id)
+      );
+  
+      if (team) {
+        const teamColor = teamColors[team.id];
+        canvas.getObjects().forEach((obj) => {
+          if (obj.my && obj.my.key === player.id) {
+            obj.set("stroke", `rgb(${teamColor.r}, ${teamColor.g}, ${teamColor.b})`);
+          }
+        });
+      }
+    });
+  
+    // Re-render the canvas
+    canvas.renderAll();
+  };
+  
   
   useEffect(() => {
    
@@ -409,18 +483,18 @@ const NewTrackingEditor = () => {
     fabric.Object.prototype.objectCaching = false;
     let playerIndex = playerBox.my.key;
   
-    // Update the playerNameMap
+    
     playerNameMap.set(playerIndex, name);
     console.log("Updated playerNameMap:", playerNameMap);
   
-    // Update the players array
+    
     setPlayers((prevPlayers) =>
       prevPlayers.map((player) =>
         player.id === playerIndex ? { ...player, name: name } : player
       )
     );
   
-    // Re-render the canvas
+    
     canvas.requestRenderAll();
     drawBoundingBoxes(frameNumber);
   
@@ -1036,6 +1110,31 @@ const NewTrackingEditor = () => {
       });
   }
   
+  
+  boundingBoxesToDraw.forEach((annotation) => {
+    const team = teams.find((team) =>
+      team.players.some((player) => player.id === annotation.PlayerKey)
+    );
+    const boxColor = team
+      ? teamColors[team.id]
+      : colorSet.get(annotation.PlayerKey); // Fallback to default color
+
+    let playerBox = convertAnnotationToBox(
+      annotation,
+      horizontalScalingFactor,
+      verticalScalingFactor
+    );
+
+    playerBox.visible = isShowingBox;
+    playerBox.stroke = `rgb(${boxColor.r}, ${boxColor.g}, ${boxColor.b})`;
+    playerBox.setControlVisible("mtr", false);
+    playerBox = defineBoxBehavior(playerBox);
+
+    canvas.add(playerBox);
+  });
+
+  canvas.renderAll();
+
   };
 
   useEffect(() => {
@@ -1842,16 +1941,16 @@ const NewTrackingEditor = () => {
           style={{ display: "block", width: "100%", height: "auto" }}
         ></canvas>
         {/* <div className="sidebar">sidebar is here</div> */}
+        
         <TrackList
-  children={playerList}
-  groups={ballList}
-  teams={teams}
-  addTeam={addTeam}
-  addPlayerToTeam={addPlayerToTeam}
-  players={players}
-  colorSet={colorSet} 
-/>
-
+        children={playerList}
+        groups={ballList}
+        players={players}
+        teams={teams}
+        teamColors={teamColors}
+        addTeam={addTeam}
+        addPlayerToTeam={addPlayerToTeam}
+        />
 
      
       </div>
