@@ -409,7 +409,9 @@ const NewTrackingEditor = () => {
     fabric.Object.prototype.objectCaching = false;
     let playerIndex = playerBox.my.key;
     playerNameMap.set(playerIndex, name);
+    console.log("Updated playerNameMap:", playerNameMap);
     canvas.requestRenderAll();
+    drawBoundingBoxes(frameNumber);
     // TODO BACKEND
     // update data when leaving the page
     // the modified data is stored in canvasBoxes array
@@ -1004,18 +1006,23 @@ const NewTrackingEditor = () => {
 
     if (isShowingBox) {
       boundingBoxesToDraw.forEach((a) => {
-        const fontSize = 12;
-        const scaledX = a.x1 * horizontalScalingFactor;
-        const scaledY = a.y1 * verticalScalingFactor - fontSize;
-        const playerKey = a.PlayerKey.toString();
-        let boxKey = new fabric.Text(playerKey, {
-          left: scaledX,
-          top: scaledY,
-          fontSize: fontSize,
-        });
-        canvas.add(boxKey);
+          const fontSize = 12;
+          const scaledX = a.x1 * horizontalScalingFactor;
+          const scaledY = a.y1 * verticalScalingFactor - fontSize;
+  
+          
+          const playerName = playerNameMap.get(a.PlayerKey) || a.PlayerKey.toString();
+  
+          
+          let boxName = new fabric.Text(playerName, {
+              left: scaledX,
+              top: scaledY,
+              fontSize: fontSize,
+          });
+          canvas.add(boxName);
       });
-    }
+  }
+  
   };
 
   useEffect(() => {
