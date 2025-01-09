@@ -159,6 +159,20 @@ export const handleDisplayingAnnotation = (
   setIsShowingAnnotation(!isShowingAnnotation);
 };
 
+export const handleAdjustSpeed = (videoElement, videoSpeed, setVideoSpeed) => {
+  const incrementBy = 0.25;
+
+  if (videoElement) {
+    if (videoSpeed == 2) {
+      setVideoSpeed(0.25);
+      videoElement.playbackRate = videoSpeed;
+    } else {
+      setVideoSpeed(videoSpeed + incrementBy);
+      videoElement.playbackRate = videoSpeed;
+    }
+  }
+};
+
 export const handleAddPlayer = ({
   playerNameMap,
   frameNumber,

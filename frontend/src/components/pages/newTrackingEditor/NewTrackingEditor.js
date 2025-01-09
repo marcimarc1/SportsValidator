@@ -8,10 +8,7 @@ import { ReactComponent as AdjustSpeedIcon } from "../../../icons/adjust-speed.s
 import { ReactComponent as QuestionIcon } from "../../../icons/question.svg";
 import { ReactComponent as KeyboardIcon } from "../../../icons/keyboard.svg";
 import { useLocation } from "react-router-dom";
-import {
-  parseProcessedPlayers,
-  parseProcessedBallTracks,
-} from "../../../utils/csvParser";
+
 import {
   convertBoxToAnnotation,
   convertAnnotationToBox,
@@ -72,6 +69,7 @@ import {
   handleDisplayingBox,
   handleDisplayingAnnotation,
   handleAddPlayer,
+  handleAdjustSpeed,
 } from "./videoControls";
 import { generatePoster } from "./postGenerator";
 import {
@@ -524,59 +522,6 @@ const NewTrackingEditor = () => {
 
     setVideoElement(localVideoElement);
   }, [videoUrl]);
-
-  function seededRandom(seed) {
-    var x = Math.sin(seed++) * 10000;
-    return x - Math.floor(x);
-  }
-
-  function generateColor(value) {
-    var r = Math.floor(seededRandom(value) * 256);
-    var g = Math.floor(seededRandom(value + 1) * 256);
-    var b = Math.floor(seededRandom(value + 2) * 256);
-    return { r, g, b };
-  }
-
-  function boundingBoxColorSet(annotationList) {
-    let uniquePlayerKeys = new Set(
-      annotationList.map((item) => item.PlayerKey),
-    );
-    let colorSet = new Map();
-
-    uniquePlayerKeys.forEach((key) => {
-      let color = generateColor(key);
-      colorSet.set(key, color);
-    });
-    return colorSet;
-  }
-  function boundingBoxColorSetBall(annotationBallList) {
-    let uniqueBallKeys = new Set(
-      annotationBallList.map((item) => item.trackNo),
-    );
-    let colorSet = new Map();
-
-    uniqueBallKeys.forEach((key) => {
-      let color = generateColor(key);
-      colorSet.set(key, color);
-    });
-    return colorSet;
-  }
-
-  function generatePoster(videoElement) {
-    //if video cannot be played, simply return
-    if (videoElement.readyState == 0) return;
-    //get video content of first frame
-    videoElement.currentTime = frameDuration;
-    const poster = new fabric.Image(videoElement, {
-      left: 0,
-      top: 0,
-      width: videoElement.width,
-      height: videoElement.height,
-      selectable: true,
-    });
-    videoElement.currentTime = 0;
-    return poster;
-  }
 
   const isInField = (inField) => {
     return inField === true || inField === null;
@@ -1153,39 +1098,39 @@ const NewTrackingEditor = () => {
     switch (event.key) {
       case keyBindings.playPause:
         event.preventDefault();
-          handlePlayPause({
-              videoElement,
-              editField,
-              setShowApplyHomographyModal,
-              setIsPlaying,
-          });
+        handlePlayPause({
+          videoElement,
+          editField,
+          setShowApplyHomographyModal,
+          setIsPlaying,
+        });
         break;
       case keyBindings.previousFrame:
-          handlePreviousFrame({
-              videoElement,
-              frameNumber,
-              getReferenceTimestampForFrame,
-              deleteFieldDrawing,
-              setFrameNumber,
-              setTimestamp,
-              drawField,
-          });
+        handlePreviousFrame({
+          videoElement,
+          frameNumber,
+          getReferenceTimestampForFrame,
+          deleteFieldDrawing,
+          setFrameNumber,
+          setTimestamp,
+          drawField,
+        });
         break;
       case keyBindings.nextFrame:
-          handleNextFrame({
-              videoElement,
-              frameNumber,
-              getReferenceTimestampForFrame,
-              deleteFieldDrawing,
-              setFrameNumber,
-              setTimestamp,
-              drawField,
-          });
+        handleNextFrame({
+          videoElement,
+          frameNumber,
+          getReferenceTimestampForFrame,
+          deleteFieldDrawing,
+          setFrameNumber,
+          setTimestamp,
+          drawField,
+        });
         break;
       case keyBindings.jumpBackward:
         event.preventDefault();
-          handlePreviousChunk(videoElement, handleUpdateTimeStamp);
-          break;
+        handlePreviousChunk(videoElement, handleUpdateTimeStamp);
+        break;
       case keyBindings.jumpForward:
         event.preventDefault();
         handleNextChunk(videoElement, handleUpdateTimeStamp);
@@ -1278,100 +1223,6 @@ const NewTrackingEditor = () => {
     setBindingAction(action);
   };
 
-  const getCurrentTimestampFrame = () => {
-    // First frame is frame 0
-    return Math.floor(videoElement.currentTime / frameDuration);
-  };
-
-  const getReferenceTimestampForFrame = (n) => {
-    return n * frameDuration + frameDuration / 3;
-  };
-
-  const updateTimestamp = (newTimestamp) => {
-    const newFrameNumber = Math.floor(newTimestamp / frameDuration);
-    setTimestamp(newTimestamp);
-    setFrameNumber(newFrameNumber);
-  };
-
-  const handleNextFrame = () => {
-    if (videoElement) {
-      const nextFrame = frameNumber + 1;
-      const referenceTimestamp = getReferenceTimestampForFrame(nextFrame);
-      videoElement.currentTime = referenceTimestamp;
-      deleteFieldDrawing();
-      setFrameNumber(nextFrame);
-      setTimestamp(referenceTimestamp);
-
-      const currentProgress =
-        (videoElement.currentTime / videoElement.duration) * 100;
-      setProgress(currentProgress);
-
-      drawField();
-    }
-  };
-
-  const handlePreviousFrame = () => {
-    if (videoElement && frameNumber > 0) {
-      const previousFrame = frameNumber - 1;
-      const referenceTimestamp = getReferenceTimestampForFrame(previousFrame);
-      videoElement.currentTime = referenceTimestamp;
-      deleteFieldDrawing();
-      setFrameNumber(previousFrame);
-      setTimestamp(referenceTimestamp);
-
-      const currentProgress =
-        (videoElement.currentTime / videoElement.duration) * 100;
-      setProgress(currentProgress);
-
-      drawField();
-    }
-  };
-
-  const handlePreviousChunk = () => {
-    const newTimestamp = Math.max(0, videoElement.currentTime - 5);
-    videoElement.currentTime = newTimestamp;
-    updateTimestamp(newTimestamp);
-  };
-
-  const handleNextChunk = () => {
-    const newTimestamp = Math.min(
-      videoElement.duration,
-      videoElement.currentTime + 5,
-    );
-    videoElement.currentTime = newTimestamp;
-    updateTimestamp(newTimestamp);
-  };
-
-  const handlePlayPause = () => {
-    if (videoElement && videoElement.readyState != 0 && !videoElement.ended) {
-      if (editField) {
-        setShowApplyHomographyModal(true);
-        return;
-      }
-      if (videoElement.paused) {
-        setIsPlaying(true);
-        videoElement.play();
-      } else {
-        setIsPlaying(false);
-        videoElement.pause();
-      }
-    }
-  };
-
-  const handleAdjustSpeed = () => {
-    const incrementBy = 0.25;
-
-    if (videoElement) {
-      if (videoSpeed == 2) {
-        setVideoSpeed(0.25);
-        videoElement.playbackRate = videoSpeed;
-      } else {
-        setVideoSpeed(videoSpeed + incrementBy);
-        videoElement.playbackRate = videoSpeed;
-      }
-    }
-  };
-
   // Seeking
 
   useEffect(() => {
@@ -1389,89 +1240,6 @@ const NewTrackingEditor = () => {
     }
   }, [videoElement]);
 
-  const handleSeekStart = () => {
-    if (videoElement && !videoElement.ended && !videoElement.paused) {
-      wasVideoPlaying = true;
-      videoElement.pause();
-    } else {
-      wasVideoPlaying = false;
-    }
-  };
-
-  const handleSeekPercent = (value) => {
-    setProgress(value);
-    const newTimestamp = (value / 100) * videoElement.duration;
-    videoElement.currentTime = newTimestamp;
-    updateTimestamp(newTimestamp);
-
-    const currentProgress =
-      (videoElement.currentTime / videoElement.duration) * 100;
-    setProgress(currentProgress);
-  };
-
-  const handleSeekEnd = () => {
-    if (wasVideoPlaying) {
-      videoElement.play();
-    }
-  };
-
-  const formatTime = (time) => {
-    const minutes = Math.floor(time / 60);
-    const seconds = time % 60;
-    return `${minutes}:${seconds.toFixed(5).padStart(2, "0")}`;
-  };
-
-  function handleDisplayingBox() {
-    if (isShowingBox) {
-      setIsShowingBox(false);
-      // if the box is hidden, the annotation shall be hidden too.
-      setIsShowingAnnotation(false);
-      if (!videoElement.paused) {
-        videoElement.pause();
-        videoElement.play();
-      }
-    } else {
-      setIsShowingBox(true);
-      if (!videoElement.paused) {
-        videoElement.pause();
-        videoElement.play();
-      }
-    }
-  }
-
-  function handleDisplayingAnnotation() {
-    if (isShowingAnnotation) {
-      setIsShowingAnnotation(false);
-    } else {
-      setIsShowingAnnotation(true);
-    }
-  }
-
-  function handleAddPlayer() {
-    const newPlayerKey = playerNameMap.size;
-    const boxColor = generateColor(newPlayerKey);
-    setColorSet(colorSet.set(newPlayerKey, boxColor));
-    setAnnotations(
-      annotations.concat({
-        FrameNo: frameNumber,
-        PlayerKey: newPlayerKey,
-        h: 100,
-        w: 100,
-        x: 500,
-        x1: 0,
-        x2: 0,
-        x_trans: 0,
-        y: 100,
-        y1: 0,
-        y2: 0,
-        y_trans: 0,
-        in_field: true,
-      }),
-    );
-    setPlayerNameMap(
-      new Map(playerNameMap.set(newPlayerKey, "player" + newPlayerKey)),
-    );
-  }
   function addBoundingBoxBallAtMousePosition(event) {
     const pointer = canvas.getPointer(event.e);
     const horizontalScalingFactor = canvas.width / 3840;
@@ -1999,7 +1767,12 @@ const NewTrackingEditor = () => {
           <button className="zoom-text-button" onClick={handleZoomReset}>
             Reset Zoom
           </button>
-          <button className="icon-button" onClick={handleAdjustSpeed}>
+          <button
+            className="icon-button"
+            onClick={() =>
+              handleAdjustSpeed(videoElement, videoSpeed, setVideoSpeed)
+            }
+          >
             <AdjustSpeedIcon className="icon" />
           </button>
           <span id="video-speed-display">
