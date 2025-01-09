@@ -2,6 +2,7 @@ import { fabric } from "fabric";
 import { getTemplate } from "./templates";
 import { calculateNewHomography, transformPoint } from "./homographyUtils";
 import { inverse } from "./mathUtils";
+import config from "../config.json";
 
 export const trailsFullRedraw = (
   canvas,
@@ -41,7 +42,7 @@ export const trailsFullRedraw = (
         left: scaledX,
         top: scaledY,
         stroke: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
-        strokeWidth: 3,
+        strokeWidth: config.soccer.trail.strokeWidth,
         fill: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
         radius: (radius * trailSize) / 50,
         visible: isShowingAnnotation,
@@ -75,7 +76,7 @@ export const trailsFullRedraw = (
         left: scaledX,
         top: scaledY,
         stroke: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
-        strokeWidth: 3,
+        strokeWidth: config.soccer.trail.strokeWidth,
         fill: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
         radius: (radius * trailSize) / 50,
         visible: isShowingAnnotation,
@@ -196,7 +197,7 @@ export const drawFieldPoints = (
       [startPoint.left, startPoint.top, endPoint.left, endPoint.top],
       {
         stroke: color,
-        strokeWidth: 3,
+        strokeWidth: config.soccer.line.strokeWidth,
         selectable: false,
       },
     );
@@ -275,7 +276,7 @@ export const drawFieldPoints = (
       rx: transformedRadiusX,
       ry: transformedRadiusY,
       stroke: color,
-      strokeWidth: 3,
+      strokeWidth: config.soccer.fieldPoint.strokeWidth,
       fill: "transparent",
       originX: "center",
       originY: "center",
@@ -293,20 +294,30 @@ export const drawFieldPoints = (
 
   // Drawing lines from template
   Object.entries(lines).forEach(([lineId, points]) => {
-    drawLineFromPoints(points, "blue", lineId);
+    drawLineFromPoints(points, config.soccer.line.color, lineId);
   });
 
   if (points.middleCircle) {
     drawCircle(
       points.middleCircle.center,
       points.middleCircle.radius,
-      "yellow",
+      config.soccer.middleCircle.color,
       "middle-circle",
     );
   }
   if (points.penaltySpot) {
-    drawCircle(points.penaltySpot[0].coords, 0.3, "red", "penalty-spot-1");
-    drawCircle(points.penaltySpot[1].coords, 0.3, "red", "penalty-spot-2");
+    drawCircle(
+      points.penaltySpot[0].coords,
+      config.soccer.penaltyArea.radius,
+      config.soccer.penaltyArea["color-spot-1"],
+      "penalty-spot-1",
+    );
+    drawCircle(
+      points.penaltySpot[1].coords,
+      config.soccer.penaltyArea.radius,
+      config.soccer.penaltyArea["color-spot-2"],
+      "penalty-spot-2",
+    );
   }
 
   return canvas

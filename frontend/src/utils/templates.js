@@ -1,10 +1,12 @@
+import config from "../config.json";
+
 function createSoccerTemplate(LENGTH, WIDTH) {
-  const GOAL_WIDTH = 7.32;
-  const GOAL_AREA_LENGTH = 5.5;
-  const GOAL_AREA_DEPTH = 5.5;
-  const PENALTY_AREA_LENGTH = 40.3;
-  const PENALTY_AREA_DEPTH = 16.5;
-  const MID_CIRCLE_RADIUS = 9.15;
+  const GOAL_WIDTH = config.soccer.goal.width;
+  const GOAL_AREA_LENGTH = config.soccer.goal.areaLength;
+  const GOAL_AREA_DEPTH = config.soccer.goal.areaDepth;
+  const PENALTY_AREA_LENGTH = config.soccer.penaltyArea.length;
+  const PENALTY_AREA_DEPTH = config.soccer.penaltyArea.depth;
+  const MID_CIRCLE_RADIUS = config.soccer.middleCircle.radius;
 
   const points = {
     outerArea: [
@@ -181,12 +183,12 @@ function createSoccerTemplate(LENGTH, WIDTH) {
 }
 
 function createTennisTemplate() {
-  const LENGTH = 23.77;
-  const WIDTH = 8.23 + 2 * 1.37;
+  const LENGTH = config.tennis.field.length;
+  const WIDTH = config.tennis.field.width;
   // const SERVICE_LINE = 6.4;
-  const SERVICE_LINE_WIDTH = 1.37;
-  const BASELINE = 5.49;
-  const BASELINE_WIDTH = 1.37;
+  const SERVICE_LINE_WIDTH = config.tennis.field.serviceLineWidth;
+  const BASELINE = config.tennis.field.baseline;
+  const BASELINE_WIDTH = config.tennis.field.baselineWidth;
 
   const points = {
     outerArea: [
@@ -281,9 +283,9 @@ function createTennisTemplate() {
 }
 
 function createUltimateTemplate() {
-  const ULTIMATE_FIELD_LENGTH = 100;
-  const ULTIMATE_FIELD_WIDTH = 37;
-  const ENDZONE_LENGTH = 18.5;
+  const ULTIMATE_FIELD_LENGTH = config.ultimate.field.length;
+  const ULTIMATE_FIELD_WIDTH = config.ultimate.field.width;
+  const ENDZONE_LENGTH = config.ultimate.field.endzoneLength;
 
   const outerAreaUltimate = [
     [0, 0],

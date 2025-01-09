@@ -1,10 +1,3 @@
-:root {
-  --main-text-color: #f5edf0;
-  --main-bg: #1b1f22;
-  --secondary-bg: #424b54;
-  --accent: #83b692;
-}
-
 .video-player {
   position: relative;
   width: 100%;
