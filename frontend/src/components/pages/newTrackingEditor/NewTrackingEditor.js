@@ -5,6 +5,8 @@ import { ReactComponent as PauseIcon } from "../../../icons/pause.svg";
 import { ReactComponent as ForwardStepIcon } from "../../../icons/forward-step.svg";
 import { ReactComponent as BackwardStepIcon } from "../../../icons/backward-step.svg";
 import { ReactComponent as AdjustSpeedIcon } from "../../../icons/adjust-speed.svg";
+import { ReactComponent as QuestionIcon } from "../../../icons/question.svg";
+import { ReactComponent as KeyboardIcon } from "../../../icons/keyboard.svg";
 import { useLocation } from "react-router-dom";
 import {
   parseProcessedPlayers,
@@ -34,6 +36,7 @@ import {
   drawFieldPoints,
   defineTrailBehaviour,
   defineTrailBehaviourBall,
+  updateHomography,
 } from "../../../utils/canvasUtils";
 import {
   multiPlayerMerge,
@@ -42,11 +45,11 @@ import {
 } from "../../../utils/validation";
 import { DownloadButton } from "./DownloadButton";
 import { parseLogFile } from "../../../utils/logFileParser";
-import Slider from "@mui/material/Slider";
 import { FieldDetailsButton } from "./field/FieldDetailsButton";
 import api from "../../../api/api";
 import { SettingsBallButton } from "./SettingsBallButton";
 import { SettingsTrailsButton } from "./SettingsTrailsButton";
+import { getPointsToTrack } from "../../../utils/templates";
 import {
   handleMultiSelectMerge,
   handleMultiSelectMergeBall,
@@ -136,6 +139,16 @@ const NewTrackingEditor = () => {
   const [isShowingBallTrails, setIsShowingBallTrails] = useState(true);
   const [selectedTrailsBall, setSelectedTrailsBall] = useState([]);
   const [videoSpeed, setVideoSpeed] = useState(1);
+  const [isZoomModeEnabled, setIsZoomModeEnabled] = useState(false);
+  const [isTooltipVisible, setTooltipVisible] = useState(false);
+  const [bindingAction, setBindingAction] = useState(null);
+  const [keyBindings, setKeyBindings] = useState({
+    playPause: " ",
+    nextFrame: ".",
+    previousFrame: ",",
+    jumpForward: "ArrowRight",
+    jumpBackward: "ArrowLeft",
+  });
 
   const handleModalOpen = modalOpen(setPlayerChosenInList, setMergeModalState);
   const handleModalBallOpen = modalBallOpen(
@@ -265,6 +278,25 @@ const NewTrackingEditor = () => {
       selectBBox(box);
     }
   }
+
+  const Tooltip = ({ isVisible, children }) => {
+    return (
+      <div className={`tooltip ${isVisible ? "visible" : ""}`}>{children}</div>
+    );
+  };
+
+  const toggleTooltip = () => {
+    if (videoElement && !videoElement.paused) {
+      videoElement.pause();
+      setIsPlaying(false);
+    }
+
+    setTooltipVisible((prev) => !prev);
+  };
+
+  const hideTooltip = () => {
+    setTooltipVisible(false);
+  };
 
   function defineBoxBehavior(box, is_playerBox = true) {
     box.on({
@@ -492,6 +524,59 @@ const NewTrackingEditor = () => {
 
     setVideoElement(localVideoElement);
   }, [videoUrl]);
+
+  function seededRandom(seed) {
+    var x = Math.sin(seed++) * 10000;
+    return x - Math.floor(x);
+  }
+
+  function generateColor(value) {
+    var r = Math.floor(seededRandom(value) * 256);
+    var g = Math.floor(seededRandom(value + 1) * 256);
+    var b = Math.floor(seededRandom(value + 2) * 256);
+    return { r, g, b };
+  }
+
+  function boundingBoxColorSet(annotationList) {
+    let uniquePlayerKeys = new Set(
+      annotationList.map((item) => item.PlayerKey),
+    );
+    let colorSet = new Map();
+
+    uniquePlayerKeys.forEach((key) => {
+      let color = generateColor(key);
+      colorSet.set(key, color);
+    });
+    return colorSet;
+  }
+  function boundingBoxColorSetBall(annotationBallList) {
+    let uniqueBallKeys = new Set(
+      annotationBallList.map((item) => item.trackNo),
+    );
+    let colorSet = new Map();
+
+    uniqueBallKeys.forEach((key) => {
+      let color = generateColor(key);
+      colorSet.set(key, color);
+    });
+    return colorSet;
+  }
+
+  function generatePoster(videoElement) {
+    //if video cannot be played, simply return
+    if (videoElement.readyState == 0) return;
+    //get video content of first frame
+    videoElement.currentTime = frameDuration;
+    const poster = new fabric.Image(videoElement, {
+      left: 0,
+      top: 0,
+      width: videoElement.width,
+      height: videoElement.height,
+      selectable: true,
+    });
+    videoElement.currentTime = 0;
+    return poster;
+  }
 
   const isInField = (inField) => {
     return inField === true || inField === null;
@@ -1044,53 +1129,154 @@ const NewTrackingEditor = () => {
     drawInField,
   ]);
 
-  const handleKeyDown = (event) => {
-    switch (event.keyCode) {
-      case 74: // j
-        handlePreviousChunk(videoElement, handleUpdateTimeStamp);
+  const handleKeyPress = (event) => {
+    if (!videoElement) return;
+
+    const { key } = event;
+
+    if (bindingAction) {
+      if (Object.values(keyBindings).includes(key)) {
+        alert("This key is already bound to another action!");
+        setBindingAction(null);
+        return;
+      }
+
+      setKeyBindings((prevBindings) => ({
+        ...prevBindings,
+        [bindingAction]: key,
+      }));
+
+      setBindingAction(null);
+      return;
+    }
+
+    switch (event.key) {
+      case keyBindings.playPause:
+        event.preventDefault();
+          handlePlayPause({
+              videoElement,
+              editField,
+              setShowApplyHomographyModal,
+              setIsPlaying,
+          });
         break;
-      case 75: // k
-        handlePlayPause({
-          videoElement,
-          editField,
-          setShowApplyHomographyModal,
-          setIsPlaying,
-        });
+      case keyBindings.previousFrame:
+          handlePreviousFrame({
+              videoElement,
+              frameNumber,
+              getReferenceTimestampForFrame,
+              deleteFieldDrawing,
+              setFrameNumber,
+              setTimestamp,
+              drawField,
+          });
         break;
-      case 76: // l
+      case keyBindings.nextFrame:
+          handleNextFrame({
+              videoElement,
+              frameNumber,
+              getReferenceTimestampForFrame,
+              deleteFieldDrawing,
+              setFrameNumber,
+              setTimestamp,
+              drawField,
+          });
+        break;
+      case keyBindings.jumpBackward:
+        event.preventDefault();
+          handlePreviousChunk(videoElement, handleUpdateTimeStamp);
+          break;
+      case keyBindings.jumpForward:
+        event.preventDefault();
         handleNextChunk(videoElement, handleUpdateTimeStamp);
         break;
-      case 188: // ,
-        handlePreviousFrame({
-          videoElement,
-          frameNumber,
-          getReferenceTimestampForFrame,
-          deleteFieldDrawing,
-          setFrameNumber,
-          setTimestamp,
-          drawField,
-        });
-        break;
-      case 190: // .
-        handleNextFrame({
-          videoElement,
-          frameNumber,
-          getReferenceTimestampForFrame,
-          deleteFieldDrawing,
-          setFrameNumber,
-          setTimestamp,
-          drawField,
-        });
+      default:
         break;
     }
   };
 
+  const handleClick = (e) => {
+    if (bindingAction) {
+      e.stopPropagation();
+      setBindingAction(null);
+      return;
+    }
+  };
+
   useEffect(() => {
-    document.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("keydown", handleKeyPress);
+
+    document.addEventListener("click", handleClick);
+
     return () => {
-      document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("keydown", handleKeyPress);
+
+      document.addEventListener("click", handleClick);
     };
-  }, [handleKeyDown]);
+  }, [handleKeyPress]);
+
+  useEffect(() => {
+    if (!isZoomModeEnabled) return;
+
+    const handleWheel = (event) => {
+      event.preventDefault();
+
+      let delta = event.deltaY;
+      let newZoomLevel = canvas.getZoom();
+
+      if (delta < 0) {
+        newZoomLevel = Math.min(newZoomLevel + 0.1, 3);
+      } else {
+        newZoomLevel = Math.max(newZoomLevel - 0.1, 0.5);
+      }
+
+      canvas.zoomToPoint({ x: event.offsetX, y: event.offsetY }, newZoomLevel);
+      canvas.renderAll();
+    };
+
+    const handleMouseDown = (event) => {
+      canvas.isDragging = true;
+      canvas.selection = false;
+      canvas.lastPosX = event.e.clientX;
+      canvas.lastPosY = event.e.clientY;
+    };
+
+    const handleMouseMove = (event) => {
+      if (canvas.isDragging) {
+        const deltaX = event.e.clientX - canvas.lastPosX;
+        const deltaY = event.e.clientY - canvas.lastPosY;
+
+        canvas.viewportTransform[4] += deltaX;
+        canvas.viewportTransform[5] += deltaY;
+
+        canvas.lastPosX = event.e.clientX;
+        canvas.lastPosY = event.e.clientY;
+
+        canvas.renderAll();
+      }
+    };
+
+    const handleMouseUp = () => {
+      canvas.isDragging = false;
+      canvas.selection = true;
+    };
+
+    canvas.wrapperEl.addEventListener("wheel", handleWheel);
+    canvas.on("mouse:down", handleMouseDown);
+    canvas.on("mouse:move", handleMouseMove);
+    canvas.on("mouse:up", handleMouseUp);
+
+    return () => {
+      canvas.wrapperEl.removeEventListener("wheel", handleWheel);
+      canvas.off("mouse:down", handleMouseDown);
+      canvas.off("mouse:move", handleMouseMove);
+      canvas.off("mouse:up", handleMouseUp);
+    };
+  }, [isZoomModeEnabled, canvas]);
+
+  const startBindingKey = (action) => {
+    setBindingAction(action);
+  };
 
   const getCurrentTimestampFrame = () => {
     // First frame is frame 0
@@ -1115,6 +1301,11 @@ const NewTrackingEditor = () => {
       deleteFieldDrawing();
       setFrameNumber(nextFrame);
       setTimestamp(referenceTimestamp);
+
+      const currentProgress =
+        (videoElement.currentTime / videoElement.duration) * 100;
+      setProgress(currentProgress);
+
       drawField();
     }
   };
@@ -1127,12 +1318,17 @@ const NewTrackingEditor = () => {
       deleteFieldDrawing();
       setFrameNumber(previousFrame);
       setTimestamp(referenceTimestamp);
+
+      const currentProgress =
+        (videoElement.currentTime / videoElement.duration) * 100;
+      setProgress(currentProgress);
+
       drawField();
     }
   };
 
   const handlePreviousChunk = () => {
-    const newTimestamp = Math.max(0, videoElement.currentTime - 6);
+    const newTimestamp = Math.max(0, videoElement.currentTime - 5);
     videoElement.currentTime = newTimestamp;
     updateTimestamp(newTimestamp);
   };
@@ -1140,7 +1336,7 @@ const NewTrackingEditor = () => {
   const handleNextChunk = () => {
     const newTimestamp = Math.min(
       videoElement.duration,
-      videoElement.currentTime + 6,
+      videoElement.currentTime + 5,
     );
     videoElement.currentTime = newTimestamp;
     updateTimestamp(newTimestamp);
@@ -1178,6 +1374,21 @@ const NewTrackingEditor = () => {
 
   // Seeking
 
+  useEffect(() => {
+    const updateProgressBar = () => {
+      const currentProgress =
+        (videoElement.currentTime / videoElement.duration) * 100;
+      setProgress(currentProgress);
+    };
+
+    if (videoElement) {
+      videoElement.addEventListener("timeupdate", updateProgressBar);
+      return () => {
+        videoElement.removeEventListener("timeupdate", updateProgressBar);
+      };
+    }
+  }, [videoElement]);
+
   const handleSeekStart = () => {
     if (videoElement && !videoElement.ended && !videoElement.paused) {
       wasVideoPlaying = true;
@@ -1192,6 +1403,10 @@ const NewTrackingEditor = () => {
     const newTimestamp = (value / 100) * videoElement.duration;
     videoElement.currentTime = newTimestamp;
     updateTimestamp(newTimestamp);
+
+    const currentProgress =
+      (videoElement.currentTime / videoElement.duration) * 100;
+    setProgress(currentProgress);
   };
 
   const handleSeekEnd = () => {
@@ -1343,6 +1558,12 @@ const NewTrackingEditor = () => {
     }
   };
 
+  const handleZoomReset = () => {
+    canvas.viewportTransform = [1, 0, 0, 1, 0, 0];
+    canvas.setZoom(1);
+    canvas.renderAll();
+  };
+
   useEffect(() => {
     canvas.getObjects().forEach((obj) => {
       if (obj.properties?.type === "fieldPoint") {
@@ -1381,7 +1602,6 @@ const NewTrackingEditor = () => {
         videoElement,
       );
       setFieldPoints(newFieldPoints);
-      console.log("newFieldPoints", newFieldPoints);
     }
   };
 
@@ -1389,24 +1609,57 @@ const NewTrackingEditor = () => {
     setTrailSize(event.target.value);
   };
 
-  const handleApplyHomography = (frameNumber) => {
+  const handleApplyHomography = (frameNumber, trackPoints) => {
     frameNumber = parseInt(frameNumber);
     var currentFrame = getCurrentTimestampFrame(videoElement, frameDuration);
     var fieldPoints = canvas
       .getObjects()
-      .filter((obj) => obj.properties?.type === "fieldPoint")
+      .filter(
+        (obj) =>
+          obj.properties?.type === "fieldPoint" &&
+          getPointsToTrack(logFile.Sport).includes(obj.id),
+      )
       .map((obj) => ({
         id: obj.id,
         x: obj.left,
         y: obj.top,
       }));
     console.log("Field points: ", fieldPoints);
+    if (!trackPoints) {
+      updateHomography(
+        fieldPoints,
+        homographies,
+        currentFrame,
+        canvas.width / 3840,
+        canvas.height / 2160,
+        logFile.Sport,
+        fieldSize?.length,
+        fieldSize?.width,
+      );
+      for (let i = 0; i <= frameNumber; i++) {
+        homographies[currentFrame + i] = homographies[currentFrame];
+      }
+
+      deleteFieldDrawing();
+      drawField();
+      setShowApplyHomographyModal(false);
+      handleEnablingEditField();
+      setIsPlaying(true);
+      videoElement.play();
+
+      return;
+    }
+
     api
       .post("/annotation/track", {
         video_id: video.name,
         start_frame: currentFrame,
         end_frame: currentFrame + frameNumber,
-        points: fieldPoints,
+        points: fieldPoints.map((point) => ({
+          ...point,
+          x: point.x / (canvas.width / 3840),
+          y: point.y / (canvas.height / 2160),
+        })),
         player_boxes: annotations
           .filter(
             (a) =>
@@ -1421,14 +1674,37 @@ const NewTrackingEditor = () => {
             y_2: a.y2,
           })),
       })
-      .then((response) => {});
+      .then((response) => {
+        const trackedPoints = response.data.tracked_points.map((points) =>
+          points.map((point) => ({
+            ...point,
+            x: point.x * (canvas.width / 3840),
+            y: point.y * (canvas.height / 2160),
+          })),
+        );
+        const startFrame = response.data.start_frame;
+        for (let i = 0; i <= trackedPoints.length; i++) {
+          console.log("trackedPoints", trackedPoints);
+          var framePoints = trackedPoints[i];
+          updateHomography(
+            framePoints,
+            homographies,
+            startFrame + i,
+            canvas.width / 3840,
+            canvas.height / 2160,
+            logFile.Sport,
+            fieldSize?.length,
+            fieldSize?.width,
+          );
+        }
 
-    deleteFieldDrawing();
-    drawField();
-    setShowApplyHomographyModal(false);
-    handleEnablingEditField();
-    setIsPlaying(true);
-    videoElement.play();
+        deleteFieldDrawing();
+        drawField();
+        setShowApplyHomographyModal(false);
+        handleEnablingEditField();
+        setIsPlaying(true);
+        videoElement.play();
+      });
   };
 
   const handleContinueWithoutApplyingHomographies = async () => {
@@ -1712,7 +1988,17 @@ const NewTrackingEditor = () => {
               <PlayIcon className="icon" />
             )}
           </button>
-
+          <div>
+            <button
+              className="zoom-text-button"
+              onClick={() => setIsZoomModeEnabled(!isZoomModeEnabled)}
+            >
+              {isZoomModeEnabled ? "Disable Zoom Mode" : "Enable Zoom Mode"}
+            </button>
+          </div>
+          <button className="zoom-text-button" onClick={handleZoomReset}>
+            Reset Zoom
+          </button>
           <button className="icon-button" onClick={handleAdjustSpeed}>
             <AdjustSpeedIcon className="icon" />
           </button>
@@ -1722,6 +2008,32 @@ const NewTrackingEditor = () => {
           <span id="timestamp-display">
             {formatTime(timestamp)} / {formatTime(videoElement?.duration)}
           </span>
+          <button
+            className="icon-button"
+            style={{ marginLeft: "auto", position: "relative" }}
+            onClick={toggleTooltip}
+          >
+            <KeyboardIcon />
+            <Tooltip isVisible={isTooltipVisible}>
+              <div
+                className="tooltip-content"
+                onClick={(e) => {
+                  e.stopPropagation();
+                }}
+              >
+                {Object.keys(keyBindings).map((action) => (
+                  <div
+                    key={action}
+                    className={`key-binding-box ${bindingAction === action ? "binding" : ""}`}
+                    onClick={() => startBindingKey(action)}
+                  >
+                    {action}:{" "}
+                    {keyBindings[action] == " " ? "Space" : keyBindings[action]}
+                  </div>
+                ))}
+              </div>
+            </Tooltip>
+          </button>
         </div>
       </div>
     </div>

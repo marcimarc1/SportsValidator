@@ -23,13 +23,14 @@ export default function ApplyHomographyModal({
   handleContinueWithoutApplying,
 }) {
   const [frameNumber, setFrameNumber] = React.useState(240);
+  const [trackPoints, setTrackPoints] = React.useState(false);
 
   const applyHomography = () => {
     if (frameNumber < 1 || isNaN(frameNumber)) {
       alert("Frame number must be greater than 0");
       return;
     }
-    handleApply(frameNumber);
+    handleApply(frameNumber, trackPoints);
   };
 
   return (
@@ -52,6 +53,16 @@ export default function ApplyHomographyModal({
               style={{ width: "120px" }}
             />
             {" frames"}
+          </Box>
+          <Box marginTop={1}>
+            <label>
+              <input
+                type="checkbox"
+                checked={trackPoints}
+                onChange={(e) => setTrackPoints(e.target.checked)}
+              />
+              {" Track points"}
+            </label>
           </Box>
           <Box marginTop={2}>
             <Button
