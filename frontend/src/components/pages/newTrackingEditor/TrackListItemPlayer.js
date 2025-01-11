@@ -52,8 +52,9 @@ class TrackListItemPlayer extends Component {
   // }
 
   handleChangeName = (obj) => {
-    this.props.setName(this.props.playerBox, obj.value);
+    this.props.setName(this.props.playerBox, obj.value); 
   };
+  
 
   delete = () => {
     if (window.confirm("Do you really want to delete this player ?")) {

@@ -12,7 +12,7 @@ class TrackList extends Component {
   };
 
   render() {
-    const { children, groups, teams, addTeam, addPlayerToTeam, players, teamColors } =
+    const { children, groups, teams, addTeam, addPlayerToTeam, players, teamColors, setName } =
       this.props;
 
     return (
@@ -41,8 +41,10 @@ class TrackList extends Component {
         <div className="TrackListList">
           {/* Players */}
           <div className={this.state.activeTab === 0 ? "" : "inactive"}>
-            {children}
-          </div>
+  {React.Children.map(children, (child) =>
+    React.cloneElement(child, { setName })
+  )}
+</div>
 
           {/* Teams */}
           <div className={this.state.activeTab === 1 ? "" : "inactive"}>
@@ -58,24 +60,20 @@ class TrackList extends Component {
                   {team.name}
                 </h3>
                 <div className="team-players-list">
-                  {team.players && team.players.length > 0 ? (
-                    team.players.map((player) => (
-                      <TrackListItemPlayer
-                        key={player.id}
-                        playerBox={{ my: { key: player.id, selected: false } }}
-                        name={player.name}
-                        changeSelection={() => {}}
-                        setName={() => {}}
-                        blink={() => {}}
-                        delete={() => {}}
-                        color={teamColors[team.id] || { r: 255, g: 255, b: 255 }}
-                        handleModalOpen={() => {}}
-                      />
-                    ))
-                  ) : (
-                    <p>No players added to this team yet.</p>
-                  )}
-                </div>
+  {team.players.map((player) => (
+    <TrackListItemPlayer
+      key={player.id}
+      playerBox={{ my: { key: player.id, selected: false } }}
+      name={player.name}
+      changeSelection={() => {}}
+      setName={setName} // Pass the setName function here
+      blink={() => {}}
+      delete={() => {}}
+      color={teamColors[team.id] || { r: 255, g: 255, b: 255 }}
+      handleModalOpen={() => {}}
+    />
+  ))}
+</div>
                 {/* Add player dropdown */}
                 <select
                   onChange={(e) =>

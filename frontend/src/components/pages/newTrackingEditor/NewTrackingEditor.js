@@ -463,37 +463,28 @@ const NewTrackingEditor = () => {
   }
 
   
-  function setName(playerBox, name) {
-    fabric.Object.prototype.objectCaching = false;
-    const playerId = playerBox.my.key;
 
-    
-    playerNameMap.set(playerId, name);
 
-    
-    setTeams((prevTeams) =>
-        prevTeams.map((team) => ({
-            ...team,
-            players: team.players.map((player) =>
-                player.id === playerId ? { ...player, name: name } : player
-            ),
-        }))
-    );
+function setName(playerBox, name) {
+  const playerId = playerBox.my.key;
 
-    
-    setPlayers((prevPlayers) =>
-        prevPlayers.map((player) =>
-            player.id === playerId ? { ...player, name: name } : player
-        )
-    );
+  
+  playerNameMap.set(playerId, name);
+  setPlayerNameMap(new Map(playerNameMap));
 
-    
-    canvas.renderAll();
-    drawBoundingBoxes(frameNumber); 
+  
+  setPlayers((prevPlayers) =>
+    prevPlayers.map((player) =>
+      player.id === playerId ? { ...player, name } : player
+    )
+  );
 
-    // TODO BACKEND
-    // Update data when leaving the page
-    // The modified data is stored in the canvasBoxes array
+  
+  drawBoundingBoxes(frameNumber);
+
+  // TODO BACKEND
+  // Update data when leaving the page
+  // The modified data is stored in the canvasBoxes array
 }
 
 
@@ -1943,14 +1934,16 @@ const NewTrackingEditor = () => {
         {/* <div className="sidebar">sidebar is here</div> */}
         
         <TrackList
-        children={playerList}
-        groups={ballList}
-        players={players}
-        teams={teams}
-        teamColors={teamColors}
-        addTeam={addTeam}
-        addPlayerToTeam={addPlayerToTeam}
-        />
+  children={playerList}
+  groups={ballList}
+  players={players}
+  teams={teams}
+  teamColors={teamColors}
+  addTeam={addTeam}
+  addPlayerToTeam={addPlayerToTeam}
+  setName={setName} // Pass setName function
+/>
+
 
      
       </div>
