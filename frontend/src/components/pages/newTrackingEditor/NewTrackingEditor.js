@@ -190,79 +190,38 @@ const NewTrackingEditor = () => {
 
   const addPlayerToTeam = (teamId, playerId) => {
     const isPlayerInAnyTeam = teams.some((team) =>
-      team.players.some((player) => player.id === parseInt(playerId))
+        team.players.some((player) => player.id === parseInt(playerId))
     );
-  
+
     if (isPlayerInAnyTeam) {
-      alert("This player is already in a team!");
-      return;
+        alert("This player is already in a team!");
+        return;
     }
-  
+
     const selectedPlayer = players.find((p) => p.id === parseInt(playerId));
     if (!selectedPlayer) return;
-  
-    
+
+   
     setTeams((prevTeams) =>
-      prevTeams.map((team) =>
-        team.id === teamId
-          ? { ...team, players: [...team.players, selectedPlayer] }
-          : team
-      )
+        prevTeams.map((team) =>
+            team.id === teamId
+                ? { ...team, players: [...team.players, selectedPlayer] }
+                : team
+        )
     );
-  
-    
+
+   
     const teamColor = teamColors[teamId];
-  
+    colorSet.set(parseInt(playerId), teamColor); 
+
     
-    setAnnotations((prevAnnotations) =>
-      prevAnnotations.map((annotation) =>
-        annotation.PlayerKey === parseInt(playerId)
-          ? { ...annotation, color: teamColor }
-          : annotation
-      )
-    );
-  
-   
-    canvas.getObjects().forEach((obj) => {
-      if (obj.my && obj.my.key === parseInt(playerId)) {
-        obj.set("stroke", `rgb(${teamColor.r}, ${teamColor.g}, ${teamColor.b})`);
-      }
-    });
-  
-   
-    setPlayers((prevPlayers) =>
-      prevPlayers.map((player) =>
-        player.id === parseInt(playerId)
-          ? { ...player, color: teamColor }
-          : player
-      )
-    );
-  
-    
+    updateSidebar();
     canvas.renderAll();
-  };
+};
+
   
   
-  const updatePlayerBoundingBoxColors = () => {
-    players.forEach((player) => {
-      const team = teams.find((team) =>
-        team.players.some((teamPlayer) => teamPlayer.id === player.id)
-      );
-  
-      if (team) {
-        const teamColor = teamColors[team.id];
-        canvas.getObjects().forEach((obj) => {
-          if (obj.my && obj.my.key === player.id) {
-            obj.set("stroke", `rgb(${teamColor.r}, ${teamColor.g}, ${teamColor.b})`);
-          }
-        });
-      }
-    });
-  
-    // Re-render the canvas
-    canvas.renderAll();
-  };
-  
+
   
   useEffect(() => {
    
@@ -350,28 +309,52 @@ const NewTrackingEditor = () => {
   function updateSidebar() {
     let tempList = [];
     let runningIndex = 0;
-    let boxes = canvasBoxes.filter(
-      (box) => box.my.frame == getCurrentTimestampFrame(),
-    );
-    boxes.forEach((box) => {
-      const boxColor = colorSet.get(box.my.key);
 
-      tempList = tempList.concat([
-        <TrackListItemPlayer
-          key={runningIndex++}
-          playerBox={box}
-          name={playerNameMap.get(box.my.key)}
-          changeSelection={changeSelection}
-          setName={setName}
-          blink={blink}
-          delete={deletePlayer}
-          color={boxColor}
-          handleModalOpen={handleModalOpen}
-        />,
-      ]);
-      runningIndex++;
+    // Get the current frame's bounding boxes
+    let boxes = canvasBoxes.filter(
+        (box) => box.my.frame == getCurrentTimestampFrame()
+    );
+
+    boxes.forEach((box) => {
+       
+        const playerId = box.my.key;
+
+        
+        let boxColor;
+        const team = teams.find((team) =>
+            team.players.some((player) => player.id === playerId)
+        );
+
+        if (team) {
+            
+            boxColor = teamColors[team.id];
+            colorSet.set(playerId, boxColor); 
+        } else {
+            
+            boxColor = colorSet.get(playerId);
+        }
+
+        
+        tempList = tempList.concat([
+            <TrackListItemPlayer
+                key={runningIndex++}
+                playerBox={box}
+                name={playerNameMap.get(playerId)}
+                changeSelection={changeSelection}
+                setName={setName}
+                blink={blink}
+                delete={deletePlayer}
+                color={boxColor}
+                handleModalOpen={handleModalOpen}
+            />,
+        ]);
     });
+
+    
     setPlayerList(tempList);
+
+    
+    canvas.renderAll();
 
     tempList = [];
     runningIndex = 0;
