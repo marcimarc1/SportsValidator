@@ -57,10 +57,12 @@ class TrackListItemPlayer extends Component {
   
 
   delete = () => {
-    if (window.confirm("Do you really want to delete this player ?")) {
-      this.props.delete(this.props.playerBox);
+    if (window.confirm("Do you really want to delete this player?")) {
+      const playerBox = this.props.playerBox || { my: { key: this.props.playerId } }; 
+      this.props.delete(playerBox);
     }
   };
+  
 
   handleClickMerge = () => {
     this.props.handleModalOpen(this.props.name);

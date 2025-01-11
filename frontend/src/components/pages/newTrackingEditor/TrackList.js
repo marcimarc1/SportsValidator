@@ -12,7 +12,7 @@ class TrackList extends Component {
   };
 
   render() {
-    const { children, groups, teams, addTeam, addPlayerToTeam, players, teamColors, setName } =
+    const { children, groups, teams, addTeam, addPlayerToTeam, players, teamColors, setName,deletePlayer } =
       this.props;
 
     return (
@@ -60,20 +60,20 @@ class TrackList extends Component {
                   {team.name}
                 </h3>
                 <div className="team-players-list">
-  {team.players.map((player) => (
-    <TrackListItemPlayer
+    {team.players.map((player) => (
+      <TrackListItemPlayer
       key={player.id}
-      playerBox={{ my: { key: player.id, selected: false } }}
+      playerBox={{ my: { key: player.id, selected: false } }} 
       name={player.name}
       changeSelection={() => {}}
-      setName={setName} // Pass the setName function here
+      setName={setName}
+      delete={deletePlayer} 
       blink={() => {}}
-      delete={() => {}}
       color={teamColors[team.id] || { r: 255, g: 255, b: 255 }}
       handleModalOpen={() => {}}
     />
   ))}
-</div>
+  </div>
                 {/* Add player dropdown */}
                 <select
                   onChange={(e) =>

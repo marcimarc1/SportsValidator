@@ -427,20 +427,52 @@ const NewTrackingEditor = () => {
   }
 
   function deletePlayer(playerBox) {
-    canvas.setActiveObject(playerBox);
-    setActiveObject(playerBox);
-    setAnnotations(annotations.filter((a) => a.PlayerKey != playerBox.my.key));
-    setCanvasBoxes(canvasBoxes.filter((a) => a.my.key != playerBox.my.key));
-
+  
+    if (playerBox && typeof playerBox.onSelect === "function") {
+      canvas.setActiveObject(playerBox);
+      setActiveObject(playerBox);
+    }
+  
+  
+    if (!playerBox || !playerBox.my || !playerBox.my.key) {
+      console.error("Invalid playerBox structure:", playerBox);
+      return;
+    }
+  
+    const playerKey = playerBox.my.key;
+  
+ 
+    setAnnotations((prevAnnotations) =>
+      prevAnnotations.filter((a) => a.PlayerKey !== playerKey)
+    );
+  
+   
+    setCanvasBoxes((prevCanvasBoxes) =>
+      prevCanvasBoxes.filter((a) => a.my.key !== playerKey)
+    );
+  
+   
     let newPlayerNameMap = new Map(playerNameMap);
-    newPlayerNameMap.delete(playerBox.my.key);
+    newPlayerNameMap.delete(playerKey);
     setPlayerNameMap(newPlayerNameMap);
-
+  
+   
+    setTeams((prevTeams) =>
+      prevTeams.map((team) => ({
+        ...team,
+        players: team.players.filter((player) => player.id !== playerKey),
+      }))
+    );
+  
+    
     updateSidebar();
-    canvas.discardActiveObject();
-    canvas.remove(playerBox);
-    canvas.requestRenderAll();
+    if (playerBox && typeof playerBox.onSelect === "function") {
+      canvas.discardActiveObject();
+      canvas.remove(playerBox);
+      canvas.requestRenderAll();
+    }
   }
+  
 
   function deleteBall(ballBox) {
     canvas.setActiveObject(ballBox);
@@ -1941,7 +1973,8 @@ function setName(playerBox, name) {
   teamColors={teamColors}
   addTeam={addTeam}
   addPlayerToTeam={addPlayerToTeam}
-  setName={setName} // Pass setName function
+  setName={setName} 
+  deletePlayer={deletePlayer}
 />
 
 
