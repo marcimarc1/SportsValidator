@@ -462,30 +462,40 @@ const NewTrackingEditor = () => {
     canvas.requestRenderAll();
   }
 
+  
   function setName(playerBox, name) {
     fabric.Object.prototype.objectCaching = false;
-    let playerIndex = playerBox.my.key;
-  
+    const playerId = playerBox.my.key;
+
     
-    playerNameMap.set(playerIndex, name);
-    console.log("Updated playerNameMap:", playerNameMap);
-  
+    playerNameMap.set(playerId, name);
+
+    
+    setTeams((prevTeams) =>
+        prevTeams.map((team) => ({
+            ...team,
+            players: team.players.map((player) =>
+                player.id === playerId ? { ...player, name: name } : player
+            ),
+        }))
+    );
+
     
     setPlayers((prevPlayers) =>
-      prevPlayers.map((player) =>
-        player.id === playerIndex ? { ...player, name: name } : player
-      )
+        prevPlayers.map((player) =>
+            player.id === playerId ? { ...player, name: name } : player
+        )
     );
-  
+
     
-    canvas.requestRenderAll();
-    drawBoundingBoxes(frameNumber);
-  
+    canvas.renderAll();
+    drawBoundingBoxes(frameNumber); 
+
     // TODO BACKEND
     // Update data when leaving the page
     // The modified data is stored in the canvasBoxes array
-  }
-  
+}
+
 
   function setNameBall(ballBox, name) {
     fabric.Object.prototype.objectCaching = false;
