@@ -52,17 +52,17 @@ class TrackListItemPlayer extends Component {
   // }
 
   handleChangeName = (obj) => {
-    this.props.setName(this.props.playerBox, obj.value); 
+    this.props.setName(this.props.playerBox, obj.value);
   };
-  
 
   delete = () => {
     if (window.confirm("Do you really want to delete this player?")) {
-      const playerBox = this.props.playerBox || { my: { key: this.props.playerId } }; 
+      const playerBox = this.props.playerBox || {
+        my: { key: this.props.playerId },
+      };
       this.props.delete(playerBox);
     }
   };
-  
 
   handleClickMerge = () => {
     this.props.handleModalOpen(this.props.name);

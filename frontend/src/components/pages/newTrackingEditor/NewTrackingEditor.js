@@ -81,8 +81,8 @@ const NewTrackingEditor = () => {
   const [isShowingAnnotation, setIsShowingAnnotation] = useState(true);
   const [playerList, setPlayerList] = useState([]); // list of player TrackListItemPlayers
   const [players, setPlayers] = useState([]); // list of players
-  const [teamColors, setTeamColors] = useState({}); 
-  const [teams, setTeams] = useState([]); 
+  const [teamColors, setTeamColors] = useState({});
+  const [teams, setTeams] = useState([]);
   const [canvasBoxes, setCanvasBoxes] = useState([]); //list of canvas boxes for player
   const [playerNameMap, setPlayerNameMap] = useState(new Map()); //map of playerkey to playername
   const [activeObject, setActiveObject] = useState(null);
@@ -112,8 +112,6 @@ const NewTrackingEditor = () => {
   const [isShowingBallTrails, setIsShowingBallTrails] = useState(true);
   const [selectedTrailsBall, setSelectedTrailsBall] = useState([]);
   const [videoSpeed, setVideoSpeed] = useState(1);
-  
-
 
   const handleModalOpen = (playerInList) => {
     setPlayerChosenInList(playerInList);
@@ -132,41 +130,38 @@ const NewTrackingEditor = () => {
   };
 
   const handleMultiSelectMerge = () => {
-    
     multiPlayerMerge(
       Array.from(selectedTrails),
       annotations,
       setAnnotations,
       playerNameMap,
-      setPlayerNameMap
+      setPlayerNameMap,
     );
-  
+
     const selectedPlayerKeys = Array.from(selectedTrails);
-    const remainingPlayerKey = selectedPlayerKeys[0]; 
-  
-    
+    const remainingPlayerKey = selectedPlayerKeys[0];
+
     setTeams((prevTeams) =>
       prevTeams.map((team) => ({
         ...team,
         players: team.players.filter(
           (player) =>
-            !selectedPlayerKeys.includes(player.id) || player.id === remainingPlayerKey
+            !selectedPlayerKeys.includes(player.id) ||
+            player.id === remainingPlayerKey,
         ),
-      }))
+      })),
     );
-  
-    
+
     setPlayers((prevPlayers) =>
       prevPlayers.filter(
         (player) =>
-          !selectedPlayerKeys.includes(player.id) || player.id === remainingPlayerKey
-      )
+          !selectedPlayerKeys.includes(player.id) ||
+          player.id === remainingPlayerKey,
+      ),
     );
-  
+
     setSelectedTrails([]);
   };
-  
-  
 
   const handleMultiSelectMergeBall = () => {
     console.log("Multiplayer merge ball");
@@ -181,7 +176,7 @@ const NewTrackingEditor = () => {
     setSelectedTrailsBall(new Array());
   };
   // deprecated function that generates unique random colors. not needed now maybe will be handy in future so it is commented as is
- /* const generateRandomColor = (usedColors) => {
+  /* const generateRandomColor = (usedColors) => {
     let color;
     do {
       color = {
@@ -196,15 +191,15 @@ const NewTrackingEditor = () => {
     );
     return color;
   };
-  */ 
+  */
   const addTeam = (color) => {
     const newTeamId = teams.length + 1;
-  
+
     setTeams((prevTeams) => [
       ...prevTeams,
       { id: newTeamId, name: `Team ${newTeamId}`, players: [] },
     ]);
-  
+
     setTeamColors((prevColors) => ({
       ...prevColors,
       [newTeamId]: {
@@ -214,64 +209,49 @@ const NewTrackingEditor = () => {
       },
     }));
   };
-  
 
   const addPlayerToTeam = (teamId, playerId) => {
     const isPlayerInAnyTeam = teams.some((team) =>
-        team.players.some((player) => player.id === parseInt(playerId))
+      team.players.some((player) => player.id === parseInt(playerId)),
     );
 
     if (isPlayerInAnyTeam) {
-        alert("This player is already in a team!");
-        return;
+      alert("This player is already in a team!");
+      return;
     }
 
     const selectedPlayer = players.find((p) => p.id === parseInt(playerId));
     if (!selectedPlayer) return;
 
-   
     setTeams((prevTeams) =>
-        prevTeams.map((team) =>
-            team.id === teamId
-                ? { ...team, players: [...team.players, selectedPlayer] }
-                : team
-        )
+      prevTeams.map((team) =>
+        team.id === teamId
+          ? { ...team, players: [...team.players, selectedPlayer] }
+          : team,
+      ),
     );
 
-   
     const teamColor = teamColors[teamId];
-    colorSet.set(parseInt(playerId), teamColor); 
+    colorSet.set(parseInt(playerId), teamColor);
 
-    
     updateSidebar();
     canvas.renderAll();
-};
+  };
 
-  
-  
-
-  
   useEffect(() => {
-   
     const uniquePlayers = new Map();
-  
+
     annotations.forEach((a) => {
       const playerId = a.PlayerKey;
       const playerName = playerNameMap.get(playerId) || `Player ${playerId}`;
-      
+
       if (!uniquePlayers.has(playerId)) {
         uniquePlayers.set(playerId, { id: playerId, name: playerName });
       }
     });
-  
-   
+
     setPlayers(Array.from(uniquePlayers.values()));
   }, [annotations, playerNameMap]);
-  
-  
-  
-  
-  
 
   const handleMultiBallTrailsDelete = () => {
     console.log("Multiplayer delete ball trails");
@@ -340,48 +320,41 @@ const NewTrackingEditor = () => {
 
     // Get the current frame's bounding boxes
     let boxes = canvasBoxes.filter(
-        (box) => box.my.frame == getCurrentTimestampFrame()
+      (box) => box.my.frame == getCurrentTimestampFrame(),
     );
 
     boxes.forEach((box) => {
-       
-        const playerId = box.my.key;
+      const playerId = box.my.key;
 
-        
-        let boxColor;
-        const team = teams.find((team) =>
-            team.players.some((player) => player.id === playerId)
-        );
+      let boxColor;
+      const team = teams.find((team) =>
+        team.players.some((player) => player.id === playerId),
+      );
 
-        if (team) {
-            
-            boxColor = teamColors[team.id];
-            colorSet.set(playerId, boxColor); 
-        } else {
-            
-            boxColor = colorSet.get(playerId);
-        }
+      if (team) {
+        boxColor = teamColors[team.id];
+        colorSet.set(playerId, boxColor);
+      } else {
+        boxColor = colorSet.get(playerId);
+      }
 
-        
-        tempList = tempList.concat([
-            <TrackListItemPlayer
-                key={runningIndex++}
-                playerBox={box}
-                name={playerNameMap.get(playerId)}
-                changeSelection={changeSelection}
-                setName={setName}
-                blink={blink}
-                delete={deletePlayer}
-                color={boxColor}
-                handleModalOpen={handleModalOpen}
-            />,
-        ]);
+      tempList = tempList.concat([
+        <TrackListItemPlayer
+          key={runningIndex++}
+          playerBox={box}
+          name={playerNameMap.get(playerId)}
+          changeSelection={changeSelection}
+          setName={setName}
+          blink={blink}
+          delete={deletePlayer}
+          color={boxColor}
+          handleModalOpen={handleModalOpen}
+        />,
+      ]);
     });
 
-    
     setPlayerList(tempList);
 
-    
     canvas.renderAll();
 
     tempList = [];
@@ -455,44 +428,37 @@ const NewTrackingEditor = () => {
   }
 
   function deletePlayer(playerBox) {
-  
     if (playerBox && typeof playerBox.onSelect === "function") {
       canvas.setActiveObject(playerBox);
       setActiveObject(playerBox);
     }
-  
-  
+
     if (!playerBox || !playerBox.my || !playerBox.my.key) {
       console.error("Invalid playerBox structure:", playerBox);
       return;
     }
-  
+
     const playerKey = playerBox.my.key;
-  
- 
+
     setAnnotations((prevAnnotations) =>
-      prevAnnotations.filter((a) => a.PlayerKey !== playerKey)
+      prevAnnotations.filter((a) => a.PlayerKey !== playerKey),
     );
-  
-   
+
     setCanvasBoxes((prevCanvasBoxes) =>
-      prevCanvasBoxes.filter((a) => a.my.key !== playerKey)
+      prevCanvasBoxes.filter((a) => a.my.key !== playerKey),
     );
-  
-   
+
     let newPlayerNameMap = new Map(playerNameMap);
     newPlayerNameMap.delete(playerKey);
     setPlayerNameMap(newPlayerNameMap);
-  
-   
+
     setTeams((prevTeams) =>
       prevTeams.map((team) => ({
         ...team,
         players: team.players.filter((player) => player.id !== playerKey),
-      }))
+      })),
     );
-  
-    
+
     updateSidebar();
     if (playerBox && typeof playerBox.onSelect === "function") {
       canvas.discardActiveObject();
@@ -500,7 +466,6 @@ const NewTrackingEditor = () => {
       canvas.requestRenderAll();
     }
   }
-  
 
   function deleteBall(ballBox) {
     canvas.setActiveObject(ballBox);
@@ -522,31 +487,24 @@ const NewTrackingEditor = () => {
     canvas.requestRenderAll();
   }
 
-  
+  function setName(playerBox, name) {
+    const playerId = playerBox.my.key;
 
+    playerNameMap.set(playerId, name);
+    setPlayerNameMap(new Map(playerNameMap));
 
-function setName(playerBox, name) {
-  const playerId = playerBox.my.key;
+    setPlayers((prevPlayers) =>
+      prevPlayers.map((player) =>
+        player.id === playerId ? { ...player, name } : player,
+      ),
+    );
 
-  
-  playerNameMap.set(playerId, name);
-  setPlayerNameMap(new Map(playerNameMap));
+    drawBoundingBoxes(frameNumber);
 
-  
-  setPlayers((prevPlayers) =>
-    prevPlayers.map((player) =>
-      player.id === playerId ? { ...player, name } : player
-    )
-  );
-
-  
-  drawBoundingBoxes(frameNumber);
-
-  // TODO BACKEND
-  // Update data when leaving the page
-  // The modified data is stored in the canvasBoxes array
-}
-
+    // TODO BACKEND
+    // Update data when leaving the page
+    // The modified data is stored in the canvasBoxes array
+  }
 
   function setNameBall(ballBox, name) {
     fabric.Object.prototype.objectCaching = false;
@@ -930,44 +888,46 @@ function setName(playerBox, name) {
       );
       if (isShowingPlayerTrails) {
         const currentTrailsToDraw = drawInField
-            ? annotations.filter(
-                  (a) => a.FrameNo === frameNumber && isInField(a.in_field),
-              )
-            : annotations.filter((a) => a.FrameNo === frameNumber);
-    
+          ? annotations.filter(
+              (a) => a.FrameNo === frameNumber && isInField(a.in_field),
+            )
+          : annotations.filter((a) => a.FrameNo === frameNumber);
+
         currentTrailsToDraw.forEach((a) => {
-            const team = teams.find((team) =>
-                team.players.some((player) => player.id === a.PlayerKey)
-            );
-    
-            // Get the team color or fallback to the player's original color
-            const trailColor = team ? teamColors[team.id] : colorSet.get(a.PlayerKey);
-    
-            const scaledX = a.x1 * horizontalScalingFactor;
-            const scaledY = a.y1 * verticalScalingFactor;
-            const scaledWidth = a.w * horizontalScalingFactor;
-            const scaledHeight = a.h * verticalScalingFactor;
-            const radius =
-                scaledWidth < scaledHeight ? scaledWidth / 4 : scaledHeight / 4;
-    
-            let trail = new fabric.Circle({
-                left: scaledX,
-                top: scaledY,
-                stroke: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
-                strokeWidth: 3,
-                fill: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
-                radius: (radius * trailSize) / 50,
-                visible: isShowingAnnotation,
-            });
-            trail.properties = {
-                frame: frameNumber,
-                playerKey: a.PlayerKey,
-            };
-            trail.hasRotatingPoint = false;
-            defineTrailBehaviour(trail, setSelectedTrails);
-            canvas.add(trail);
+          const team = teams.find((team) =>
+            team.players.some((player) => player.id === a.PlayerKey),
+          );
+
+          // Get the team color or fallback to the player's original color
+          const trailColor = team
+            ? teamColors[team.id]
+            : colorSet.get(a.PlayerKey);
+
+          const scaledX = a.x1 * horizontalScalingFactor;
+          const scaledY = a.y1 * verticalScalingFactor;
+          const scaledWidth = a.w * horizontalScalingFactor;
+          const scaledHeight = a.h * verticalScalingFactor;
+          const radius =
+            scaledWidth < scaledHeight ? scaledWidth / 4 : scaledHeight / 4;
+
+          let trail = new fabric.Circle({
+            left: scaledX,
+            top: scaledY,
+            stroke: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
+            strokeWidth: 3,
+            fill: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
+            radius: (radius * trailSize) / 50,
+            visible: isShowingAnnotation,
+          });
+          trail.properties = {
+            frame: frameNumber,
+            playerKey: a.PlayerKey,
+          };
+          trail.hasRotatingPoint = false;
+          defineTrailBehaviour(trail, setSelectedTrails);
+          canvas.add(trail);
         });
-    }
+      }
       if (isShowingBallTrails) {
         const currentBallTrailsToDraw = annotationBallTracks.filter(
           (a) => a.FrameNo === frameNumber,
@@ -1144,48 +1104,45 @@ function setName(playerBox, name) {
 
     if (isShowingBox) {
       boundingBoxesToDraw.forEach((a) => {
-          const fontSize = 12;
-          const scaledX = a.x1 * horizontalScalingFactor;
-          const scaledY = a.y1 * verticalScalingFactor - fontSize;
-  
-          
-          const playerName = playerNameMap.get(a.PlayerKey) || a.PlayerKey.toString();
-  
-          
-          let boxName = new fabric.Text(playerName, {
-              left: scaledX,
-              top: scaledY,
-              fontSize: fontSize,
-          });
-          canvas.add(boxName);
+        const fontSize = 12;
+        const scaledX = a.x1 * horizontalScalingFactor;
+        const scaledY = a.y1 * verticalScalingFactor - fontSize;
+
+        const playerName =
+          playerNameMap.get(a.PlayerKey) || a.PlayerKey.toString();
+
+        let boxName = new fabric.Text(playerName, {
+          left: scaledX,
+          top: scaledY,
+          fontSize: fontSize,
+        });
+        canvas.add(boxName);
       });
-  }
-  
-  
-  boundingBoxesToDraw.forEach((annotation) => {
-    const team = teams.find((team) =>
-      team.players.some((player) => player.id === annotation.PlayerKey)
-    );
-    const boxColor = team
-      ? teamColors[team.id]
-      : colorSet.get(annotation.PlayerKey); // Fallback to default color
+    }
 
-    let playerBox = convertAnnotationToBox(
-      annotation,
-      horizontalScalingFactor,
-      verticalScalingFactor
-    );
+    boundingBoxesToDraw.forEach((annotation) => {
+      const team = teams.find((team) =>
+        team.players.some((player) => player.id === annotation.PlayerKey),
+      );
+      const boxColor = team
+        ? teamColors[team.id]
+        : colorSet.get(annotation.PlayerKey); // Fallback to default color
 
-    playerBox.visible = isShowingBox;
-    playerBox.stroke = `rgb(${boxColor.r}, ${boxColor.g}, ${boxColor.b})`;
-    playerBox.setControlVisible("mtr", false);
-    playerBox = defineBoxBehavior(playerBox);
+      let playerBox = convertAnnotationToBox(
+        annotation,
+        horizontalScalingFactor,
+        verticalScalingFactor,
+      );
 
-    canvas.add(playerBox);
-  });
+      playerBox.visible = isShowingBox;
+      playerBox.stroke = `rgb(${boxColor.r}, ${boxColor.g}, ${boxColor.b})`;
+      playerBox.setControlVisible("mtr", false);
+      playerBox = defineBoxBehavior(playerBox);
 
-  canvas.renderAll();
+      canvas.add(playerBox);
+    });
 
+    canvas.renderAll();
   };
 
   useEffect(() => {
@@ -1993,24 +1950,20 @@ function setName(playerBox, name) {
           style={{ display: "block", width: "100%", height: "auto" }}
         ></canvas>
         {/* <div className="sidebar">sidebar is here</div> */}
-        
+
         <TrackList
-  children={playerList}
-  groups={ballList}
-  players={players}
-  teams={teams}
-  teamColors={teamColors}
-  addTeam={addTeam}
-  addPlayerToTeam={addPlayerToTeam}
-  setName={setName} 
-  deletePlayer={deletePlayer}
-  handleModalOpen={handleModalOpen}
-  blink={blink}
-  
-/>
-
-
-     
+          children={playerList}
+          groups={ballList}
+          players={players}
+          teams={teams}
+          teamColors={teamColors}
+          addTeam={addTeam}
+          addPlayerToTeam={addPlayerToTeam}
+          setName={setName}
+          deletePlayer={deletePlayer}
+          handleModalOpen={handleModalOpen}
+          blink={blink}
+        />
       </div>
       <div className="controls">
         <SeekBar

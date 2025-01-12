@@ -6,7 +6,7 @@ class TrackList extends Component {
   state = {
     activeTab: 0,
     newTeamColor: "#ffffff",
-    selectedPlayer: "", 
+    selectedPlayer: "",
   };
 
   changeTab = (tabID) => () => {
@@ -31,7 +31,7 @@ class TrackList extends Component {
 
     if (playerId) {
       addPlayerToTeam(teamId, playerId);
-      this.setState({ selectedPlayer: "" }); 
+      this.setState({ selectedPlayer: "" });
     }
   };
 
@@ -77,7 +77,7 @@ class TrackList extends Component {
           {/* Players */}
           <div className={activeTab === 0 ? "" : "inactive"}>
             {React.Children.map(children, (child) =>
-              React.cloneElement(child, { setName })
+              React.cloneElement(child, { setName }),
             )}
           </div>
 
@@ -101,22 +101,25 @@ class TrackList extends Component {
                 <div className="team-players-list">
                   {team.players.map((player) => {
                     const playerBox = React.Children.toArray(children).find(
-                      (child) =>
-                        child.props.playerBox.my.key === player.id
+                      (child) => child.props.playerBox.my.key === player.id,
                     )?.props.playerBox;
 
                     return (
                       <TrackListItemPlayer
                         key={player.id}
                         playerBox={
-                          playerBox || { my: { key: player.id, selected: false } }
+                          playerBox || {
+                            my: { key: player.id, selected: false },
+                          }
                         }
                         name={player.name}
                         changeSelection={() => {}}
                         setName={setName}
                         delete={deletePlayer}
                         blink={blink}
-                        color={teamColors[team.id] || { r: 255, g: 255, b: 255 }}
+                        color={
+                          teamColors[team.id] || { r: 255, g: 255, b: 255 }
+                        }
                         handleModalOpen={handleModalOpen}
                       />
                     );
