@@ -6,6 +6,7 @@ class TrackList extends Component {
   state = {
     activeTab: 0,
     newTeamColor: "#ffffff",
+    selectedPlayer: "", 
   };
 
   changeTab = (tabID) => () => {
@@ -24,12 +25,21 @@ class TrackList extends Component {
     this.setState({ newTeamColor: event.target.value });
   };
 
+  handlePlayerSelect = (teamId, event) => {
+    const { addPlayerToTeam } = this.props;
+    const playerId = event.target.value;
+
+    if (playerId) {
+      addPlayerToTeam(teamId, playerId);
+      this.setState({ selectedPlayer: "" }); 
+    }
+  };
+
   render() {
     const {
       children,
       groups,
       teams,
-      addPlayerToTeam,
       players,
       teamColors,
       setName,
@@ -38,7 +48,7 @@ class TrackList extends Component {
       blink,
     } = this.props;
 
-    const { activeTab, newTeamColor } = this.state;
+    const { activeTab, newTeamColor, selectedPlayer } = this.state;
 
     return (
       <div className="TrackList">
@@ -77,9 +87,13 @@ class TrackList extends Component {
               <div key={team.id} className="team-section">
                 <h3
                   style={{
+                    margin: "0",
+                    fontSize: "1.2rem",
+                    fontWeight: "bold",
                     color: `rgb(${teamColors[team.id]?.r || 255}, ${
                       teamColors[team.id]?.g || 255
                     }, ${teamColors[team.id]?.b || 255})`,
+                    lineHeight: "1.5",
                   }}
                 >
                   {team.name}
@@ -108,11 +122,23 @@ class TrackList extends Component {
                     );
                   })}
                 </div>
-                {/* Add player dropdown */}
+                {/* Styled dropdown */}
                 <select
-                  onChange={(e) => addPlayerToTeam(team.id, e.target.value)}
+                  value={selectedPlayer}
+                  onChange={(e) => this.handlePlayerSelect(team.id, e)}
+                  style={{
+                    width: "100%",
+                    padding: "8px",
+                    borderRadius: "5px",
+                    backgroundColor: "var(--secondary-bg)",
+                    color: "var(--main-text-color)",
+                    border: "1px solid var(--main-text-color)",
+                    marginTop: "10px",
+                  }}
                 >
-                  <option value="">Select Player</option>
+                  <option value="" disabled>
+                    Select Player
+                  </option>
                   {players.map((player) => (
                     <option key={player.id} value={player.id}>
                       {player.name}
@@ -132,7 +158,7 @@ class TrackList extends Component {
                 borderRadius: "5px",
                 display: "flex",
                 alignItems: "center",
-                gap: "15px",
+                gap: "10px",
               }}
             >
               <label
@@ -166,12 +192,9 @@ class TrackList extends Component {
                   backgroundColor:
                     newTeamColor !== "#ffffff" ? newTeamColor : "var(--accent)",
                   color: newTeamColor !== "#ffffff" ? "#000" : "#fff",
-                  height: "50px",
-                  borderRadius: "5px",
-                  fontSize: "1rem",
                 }}
               >
-                ADD TEAM
+                Add Team
               </Button>
             </div>
           </div>
