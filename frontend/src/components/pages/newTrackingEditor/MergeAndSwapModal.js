@@ -36,9 +36,11 @@ export default function MergeAndSwapModal({
   frameNumber,
   mergeModalState,
   handleClose,
+  setTeams,
 }) {
   const [selectedPlayer, setSelectedPlayer] = useState("");
   const [operation, setOperation] = useState("swap");
+
   const menuItems = useMemo(
     () =>
       Array.from(playerNameMap.values()).map((name) => {
@@ -59,7 +61,7 @@ export default function MergeAndSwapModal({
   };
 
   const handleClick = () => {
-    if (operation === "swap")
+    if (operation === "swap") {
       swapPlayerData(
         selectedPlayer,
         playerNameMap,
@@ -68,7 +70,7 @@ export default function MergeAndSwapModal({
         setAnnotations,
         frameNumber,
       );
-    else
+    } else {
       mergePlayerData(
         selectedPlayer,
         playerNameMap,
@@ -77,6 +79,24 @@ export default function MergeAndSwapModal({
         annotations,
         setAnnotations,
       );
+
+      
+      const mergedPlayerId = Array.from(playerNameMap.keys()).find(
+        (key) => playerNameMap.get(key) === selectedPlayer,
+      );
+      const playerToRemoveId = Array.from(playerNameMap.keys()).find(
+        (key) => playerNameMap.get(key) === playerChosenInList,
+      );
+
+      setTeams((prevTeams) =>
+        prevTeams.map((team) => ({
+          ...team,
+          players: team.players.filter(
+            (player) => player.id !== playerToRemoveId,
+          ),
+        })),
+      );
+    }
     handleClose();
   };
 

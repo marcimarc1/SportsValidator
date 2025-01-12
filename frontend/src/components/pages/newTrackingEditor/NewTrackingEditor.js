@@ -1850,6 +1850,7 @@ function setName(playerBox, name) {
         frameNumber={frameNumber}
         mergeModalState={mergeModalState}
         handleClose={handleModalsClose}
+        setTeams={setTeams}
       />
       <MergeAndSwapModalBall
         ballChosenInList={ballChosenInList}
