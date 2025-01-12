@@ -1975,6 +1975,7 @@ function setName(playerBox, name) {
   addPlayerToTeam={addPlayerToTeam}
   setName={setName} 
   deletePlayer={deletePlayer}
+  handleModalOpen={handleModalOpen}
 />
 
 

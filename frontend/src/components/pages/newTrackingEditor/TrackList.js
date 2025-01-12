@@ -12,7 +12,7 @@ class TrackList extends Component {
   };
 
   render() {
-    const { children, groups, teams, addTeam, addPlayerToTeam, players, teamColors, setName,deletePlayer } =
+    const { children, groups, teams, addTeam, addPlayerToTeam, players, teamColors, setName,deletePlayer, handleModalOpen } =
       this.props;
 
     return (
@@ -70,7 +70,7 @@ class TrackList extends Component {
       delete={deletePlayer} 
       blink={() => {}}
       color={teamColors[team.id] || { r: 255, g: 255, b: 255 }}
-      handleModalOpen={() => {}}
+      handleModalOpen={handleModalOpen}
     />
   ))}
   </div>
