@@ -11,11 +11,36 @@ class TrackList extends Component {
     this.setState({ activeTab: tabID });
   };
 
+  state = {
+    activeTab: 0,
+    newTeamColor: "#ffffff", 
+  };
+
+  changeTab = (tabID) => () => {
+    this.setState({ activeTab: tabID });
+  };
+
+  handleAddTeam = () => {
+    const { addTeam } = this.props;
+    const { newTeamColor } = this.state;
+
+    addTeam(newTeamColor); 
+    this.setState({ newTeamColor: "#ffffff" }); 
+  };
+
+  handleColorChange = (event) => {
+    this.setState({ newTeamColor: event.target.value });
+  };
+
+  
+
   render() {
     const { children, groups, teams, addTeam, addPlayerToTeam, players, teamColors, setName,deletePlayer, handleModalOpen, blink } =
       this.props;
-
-    return (
+      
+      const { activeTab, newTeamColor } = this.state;
+    
+      return (
       <div className="TrackList">
         <div className="TrackListTabs">
           <Button
@@ -83,17 +108,25 @@ class TrackList extends Component {
         })}
       </div>
       {/* Add player dropdown */}
-      <select onChange={(e) => addPlayerToTeam(team.id, e.target.value)}>
-        <option value="">Select Player</option>
-        {players.map((player) => (
-          <option key={player.id} value={player.id}>
-            {player.name}
-          </option>
-        ))}
-      </select>
+      <select
+                  onChange={(e) => addPlayerToTeam(team.id, e.target.value)}
+                >
+                  <option value="">Select Player</option>
+                  {players.map((player) => (
+                    <option key={player.id} value={player.id}>
+                      {player.name}
+                    </option>
+                  ))}
+                </select>
     </div>
   ))}
-  <Button onClick={addTeam}>Add Team</Button>
+   <h4>Add New Team</h4>
+              <input
+                type="color"
+                value={newTeamColor}
+                onChange={this.handleColorChange}
+              />
+              <Button onClick={this.handleAddTeam}>Add Team</Button>
 </div>
 
           {/* Ball */}

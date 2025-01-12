@@ -180,8 +180,8 @@ const NewTrackingEditor = () => {
     );
     setSelectedTrailsBall(new Array());
   };
-
-  const generateRandomColor = (usedColors) => {
+  // deprecated function that generates unique random colors. not needed now maybe will be handy in future so it is commented as is
+ /* const generateRandomColor = (usedColors) => {
     let color;
     do {
       color = {
@@ -196,21 +196,25 @@ const NewTrackingEditor = () => {
     );
     return color;
   };
-
-  const addTeam = () => {
+  */ 
+  const addTeam = (color) => {
     const newTeamId = teams.length + 1;
-    const usedColors = Object.values(teamColors);
-    const newTeamColor = generateRandomColor(usedColors);
-
+  
     setTeams((prevTeams) => [
       ...prevTeams,
       { id: newTeamId, name: `Team ${newTeamId}`, players: [] },
     ]);
+  
     setTeamColors((prevColors) => ({
       ...prevColors,
-      [newTeamId]: newTeamColor,
+      [newTeamId]: {
+        r: parseInt(color.slice(1, 3), 16), // Convert hex to RGB
+        g: parseInt(color.slice(3, 5), 16),
+        b: parseInt(color.slice(5, 7), 16),
+      },
     }));
   };
+  
 
   const addPlayerToTeam = (teamId, playerId) => {
     const isPlayerInAnyTeam = teams.some((team) =>
