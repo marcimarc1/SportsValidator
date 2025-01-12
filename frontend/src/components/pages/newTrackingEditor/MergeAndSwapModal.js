@@ -87,14 +87,27 @@ export default function MergeAndSwapModal({
       const playerToRemoveId = Array.from(playerNameMap.keys()).find(
         (key) => playerNameMap.get(key) === playerChosenInList,
       );
+      
+      const earlierPlayerId =
+        annotations.find((a) => a.PlayerKey === playerToRemoveId && a.FrameNo < frameNumber)
+          ? playerToRemoveId
+          : mergedPlayerId;
+
+      const laterPlayerId =
+        earlierPlayerId === playerToRemoveId ? mergedPlayerId : playerToRemoveId;
+
 
       setTeams((prevTeams) =>
         prevTeams.map((team) => ({
           ...team,
-          players: team.players.filter(
-            (player) => player.id !== playerToRemoveId,
-          ),
-        })),
+          players: team.players
+            .filter((player) => player.id !== laterPlayerId) 
+            .map((player) =>
+              player.id === earlierPlayerId
+                ? { ...player, id: earlierPlayerId } 
+                : player
+            ),
+        }))
       );
     }
     handleClose();
