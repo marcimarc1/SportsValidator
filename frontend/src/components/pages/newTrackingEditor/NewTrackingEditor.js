@@ -132,17 +132,41 @@ const NewTrackingEditor = () => {
   };
 
   const handleMultiSelectMerge = () => {
-    console.log("Multiplayer merge");
-    console.log(Array.from(selectedTrails));
+    
     multiPlayerMerge(
       Array.from(selectedTrails),
       annotations,
       setAnnotations,
       playerNameMap,
-      setPlayerNameMap,
+      setPlayerNameMap
     );
-    setSelectedTrails(new Array());
+  
+    const selectedPlayerKeys = Array.from(selectedTrails);
+    const remainingPlayerKey = selectedPlayerKeys[0]; 
+  
+    
+    setTeams((prevTeams) =>
+      prevTeams.map((team) => ({
+        ...team,
+        players: team.players.filter(
+          (player) =>
+            !selectedPlayerKeys.includes(player.id) || player.id === remainingPlayerKey
+        ),
+      }))
+    );
+  
+    
+    setPlayers((prevPlayers) =>
+      prevPlayers.filter(
+        (player) =>
+          !selectedPlayerKeys.includes(player.id) || player.id === remainingPlayerKey
+      )
+    );
+  
+    setSelectedTrails([]);
   };
+  
+  
 
   const handleMultiSelectMergeBall = () => {
     console.log("Multiplayer merge ball");
@@ -1976,6 +2000,8 @@ function setName(playerBox, name) {
   setName={setName} 
   deletePlayer={deletePlayer}
   handleModalOpen={handleModalOpen}
+  blink={blink}
+  
 />
 
 
