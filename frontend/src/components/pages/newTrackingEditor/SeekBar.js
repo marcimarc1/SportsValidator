@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect } from "react";
 import "./SeekBar.css";
+import config from "../../../config.json";
 
 const SeekBar = ({ onSeekStart, onSeekPercent, onSeekEnd, progress }) => {
   const [displayedProgress, setDisplayedProgress] = useState(0);
@@ -44,11 +45,17 @@ const SeekBar = ({ onSeekStart, onSeekPercent, onSeekEnd, progress }) => {
     <div
       ref={containerRef}
       className="seeker-container"
+      style={{
+        backgroundColor: config.general.seekbar.containerBackgroundColor,
+      }}
       onMouseDown={handleMouseDown}
     >
       <div
         className="seeker"
-        style={{ width: `${isSeeking ? displayedProgress : progress}%` }}
+        style={{
+          width: `${isSeeking ? displayedProgress : progress}%`,
+          backgroundColor: config.general.seekbar.barBackgroundColor,
+        }}
       ></div>
     </div>
   );

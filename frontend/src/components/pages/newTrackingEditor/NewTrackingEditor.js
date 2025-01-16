@@ -24,6 +24,7 @@ import { fabric } from "fabric";
 import "./NewTrackingEditor.css";
 import SeekBar from "./SeekBar";
 import { Switch, Button, Box } from "@mui/material";
+import config from "../../../config.json";
 
 import TrackList from "../newTrackingEditor/TrackList";
 import TrackListItemPlayer from "./TrackListItemPlayer";
@@ -108,11 +109,11 @@ const NewTrackingEditor = () => {
   const [isTooltipVisible, setTooltipVisible] = useState(false);
   const [bindingAction, setBindingAction] = useState(null);
   const [keyBindings, setKeyBindings] = useState({
-    playPause: " ",
-    nextFrame: ".",
-    previousFrame: ",",
-    jumpForward: "ArrowRight",
-    jumpBackward: "ArrowLeft",
+    playPause: config.general.keyBindings.playPause,
+    nextFrame: config.general.keyBindings.nextFrame,
+    previousFrame: config.general.keyBindings.previousFrame,
+    jumpForward: config.general.keyBindings.jumpForward,
+    jumpBackward: config.general.keyBindings.jumpBackward,
   });
 
   const handleModalOpen = (playerInList) => {
@@ -156,6 +157,27 @@ const NewTrackingEditor = () => {
     );
     setSelectedTrailsBall(new Array());
   };
+
+  useEffect(() => {
+    const root = document.documentElement;
+
+    root.style.setProperty(
+      "--main-text-color",
+      config.general.trackingEditor.color.mainText,
+    );
+    root.style.setProperty(
+      "--main-bg",
+      config.general.trackingEditor.color.mainBg,
+    );
+    root.style.setProperty(
+      "--secondary-bg",
+      config.general.trackingEditor.color.secondaryBg,
+    );
+    root.style.setProperty(
+      "--accent",
+      config.general.trackingEditor.color.accent,
+    );
+  }, []);
 
   const handleMultiBallTrailsDelete = () => {
     console.log("Multiplayer delete ball trails");
@@ -1877,8 +1899,8 @@ const NewTrackingEditor = () => {
             variant="contained"
             onClick={handleAddPlayer}
             sx={{
-              backgroundColor: "#BBC3C9 !important",
-              color: "#1b1f22 !important",
+              backgroundColor: `${config.general.buttons.addPlayer.backgroundColor} !important`,
+              color: `${config.general.buttons.addPlayer.color} !important`,
             }}
           >
             Add player
@@ -1888,8 +1910,8 @@ const NewTrackingEditor = () => {
             variant="contained"
             onClick={handleMultiSelectMerge}
             sx={{
-              backgroundColor: "#BBC3C9 !important",
-              color: "#1b1f22 !important",
+              backgroundColor: `${config.general.buttons.merge.backgroundColor} !important`,
+              color: `${config.general.buttons.merge.color} !important`,
             }}
           >
             Merge Player
@@ -1899,8 +1921,8 @@ const NewTrackingEditor = () => {
             variant="contained"
             onClick={handleMultiSelectMergeBall}
             sx={{
-              backgroundColor: "#BBC3C9 !important",
-              color: "#1b1f22 !important",
+              backgroundColor: `${config.general.buttons.mergeBall.backgroundColor} !important`,
+              color: `${config.general.buttons.mergeBall.backgroundColor} !important`,
             }}
           >
             Merge Ball
@@ -1910,8 +1932,8 @@ const NewTrackingEditor = () => {
             variant="contained"
             onClick={handleMultiBallTrailsDelete}
             sx={{
-              backgroundColor: "#BBC3C9 !important",
-              color: "#1b1f22 !important",
+              backgroundColor: `${config.general.buttons.deleteBallTrails.backgroundColor} !important`,
+              color: `${config.general.buttons.deleteBallTrails.backgroundColor} !important`,
             }}
           >
             Del selected Balltrails
