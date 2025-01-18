@@ -36,11 +36,7 @@ import {
   defineTrailBehaviourBall,
   updateHomography,
 } from "../../../utils/canvasUtils";
-import {
-  multiPlayerMerge,
-  multiBallMerge,
-  multiBallTrailsDelete,
-} from "../../../utils/validation";
+
 import { DownloadButton } from "./DownloadButton";
 import { parseLogFile } from "../../../utils/logFileParser";
 import { FieldDetailsButton } from "./field/FieldDetailsButton";
@@ -48,6 +44,23 @@ import api from "../../../api/api";
 import { SettingsBallButton } from "./SettingsBallButton";
 import { SettingsTrailsButton } from "./SettingsTrailsButton";
 import { getPointsToTrack } from "../../../utils/templates";
+import { modalBallOpen, modalOpen, modalsClose } from "./modalHandler";
+import {
+  blink,
+  deleteBall,
+  deletePlayer,
+  setName,
+  setNameBall,
+} from "./canvasUtils";
+import { generatePoster } from "./postGenerator";
+import useInitializeTrackingData from "./useInitializeTrackingData";
+import { updateSidebar } from "./sidebarUpdater";
+import { generateColor } from "../../../utils/colorGenerator";
+import {
+  handleMultiBallTrailsDelete,
+  handleMultiSelectMerge,
+  handleMultiSelectMergeBall,
+} from "./multiSelectHandlers";
 
 // TODO Take a video_id instead and have an endpoint on the server where we supply a video_id and get the corresponding video
 const NewTrackingEditor = () => {
@@ -1668,7 +1681,15 @@ const NewTrackingEditor = () => {
           <Button
             data-testid="merge-button"
             variant="contained"
-            onClick={handleMultiSelectMerge}
+            onClick={() =>
+              handleMultiSelectMerge(
+                selectedTrails,
+                annotations,
+                setAnnotations,
+                setPlayerNameMap,
+                setSelectedTrails,
+              )
+            }
             sx={{
               backgroundColor: "#BBC3C9 !important",
               color: "#1b1f22 !important",
@@ -1679,7 +1700,16 @@ const NewTrackingEditor = () => {
           <Button
             data-testid="merge-button-ball"
             variant="contained"
-            onClick={handleMultiSelectMergeBall}
+            onClick={() =>
+              handleMultiSelectMergeBall(
+                selectedTrailsBall,
+                annotationBallTracks,
+                setAnnotationBallTracks,
+                ballNameMap,
+                setBallNameMap,
+                setSelectedTrailsBall,
+              )
+            }
             sx={{
               backgroundColor: `${config.general.buttons.mergeBall.backgroundColor} !important`,
               color: `${config.general.buttons.mergeBall.backgroundColor} !important`,
@@ -1690,7 +1720,16 @@ const NewTrackingEditor = () => {
           <Button
             data-testid="delete-ball-trails-button"
             variant="contained"
-            onClick={handleMultiBallTrailsDelete}
+            onClick={() =>
+              handleMultiBallTrailsDelete(
+                selectedTrailsBall,
+                annotationBallTracks,
+                setAnnotationBallTracks,
+                ballNameMap,
+                setBallNameMap,
+                setSelectedTrailsBall,
+              )
+            }
             sx={{
               backgroundColor: `${config.general.buttons.deleteBallTrails.backgroundColor} !important`,
               color: `${config.general.buttons.deleteBallTrails.backgroundColor} !important`,

@@ -1,4 +1,9 @@
 // multiSelectHandlers.js
+import {
+  multiPlayerMerge,
+  multiBallMerge,
+  multiBallTrailsDelete,
+} from "../../../utils/validation";
 
 export const handleMultiSelectMerge = (
   selectedTrails,
@@ -7,7 +12,6 @@ export const handleMultiSelectMerge = (
   playerNameMap,
   setPlayerNameMap,
   setSelectedTrails,
-  multiPlayerMerge,
 ) => {
   console.log("Multiplayer merge");
   console.log(Array.from(selectedTrails));
@@ -28,7 +32,6 @@ export const handleMultiSelectMergeBall = (
   ballNameMap,
   setBallNameMap,
   setSelectedTrailsBall,
-  multiBallMerge,
 ) => {
   console.log("Multiplayer merge ball");
   console.log(Array.from(selectedTrailsBall));
@@ -49,7 +52,6 @@ export const handleMultiBallTrailsDelete = (
   ballNameMap,
   setBallNameMap,
   setSelectedTrailsBall,
-  multiBallTrailsDelete,
 ) => {
   console.log("Multiplayer delete ball trails");
   console.log(Array.from(selectedTrailsBall));
