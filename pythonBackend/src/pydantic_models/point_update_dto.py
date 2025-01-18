@@ -1,7 +1,8 @@
-from typing import List
+from typing import List, Optional
 from pydantic import BaseModel
 
 class Point(BaseModel):
+    label: Optional[str] = None
     id: str
     x: float
     y: float

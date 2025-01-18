@@ -9,6 +9,7 @@ import IconButton from "@material-ui/core/IconButton";
 import { green, pink } from "@mui/material/colors";
 import { EditText } from "react-edit-text";
 import "react-edit-text/dist/index.css";
+import config from "../../../config.json";
 
 import "./NewTrackingEditor.css";
 import { ReactComponent as Highlight } from "../../../icons/highlight.svg";
@@ -142,8 +143,8 @@ class TrackListItemPlayer extends Component {
     };
 
     const dotStyle = {
-      width: "12px",
-      height: "12px",
+      width: config.soccer.player.sidebarDot.width + "px",
+      height: config.soccer.player.sidebarDot.height + "px",
       borderRadius: "50%",
       backgroundColor:
         "rgb(" +

@@ -52,33 +52,18 @@ async def track_points_logic(dto: PointUpdate):
             break
 
         frame_count += 1
-        if frame_count % FRAME_SKIP != 0:
-            tracked_points.append(tracked_points[-1] if tracked_points else initial_points)
+        if frame_count % frame_skip != 0:
             continue
 
         new_points = []
-        
         for i, tracker in enumerate(trackers):
-            if i >= len(tracked_points[-1]):
-                continue
-            
-            current_point = tracked_points[-1][i]
-            
-            if is_point_near_player_box(current_point, dto.player_boxes, frame_number):
-                new_points.append(current_point)
-                continue
-                
-            part_of_image, (offset_x, offset_y) = get_part_of_image(frame, current_point, PART_OF_IMAGE_SIZE)
-            success, box = tracker.update(part_of_image)
-            
+            success, box = tracker.update(frame)
             if not success:
-                new_points.append(current_point)
-                continue
-
+                break
             x, y, w, h = box
             new_x = current_point.x + (x - part_of_image.shape[1]//2) + offset_x
             new_y = current_point.y + (y - part_of_image.shape[0]//2) + offset_y
-            
+
             dx = new_x - current_point.x
             dy = new_y - current_point.y
             if abs(dx) > MAX_MOVEMENT or abs(dy) > MAX_MOVEMENT:
@@ -89,6 +74,7 @@ async def track_points_logic(dto: PointUpdate):
                         x=new_x,
                         y=new_y,
                         id=current_point.id,
+                        label=dto.points[i].label,
                     )
                 )
 
@@ -99,7 +85,7 @@ async def track_points_logic(dto: PointUpdate):
 
     if APPLY_SMOOTHING:
         tracked_points = smooth_points(tracked_points)
-        
+
     return TrackingResult(
         tracked_points=tracked_points,
         start_frame=dto.start_frame,
