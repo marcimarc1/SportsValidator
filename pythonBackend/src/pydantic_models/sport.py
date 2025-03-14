@@ -1,6 +1,9 @@
-from pydantic import BaseModel
+from typing import Dict, List
+
+from pydantic import BaseModel, ConfigDict
 
 
-class SportDto(BaseModel):
-    id: int
-    name: str
+class SportsDto(BaseModel):
+    sports: List[Dict]
+
+    model_config = ConfigDict(from_attributes=True)
