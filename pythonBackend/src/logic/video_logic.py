@@ -1,10 +1,14 @@
+import shutil
+import uuid
+
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
 from sqlalchemy.future import select
-from ..db.db_models.videos import Video
-from ..db.db_models.games import Game
-from ..pydantic_models.Import.import_request_dto import ImportRequestDto
+from db.db_models.videos import Video
+from pydantic_models.Import.import_request_dto import ImportRequestDto
 import os
+
+from pydantic_models.video import VideosDto
 
 
 def add_video(dto: ImportRequestDto, db: Session):
@@ -18,15 +22,11 @@ def add_video(dto: ImportRequestDto, db: Session):
     db.commit()
     id_ = video.id
     path = os.environ.get('APP_DATA_PATH')
-    path = os.path.join(path, game.id)
+    path = os.path.join(path, dto.game_id)
     if os.path.exists(path):
         path = os.path.join(path,id_)
         if not os.path.exists(path):
             os.makedirs(path)
-        else:
-            throw(HTTPException(status_code=500, detail="UUID for Video already exists"))
-    else:
-        throw(HTTPException(status_code=500, detail="Game Directory does not exist"))
     assert os.path.exists(path)
     video.video_path = path
     db.commit()
@@ -53,7 +53,7 @@ def delete_video(video_id: int, db: Session):
     if os.path.exists(path):
         shutil.rmtree(path)
 
-async def get_videos_by_game_id(game_id: int, db: Session):
-    videos = db.query(Video).filter(Video.game_id ==game_id).all()
-    return videos
+async def list_videos(game_id: uuid.UUID, db: Session)-> VideosDto:
+    db_videos = db.query(Video).filter(Video.game_id == game_id).all()
+    return  VideosDto(videos=[VideosDto.model_validate(video) for video in db_videos])
 
