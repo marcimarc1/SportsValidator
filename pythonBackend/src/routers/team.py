@@ -1,26 +1,31 @@
+from typing import List
 import fastapi
-from fastapi import HTTPException, Depends
-from sqlalchemy.orm import Session
-from ..logic.team_logic import *
-from ..db.database import get_db
-from ..pydantic_models.team import TeamDto
+from fastapi import Depends
+from pydantic.v1 import parse_obj_as
+
+from logic.team_logic import *
+from db.database import get_db
+from pydantic_models.team import *
 
 router = fastapi.APIRouter(
     prefix="/team"
 )
 
+@router.get("/list", response_model=TeamsDto, tags=["team"])
+async def get_list(db: Session = Depends(get_db)):
+    return list_teams(db=db)
+
 
 @router.get("/{team_id}", response_model=TeamDto, tags=["team"])
 async def get(team_id: int, db: Session = Depends(get_db)):
-    team = await read_team(team_id, db)
+    team = await get_team(team_id, db)
     return team
 
 
 # Create
-@router.post("/",response_model=TeamDto, tags=["team"])
-async def create(dto: TeamDto, db: Session = Depends(get_db)):
-    team = await create_team(dto, db)
-    return team
+@router.post("/", response_model= TeamDto, tags=["team"])
+async def create(dto: CreateTeamDto, db: Session = Depends(get_db)):
+    return create_team(dto, db)
 
 
 # Update
