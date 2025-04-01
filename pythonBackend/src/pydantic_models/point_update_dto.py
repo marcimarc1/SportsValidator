@@ -1,5 +1,6 @@
 from typing import List
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
+
 
 class Point(BaseModel):
     id: str
@@ -13,15 +14,14 @@ class PlayerBox(BaseModel):
     x_2: float
     y_2: float
 
+    model_config = ConfigDict(from_attributes=True)
+
 class PointUpdate(BaseModel):
     video_id: str
     points: List[Point]
     player_boxes: List[PlayerBox]
     start_frame: int
     end_frame: int
-
-    class Config:
-        orm_mode = True
 
 class TrackingResult(BaseModel):
     tracked_points: List[List[Point]]

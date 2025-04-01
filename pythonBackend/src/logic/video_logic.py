@@ -1,59 +1,71 @@
 import shutil
 import uuid
-
 from sqlalchemy.orm import Session
-from fastapi import HTTPException
+from fastapi import HTTPException, UploadFile, File
+from fastapi.responses import FileResponse
 from sqlalchemy.future import select
+from db.db_models.annotations import Annotation
 from db.db_models.videos import Video
 from pydantic_models.Import.import_request_dto import ImportRequestDto
 import os
 
-from pydantic_models.video import VideosDto
+from pydantic_models.video import VideosDto, VideoUploadDto, VideoDto
 
 
-def add_video(dto: ImportRequestDto, db: Session):
+def add_video(dto: VideoUploadDto,db: Session,) -> uuid.UUID:
     video = Video(
         game_id = dto.game_id,
-        video_path = "placeholder",
-        uploaded_by = dto.upload_user,
-        sequence_number = dto.sequence_number
+        sequence_number = dto.sequence_number,
+        name = dto.name,
     )
     db.add(video)
     db.commit()
-    id_ = video.id
-    path = os.environ.get('APP_DATA_PATH')
-    path = os.path.join(path, dto.game_id)
-    if os.path.exists(path):
-        path = os.path.join(path,id_)
-        if not os.path.exists(path):
-            os.makedirs(path)
-    assert os.path.exists(path)
-    video.video_path = path
-    db.commit()
-    return video
+    videoId: uuid.UUID = video.id
+    return videoId
 
-def delete_video(video_id: int, db: Session):
-    qry = db.execute(select(Video).filter(Video.id == video_id))
-    video = qry.scalars().first()
-    if video is None:
-        raise HTTPException(status_code=404, detail="Game not found")
+def delete_video(video_id: uuid.UUID, db: Session):
+    db_video = db.query(Video).filter(Video.id == video_id).one_or_none()
 
-    game_id = video.game_id
-    sequence_number = video.sequence_number
-    path = video.video_path
+    if db_video:
+        annotations = db.query(Annotation).filter(Annotation.video_id == video_id).all()
+        for annotation in annotations:
+            db.delete(annotation)
+        game_id = db_video.game_id # For Path
+        db.delete(db_video)
+        db.commit()
 
-    db.delete(video)
-    db.commit()
-    db.query(Video).\
-        filter(Video.game_id == game_id and Video.sequence_number>sequence_number).\
-        update({"sequence_number": Video.sequence_number-1})
-    db.commit()
+        basePath = os.environ.get('APP_DATA_PATH', 'C:/SportsValidator')
+        gamePath = os.path.join(basePath, str(game_id))
+        videoPath = os.path.join(gamePath, str(video_id))
+        # Delete Folder
+        if os.path.exists(videoPath) and os.path.isdir(videoPath):
+            shutil.rmtree(videoPath)
 
-    # Delete Folder
-    if os.path.exists(path):
-        shutil.rmtree(path)
+        return {"message": "Video deleted successfully"}
+
+
+    return {"message": "No Video for given Id"}
+
 
 async def list_videos(game_id: uuid.UUID, db: Session)-> VideosDto:
     db_videos = db.query(Video).filter(Video.game_id == game_id).all()
-    return  VideosDto(videos=[VideosDto.model_validate(video) for video in db_videos])
+    return  VideosDto(videos=[VideoDto.model_validate(video) for video in db_videos])
+
+
+async def get_video_file(video_id: uuid.UUID, db: Session):
+    db_video = db.query(Video).filter(Video.id == video_id).one_or_none()
+    if not db_video:
+        return {"message": "Video not found"}
+
+    basePath = os.environ.get('APP_DATA_PATH', 'C:/SportsValidator')
+    gamePath = os.path.join(basePath, str(db_video.game_id))
+    videoPath = os.path.join(gamePath, str(video_id))
+    filePath = os.path.join(videoPath, "video.mp4")
+
+    if not os.path.exists(filePath):
+        return {"message": "Video-File not found"}
+
+    return FileResponse(filePath, media_type="video/mp4")
+
+
 

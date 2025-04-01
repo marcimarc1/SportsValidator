@@ -1,6 +1,6 @@
 import cv2
 import os
-from ...pydantic_models.point_update_dto import PointUpdate, Point, TrackingResult
+from pydantic_models.point_update_dto import PointUpdate, Point, TrackingResult
 
 
 async def track_points_logic(dto: PointUpdate):

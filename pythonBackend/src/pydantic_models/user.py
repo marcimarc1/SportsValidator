@@ -1,10 +1,16 @@
-from pydantic import BaseModel
+import uuid
+
+from pydantic import BaseModel, ConfigDict
 
 
-class UserDto(BaseModel):
+class BaseUserDto(BaseModel):
     username: str
     email: str
     password: str
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
+
+class UserDto(BaseUserDto):
+    id: uuid.UUID
+
+

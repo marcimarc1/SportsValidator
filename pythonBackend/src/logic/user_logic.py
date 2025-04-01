@@ -1,8 +1,8 @@
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
 from sqlalchemy.future import select
-from ..db.db_models.users import User
-from ..pydantic_models.user import UserDto
+from db.db_models.users import User
+from pydantic_models.user import UserDto
 
 async def create_user(dto: UserDto, db: Session):
     user = User(**dto.model_dump())

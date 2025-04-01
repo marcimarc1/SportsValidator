@@ -1,11 +1,11 @@
 from contextlib import asynccontextmanager
 import os
-# import aiofiles
+import uvicorn
 import logging
-from typing import List
 from fastapi import FastAPI, UploadFile
-from fastapi.middleware.cors import CORSMiddleware
-from .routers import annotation, user, game, sport, team, video
+from starlette.middleware import Middleware
+from starlette.middleware.cors import CORSMiddleware
+from routers import annotation, user, game, sport, team, video
 from alembic.config import Config
 from alembic import command
 
@@ -27,15 +27,23 @@ async def lifespan(app_: FastAPI):
     yield
     log.info("Shutting down...")
 
-# App Creation
-app = FastAPI(lifespan=lifespan)
+origins = [
+    "http://localhost",
+    "http://localhost:8080",
+    "http://localhost:3000",
+]
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+middleware =[
+    Middleware(
+        CORSMiddleware,
+        allow_origins=origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )]
+
+app = FastAPI(lifespan=lifespan, debug=True, middleware=middleware)
+
 
 # Bind Routers from Router Directory
 app.include_router(annotation.router)
@@ -51,12 +59,5 @@ app.include_router(video.router)
 async def check_app():
     return {"status": "App Running!"}
 
-# @app.post("/upload")
-# async def upload(files: List[UploadFile]):
-#     for file in files:
-#         # Todo: Add correct path for upload items
-#         async with aiofiles.open("path", 'wb') as out_file:
-#             while content := await file.read(1024):
-#                 await out_file.write(content)
-#
-#     return "Files successfully uploaded"
+if __name__ == "__main__":
+    uvicorn.run(app, host="localhost", port=8000)

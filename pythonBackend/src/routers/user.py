@@ -1,9 +1,9 @@
 import fastapi
 from fastapi import HTTPException, Depends
 from sqlalchemy.orm import Session
-from ..logic.user_logic import *
-from ..db.database import get_db
-from ..pydantic_models.user import UserDto
+from logic.user_logic import *
+from db.database import get_db
+from pydantic_models.user import UserDto
 
 router = fastapi.APIRouter(
     prefix="/user"
