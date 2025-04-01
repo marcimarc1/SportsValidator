@@ -5,6 +5,8 @@ import Form from "react-bootstrap/Form";
 import api from "../../../../api/api";
 import {useState} from "react";
 
+import axios from "axios";
+
 const style = {
   position: 'absolute',
   top: '50%',
@@ -29,6 +31,7 @@ const AddTeamModal = () => {
     setOpen(true);
     setFormData({
       ...formData,
+        id: null,
         team_name: ''
     })
   };
@@ -37,18 +40,28 @@ const AddTeamModal = () => {
     setOpen(false);
   };
 
-      const handleInputChange = (event) => {
-
-        let value = event.target.value;
-        setFormData({
-            ...formData,
-            [event.target.name]: value,
-        });
-    }
+  const handleInputChange = (event) => {
+      let value = event.target.value;
+      setFormData({
+          ...formData,
+          [event.target.name]: value,
+      });
+  }
 
     const handleFormSubmit = async (event) => {
+
         event.preventDefault();
-        await api.post('/team/', formData)
+        try {
+            await axios.post("http://localhost:8000/team/",
+                formData,
+                {headers: {
+                'Access-Control-Allow-Origin': '*',
+                    'Content-Type': 'application/json',
+            },
+            withCredentials: true})
+        }catch(err) {
+            console.log(err);
+        }finally {handleClose()}
     }
 
   return (
@@ -65,7 +78,7 @@ const AddTeamModal = () => {
             <form onSubmit={handleFormSubmit}>
               <div className='mb-3 mt-3'>
                 <label htmlFor='name' className="form-label">Name:</label>
-                <input type='text' className='form-control' id='name' name='name'
+                <input type='text' className='form-control' id='name' name='team_name'
                        onChange={handleInputChange} value={formData.team_name}/>
               </div>
               <button className="FileButton" type='submit'>Save</button>
