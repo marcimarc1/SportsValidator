@@ -124,21 +124,12 @@ function createLabel(text, topCoordinate, leftCoordinate) {
   });
 }
 
-export const drawFieldPoints = (
-  canvas,
-  frameNumber,
-  homographies,
+export function getOriginalFieldPoints(
+  points,
   horizontalScalingFactor,
   verticalScalingFactor,
-  sport,
-  length,
-  width,
-) => {
-  const { points, lines } = getTemplate(sport, length, width);
-  let homography = homographies[frameNumber];
-  let invHomography = inverse(homography);
-
-  const originalFieldPoints = Object.values(points)
+) {
+  return Object.values(points)
     .flat()
     .map((point, index) => {
       if (!point.coords || point.coords.length < 2) {
@@ -151,6 +142,24 @@ export const drawFieldPoints = (
       };
     })
     .filter((p) => p !== null);
+}
+
+export const drawFieldPoints = (
+  canvas,
+  frameNumber,
+  homographies,
+  horizontalScalingFactor,
+  verticalScalingFactor,
+  sport,
+  length,
+  width,
+  // filterBoxes, enable once filterBoxes data is correct
+) => {
+  const { points, lines } = getTemplate(sport, length, width);
+  let homography = homographies[frameNumber];
+  let invHomography = inverse(homography);
+
+  const originalFieldPoints = getOriginalFieldPoints(points);
 
   const drawPoint = (point, color, radius = 5) => {
     const transformedPoint = transformPoint(
@@ -345,13 +354,13 @@ export const drawFieldPoints = (
       points.penaltySpot[0].coords,
       config.soccer.penaltyArea.radius,
       config.soccer.penaltyArea["color-spot-1"],
-      "penalty-spot-1",
+      "penalty-spot-0",
     );
     drawCircle(
       points.penaltySpot[1].coords,
       config.soccer.penaltyArea.radius,
       config.soccer.penaltyArea["color-spot-2"],
-      "penalty-spot-2",
+      "penalty-spot-1",
     );
   }
 
@@ -450,23 +459,16 @@ export const updateHomography = (
 ) => {
   const { points } = getTemplate(sport, length, width);
 
-  const originalFieldPoints = Object.values(points)
-    .flat()
-    .map((point, index) => {
-      if (!point.coords || point.coords.length < 2) {
-        return null;
-      }
-      return {
-        x: point.coords[0] * horizontalScalingFactor,
-        y: point.coords[1] * verticalScalingFactor,
-        id: point.id,
-      };
-    })
-    .filter((p) => p !== null);
+  const originalFieldPoints = getOriginalFieldPoints(
+    points,
+    horizontalScalingFactor,
+    verticalScalingFactor,
+  ).filter((p) => p !== null);
 
   const templatePoints = Object.values(points)
     .flat()
-    .map((p) => p.coords);
+    .map((p) => p.coords)
+    .filter((o) => o !== undefined);
 
   const trackedPointsTransformed = trackedPoints?.map((obj) => ({
     x: obj.x / horizontalScalingFactor,
@@ -483,7 +485,6 @@ export const updateHomography = (
       trackedPointsTransformed,
       templatePoints,
     );
-
     homographies[frameNumber] = newHomography;
   } catch (error) {
     console.log(error);
