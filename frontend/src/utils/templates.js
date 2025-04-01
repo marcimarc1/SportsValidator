@@ -334,7 +334,34 @@ export const getPointsToTrack = (key) => {
         "single-net-1",
       ];
     case "Soccer":
-      return ["outer-0", "outer-1", "outer-2", "outer-3"];
+      return [
+        "outer-0",
+        "outer-1",
+        "outer-2",
+        "outer-3",
+        "penalty-left-0",
+        "penalty-left-1",
+        "penalty-left-2",
+        "penalty-left-3",
+        "goal-left-0",
+        "goal-left-1",
+        "goal-left-2",
+        "goal-left-3",
+        "penalty-right-0",
+        "penalty-right-1",
+        "penalty-right-2",
+        "penalty-right-3",
+        "goal-right-0",
+        "goal-right-1",
+        "goal-right-2",
+        "goal-right-3",
+        "midline-0",
+        "midline-1",
+        "middle-circle",
+        "penalty-spot-0",
+        "penalty-spot-1",
+      ];
+
     default:
       throw new Error("Template not found");
   }

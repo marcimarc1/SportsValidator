@@ -4,7 +4,7 @@ from sqlalchemy import pool
 from alembic import context
 
 from db.database import Base
-from db.db_models import annotations, access_role, player, player_history, game_history, teams, users,videos,roles, sport
+from db.db_models import annotations, access_role, player, player_history, game_history, teams, users,videos,roles, sport, homography
 
 config = context.config
 
