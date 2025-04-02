@@ -845,7 +845,7 @@ const NewTrackingEditor = () => {
 
     const onLoadedData = () => {
       console.log("Loaded data");
-      const poster = generatePoster(videoElement);
+      const poster = generatePoster(videoElement, frameDuration);
       if (poster) {
         canvas.add(poster);
       }
