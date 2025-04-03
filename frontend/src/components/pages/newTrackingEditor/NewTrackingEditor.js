@@ -117,6 +117,7 @@ const NewTrackingEditor = () => {
   const [selectedTrailsBall, setSelectedTrailsBall] = useState([]);
   const [videoSpeed, setVideoSpeed] = useState(1);
   const [isZoomModeEnabled, setIsZoomModeEnabled] = useState(false);
+  const [zoomStatus, setZoomStatus] = useState("Enable Zoom Mode");
   const [isTooltipVisible, setTooltipVisible] = useState(false);
   const [bindingAction, setBindingAction] = useState(null);
   const [keyBindings, setKeyBindings] = useState({
@@ -125,6 +126,7 @@ const NewTrackingEditor = () => {
     previousFrame: config.general.keyBindings.previousFrame,
     jumpForward: config.general.keyBindings.jumpForward,
     jumpBackward: config.general.keyBindings.jumpBackward,
+    ZoomModeEnabled: config.general.keyBindings.ZoomModeEnabled
   });
 
   const handleModalOpen = modalOpen(setPlayerChosenInList, setMergeModalState);
@@ -1086,6 +1088,10 @@ const NewTrackingEditor = () => {
         event.preventDefault();
         handleNextChunk();
         break;
+      case keyBindings.ZoomModeEnabled:
+        event.preventDefault();
+        handleZoomModeEnabled();
+        break;
       default:
         break;
     }
@@ -1252,6 +1258,11 @@ const NewTrackingEditor = () => {
         videoElement.pause();
       }
     }
+  };
+
+  const handleZoomModeEnabled = () => {
+    setIsZoomModeEnabled(!isZoomModeEnabled)
+    setZoomStatus(isZoomModeEnabled ? "Enable Zoom Mode":"Disable Zoom Mode")
   };
 
   const handleAdjustSpeed = () => {
@@ -1832,7 +1843,7 @@ const NewTrackingEditor = () => {
               className="zoom-text-button"
               onClick={() => setIsZoomModeEnabled(!isZoomModeEnabled)}
             >
-              {isZoomModeEnabled ? "Disable Zoom Mode" : "Enable Zoom Mode"}
+              {zoomStatus}
             </button>
           </div>
           <button className="zoom-text-button" onClick={handleZoomReset}>
