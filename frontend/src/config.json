@@ -13,7 +13,7 @@
       "containerBackgroundColor": "black"
     },
     "trackingEditor": {
-      "color":{
+      "color": {
         "mainText": "#f5edf0",
         "mainBg": "#1b1f22",
         "secondaryBg": "#424b53",
@@ -89,5 +89,4 @@
       "endzoneLength": 18.5
     }
   }
-
 }

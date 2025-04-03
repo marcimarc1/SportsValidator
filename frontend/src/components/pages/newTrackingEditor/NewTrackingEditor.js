@@ -126,7 +126,7 @@ const NewTrackingEditor = () => {
     previousFrame: config.general.keyBindings.previousFrame,
     jumpForward: config.general.keyBindings.jumpForward,
     jumpBackward: config.general.keyBindings.jumpBackward,
-    ZoomModeEnabled: config.general.keyBindings.ZoomModeEnabled
+    ZoomModeEnabled: config.general.keyBindings.ZoomModeEnabled,
   });
 
   const handleModalOpen = modalOpen(setPlayerChosenInList, setMergeModalState);
@@ -1261,8 +1261,8 @@ const NewTrackingEditor = () => {
   };
 
   const handleZoomModeEnabled = () => {
-    setIsZoomModeEnabled(!isZoomModeEnabled)
-    setZoomStatus(isZoomModeEnabled ? "Enable Zoom Mode":"Disable Zoom Mode")
+    setIsZoomModeEnabled(!isZoomModeEnabled);
+    setZoomStatus(isZoomModeEnabled ? "Enable Zoom Mode" : "Disable Zoom Mode");
   };
 
   const handleAdjustSpeed = () => {
