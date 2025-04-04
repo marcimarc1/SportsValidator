@@ -1686,6 +1686,7 @@ const NewTrackingEditor = () => {
                 selectedTrails,
                 annotations,
                 setAnnotations,
+                playerNameMap,
                 setPlayerNameMap,
                 setSelectedTrails,
               )
