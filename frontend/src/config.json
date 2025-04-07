@@ -5,14 +5,15 @@
       "nextFrame": ".",
       "previousFrame": ",",
       "jumpForward": "ArrowRight",
-      "jumpBackward": "ArrowLeft"
+      "jumpBackward": "ArrowLeft",
+      "ZoomModeEnabled": "x"
     },
     "seekbar": {
       "barBackgroundColor": "#f00",
       "containerBackgroundColor": "black"
     },
     "trackingEditor": {
-      "color":{
+      "color": {
         "mainText": "#f5edf0",
         "mainBg": "#1b1f22",
         "secondaryBg": "#424b53",
@@ -88,5 +89,4 @@
       "endzoneLength": 18.5
     }
   }
-
 }
