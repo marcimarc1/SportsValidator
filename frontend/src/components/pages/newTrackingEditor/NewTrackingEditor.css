@@ -363,3 +363,8 @@ for now just using style property of EditText component in JS code*/
 .tests {
   display: none;
 }
+.team-section {
+  border-top: 1px solid #666;
+  padding-top: 1rem;
+  margin-top: 1rem;
+}

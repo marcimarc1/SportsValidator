@@ -86,6 +86,8 @@ const NewTrackingEditor = () => {
   const [isShowingBox, setIsShowingBox] = useState(true);
   const [isShowingAnnotation, setIsShowingAnnotation] = useState(true);
   const [playerList, setPlayerList] = useState([]); //list of player TrackListItemPlayers
+  const [teams, setTeams] = useState([]);
+  const [teamColors, setTeamColors] = useState({});
   const [canvasBoxes, setCanvasBoxes] = useState([]); //list of canvas boxes for player
   const [playerNameMap, setPlayerNameMap] = useState(new Map()); //map of playerkey to playername
   const [activeObject, setActiveObject] = useState(null);
@@ -152,6 +154,59 @@ const NewTrackingEditor = () => {
     setBallNameMap,
   );
 
+  const addTeam = (color) => {
+    const newTeamId = teams.length + 1;
+
+    setTeams((prevTeams) => [
+      ...prevTeams,
+      { id: newTeamId, name: `Team ${newTeamId}`, players: [] },
+    ]);
+
+    setTeamColors((prevColors) => ({
+      ...prevColors,
+      [newTeamId]: {
+        r: parseInt(color.slice(1, 3), 16),
+        g: parseInt(color.slice(3, 5), 16),
+        b: parseInt(color.slice(5, 7), 16),
+      },
+    }));
+  };
+
+  const addPlayerToTeam = (teamId, playerId) => {
+    const id = parseInt(playerId);
+    const isPlayerInAnyTeam = teams.some((team) =>
+      team.players.some((player) => player.id === id),
+    );
+
+    if (isPlayerInAnyTeam) {
+      alert("This player is already in a team!");
+      return;
+    }
+
+    const selectedPlayerComponent = playerList.find(
+      (p) => p.props.playerBox?.my?.key === id,
+    );
+    if (!selectedPlayerComponent) return;
+
+    const selectedPlayer = {
+      id,
+      name: selectedPlayerComponent.props.name,
+    };
+
+    setTeams((prevTeams) =>
+      prevTeams.map((team) =>
+        team.id === teamId
+          ? { ...team, players: [...team.players, selectedPlayer] }
+          : team,
+      ),
+    );
+
+    const teamColor = teamColors[teamId];
+    colorSet.set(id, teamColor);
+
+    drawBoundingBoxes(frameNumber);
+  };
+
   let { videoName } = useParams();
 
   const canvasRef = useRef(null);
@@ -210,7 +265,7 @@ const NewTrackingEditor = () => {
 
   const handleSetName = (playerBox, name) => {
     setName(canvas, playerBox, name, playerNameMap);
-    drawBoundingBoxes(frameNumber)
+    drawBoundingBoxes(frameNumber);
   };
 
   const handleSetNameBall = (ballBox, name) => {
@@ -412,9 +467,9 @@ const NewTrackingEditor = () => {
               name={playerNameMap.get(activeObject.my.key)}
               changeSelection={changeSelection}
               setName={handleSetName}
-              blink={blink}
+              blink={handleBlink}
               color={boxColor}
-              delete={deletePlayer}
+              delete={handleDeletePlayer}
               handleModalOpen={handleModalOpen}
             />,
           ]);
@@ -430,9 +485,9 @@ const NewTrackingEditor = () => {
               name={playerNameMap.get(tempBox.my.key)}
               changeSelection={changeSelection}
               setName={handleSetName}
-              blink={blink}
+              blink={handleBlink}
               color={boxColor}
-              delete={deletePlayer}
+              delete={handleDeletePlayer}
               handleModalOpen={handleModalOpen}
             />,
           ]);
@@ -451,7 +506,7 @@ const NewTrackingEditor = () => {
               name={ballNameMap.get(activeObject.my.key)}
               changeSelection={changeSelection}
               setName={setNameBall}
-              blink={blink}
+              blink={handleBlink}
               color={boxColor}
               delete={deleteBall}
               handleModalOpen={handleModalBallOpen}
@@ -468,7 +523,7 @@ const NewTrackingEditor = () => {
               name={ballNameMap.get(tempBox.my.key)}
               changeSelection={changeSelection}
               setName={setNameBall}
-              blink={blink}
+              blink={handleBlink}
               color={boxColor}
               delete={deleteBall}
               handleModalOpen={handleModalBallOpen}
@@ -640,9 +695,9 @@ const NewTrackingEditor = () => {
             name={playerNameMap.get(boundingBox.my.key)}
             changeSelection={changeSelection}
             setName={handleSetName}
-            blink={blink}
+            blink={handleBlink}
             color={boxColor}
-            delete={deletePlayer}
+            delete={handleDeletePlayer}
             handleModalOpen={handleModalOpen}
           />,
         ]);
@@ -676,8 +731,8 @@ const NewTrackingEditor = () => {
               name={playerNameMap.get(boundingBox.PlayerKey)}
               changeSelection={changeSelection}
               setName={handleSetName}
-              blink={blink}
-              delete={deletePlayer}
+              blink={handleBlink}
+              delete={handleDeletePlayer}
               handleModalOpen={handleModalOpen}
             />,
           ]);
@@ -765,7 +820,8 @@ const NewTrackingEditor = () => {
         const fontSize = 12;
         const scaledX = a.x1 * horizontalScalingFactor;
         const scaledY = a.y1 * verticalScalingFactor - fontSize;
-        const playerKey = playerNameMap.get(a.PlayerKey) || a.PlayerKey.toString();
+        const playerKey =
+          playerNameMap.get(a.PlayerKey) || a.PlayerKey.toString();
         let boxKey = new fabric.Text(playerKey, {
           left: scaledX,
           top: scaledY,
@@ -986,8 +1042,8 @@ const NewTrackingEditor = () => {
               name={playerNameMap.get(boundingBox.PlayerKey)}
               changeSelection={changeSelection}
               setName={handleSetName}
-              blink={blink}
-              delete={deletePlayer}
+              blink={handleBlink}
+              delete={handleDeletePlayer}
               color={boxColor}
               handleModalOpen={handleModalOpen}
             />,
@@ -1026,7 +1082,7 @@ const NewTrackingEditor = () => {
               name={ballNameMap.get(boundingBox.trackNo)}
               changeSelection={changeSelection}
               setName={setNameBall}
-              blink={blink}
+              blink={handleBlink}
               handleModalOpen={handleModalBallOpen}
               delete={deleteBall}
             />,
@@ -1811,7 +1867,14 @@ const NewTrackingEditor = () => {
           style={{ display: "block", width: "100%", height: "auto" }}
         ></canvas>
         {/* <div className="sidebar">sidebar is here</div> */}
-        <TrackList children={playerList} groups={ballList}></TrackList>
+        <TrackList
+          children={playerList}
+          groups={ballList}
+          teams={teams}
+          teamColors={teamColors}
+          addTeam={addTeam}
+          addPlayerToTeam={addPlayerToTeam}
+        />
       </div>
       <div className="controls">
         <SeekBar
