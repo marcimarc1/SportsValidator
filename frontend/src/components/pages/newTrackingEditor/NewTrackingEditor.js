@@ -210,6 +210,7 @@ const NewTrackingEditor = () => {
 
   const handleSetName = (playerBox, name) => {
     setName(canvas, playerBox, name, playerNameMap);
+    drawBoundingBoxes(frameNumber)
   };
 
   const handleSetNameBall = (ballBox, name) => {
@@ -410,7 +411,7 @@ const NewTrackingEditor = () => {
               playerBox={activeObject}
               name={playerNameMap.get(activeObject.my.key)}
               changeSelection={changeSelection}
-              setName={setName}
+              setName={handleSetName}
               blink={blink}
               color={boxColor}
               delete={deletePlayer}
@@ -428,7 +429,7 @@ const NewTrackingEditor = () => {
               playerBox={tempBox}
               name={playerNameMap.get(tempBox.my.key)}
               changeSelection={changeSelection}
-              setName={setName}
+              setName={handleSetName}
               blink={blink}
               color={boxColor}
               delete={deletePlayer}
@@ -638,7 +639,7 @@ const NewTrackingEditor = () => {
             playerBox={boundingBox}
             name={playerNameMap.get(boundingBox.my.key)}
             changeSelection={changeSelection}
-            setName={setName}
+            setName={handleSetName}
             blink={blink}
             color={boxColor}
             delete={deletePlayer}
@@ -674,7 +675,7 @@ const NewTrackingEditor = () => {
               color={boxColor}
               name={playerNameMap.get(boundingBox.PlayerKey)}
               changeSelection={changeSelection}
-              setName={setName}
+              setName={handleSetName}
               blink={blink}
               delete={deletePlayer}
               handleModalOpen={handleModalOpen}
@@ -764,7 +765,7 @@ const NewTrackingEditor = () => {
         const fontSize = 12;
         const scaledX = a.x1 * horizontalScalingFactor;
         const scaledY = a.y1 * verticalScalingFactor - fontSize;
-        const playerKey = a.PlayerKey.toString();
+        const playerKey = playerNameMap.get(a.PlayerKey) || a.PlayerKey.toString();
         let boxKey = new fabric.Text(playerKey, {
           left: scaledX,
           top: scaledY,
@@ -984,7 +985,7 @@ const NewTrackingEditor = () => {
               playerBox={playerBox}
               name={playerNameMap.get(boundingBox.PlayerKey)}
               changeSelection={changeSelection}
-              setName={setName}
+              setName={handleSetName}
               blink={blink}
               delete={deletePlayer}
               color={boxColor}
