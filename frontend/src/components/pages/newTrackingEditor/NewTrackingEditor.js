@@ -1905,7 +1905,12 @@ const NewTrackingEditor = () => {
           <div>
             <button
               className="zoom-text-button"
-              onClick={() => setIsZoomModeEnabled(!isZoomModeEnabled)}
+              onClick={() => {
+                setIsZoomModeEnabled(!isZoomModeEnabled);
+                setZoomStatus(
+                  isZoomModeEnabled ? "Enable Zoom Mode" : "Disable Zoom Mode",
+                );
+              }}
             >
               {zoomStatus}
             </button>
