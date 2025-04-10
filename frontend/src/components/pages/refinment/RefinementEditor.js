@@ -13,10 +13,11 @@ import api from "../../../api/api";
 import { getPointsToTrack, getTemplate } from "../../../utils/templates";
 import { invertNoCV } from "../../../utils/mathUtils";
 import { transformPoint } from "../../../utils/homographyUtils";
-import { convertFieldPointsFormat } from "./util";
+import { convertFieldPointsFormat, homographyToFieldData } from "./util";
 import BounceLoader from "react-spinners/BounceLoader";
 import SideBar from "./SideBar";
 import SaveRefinementModal from "./SaveRefinementModal";
+import { Button } from "@mui/material";
 
 // TODO Take a video_id instead and have an endpoint on the server where we supply a video_id and get the corresponding video
 const RefinementEditor = () => {
@@ -64,44 +65,7 @@ const RefinementEditor = () => {
   // Send the full homography data to the backend
   useEffect(() => {
     // Send out ALL
-    const { points, lines } = getTemplate(
-      logFile.Sport,
-      fieldSize?.length ?? 103,
-      fieldSize?.height ?? 68,
-    );
-
-    const res = {};
-
-    for (let i = 0; i < Object.entries(homographies).length; i++) {
-      // Fill out the entire refinement object for this frame
-      let homography = homographies[i];
-      // Using normal invert causes issue window.cv.Mat is not a constructor, this is a workaround
-      let invHomography = invertNoCV(homography);
-
-      const innerRes = {};
-
-      for (const [key, value] of Object.entries(points)) {
-        if (Array.isArray(value) && key !== "middleCircle") {
-          innerRes[key] = [];
-          // invert
-          value.forEach((elem) => {
-            innerRes[key].push(
-              transformPoint(
-                elem,
-                invHomography,
-                canvas.height / 3840,
-                canvas.width / 2460,
-              ),
-            );
-          });
-        }
-      }
-      innerRes["frame"] = i;
-      // Enable once filterBoxes data is correct
-      // innerRes["filterBoxes"] = filterBoxes[i]
-      res[i] = innerRes;
-    }
-
+    const res = homographyToFieldData(homographies, logFile, canvas, fieldSize);
     api
       .post(`/annotation/refine/${logFile.Sport}/${video.name}`, res)
       .then((resp) => {
@@ -731,6 +695,7 @@ const RefinementEditor = () => {
           setShowSendModal(false);
         }}
       />
+
       <div
         style={{
           display: isLoadingData ? "flex" : "none",
@@ -782,6 +747,10 @@ const RefinementEditor = () => {
           ></canvas>
           <SideBar
             watchedFrames={watchedFrames}
+            homography={homographies}
+            logFile={logFile}
+            canvas={canvas}
+            fieldSize={fieldSize}
             maxHeight={750}
             onSendUpdates={() => {
               setShowSendModal(true);
