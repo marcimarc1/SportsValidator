@@ -216,7 +216,8 @@ def get_homography_model(session: Session, video_id: str) -> HomographyModelSocc
             goalAreaLeft=deserialize_points(result.goal_area_left),
             goalAreaRight=deserialize_points(result.goal_area_right),
             middleLine=deserialize_points(result.middle_line),
-            penaltySpot=deserialize_points(result.penalty_spot)
+            penaltySpot=deserialize_points(result.penalty_spot),
+            middleCircle=deserialize_points(result.middle_circle)
         )
 
         # Add to the list as a tuple (frame, field_section)

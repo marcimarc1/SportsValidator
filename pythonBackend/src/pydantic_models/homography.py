@@ -12,8 +12,8 @@ class Point(BaseModel):
 
 # Football data
 class MidlinePointSoccer(BaseModel):
-    id: str
-    coords: Tuple[float, float]
+    radius: float
+    center: Tuple[float, float]
 
 
 class MiddleCircleSoccer(BaseModel):
@@ -35,6 +35,7 @@ class FieldSectionSoccer(BaseModel):
     goalAreaRight: List[Point]
     middleLine: List[Point]
     penaltySpot: List[Point]
+    middleCircle: MidlinePointSoccer
     # filterBoxes: List[List[float]]
 
 

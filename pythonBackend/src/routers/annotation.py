@@ -6,7 +6,7 @@ from ..logic.annotation_logic import get_annotations_by_video_id, save_annotatio
 from ..db.database import get_db
 from ..pydantic_models.point_update_dto import PointUpdate
 from ..logic.tracking.tracking_logic import track_points_logic
-from ..logic.active_learning import filter_annotation_data_by_score
+from ..logic.active_learning import filter_annotation_data_by_score, quality_function
 from ..pydantic_models.homography import HomographyModelSoccer, HomographyModelSoccerAsList, HomographyModelTennis, \
     HomographyModelTennisAsList
 
@@ -39,6 +39,13 @@ async def track_points(dto: PointUpdate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail=str(e))
 
 
+@router.post("/quality-refine/Soccer/{video_id}")
+async def refine_soccer(video_id: str, data: FieldSectionSoccer):
+    try:
+        return quality_function(data, "Soccer")
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
 @router.post("/refine/Soccer/{video_id}")
 async def refine_soccer(video_id: str, data: HomographyModelSoccer):
     try:
@@ -55,6 +62,13 @@ async def save_refine_soccer(video_id: str, data: HomographyModelSoccerAsList, d
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+
+@router.post("/quality-refine/Tennis/{video_id}")
+async def refine_tennis(video_id: str, data: FieldSectionTennis):
+    try:
+        return quality_function(data, "Tennis")
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 @router.post("/refine/Tennis/{video_id}")
 async def refine_tennis(video_id: str, data: HomographyModelTennis):

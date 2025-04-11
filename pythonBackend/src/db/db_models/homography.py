@@ -18,6 +18,8 @@ class HomographyModelSoccerORM(Base):
     goal_area_right = Column(JSON, nullable=False, default=list)
     middle_line = Column(JSON, nullable=False, default=list)
     penalty_spot = Column(JSON, nullable=False, default=list)
+    middle_circle = Column(JSON, nullable=False)
+
     # filter_boxes = Column(JSON, nullable=False, default=list)
 
     # Ensure video_id + frame is unique
