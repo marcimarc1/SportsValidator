@@ -43,7 +43,7 @@ def filter_annotation_data_by_score(data: Union[HomographyModelSoccer, Homograph
 
     # get 10 lowest
     scored_points.sort()
-    lowest_points = [point for score, point in scored_points[:10]]
+    lowest_points = [point for score, point in scored_points[:config.get("returned_frames", 10)]]
     lowest_points.sort()
     if sport.lower() == "soccer":
         return HomographyModelSoccerAsList.parse_obj(lowest_points)

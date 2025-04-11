@@ -159,8 +159,6 @@ export const drawFieldPoints = (
   let homography = homographies[frameNumber];
   let invHomography = inverse(homography);
 
-  const originalFieldPoints = getOriginalFieldPoints(points);
-
   const drawPoint = (point, color, radius = 5) => {
     const transformedPoint = transformPoint(
       point,

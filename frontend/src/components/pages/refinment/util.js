@@ -116,6 +116,8 @@ export function homographyToFieldData(
             ),
           );
         });
+      } else {
+        innerRes[key] = value;
       }
     }
     innerRes["frame"] = i;
