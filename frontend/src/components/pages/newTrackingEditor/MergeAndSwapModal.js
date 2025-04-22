@@ -29,8 +29,6 @@ const style = {
 
 export default function MergeAndSwapModal({
   playerChosenInList,
-  playerNameMap,
-  setPlayerNameMap,
   annotations,
   setAnnotations,
   frameNumber,
@@ -39,19 +37,20 @@ export default function MergeAndSwapModal({
 }) {
   const [selectedPlayer, setSelectedPlayer] = useState("");
   const [operation, setOperation] = useState("swap");
+
   const menuItems = useMemo(
     () =>
-      Array.from(playerNameMap.values()).map((name) => {
-        if (name !== playerChosenInList) {
-          const testid = "menuitem" + name;
+      Array.from(annotations.map(a => {
+        if (a.displayName !== playerChosenInList) {
+          const testid = "menuitem" + a.displayName;
           return (
-            <MenuItem key={name} data-testid={testid} value={name}>
-              {name}
+            <MenuItem key={a.displayName} data-testid={testid} value={a.displayName}>
+              {a.displayName}
             </MenuItem>
           );
         }
-      }),
-    [playerNameMap, playerChosenInList],
+      })),
+    [annotations, playerChosenInList],
   );
 
   const handleChange = (event) => {
@@ -62,7 +61,6 @@ export default function MergeAndSwapModal({
     if (operation === "swap")
       swapPlayerData(
         selectedPlayer,
-        playerNameMap,
         playerChosenInList,
         annotations,
         setAnnotations,
@@ -71,8 +69,6 @@ export default function MergeAndSwapModal({
     else
       mergePlayerData(
         selectedPlayer,
-        playerNameMap,
-        setPlayerNameMap,
         playerChosenInList,
         annotations,
         setAnnotations,

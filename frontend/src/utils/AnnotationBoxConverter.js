@@ -27,8 +27,8 @@ export const convertAnnotationToBox = (
     });
     boundingBox.my = {
       selected: false,
-      key: annotation.PlayerKey,
-      frame: annotation.FrameNo,
+      key: annotation.displayName,
+      frame: annotation.frame_number,
       in_field: annotation.in_field,
       // also connect it to corresponding annotation
     };
@@ -46,7 +46,7 @@ export const convertBoxToAnnotation = (
   try {
     return {
       FrameNo: boundingBox.my.frame,
-      PlayerKey: boundingBox.my.key,
+      displayName: boundingBox.my.key,
       h: (boundingBox.height * boundingBox.scaleY) / verticalScalingFactor,
       w: (boundingBox.width * boundingBox.scaleX) / horizontalScalingFactor,
       //x,x2,x_trans and other data should be retrieved in future
@@ -96,8 +96,8 @@ export const convertAnnotationBallToBallbox = (
     });
     boundingBox.my = {
       selected: false,
-      key: annotationBall.trackNo,
-      frame: annotationBall.FrameNo,
+      key: annotationBall.displayName,
+      frame: annotationBall.frame_number,
     };
     return boundingBox;
   } catch {
@@ -114,8 +114,8 @@ export const convertBallboxToAnnotationBall = (
     const x1 = boundingBox.left / horizontalScalingFactor;
     const y1 = boundingBox.top / verticalScalingFactor;
     return {
-      FrameNo: boundingBox.my.frame,
-      trackNo: boundingBox.my.key,
+      frame_number: boundingBox.my.frame,
+      displayName: boundingBox.my.key,
       x1: x1,
       y1: y1,
       x2:

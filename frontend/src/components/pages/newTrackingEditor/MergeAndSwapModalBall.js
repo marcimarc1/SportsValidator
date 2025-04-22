@@ -29,8 +29,6 @@ const style = {
 
 export default function MergeAndSwapModalBall({
   ballChosenInList,
-  ballNameMap,
-  setBallNameMap,
   annotationBallTracks,
   setAnnotationBallTracks,
   frameNumber,
@@ -41,17 +39,17 @@ export default function MergeAndSwapModalBall({
   const [operation, setOperation] = useState("swap");
   const menuItems = useMemo(
     () =>
-      Array.from(ballNameMap.values()).map((name) => {
-        if (name !== ballChosenInList) {
-          const testid = "menuitem" + name;
+      Array.from(annotationBallTracks.map(a => {
+        if (a.displayName !== ballChosenInList) {
+          const testid = "menuitem" + a.displayName;
           return (
-            <MenuItem key={name} data-testid={testid} value={name}>
-              {name}
+            <MenuItem key={a.displayName} data-testid={testid} value={a.displayName}>
+              {a.displayName}
             </MenuItem>
           );
         }
-      }),
-    [ballNameMap, ballChosenInList],
+      })),
+    [annotationBallTracks, ballChosenInList],
   );
 
   const handleChange = (event) => {
@@ -62,7 +60,6 @@ export default function MergeAndSwapModalBall({
     if (operation === "swap")
       swapBallData(
         selectedBall,
-        ballNameMap,
         ballChosenInList,
         annotationBallTracks,
         setAnnotationBallTracks,
@@ -71,8 +68,6 @@ export default function MergeAndSwapModalBall({
     else
       mergeBallData(
         selectedBall,
-        ballNameMap,
-        setBallNameMap,
         ballChosenInList,
         annotationBallTracks,
         setAnnotationBallTracks,
