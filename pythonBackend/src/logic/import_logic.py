@@ -66,20 +66,20 @@ async def saveFilesForVideo(
     with open(videoFilePath, "wb") as f:
         while content := videoFile.file.read(1024):
             f.write(content)
-    print("Video file saved in {}".format(videoFilePath))
+    print("Saving Video file in {}".format(videoFilePath))
 
     #Write Player Annotations
     playerAnnotationPath = os.path.join(path, "processedPlayer.csv")
     with open(playerAnnotationPath, "wb") as f:
         while content := playerAnnotationFile.file.read(1024):
             f.write(content)
-    print("Player-Annotation file saved in {}".format(playerAnnotationPath))
+    print("Saving Player-Annotation file in {}".format(playerAnnotationPath))
     #Write Ball Annotations
     ballAnnotationPath = os.path.join(path, "processedBall.csv")
     with open(ballAnnotationPath, "wb") as f:
         while content := ballAnnotationFile.file.read(1024):
             f.write(content)
-    print("Ball-Annotation file saved in {}".format(ballAnnotationPath))
+    print("Saving Ball-Annotation file in {}".format(ballAnnotationPath))
 
     return videoFilePath, playerAnnotationPath, ballAnnotationPath
 
@@ -95,6 +95,7 @@ def process_player_csv(video_id: uuid.UUID, game_id: uuid.UUID, csv_path: str, d
                 video_id=video_id,
                 game_id=game_id,
                 frame_number=int(float(row['FrameNo'])),
+                displayName="Player " + str(int(float(row['PlayerKey']))),
                 x=float(row['x']),
                 y=float(row['y']),
                 w=float(row['w']),
@@ -123,6 +124,7 @@ def process_ball_csv(video_id: uuid.UUID, game_id: uuid.UUID, csv_path: str, db:
                 video_id=video_id,
                 game_id=game_id,
                 frame_number=int(float(row['FrameNo'])),
+                displayName="Ball"+ str(int(float(row['trackNo']))),
                 x2=float(row['x2']),
                 y2=float(row['y2']),
                 x1=float(row['x1']),

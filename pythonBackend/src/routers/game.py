@@ -32,7 +32,7 @@ async def update_points(game_id: str, dto: GameDto, db: Session = Depends(get_db
     game = await update_game(game_id, dto, db)
     return game
 
-@router.delete("/{game_id}", response_model=dict, tags=["game"])
+@router.get("/delete/{game_id}", response_model=dict, tags=["game"])
 async def delete(game_id: str, db: Session = Depends(get_db)):
-    await delete_game(game_id, db)
-    return {"message": "Game deleted successfully"}
+    response = await delete_game(game_id, db)
+    return response
