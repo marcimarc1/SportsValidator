@@ -41,7 +41,7 @@ def delete_video(video_id: uuid.UUID, db: Session):
         if os.path.exists(videoPath) and os.path.isdir(videoPath):
             shutil.rmtree(videoPath)
 
-        return {"message": "Video deleted successfully"}
+        return {"message": "success"}
 
 
     return {"message": "No Video for given Id"}

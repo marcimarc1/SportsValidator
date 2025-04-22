@@ -1,9 +1,12 @@
 import shutil
+
+from sqlalchemy import exists
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
 from sqlalchemy.future import select
 from db.db_models.games import Game
 from db.db_models.teams import Team
+from db.db_models.videos import Video
 from pydantic_models.Search.SearchDto import SearchDto
 from pydantic_models.game import GameDto, CreateGameDto, GamesDto
 import os
@@ -53,31 +56,38 @@ async def read_game(game_id: str, db: Session):
     return GameDto.model_validate(db_game)
 
 async def update_game(game_id: str, game_dto: GameDto, db: Session):
-    qry = db.execute(select(Game).filter(Game.id == game_id))
-    game = qry.scalars().first()
+    db_game = db.execute(select(Game).filter(Game.id == game_id)).scalars().first()
 
-    if game is None:
+    if db_game is None:
         raise HTTPException(status_code=404, detail="Game not found")
 
     for field, value in game_dto.model_dump(exclude_unset=True).items():
-        setattr(game, field, value)
+        setattr(db_game, field, value)
     db.commit()
-    return game
+    return GameDto.model_validate(db_game)
 
 
 async def delete_game(game_id: str, db: Session):
+    print(f"deleting game: {id}".format(id=game_id))
+    game = db.query(Game).filter(Game.id == game_id).first()
     # Delete DB-Entry
     qry = db.execute(select(Game).filter(Game.id == game_id))
     game = qry.scalars().first()
     if game is None:
         raise HTTPException(status_code=404, detail="Game not found")
+
+    if db.execute(select(exists().where(Video.game_id == game.id))).scalar():
+        return {"message": "The game still contains Videos"}
+
     id_ = str(game.id)
     db.delete(game)
     db.commit()
 
     # Delete directory from file-system
-    path = os.environ.get('APP_DATA_PATH')
+    path = os.environ.get('APP_DATA_PATH', 'C:/SportsValidator')
     if path is not None:
         path = os.path.join(path, id_)
         if os.path.exists(path):
+            print(f"deleting files")
             shutil.rmtree(path)
+    return {"message": "success"}

@@ -8,9 +8,8 @@ import { useHistory } from 'react-router-dom';
 import api from "../../../../api/api";
 
 
-const VideoListItem = ({video}) => {
+const VideoListItem = ({video, deleteVideo}) => {
     const history = useHistory();
-    const date= new Date(video.video.date_played).toLocaleDateString();
 
     const thumbnailImageWidth = 500;
     const thumbnailImageHeight = 281;
@@ -28,17 +27,15 @@ const VideoListItem = ({video}) => {
 
 
     const handleClickOpenEditor = () => {
-        history.push(`/newTrackingEditor/${video.video.id}`)
+        history.push(`/newTrackingEditor/${video.id}`)
     }
     const handleEditGame = () => {
-
+        //TODO
     }
-    const handleDeleteGame = async () => {
-        const response = await api.get(`/video/delete/${video.video.id}`)
-        console.log(response)
-
-        //Todo: Add Reload EventHandler in Video Overview
+    const handleDeleteVideo = async () => {
+        deleteVideo(video.id);
     }
+
     return (
         <div
             className="FileOverviewListItem"
@@ -57,12 +54,12 @@ const VideoListItem = ({video}) => {
                 <div className="FileOverviewListItemMetadata">
                     <EditText
                         className="FileOverviewListItemMetadataName"
-                        defaultValue={"Videoname TODO"}
+                        defaultValue={video.name}
                         disabled={true}
                     />
                     <EditText
                         className="FileOverviewListItemMetadataDuration AlignWithMetaDataName"
-                        defaultValue={"DURATION TODO"}
+                        defaultValue={"TODO: Add info"}
                         disabled={true}
                     />
                 </div>
@@ -88,7 +85,7 @@ const VideoListItem = ({video}) => {
                     size="medium"
                     variant="contained"
                     className={"FileOverviewListItemButton"}
-                    onClick={handleDeleteGame}
+                    onClick={handleDeleteVideo}
                     aria-label="delete videofile"
                 >
                     <FontAwesomeIcon icon={faTrash}/>

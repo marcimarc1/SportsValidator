@@ -1,12 +1,7 @@
 import * as React from 'react';
 import Box from '@mui/material/Box';
 import Modal from '@mui/material/Modal';
-import { useForm } from "react-hook-form";
-import Form from "react-bootstrap/Form";
-import api from "../../../../api/api";
-import {useState} from "react";
-import { DndContext, useDraggable, useDroppable, closestCenter } from "@dnd-kit/core";
-import { SortableContext, arrayMove, useSortable } from "@dnd-kit/sortable";
+import {useForm} from "react-hook-form";
 
 import axios from "axios";
 import SequenceModal from "./SequenceModal";
@@ -27,15 +22,20 @@ const style = {
 };
 
 
-const AddVideoModal = ({modalTitle, onSave, titles, gameId}) => {
+const AddVideoModal = ({modalTitle, titles, gameId, setLoading, setLoaderText}) => {
     const [open, setOpen] = React.useState(false);
 
-    const{register, handleSubmit} = useForm()
-    const[videoFile, setVideoFile] = React.useState(undefined)
-    const[playerAnnotationFile, setPlayerAnnotationFile] = React.useState(undefined)
-    const[ballAnnotationFile, setBallAnnotationFile] = React.useState(undefined)
+    const {register, handleSubmit, reset} = useForm()
+    const [videoFile, setVideoFile] = React.useState(undefined)
+    const [playerAnnotationFile, setPlayerAnnotationFile] = React.useState(undefined)
+    const [ballAnnotationFile, setBallAnnotationFile] = React.useState(undefined)
 
-    const handleOpen= () => {
+
+    const handleOpen = () => {
+        reset()
+        setVideoFile(undefined)
+        setPlayerAnnotationFile(undefined)
+        setBallAnnotationFile(undefined)
         setOpen(true);
     };
 
@@ -54,7 +54,7 @@ const AddVideoModal = ({modalTitle, onSave, titles, gameId}) => {
         const videoMetadata = {
             name: formData.get("title"),
             game_id: gameId,
-            sequence_number: titles.length+1,
+            sequence_number: titles.length + 1,
         }
 
         formDto.append(("videoInfo"), JSON.stringify(videoMetadata))
@@ -66,17 +66,31 @@ const AddVideoModal = ({modalTitle, onSave, titles, gameId}) => {
         try {
             await axios.post("http://localhost:8000/video/addVideo",
                 formDto,
-                {headers: {
+                {
+                    headers: {
                         'Access-Control-Allow-Origin': '*',
                         'Content-Type': 'multipart/form-data',
                     },
-                    withCredentials: true})
-        }catch(err) {
+                    withCredentials: true
+                })
+        } catch (err) {
             console.log(err);
-        }finally {
+        } finally {
             handleClose()
         }
     }
+
+    const handleFileChange = async (event, setFile) => {
+        await new Promise(resolve => setTimeout(resolve, 0));
+        const file = event.target.files[0];
+        setFile(file);
+        setLoading(false)
+    };
+
+    const handleFileClick = (text) => () => {
+        setLoaderText(text);
+        setLoading(true);
+    };
 
     return (
         <React.Fragment>
@@ -92,7 +106,7 @@ const AddVideoModal = ({modalTitle, onSave, titles, gameId}) => {
                         <form onSubmit={handleFormSubmit}>
                             <div className='mb-3 mt-3'>
                                 <label htmlFor='title' className="form-label">Name:</label>
-                                <input type='text' className='form-control'  placeholder='Name'
+                                <input type='text' className='form-control' placeholder='Name'
                                        {...register("title")}/>
                             </div>
 
@@ -103,7 +117,8 @@ const AddVideoModal = ({modalTitle, onSave, titles, gameId}) => {
                                         type='file'
                                         id='videoFile'
                                         className="mt-1 block w-full border p-2 rounded-md"
-                                        onChange={e => setVideoFile(e.target.files[0]) }/>
+                                        onClick={handleFileClick("Loading Video File")}
+                                        onChange={(e) => handleFileChange(e, setVideoFile)}/>
                                 </label>
                                 {videoFile && <p className="text-sm text-gray-600">Selected: {videoFile.name}</p>}
                             </div>
@@ -115,9 +130,11 @@ const AddVideoModal = ({modalTitle, onSave, titles, gameId}) => {
                                         type='file'
                                         id='playerAnnotationFile'
                                         className="mt-1 block w-full border p-2 rounded-md"
-                                        onChange={e => setPlayerAnnotationFile(e.target.files[0]) }/>
+                                        onClick={handleFileClick("Loading Player File")}
+                                        onChange={(e) => handleFileChange(e, setPlayerAnnotationFile)}/>
                                 </label>
-                                {playerAnnotationFile && <p className="text-sm text-gray-600">Selected: {playerAnnotationFile.name}</p>}
+                                {playerAnnotationFile &&
+                                    <p className="text-sm text-gray-600">Selected: {playerAnnotationFile.name}</p>}
                             </div>
                             <div className='mb-3'>
                                 <label className='block'>
@@ -126,9 +143,11 @@ const AddVideoModal = ({modalTitle, onSave, titles, gameId}) => {
                                         type='file'
                                         id='ballAnnotationFile'
                                         className="mt-1 block w-full border p-2 rounded-md"
-                                        onChange={e => setBallAnnotationFile(e.target.files[0]) }/>
+                                        onClick={handleFileClick("Loading Ball File")}
+                                        onChange={(e) => handleFileChange(e, setBallAnnotationFile)}/>
                                 </label>
-                                {ballAnnotationFile && <p className="text-sm text-gray-600">Selected: {ballAnnotationFile.name}</p>}
+                                {ballAnnotationFile &&
+                                    <p className="text-sm text-gray-600">Selected: {ballAnnotationFile.name}</p>}
                             </div>
                             <button className="FileButton" type='submit'>Save</button>
                             <button className="FileButton" onClick={handleClose}>Close</button>

@@ -5,9 +5,11 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faEdit, faTrash, faBars} from "@fortawesome/free-solid-svg-icons";
 import React from "react";
 import { useHistory } from 'react-router-dom';
+import toast from "react-hot-toast"
+import api from "../../../../api/api";
 
 
-const GameListItem = ({game}) => {
+const GameListItem = ({game, handleDelete}) => {
     const history = useHistory();
     const date= new Date(game.game.date_played).toLocaleDateString();
 
@@ -32,8 +34,8 @@ const GameListItem = ({game}) => {
     const handleEditGame = () => {
 
     }
-    const handleDeleteGame = () => {
-
+    const handleDeleteGame = async () => {
+        handleDelete(game.game.id);
     }
     return (
         <div
