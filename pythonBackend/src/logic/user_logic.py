@@ -1,43 +1,46 @@
+import uuid
+
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
 from sqlalchemy.future import select
 from db.db_models.users import User
-from pydantic_models.user import UserDto
+from pydantic_models.user import UserDto, UpdateUserDto
 
-async def create_user(dto: UserDto, db: Session):
-    user = User(**dto.model_dump())
-    db.add(user)
+
+async def create_user(dto: UserDto, db: Session)->UserDto:
+    db_user = User(
+        username=dto.username,
+        email=dto.email,
+        password=dto.password,
+    )
+    db.add(db_user)
     db.commit()
-    return user
+    db.refresh(db_user)
+    return UserDto.model_validate(db_user)
 
-async def read_user(user_id: int, db: Session):
-    qry = db.execute(select(User).filter(User.id == user_id))
-    user = qry.scalars().first()
+async def get_user(user_id: uuid.UUID, db: Session)->UserDto:
+    db_user = db.query(User).filter(User.id == user_id).first()
+    return UserDto.model_validate(db_user)
 
-    if user is None:
+async def update_user(user_id: uuid.UUID, user_dto: UpdateUserDto, db: Session)->UserDto:
+    db_user = db.execute(select(User).filter(User.id == user_id)).first()
+
+    if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    return user
-
-async def update_user(user_id: int, user_dto: UserDto, db: Session):
-    qry = db.execute(select(User).filter(User.id == user_id))
-    user = qry.scalars().first()
-
-    if user is None:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    for field, value in user_dto.model_dump(exclude_unset=True).items():
-        setattr(user, field, value)
+    update_data = user_dto.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(db_user, key, value)
     db.commit()
-    return user
+    db.refresh(db_user)
+    return UserDto.model_validate(db_user)
 
 
-async def delete_user(user_id: int, db: Session):
-    qry = db.execute(select(User).filter(User.id == user_id))
-    user = qry.scalars().first()
-
-    if user is None:
+async def delete_user(user_id: uuid.UUID, db: Session)->dict[str, str]:
+    db_user = db.execute(select(User).filter(User.id == user_id)).first()
+    if db_user:
+        db.delete(db_user)
+        db.commit()
+        return {"message": "success"}
+    else:
         raise HTTPException(status_code=404, detail="User not found")
-
-    db.delete(user)
-    db.commit()
