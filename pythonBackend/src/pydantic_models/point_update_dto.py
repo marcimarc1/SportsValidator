@@ -1,8 +1,9 @@
-from typing import List
+from typing import List, Optional
 from pydantic import BaseModel, ConfigDict
 
 
 class Point(BaseModel):
+    label: Optional[str] = None
     id: str
     x: float
     y: float
@@ -22,6 +23,9 @@ class PointUpdate(BaseModel):
     player_boxes: List[PlayerBox]
     start_frame: int
     end_frame: int
+
+    class Config:
+        orm_mode = True
 
 class TrackingResult(BaseModel):
     tracked_points: List[List[Point]]

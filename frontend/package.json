@@ -27,7 +27,7 @@
     "date-fns": "^4.1.0",
     "fabric": "^5.3.0",
     "http-proxy-middleware": "^2.0.6",
-    "prettier": "3.2.4",
+    "prettier": "^3.5.3",
     "react": "^17.0.2",
     "react-bootstrap": "^2.10.6",
     "react-components": "^0.5.1",
@@ -39,11 +39,13 @@
     "react-modal": "^3.16.3",
     "react-router": "^5.2.0",
     "react-router-dom": "^5.2.0",
-    "react-scripts": "^4.0.1",
+    "react-scripts": "4.0.1",
+    "react-spinners": "^0.15.0",
     "react-swipeable-views": "^0.14.0",
     "require-context": "^1.1.0",
     "testing-library": "^0.0.2",
-    "web-vitals": "^0.2.4"
+    "web-vitals": "^0.2.4",
+    "ldrs": "^1.1.2"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -92,11 +94,12 @@
     ]
   },
   "devDependencies": {
-    "@babel/core": "^7.23.3",
+    "@babel/core": "^7.26.9",
     "@babel/plugin-proposal-private-property-in-object": "7.21.11",
     "@babel/preset-env": "^7.23.3",
     "@babel/preset-typescript": "^7.23.3",
     "@types/react-edit-text": "^4.4.1",
+    "jest": "26.6.0",
     "jest-canvas-mock": "^2.5.2",
     "jest-environment-jsdom": "^26.6.0",
     "jest-fetch-mock": "3.0.3",

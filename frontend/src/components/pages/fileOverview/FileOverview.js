@@ -202,6 +202,9 @@ class FileOverview extends Component {
     let tempFieldSize = selectedFiles.find(
       (file) => file.name === "homographiesoptimized_field_size.json",
     );
+    let tempFilterBoxes = selectedFiles.find(
+      (file) => file.name === "homographies_filter_boxes.json",
+    );
 
     const readCSV = (file, key) => {
       return new Promise((resolve, reject) => {
@@ -247,6 +250,9 @@ class FileOverview extends Component {
       tempFieldSize
         ? readJson(tempFieldSize, "fieldSize")
         : Promise.resolve(null),
+      tempFilterBoxes
+        ? readJson(tempFilterBoxes, "filterBoxes")
+        : Promise.resolve(null),
     ])
       .then((results) => {
         this.setState((prevState) => {
@@ -256,6 +262,7 @@ class FileOverview extends Component {
             processedPlayers: tempProcessedPlayers,
             processedBallTracks: tempProcessedBallTracks,
             homographies: tempHomographies,
+            filterBoxes: tempFilterBoxes,
             log: tempLog,
             video: tempVideo,
             fieldSize: tempFieldSize,
@@ -300,6 +307,8 @@ class FileOverview extends Component {
           processedPlayers={e.processedPlayers}
           video={e.video}
           processedBallTracks={e.processedBallTracks}
+          // Enable once filterBoxes data is correct, to pass filterBoxes to refinement
+          // filterBoxes={e.filterBoxes}
           homographies={e.homographies}
           fieldSize={e.fieldSize}
           log={e.log}

@@ -3,6 +3,8 @@ import os
 import uvicorn
 import logging
 from fastapi import FastAPI, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
+from .routers import annotation, user
 from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
 from routers import annotation, user, game, sport, team, video
@@ -60,4 +62,5 @@ async def check_app():
     return {"status": "App Running!"}
 
 if __name__ == "__main__":
+    # TODO(Marco): Lifespan/Config
     uvicorn.run(app, host="localhost", port=8000)

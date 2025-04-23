@@ -10,6 +10,7 @@ import NewTrackingEditor from "./components/pages/newTrackingEditor/NewTrackingE
 import VideoUpload from "./components/pages/VideoUpload";
 import GameOverview from "./components/pages/fileOverview/GameOverview";
 import VideoOverview from "./components/pages/fileOverview/VideoOverview";
+import RefinmentEditor from "./components/pages/refinment/RefinementEditor";
 // import TrackingEditor from './components/pages/trackingEditor/TrackingEditor';
 
 class App extends Component {
@@ -71,6 +72,11 @@ class App extends Component {
 
           <Route exact path="/videos/:id">
             <VideoOverview/>
+          </Route>
+
+	  <Route exact path="/refinment/:id">
+            <Header />
+            <RefinmentEditor />
           </Route>
 
           <Route path="/upload-video">

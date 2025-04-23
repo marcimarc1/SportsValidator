@@ -1,0 +1,63 @@
+ {
+   "returned_frames": 10,
+  "tests": {
+    "soccer": [
+      {
+        "id": "parallel_test",
+        "threshold": 5,
+        "enabled": true,
+        "weight": 1.0
+      },
+      {
+        "id": "length_test",
+        "threshold": 10,
+        "enabled": true,
+        "weight": 1.0
+      },
+      {
+        "id": "corner_degree_test",
+        "threshold": 1,
+        "enabled": true,
+        "weight": 1.0
+      },
+       {
+        "id": "filter_boxes_test",
+        "threshold": 1,
+        "enabled": false,
+        "weight": 1.0
+      }
+    ],
+    "tennis": [
+      {
+        "id": "length_test",
+        "threshold": 10,
+        "enabled": true,
+        "weight": 1.0
+      },
+      {
+        "id": "parallel_test",
+        "threshold": 5,
+        "enabled": true,
+        "weight": 1.0
+      },
+      {
+        "id": "outer_corner_degree_test",
+        "threshold": 1,
+        "enabled": true,
+        "weight": 1.0
+      },
+      {
+        "id": "inner_corner_degree_test",
+        "threshold": 1,
+        "enabled": true,
+        "weight": 1.0
+      },
+      {
+        "id": "filter_boxes_test",
+        "threshold": 1,
+        "enabled": false,
+        "weight": 1.0
+      }
+    ]
+  }
+}

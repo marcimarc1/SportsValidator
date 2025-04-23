@@ -1,0 +1,92 @@
+{
+  "general": {
+    "keyBindings": {
+      "playPause": " ",
+      "nextFrame": ".",
+      "previousFrame": ",",
+      "jumpForward": "ArrowRight",
+      "jumpBackward": "ArrowLeft",
+      "ZoomModeEnabled": "x"
+    },
+    "seekbar": {
+      "barBackgroundColor": "#f00",
+      "containerBackgroundColor": "black"
+    },
+    "trackingEditor": {
+      "color": {
+        "mainText": "#f5edf0",
+        "mainBg": "#1b1f22",
+        "secondaryBg": "#424b53",
+        "accent": "#83b692"
+      }
+    },
+    "buttons": {
+      "addPlayer": {
+        "backgroundColor": "#BBC3C9",
+        "color": "#1b1f22"
+      },
+      "merge": {
+        "backgroundColor": "#BBC3C9",
+        "color": "#1b1f22"
+      },
+      "mergeBall": {
+        "backgroundColor": "#BBC3C9",
+        "color": "#1b1f22"
+      },
+      "deleteBallTrails": {
+        "backgroundColor": "#BBC3C9",
+        "color": "#1b1f22"
+      }
+    }
+  },
+  "soccer": {
+    "goal": {
+      "width": 7.32,
+      "areaLength": 5.5,
+      "areaDepth": 5.5
+    },
+    "trail": {
+      "strokeWidth": 3
+    },
+    "line": {
+      "color": "blue",
+      "strokeWidth": 3
+    },
+    "fieldPoint": {
+      "strokeWidth": 3
+    },
+    "player": {
+      "sidebarDot": {
+        "width": 12,
+        "height": 12
+      }
+    },
+    "penaltyArea": {
+      "length": 40.3,
+      "depth": 16.5,
+      "radius": 0.3,
+      "color-spot-1": "red",
+      "color-spot-2": "red"
+    },
+    "middleCircle": {
+      "color": "yellow",
+      "radius": 9.15
+    }
+  },
+  "tennis": {
+    "field": {
+      "length": 23.77,
+      "width": 10.97,
+      "serviceLineWidth": 1.37,
+      "baseline": 5.49,
+      "baselineWidth": 1.37
+    }
+  },
+  "ultimate": {
+    "field": {
+      "length": 100,
+      "width": 37,
+      "endzoneLength": 18.5
+    }
+  }
+}

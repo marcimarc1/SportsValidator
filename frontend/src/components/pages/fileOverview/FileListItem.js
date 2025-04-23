@@ -2,7 +2,12 @@ import React, { Component } from "react";
 import { Link } from "react-router-dom";
 import PropTypes from "prop-types";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faTrash, faEdit, faChartBar } from "@fortawesome/free-solid-svg-icons";
+import {
+  faTrash,
+  faEdit,
+  faChartBar,
+  faFilter,
+} from "@fortawesome/free-solid-svg-icons";
 import IconButton from "@material-ui/core/IconButton";
 import { EditText, EditTextarea } from "react-edit-text";
 import "react-edit-text/dist/index.css";
@@ -104,6 +109,7 @@ class FileListItem extends Component {
                 video: this.props.video,
                 processedBallTracks: this.props.processedBallTracks,
                 homographies: this.props.homographies,
+                filterBoxes: this.props.filterBoxes,
                 fieldSize: this.props.fieldSize,
                 log: this.props.log,
               },
@@ -126,6 +132,29 @@ class FileListItem extends Component {
               aria-label="show analysis"
             >
               <FontAwesomeIcon icon={faChartBar} />
+            </IconButton>
+          </Link>
+          <Link
+            to={{
+              pathname: `refinment/${this.props.videoName}`,
+              state: {
+                processedPlayers: this.props.processedPlayers,
+                video: this.props.video,
+                processedBallTracks: this.props.processedBallTracks,
+                homographies: this.props.homographies,
+                fieldSize: this.props.fieldSize,
+                log: this.props.log,
+                filterBoxes: this.props.filterBoxes,
+              },
+            }}
+          >
+            <IconButton
+              size="medium"
+              variant="contained"
+              className={"FileOverviewListItemButton"}
+              aria-label="refine annotations"
+            >
+              <FontAwesomeIcon icon={faFilter} />
             </IconButton>
           </Link>
           <IconButton

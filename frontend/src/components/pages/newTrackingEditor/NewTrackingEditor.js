@@ -4,6 +4,9 @@ import {ReactComponent as PlayIcon} from "../../../icons/play.svg";
 import {ReactComponent as PauseIcon} from "../../../icons/pause.svg";
 import {ReactComponent as ForwardStepIcon} from "../../../icons/forward-step.svg";
 import {ReactComponent as BackwardStepIcon} from "../../../icons/backward-step.svg";
+import { ReactComponent as AdjustSpeedIcon } from "../../../icons/adjust-speed.svg";
+import { ReactComponent as QuestionIcon } from "../../../icons/question.svg";
+import { ReactComponent as KeyboardIcon } from "../../../icons/keyboard.svg";
 import {useLocation} from "react-router-dom";
 import {
     parseProcessedPlayers,
@@ -29,6 +32,7 @@ import {
     Typography,
 } from "@mui/material";
 import TextField from "@mui/material/TextField";
+import config from "../../../config.json";
 
 import TrackList from "../newTrackingEditor/TrackList";
 import TrackListItemPlayer from "./TrackListItemPlayer";
@@ -41,22 +45,42 @@ import {
     drawFieldPoints,
     defineTrailBehaviour,
     defineTrailBehaviourBall,
+    updateHomography,
 } from "../../../utils/canvasUtils";
 import {
     multiPlayerMerge,
     multiBallMerge,
     multiBallTrailsDelete,
 } from "../../../utils/validation";
-import {DownloadButton} from "./DownloadButton";
-import {parseLogFile} from "../../../utils/logFileParser";
+import { DownloadButton } from "./DownloadButton";
+import { parseLogFile } from "../../../utils/logFileParser";
 import Slider from "@mui/material/Slider";
-import {FieldDetailsButton} from "./field/FieldDetailsButton";
+import { FieldDetailsButton } from "./field/FieldDetailsButton";
 import api from "../../../api/api";
-import {SettingsBallButton} from "./SettingsBallButton";
-import {SettingsTrailsButton} from "./SettingsTrailsButton";
+import { SettingsBallButton } from "./SettingsBallButton";
+import { SettingsTrailsButton } from "./SettingsTrailsButton";
 import LoadingOverlay from "react-loading-overlay-ts";
+import { getPointsToTrack } from "../../../utils/templates";
+import { modalBallOpen, modalOpen, modalsClose } from "./modalHandler";
+import {
+  blink,
+  deleteBall,
+  deletePlayer,
+  setName,
+  setNameBall,
+} from "./canvasUtils";
+import { generatePoster } from "./postGenerator";
+import useInitializeTrackingData from "./useInitializeTrackingData";
+import { updateSidebar } from "./sidebarUpdater";
+import { generateColor } from "../../../utils/colorGenerator";
+import {
+  handleMultiBallTrailsDelete,
+  handleMultiSelectMerge,
+  handleMultiSelectMergeBall,
+} from "./multiSelectHandlers";
 
 const NewTrackingEditor = () => {
+    const location = useLocation();
     const [video, setVideo] = useState(null);
     const [videoMetadata, setVideoMetadata] = useState(null);
     const [homographies, setHomographies] = useState(null);
@@ -73,6 +97,8 @@ const NewTrackingEditor = () => {
     const [isShowingBox, setIsShowingBox] = useState(true);
     const [isShowingAnnotation, setIsShowingAnnotation] = useState(true);
     const [playerList, setPlayerList] = useState([]); //list of player TrackListItemPlayers
+    const [teams, setTeams] = useState([]);
+    const [teamColors, setTeamColors] = useState({});
     const [canvasBoxes, setCanvasBoxes] = useState([]); //list of canvas boxes for player
     const [activeObject, setActiveObject] = useState(null);
     const [colorSet, setColorSet] = useState(new Map()); //map of playerkey to color
@@ -82,6 +108,7 @@ const NewTrackingEditor = () => {
     const [playerChosenInList, setPlayerChosenInList] = useState("");
     const [showField, setShowField] = useState(false);
     const [editField, setEditField] = useState(false);
+    let [wasVideoPlaying, setWasVideoPlaying] = useState(false);
     const [logFile, setLogFile] = useState(null);
     const [selectedTrails, setSelectedTrails] = useState(new Set());
     const [trailSize, setTrailSize] = useState(50);
@@ -101,22 +128,29 @@ const NewTrackingEditor = () => {
     const [selectedTrailsBall, setSelectedTrailsBall] = useState([]);
     const [loading, setLoading] = useState(false);
     const [loaderText, setLoaderText] = useState("Loading...");
+    const [videoSpeed, setVideoSpeed] = useState(1);
+    const [isZoomModeEnabled, setIsZoomModeEnabled] = useState(false);
+    const [zoomStatus, setZoomStatus] = useState("Enable Zoom Mode");
+    const [isTooltipVisible, setTooltipVisible] = useState(false);
+    const [bindingAction, setBindingAction] = useState(null);
+    const [keyBindings, setKeyBindings] = useState({
+      playPause: config.general.keyBindings.playPause,
+      nextFrame: config.general.keyBindings.nextFrame,
+      previousFrame: config.general.keyBindings.previousFrame,
+      jumpForward: config.general.keyBindings.jumpForward,
+      jumpBackward: config.general.keyBindings.jumpBackward,
+      ZoomModeEnabled: config.general.keyBindings.ZoomModeEnabled,
+    });
 
-    const handleModalOpen = (playerInList) => {
-        setPlayerChosenInList(playerInList);
-        setMergeModalState(true);
-    };
-
-    const handleModalBallOpen = (ballInList) => {
-        setBallChosenInList(ballInList);
-        setMergeModalBallState(true);
-        console.log("test2");
-    };
-
-    const handleModalsClose = () => {
-        setMergeModalState(false);
-        setMergeModalBallState(false);
-    };
+  const handleModalOpen = modalOpen(setPlayerChosenInList, setMergeModalState);
+  const handleModalBallOpen = modalBallOpen(
+      setBallChosenInList,
+      setMergeModalBallState,
+  );
+  const handleModalsClose = modalsClose(
+      setMergeModalState,
+      setMergeModalBallState,
+  );
 
     const handleMultiSelectMerge = () => {
         console.log("Multiplayer merge");
@@ -150,6 +184,71 @@ const NewTrackingEditor = () => {
         );
         setSelectedTrailsBall(new Array());
     };
+  useInitializeTrackingData(
+    video,
+    processedPlayers,
+    processedBallTracks,
+    setVideoUrl,
+    setAnnotations,
+    setColorSet,
+    setPlayerNameMap,
+    setAnnotationBallTracks,
+    setColorSetBall,
+    setBallNameMap,
+  );
+
+  const addTeam = (color) => {
+    const newTeamId = teams.length + 1;
+
+    setTeams((prevTeams) => [
+      ...prevTeams,
+      { id: newTeamId, name: `Team ${newTeamId}`, players: [] },
+    ]);
+
+    setTeamColors((prevColors) => ({
+      ...prevColors,
+      [newTeamId]: {
+        r: parseInt(color.slice(1, 3), 16),
+        g: parseInt(color.slice(3, 5), 16),
+        b: parseInt(color.slice(5, 7), 16),
+      },
+    }));
+  };
+
+  const addPlayerToTeam = (teamId, playerId) => {
+    const id = parseInt(playerId);
+    const isPlayerInAnyTeam = teams.some((team) =>
+      team.players.some((player) => player.id === id),
+    );
+
+    if (isPlayerInAnyTeam) {
+      alert("This player is already in a team!");
+      return;
+    }
+
+    const selectedPlayerComponent = playerList.find(
+      (p) => p.props.playerBox?.my?.key === id,
+    );
+    if (!selectedPlayerComponent) return;
+
+    const selectedPlayer = {
+      id,
+      name: selectedPlayerComponent.props.name,
+    };
+
+    setTeams((prevTeams) =>
+      prevTeams.map((team) =>
+        team.id === teamId
+          ? { ...team, players: [...team.players, selectedPlayer] }
+          : team,
+      ),
+    );
+
+    const teamColor = teamColors[teamId];
+    colorSet.set(id, teamColor);
+
+    drawBoundingBoxes(frameNumber);
+  };
 
     const canvasRef = useRef(null);
     const frameDuration = 1001 / 24000; // TODO Get this information from the backend
@@ -216,8 +315,31 @@ const NewTrackingEditor = () => {
             setLoading(false);
         }
     }
+  const refreshSidebar = () => {
+    updateSidebar({
+      canvasBoxes,
+      canvasBoxesBall,
+      colorSet,
+      colorSetBall,
+      getCurrentTimestampFrame,
+      playerNameMap,
+      ballNameMap,
+      changeSelection,
+      handleSetName,
+      handleSetNameBall,
+      handleBlink,
+      handleDeletePlayer,
+      handleDeleteBall,
+      handleModalOpen,
+      handleModalBallOpen,
+      setPlayerList,
+      setBallList,
+    });
+  };
 
-    let wasVideoPlaying = false;
+  const handleBlink = (playerBox) => {
+    blink(canvas, playerBox, setActiveObject);
+  };
 
     function updateSidebar() {
         let tempList = [];
@@ -245,6 +367,17 @@ const NewTrackingEditor = () => {
         });
         debugger;
         setPlayerList(tempList);
+  const handleDeletePlayer = (playerBox) => {
+    deletePlayer(
+      canvas,
+      playerBox,
+      setAnnotations,
+      setCanvasBoxes,
+      playerNameMap,
+      setPlayerNameMap,
+      refreshSidebar,
+    );
+  };
 
         tempList = [];
         runningIndex = 0;
@@ -283,6 +416,17 @@ const NewTrackingEditor = () => {
         let time = 0;
         let interval = 400;
         let blinkColor = "rgb(255, 255, 255, 0.6)";
+  const handleDeleteBall = (ballBox) => {
+    deleteBall(
+      canvas,
+      ballBox,
+      setAnnotationBallTracks,
+      setCanvasBoxesBall,
+      ballNameMap,
+      setBallNameMap,
+      refreshSidebar,
+    );
+  };
 
         if (originalStrokeColor !== blinkColor) {
             // necessary because otherwise bBox could permanently be set to blinkColor
@@ -295,6 +439,10 @@ const NewTrackingEditor = () => {
                     playerBox.setCoords();
                     canvas.renderAll();
                 }, time);
+  const handleSetName = (playerBox, name) => {
+    setName(canvas, playerBox, name, playerNameMap);
+    drawBoundingBoxes(frameNumber);
+  };
 
                 time += interval;
                 setTimeout(() => {
@@ -367,6 +515,9 @@ const NewTrackingEditor = () => {
         // update data when leaving the page
         // the modified data is stored in canvasBoxes array
     }
+  const handleSetNameBall = (ballBox, name) => {
+    setNameBall(canvas, ballBox, name, ballNameMap);
+  };
 
     function boxInCanvas(boxToCheck) {
         //check if the box is in the canvas
@@ -410,22 +561,36 @@ const NewTrackingEditor = () => {
         }
     }
 
-    function defineBoxBehavior(box, is_playerBox = true) {
-        box.on({
-            selected: () => {
-            },
-            mousedown: () => {
-            },
-            mouseover: () => {
-            },
-        });
+  const Tooltip = ({ isVisible, children }) => {
+    return (
+      <div className={`tooltip ${isVisible ? "visible" : ""}`}>{children}</div>
+    );
+  };
 
-        box.on({
-            deselected: () => {
-            },
-            mouseout: () => {
-            },
-        });
+  const toggleTooltip = () => {
+    if (videoElement && !videoElement.paused) {
+      videoElement.pause();
+      setIsPlaying(false);
+    }
+
+    setTooltipVisible((prev) => !prev);
+  };
+
+  const hideTooltip = () => {
+    setTooltipVisible(false);
+  };
+
+  function defineBoxBehavior(box, is_playerBox = true) {
+    box.on({
+      selected: () => {},
+      mousedown: () => {},
+      mouseover: () => {},
+    });
+
+    box.on({
+      deselected: () => {},
+      mouseout: () => {},
+    });
 
         if (is_playerBox) {
             box.on({
@@ -521,10 +686,10 @@ const NewTrackingEditor = () => {
                             playerBox={activeObject}
                             name={activeObject.displayName}
                             changeSelection={changeSelection}
-                            setName={setName}
-                            blink={blink}
+                            setName={handleSetName}
+                            blink={handleBlink}
                             color={boxColor}
-                            delete={deletePlayer}
+                            delete={handleDeletePlayer}
                             handleModalOpen={handleModalOpen}
                         />,
                     ]);
@@ -539,10 +704,10 @@ const NewTrackingEditor = () => {
                             playerBox={tempBox}
                             name={tempBox.displayName}
                             changeSelection={changeSelection}
-                            setName={setName}
-                            blink={blink}
+                            setName={handleSetName}
+                            blink={handleBlink}
                             color={boxColor}
-                            delete={deletePlayer}
+                            delete={handleDeletePlayer}
                             handleModalOpen={handleModalOpen}
                         />,
                     ]);
@@ -656,9 +821,9 @@ const NewTrackingEditor = () => {
         return poster;
     }
 
-    const isInField = (inField) => {
-        return inField === true || inField === null;
-    };
+  const isInField = (inField) => {
+    return inField === true || inField === null;
+  };
 
     // https://stackoverflow.com/questions/33834724/draw-video-on-canvas-html5
     const drawVideo = () => {
@@ -791,10 +956,10 @@ const NewTrackingEditor = () => {
                         playerBox={boundingBox}
                         name={boundingBox.displayName}
                         changeSelection={changeSelection}
-                        setName={setName}
-                        blink={blink}
+                        setName={handleSetName}
+                        blink={handleBlink}
                         color={boxColor}
-                        delete={deletePlayer}
+                        delete={handleDeletePlayer}
                         handleModalOpen={handleModalOpen}
                     />,
                 ]);
@@ -827,9 +992,9 @@ const NewTrackingEditor = () => {
                             color={boxColor}
                             name={playerBox.my.key}
                             changeSelection={changeSelection}
-                            setName={setName}
-                            blink={blink}
-                            delete={deletePlayer}
+                            setName={handleSetName}
+                            blink={handleBlink}
+                            delete={handleDeletePlayer}
                             handleModalOpen={handleModalOpen}
                         />,
                     ]);
@@ -853,11 +1018,11 @@ const NewTrackingEditor = () => {
                         ballBox={boundingBox}
                         name={boundingBox.displayName}
                         changeSelection={changeSelection}
-                        setName={setNameBall}
-                        blink={blink}
+                        setName={handleSetNameBall}
+                        blink={handleBlink}
                         color={boxColor}
                         handleModalOpen={handleModalBallOpen}
-                        delete={deleteBall}
+                        delete={handleDeleteBall}
                     />,
                 ]);
             });
@@ -887,10 +1052,10 @@ const NewTrackingEditor = () => {
                             color={boxColor}
                             name={boundingBox.displayName}
                             changeSelection={changeSelection}
-                            setName={setNameBall}
-                            blink={blink}
+                            setName={handleSetNameBall}
+                            blink={handleBlink}
                             handleModalOpen={handleModalBallOpen}
-                            delete={deleteBall}
+                            delete={handleDeleteBall}
                         />,
                     ]);
                 });
@@ -927,6 +1092,10 @@ const NewTrackingEditor = () => {
             });
         }
     };
+
+  function handleUpdateTimeStamp(newTimestamp) {
+    updateTimestamp(newTimestamp, frameDuration, setTimestamp, setFrameNumber);
+  }
 
     useEffect(() => {
         if (!videoElement) return;
@@ -994,13 +1163,13 @@ const NewTrackingEditor = () => {
             console.log("Stalled");
         };
 
-        const onLoadedData = () => {
-            console.log("Loaded data");
-            const poster = generatePoster(videoElement);
-            if (poster) {
-                canvas.add(poster);
-            }
-        };
+    const onLoadedData = () => {
+      console.log("Loaded data");
+      const poster = generatePoster(videoElement, frameDuration);
+      if (poster) {
+        canvas.add(poster);
+      }
+    };
 
         const onWaiting = () => {
             console.log("Waiting");
@@ -1114,7 +1283,6 @@ const NewTrackingEditor = () => {
             if (boundingBoxesToDraw.length > 0) {
                 //draw boxes
                 boundingBoxesToDraw.forEach((boundingBox) => {
-                    ;
                     const boxColor = colorSet.get(boundingBox.displayName);
                     const playerName = boundingBox.displayName;
                     let playerBox = convertAnnotationToBox(
@@ -1127,15 +1295,16 @@ const NewTrackingEditor = () => {
                     playerBox.setControlVisible("mtr", false);
                     playerBox = defineBoxBehavior(playerBox);
                     canvas.add(playerBox);
+
                     tempList = tempList.concat([
                         <TrackListItemPlayer
                             key={runningIndex++}
                             playerBox={playerBox}
                             name={playerName}
                             changeSelection={changeSelection}
-                            setName={setName}
-                            blink={blink}
-                            delete={deletePlayer}
+                            setName={handleSetName}
+                            blink={handleBlink}
+                            delete={handleDeletePlayer}
                             color={boxColor}
                             handleModalOpen={handleModalOpen}
                         />,
@@ -1174,7 +1343,7 @@ const NewTrackingEditor = () => {
                             name={boundingBox.displayName}
                             changeSelection={changeSelection}
                             setName={setNameBall}
-                            blink={blink}
+                            blink={handleBlink}
                             handleModalOpen={handleModalBallOpen}
                             delete={deleteBall}
                         />,
@@ -1186,6 +1355,8 @@ const NewTrackingEditor = () => {
     }, [
         annotations,
         annotationBallTracks,
+        playerNameMap,
+        ballNameMap,
         trailsEnabled,
         isShowingBallTrails,
         isShowingPlayerTrails,
@@ -1195,32 +1366,137 @@ const NewTrackingEditor = () => {
         drawInField,
     ]);
 
-    const handleKeyDown = (event) => {
-        switch (event.keyCode) {
-            case 74: // j
-                handlePreviousChunk();
-                break;
-            case 75: // k
-                handlePlayPause();
-                break;
-            case 76: // l
-                handleNextChunk();
-                break;
-            case 188: // ,
-                handlePreviousFrame();
-                break;
-            case 190: // .
-                handleNextFrame();
-                break;
-        }
+  const handleKeyPress = (event) => {
+    if (!videoElement) return;
+
+    const { key } = event;
+
+    if (bindingAction) {
+      if (Object.values(keyBindings).includes(key)) {
+        alert("This key is already bound to another action!");
+        setBindingAction(null);
+        return;
+      }
+
+      setKeyBindings((prevBindings) => ({
+        ...prevBindings,
+        [bindingAction]: key,
+      }));
+
+      setBindingAction(null);
+      return;
+    }
+
+    switch (event.key) {
+      case keyBindings.playPause:
+        event.preventDefault();
+        handlePlayPause();
+        break;
+      case keyBindings.previousFrame:
+        handlePreviousFrame();
+        break;
+      case keyBindings.nextFrame:
+        handleNextFrame();
+        break;
+      case keyBindings.jumpBackward:
+        event.preventDefault();
+        handlePreviousChunk();
+        break;
+      case keyBindings.jumpForward:
+        event.preventDefault();
+        handleNextChunk();
+        break;
+      case keyBindings.ZoomModeEnabled:
+        event.preventDefault();
+        handleZoomModeEnabled();
+        break;
+      default:
+        break;
+    }
+  };
+
+  const handleClick = (e) => {
+    if (bindingAction) {
+      e.stopPropagation();
+      setBindingAction(null);
+      return;
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener("keydown", handleKeyPress);
+
+    document.addEventListener("click", handleClick);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyPress);
+
+      document.addEventListener("click", handleClick);
+    };
+  }, [handleKeyPress]);
+
+  useEffect(() => {
+    if (!isZoomModeEnabled) return;
+
+    const handleWheel = (event) => {
+      event.preventDefault();
+
+      let delta = event.deltaY;
+      let newZoomLevel = canvas.getZoom();
+
+      if (delta < 0) {
+        newZoomLevel = Math.min(newZoomLevel + 0.1, 3);
+      } else {
+        newZoomLevel = Math.max(newZoomLevel - 0.1, 0.5);
+      }
+
+      canvas.zoomToPoint({ x: event.offsetX, y: event.offsetY }, newZoomLevel);
+      canvas.renderAll();
     };
 
-    useEffect(() => {
-        document.addEventListener("keydown", handleKeyDown);
-        return () => {
-            document.removeEventListener("keydown", handleKeyDown);
-        };
-    }, [handleKeyDown]);
+    const handleMouseDown = (event) => {
+      canvas.isDragging = true;
+      canvas.selection = false;
+      canvas.lastPosX = event.e.clientX;
+      canvas.lastPosY = event.e.clientY;
+    };
+
+    const handleMouseMove = (event) => {
+      if (canvas.isDragging) {
+        const deltaX = event.e.clientX - canvas.lastPosX;
+        const deltaY = event.e.clientY - canvas.lastPosY;
+
+        canvas.viewportTransform[4] += deltaX;
+        canvas.viewportTransform[5] += deltaY;
+
+        canvas.lastPosX = event.e.clientX;
+        canvas.lastPosY = event.e.clientY;
+
+        canvas.renderAll();
+      }
+    };
+
+    const handleMouseUp = () => {
+      canvas.isDragging = false;
+      canvas.selection = true;
+    };
+
+    canvas.wrapperEl.addEventListener("wheel", handleWheel);
+    canvas.on("mouse:down", handleMouseDown);
+    canvas.on("mouse:move", handleMouseMove);
+    canvas.on("mouse:up", handleMouseUp);
+
+    return () => {
+      canvas.wrapperEl.removeEventListener("wheel", handleWheel);
+      canvas.off("mouse:down", handleMouseDown);
+      canvas.off("mouse:move", handleMouseMove);
+      canvas.off("mouse:up", handleMouseUp);
+    };
+  }, [isZoomModeEnabled, canvas]);
+
+  const startBindingKey = (action) => {
+    setBindingAction(action);
+  };
 
     const getCurrentTimestampFrame = () => {
         // First frame is frame 0
@@ -1237,44 +1513,54 @@ const NewTrackingEditor = () => {
         setFrameNumber(newFrameNumber);
     };
 
-    const handleNextFrame = () => {
-        if (videoElement) {
-            const nextFrame = frameNumber + 1;
-            const referenceTimestamp = getReferenceTimestampForFrame(nextFrame);
-            videoElement.currentTime = referenceTimestamp;
-            deleteFieldDrawing();
-            setFrameNumber(nextFrame);
-            setTimestamp(referenceTimestamp);
-            drawField();
-        }
-    };
+  const handleNextFrame = () => {
+    if (videoElement) {
+      const nextFrame = frameNumber + 1;
+      const referenceTimestamp = getReferenceTimestampForFrame(nextFrame);
+      videoElement.currentTime = referenceTimestamp;
+      deleteFieldDrawing();
+      setFrameNumber(nextFrame);
+      setTimestamp(referenceTimestamp);
 
-    const handlePreviousFrame = () => {
-        if (videoElement && frameNumber > 0) {
-            const previousFrame = frameNumber - 1;
-            const referenceTimestamp = getReferenceTimestampForFrame(previousFrame);
-            videoElement.currentTime = referenceTimestamp;
-            deleteFieldDrawing();
-            setFrameNumber(previousFrame);
-            setTimestamp(referenceTimestamp);
-            drawField();
-        }
-    };
+      const currentProgress =
+        (videoElement.currentTime / videoElement.duration) * 100;
+      setProgress(currentProgress);
 
-    const handlePreviousChunk = () => {
-        const newTimestamp = Math.max(0, videoElement.currentTime - 6);
-        videoElement.currentTime = newTimestamp;
-        updateTimestamp(newTimestamp);
-    };
+      drawField();
+    }
+  };
 
-    const handleNextChunk = () => {
-        const newTimestamp = Math.min(
-            videoElement.duration,
-            videoElement.currentTime + 6,
-        );
-        videoElement.currentTime = newTimestamp;
-        updateTimestamp(newTimestamp);
-    };
+  const handlePreviousFrame = () => {
+    if (videoElement && frameNumber > 0) {
+      const previousFrame = frameNumber - 1;
+      const referenceTimestamp = getReferenceTimestampForFrame(previousFrame);
+      videoElement.currentTime = referenceTimestamp;
+      deleteFieldDrawing();
+      setFrameNumber(previousFrame);
+      setTimestamp(referenceTimestamp);
+
+      const currentProgress =
+        (videoElement.currentTime / videoElement.duration) * 100;
+      setProgress(currentProgress);
+
+      drawField();
+    }
+  };
+
+  const handlePreviousChunk = () => {
+    const newTimestamp = Math.max(0, videoElement.currentTime - 5);
+    videoElement.currentTime = newTimestamp;
+    updateTimestamp(newTimestamp);
+  };
+
+  const handleNextChunk = () => {
+    const newTimestamp = Math.min(
+      videoElement.duration,
+      videoElement.currentTime + 5,
+    );
+    videoElement.currentTime = newTimestamp;
+    updateTimestamp(newTimestamp);
+  };
 
     const handlePlayPause = () => {
         if (videoElement && videoElement.readyState != 0 && !videoElement.ended) {
@@ -1292,23 +1578,61 @@ const NewTrackingEditor = () => {
         }
     };
 
-    // Seeking
+  const handleZoomModeEnabled = () => {
+    setIsZoomModeEnabled(!isZoomModeEnabled);
+    setZoomStatus(isZoomModeEnabled ? "Enable Zoom Mode" : "Disable Zoom Mode");
+  };
 
-    const handleSeekStart = () => {
-        if (videoElement && !videoElement.ended && !videoElement.paused) {
-            wasVideoPlaying = true;
-            videoElement.pause();
-        } else {
-            wasVideoPlaying = false;
-        }
+  const handleAdjustSpeed = () => {
+    const incrementBy = 0.25;
+
+    if (videoElement) {
+      if (videoSpeed == 2) {
+        setVideoSpeed(0.25);
+        videoElement.playbackRate = videoSpeed;
+      } else {
+        setVideoSpeed(videoSpeed + incrementBy);
+        videoElement.playbackRate = videoSpeed;
+      }
+    }
+  };
+
+  // Seeking
+
+  useEffect(() => {
+    const updateProgressBar = () => {
+      const currentProgress =
+        (videoElement.currentTime / videoElement.duration) * 100;
+      setProgress(currentProgress);
     };
 
-    const handleSeekPercent = (value) => {
-        setProgress(value);
-        const newTimestamp = (value / 100) * videoElement.duration;
-        videoElement.currentTime = newTimestamp;
-        updateTimestamp(newTimestamp);
-    };
+    if (videoElement) {
+      videoElement.addEventListener("timeupdate", updateProgressBar);
+      return () => {
+        videoElement.removeEventListener("timeupdate", updateProgressBar);
+      };
+    }
+  }, [videoElement]);
+
+  const handleSeekStart = () => {
+    if (videoElement && !videoElement.ended && !videoElement.paused) {
+      wasVideoPlaying = true;
+      videoElement.pause();
+    } else {
+      wasVideoPlaying = false;
+    }
+  };
+
+  const handleSeekPercent = (value) => {
+    setProgress(value);
+    const newTimestamp = (value / 100) * videoElement.duration;
+    videoElement.currentTime = newTimestamp;
+    updateTimestamp(newTimestamp);
+
+    const currentProgress =
+      (videoElement.currentTime / videoElement.duration) * 100;
+    setProgress(currentProgress);
+  };
 
     const handleSeekEnd = () => {
         if (wasVideoPlaying) {
@@ -1459,13 +1783,19 @@ const NewTrackingEditor = () => {
         }
     };
 
-    useEffect(() => {
-        canvas.getObjects().forEach((obj) => {
-            if (obj.properties?.type === "fieldPoint") {
-                obj.set({selectable: editField});
-            }
-        });
-    }, [editField, canvas]);
+  const handleZoomReset = () => {
+    canvas.viewportTransform = [1, 0, 0, 1, 0, 0];
+    canvas.setZoom(1);
+    canvas.renderAll();
+  };
+
+  useEffect(() => {
+    canvas.getObjects().forEach((obj) => {
+      if (obj.properties?.type === "fieldPoint") {
+        obj.set({ selectable: editField });
+      }
+    });
+  }, [editField, canvas]);
 
     const deleteFieldDrawing = () => {
         canvas.remove(
@@ -1484,63 +1814,112 @@ const NewTrackingEditor = () => {
             return;
         }
 
-        if (showField || forceDraw) {
-            const newFieldPoints = drawFieldPoints(
-                canvas,
-                getCurrentTimestampFrame(),
-                homographies,
-                canvas.width / 3840,
-                canvas.height / 2160,
-                logFile.Sport,
-                fieldSize?.length,
-                fieldSize?.width,
-                videoElement,
-            );
-            setFieldPoints(newFieldPoints);
-            console.log("newFieldPoints", newFieldPoints);
-        }
-    };
+    if (showField || forceDraw) {
+      const newFieldPoints = drawFieldPoints(
+        canvas,
+        getCurrentTimestampFrame(),
+        homographies,
+        canvas.width / 3840,
+        canvas.height / 2160,
+        logFile.Sport,
+        fieldSize?.length,
+        fieldSize?.width,
+        videoElement,
+      );
+      setFieldPoints(newFieldPoints);
+    }
+  };
 
     const handleSwitchingTrailSize = (event) => {
         setTrailSize(event.target.value);
     };
 
-    const handleApplyHomography = (frameNumber) => {
-        const path = window.location.pathname;
-        const videoId = path.substring(path.lastIndexOf("/") + 1);
-        frameNumber = parseInt(frameNumber);
-        var currentFrame = parseInt(getCurrentTimestampFrame());
-        var fieldPoints = canvas
-            .getObjects()
-            .filter((obj) => obj.properties?.type === "fieldPoint")
-            .map((obj) => ({
-                id: obj.id,
-                x: obj.left,
-                y: obj.top,
-            }));
-        console.log("Field points: ", fieldPoints);
-        api
-            .post("/annotation/track", {
-                video_id: videoId,
-                start_frame: currentFrame,
-                end_frame: currentFrame + frameNumber,
-                points: fieldPoints,
-                player_boxes: annotations
-                    .filter(
-                        (a) =>
-                            a.frame_number >= currentFrame &&
-                            a.frame_number <= currentFrame + frameNumber,
-                    )
-                    .map((a) => ({
-                        frame_no: a.frame_number,
-                        x_1: a.x1,
-                        y_1: a.y1,
-                        x_2: a.x2,
-                        y_2: a.y2,
-                    })),
-            })
-            .then((response) => {
-            });
+  const handleApplyHomography = (frameNumber) => {
+    const path = window.location.pathname;
+    const videoId = path.substring(path.lastIndexOf("/") + 1);
+    frameNumber = parseInt(frameNumber);
+    var currentFrame = parseInt(getCurrentTimestampFrame());
+    var fieldPoints = canvas
+      .getObjects()
+      .filter((obj) =>obj.properties?.type === "fieldPoint")
+      .map((obj) => ({
+        id: obj.id,
+        x: obj.left,
+        y: obj.top,
+      }));
+    console.log("Field points: ", fieldPoints);
+    if (!trackPoints) {
+      updateHomography(
+        fieldPoints,
+        homographies,
+        currentFrame,
+        canvas.width / 3840,
+        canvas.height / 2160,
+        logFile.Sport,
+        fieldSize?.length,
+        fieldSize?.width,
+      );
+      for (let i = 0; i <= frameNumber; i++) {
+        homographies[currentFrame + i] = homographies[currentFrame];
+      }
+
+      deleteFieldDrawing();
+      drawField();
+      setShowApplyHomographyModal(false);
+      handleEnablingEditField();
+      setIsPlaying(true);
+      videoElement.play();
+
+      return;
+    }
+
+    api
+      .post("/annotation/track", {
+        video_id: videoId,
+        start_frame: currentFrame,
+        end_frame: currentFrame + frameNumber,
+        points: fieldPoints.map((point) => ({
+          ...point,
+          x: point.x / (canvas.width / 3840),
+          y: point.y / (canvas.height / 2160),
+        })),
+        player_boxes: annotations
+          .filter(
+            (a) =>
+              a.frame_number >= currentFrame &&
+              a.frame_number <= currentFrame + frameNumber,
+          )
+          .map((a) => ({
+            frame_no: a.frame_number,
+            x_1: a.x1,
+            y_1: a.y1,
+            x_2: a.x2,
+            y_2: a.y2,
+          })),
+      })
+      .then((response) => {
+        const trackedPoints = response.data.tracked_points.map((points) =>
+          points.map((point) => ({
+            ...point,
+            x: point.x * (canvas.width / 3840),
+            y: point.y * (canvas.height / 2160),
+          })),
+        );
+        const startFrame = response.data.start_frame;
+        for (let i = 0; i <= trackedPoints.length; i++) {
+          console.log("trackedPoints", trackedPoints);
+          var framePoints = trackedPoints[i];
+          updateHomography(
+            framePoints,
+            homographies,
+            startFrame + i,
+            canvas.width / 3840,
+            canvas.height / 2160,
+            logFile.Sport,
+            fieldSize?.length,
+            fieldSize?.width,
+          );
+        }
 
         deleteFieldDrawing();
         drawField();
@@ -1548,7 +1927,8 @@ const NewTrackingEditor = () => {
         handleEnablingEditField();
         setIsPlaying(true);
         videoElement.play();
-    };
+      });
+  };
 
     const handleContinueWithoutApplyingHomographies = async () => {
         console.log("Continuing without applying homographies");
@@ -1620,146 +2000,228 @@ const NewTrackingEditor = () => {
                         onChange={() => setDrawInField(!drawInField)}
                     />
 
-                    <Button
-                        data-testid="add-player-button"
-                        variant="contained"
-                        onClick={handleAddPlayer}
-                        sx={{
-                            backgroundColor: "#BBC3C9 !important",
-                            color: "#1b1f22 !important",
-                        }}
-                    >
-                        Add player
-                    </Button>
-                    <Button
-                        data-testid="merge-button"
-                        variant="contained"
-                        onClick={handleMultiSelectMerge}
-                        sx={{
-                            backgroundColor: "#BBC3C9 !important",
-                            color: "#1b1f22 !important",
-                        }}
-                    >
-                        Merge Player
-                    </Button>
-                    <Button
-                        data-testid="merge-button-ball"
-                        variant="contained"
-                        onClick={handleMultiSelectMergeBall}
-                        sx={{
-                            backgroundColor: "#BBC3C9 !important",
-                            color: "#1b1f22 !important",
-                        }}
-                    >
-                        Merge Ball
-                    </Button>
-                    <Button
-                        data-testid="delete-ball-trails-button"
-                        variant="contained"
-                        onClick={handleMultiBallTrailsDelete}
-                        sx={{
-                            backgroundColor: "#BBC3C9 !important",
-                            color: "#1b1f22 !important",
-                        }}
-                    >
-                        Del selected Balltrails
-                    </Button>
-                    <FieldDetailsButton
-                        handleEnablingField={handleEnablingField}
-                        showField={showField}
-                        editField={editField}
-                        handleEnablingEditField={handleEnablingEditField}
-                        videoElement={videoElement}
-                        fieldSize={fieldSize}
-                    />
-                    <SettingsBallButton
-                        disabled={!videoElement?.paused}
-                        isShowingBallBox={isShowingBallBox}
-                        handleShowBallBox={handleShowBallBox}
-                        handleAddBall={handleAddBall}
-                    />
-                    <SettingsTrailsButton
-                        disabled={!videoElement?.paused}
-                        trailsEnabled={trailsEnabled}
-                        handleEnablingTrails={handleEnablingTrails}
-                        isShowingPlayerTrails={isShowingPlayerTrails}
-                        handleShowPlayerTrails={handleShowPlayerTrails}
-                        isShowingBallTrails={isShowingBallTrails}
-                        handleShowBallTrails={handleShowBallTrails}
-                        trailSize={trailSize}
-                        handleSwitchingTrailSize={handleSwitchingTrailSize}
-                        trailFrameNumber={trailFrameNumber}
-                        setTrailFrameNumber={setTrailFrameNumber}
-                    />
-                    <div className="tests">
-                        <Button
-                            data-testid="from-annotation"
-                            className="tests"
-                            onClick={() => drawBoundingBoxes(frameNumber)}
-                        >
-                            draw players from annotation and Ball tracks
-                        </Button>
-                    </div>
-                    <DownloadButton
-                        players={annotations}
-                        video={videoUrl}
-                        homographies={homographies}
-                        balls={annotationBallTracks}
-                    />
-                </Box>
-            </div>
+          <Button
+            data-testid="add-player-button"
+            variant="contained"
+            onClick={handleAddPlayer}
+            sx={{
+              backgroundColor: "#BBC3C9 !important",
+              color: "#1b1f22 !important",
+            }}
+          >
+            Add player
+          </Button>
+          <Button
+            data-testid="merge-button"
+            variant="contained"
+            onClick={() =>
+              handleMultiSelectMerge(
+                selectedTrails,
+                annotations,
+                setAnnotations,
+                playerNameMap,
+                setPlayerNameMap,
+                setSelectedTrails,
+              )
+            }
+            sx={{
+              backgroundColor: "#BBC3C9 !important",
+              color: "#1b1f22 !important",
+            }}
+          >
+            Merge Player
+          </Button>
+          <Button
+            data-testid="merge-button-ball"
+            variant="contained"
+            onClick={() =>
+              handleMultiSelectMergeBall(
+                selectedTrailsBall,
+                annotationBallTracks,
+                setAnnotationBallTracks,
+                ballNameMap,
+                setBallNameMap,
+                setSelectedTrailsBall,
+              )
+            }
+            sx={{
+              backgroundColor: `${config.general.buttons.mergeBall.backgroundColor} !important`,
+              color: `${config.general.buttons.mergeBall.backgroundColor} !important`,
+            }}
+          >
+            Merge Ball
+          </Button>
+          <Button
+            data-testid="delete-ball-trails-button"
+            variant="contained"
+            onClick={() =>
+              handleMultiBallTrailsDelete(
+                selectedTrailsBall,
+                annotationBallTracks,
+                setAnnotationBallTracks,
+                ballNameMap,
+                setBallNameMap,
+                setSelectedTrailsBall,
+              )
+            }
+            sx={{
+              backgroundColor: `${config.general.buttons.deleteBallTrails.backgroundColor} !important`,
+              color: `${config.general.buttons.deleteBallTrails.backgroundColor} !important`,
+            }}
+          >
+            Del selected Balltrails
+          </Button>
+          <FieldDetailsButton
+            handleEnablingField={handleEnablingField}
+            showField={showField}
+            editField={editField}
+            handleEnablingEditField={handleEnablingEditField}
+            videoElement={videoElement}
+            fieldSize={fieldSize}
+          />
+          <SettingsBallButton
+            disabled={!videoElement?.paused}
+            isShowingBallBox={isShowingBallBox}
+            handleShowBallBox={handleShowBallBox}
+            handleAddBall={handleAddBall}
+          />
+          <SettingsTrailsButton
+            disabled={!videoElement?.paused}
+            trailsEnabled={trailsEnabled}
+            handleEnablingTrails={handleEnablingTrails}
+            isShowingPlayerTrails={isShowingPlayerTrails}
+            handleShowPlayerTrails={handleShowPlayerTrails}
+            isShowingBallTrails={isShowingBallTrails}
+            handleShowBallTrails={handleShowBallTrails}
+            trailSize={trailSize}
+            handleSwitchingTrailSize={handleSwitchingTrailSize}
+            trailFrameNumber={trailFrameNumber}
+            setTrailFrameNumber={setTrailFrameNumber}
+          />
+          <div className="tests">
+            <Button
+              data-testid="from-annotation"
+              className="tests"
+              onClick={() => drawBoundingBoxes(frameNumber)}
+            >
+              draw players from annotation and Ball tracks
+            </Button>
+          </div>
+          <DownloadButton
+            players={annotations}
+            video={video}
+            homographies={homographies}
+            balls={annotationBallTracks}
+          />
+        </Box>
+      </div>
 
-            <div id="canvas-container">
-                <canvas
-                    data-testid="fabric-canvas"
-                    ref={canvasRef}
-                    canvas={JSON.stringify(canvas)}
-                    annotations={annotations.length}
-                    annotationballtracks={annotationBallTracks.length}
-                    playerlist={JSON.stringify(playerList)}
-                    fieldPoints={JSON.stringify(fieldPoints)}
-                    className="canvas"
-                    id="tracking-editor-canvas"
-                    width="1920"
-                    height="1080"
-                    style={{display: "block", width: "100%", height: "auto"}}
-                ></canvas>
-                {/* <div className="sidebar">sidebar is here</div> */}
-                <TrackList children={playerList} groups={ballList}></TrackList>
-            </div>
-            <div className="controls">
-                <SeekBar
-                    onSeekStart={handleSeekStart}
-                    onSeekPercent={handleSeekPercent}
-                    onSeekEnd={handleSeekEnd}
-                    progress={progress}
-                />
-                <div id="buttons-container">
-                    <button className="icon-button" onClick={handlePreviousFrame}>
-                        <BackwardStepIcon className="icon"/>
-                    </button>
-                    <span id="frame-number-display">Frame {frameNumber}</span>
-                    <button
-                        className="icon-button"
-                        data-testid="next-frame-button"
-                        onClick={handleNextFrame}
-                    >
-                        <ForwardStepIcon className="icon"/>
-                    </button>
-                    <button className="icon-button" onClick={handlePlayPause}>
-                        {isPlaying ? (
-                            <PauseIcon className="icon"/>
-                        ) : (
-                            <PlayIcon className="icon"/>
-                        )}
-                    </button>
-                    <span id="timestamp-display">
+      <div id="canvas-container">
+        <canvas
+          data-testid="fabric-canvas"
+          ref={canvasRef}
+          canvas={JSON.stringify(canvas)}
+          annotations={annotations.length}
+          annotationballtracks={annotationBallTracks.length}
+          playerlist={JSON.stringify(playerList)}
+          fieldPoints={JSON.stringify(fieldPoints)}
+          className="canvas"
+          id="tracking-editor-canvas"
+          width="1920"
+          height="1080"
+          style={{ display: "block", width: "100%", height: "auto" }}
+        ></canvas>
+        {/* <div className="sidebar">sidebar is here</div> */}
+        <TrackList
+          children={playerList}
+          groups={ballList}
+          teams={teams}
+          teamColors={teamColors}
+          addTeam={addTeam}
+          addPlayerToTeam={addPlayerToTeam}
+        />
+      </div>
+      <div className="controls">
+        <SeekBar
+          onSeekStart={handleSeekStart}
+          onSeekPercent={handleSeekPercent}
+          onSeekEnd={handleSeekEnd}
+          progress={progress}
+        />
+        <div id="buttons-container">
+          <button className="icon-button" onClick={handlePreviousFrame}>
+            <BackwardStepIcon className="icon" />
+          </button>
+          <span id="frame-number-display">Frame {frameNumber}</span>
+          <button
+            className="icon-button"
+            data-testid="next-frame-button"
+            onClick={handleNextFrame}
+          >
+            <ForwardStepIcon className="icon" />
+          </button>
+          <button className="icon-button" onClick={handlePlayPause}>
+            {isPlaying ? (
+              <PauseIcon className="icon" />
+            ) : (
+              <PlayIcon className="icon" />
+            )}
+          </button>
+          <div>
+            <button
+              className="zoom-text-button"
+              onClick={() => {
+                setIsZoomModeEnabled(!isZoomModeEnabled);
+                setZoomStatus(
+                  isZoomModeEnabled ? "Enable Zoom Mode" : "Disable Zoom Mode",
+                );
+              }}
+            >
+              {zoomStatus}
+            </button>
+          </div>
+          <button className="zoom-text-button" onClick={handleZoomReset}>
+            Reset Zoom
+          </button>
+          <button className="icon-button" onClick={handleAdjustSpeed}>
+            <AdjustSpeedIcon className="icon" />
+          </button>
+          <span id="video-speed-display">
+            {videoElement?.playbackRate || videoSpeed}x
+          </span>
+          <span id="timestamp-display">
             {formatTime(timestamp)} / {formatTime(videoElement?.duration)}
           </span>
-                </div>
-            </div>
-        </LoadingOverlay>
-    );
+          <button
+            className="icon-button"
+            style={{ marginLeft: "auto", position: "relative" }}
+            onClick={toggleTooltip}
+          >
+            <KeyboardIcon />
+            <Tooltip isVisible={isTooltipVisible}>
+              <div
+                className="tooltip-content"
+                onClick={(e) => {
+                  e.stopPropagation();
+                }}
+              >
+                {Object.keys(keyBindings).map((action) => (
+                  <div
+                    key={action}
+                    className={`key-binding-box ${bindingAction === action ? "binding" : ""}`}
+                    onClick={() => startBindingKey(action)}
+                  >
+                    {action}:{" "}
+                    {keyBindings[action] == " " ? "Space" : keyBindings[action]}
+                  </div>
+                ))}
+              </div>
+            </Tooltip>
+          </button>
+        </div>
+      </div>
+    </LoadingOverlay>
+  );
 };
 
 export default NewTrackingEditor;
