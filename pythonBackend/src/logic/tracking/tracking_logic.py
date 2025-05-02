@@ -1,9 +1,10 @@
-from typing import List
 import cv2
 import os
-from ...pydantic_models.point_update_dto import PlayerBox, PointUpdate, Point, TrackingResult
-from ...util import is_valid_path
-from .tracking_helper_functions import get_part_of_image, is_point_near_player_box, smooth_points
+
+from logic.helper.util import is_valid_path
+from logic.tracking.tracking_helper_functions import get_part_of_image
+
+from pydantic_models.point_update_dto import PlayerBox, PointUpdate, Point, TrackingResult
 from pydantic_models.point_update_dto import PointUpdate, Point, TrackingResult
 
 #OPTIONS
