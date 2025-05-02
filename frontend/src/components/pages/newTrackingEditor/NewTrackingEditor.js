@@ -9,10 +9,6 @@ import { ReactComponent as QuestionIcon } from "../../../icons/question.svg";
 import { ReactComponent as KeyboardIcon } from "../../../icons/keyboard.svg";
 import {useLocation} from "react-router-dom";
 import {
-    parseProcessedPlayers,
-    parseProcessedBallTracks,
-} from "../../../utils/csvParser";
-import {
     convertBoxToAnnotation,
     convertAnnotationToBox,
     convertAnnotationBallToBallbox,
@@ -70,7 +66,6 @@ import {
   setNameBall,
 } from "./canvasUtils";
 import { generatePoster } from "./postGenerator";
-import useInitializeTrackingData from "./useInitializeTrackingData";
 import { updateSidebar } from "./sidebarUpdater";
 import { generateColor } from "../../../utils/colorGenerator";
 import {
@@ -160,7 +155,7 @@ const NewTrackingEditor = () => {
             annotations,
             setAnnotations
         );
-        setSelectedTrails(new Array());
+        setSelectedTrails([]);
     };
 
     const handleMultiSelectMergeBall = () => {
@@ -171,7 +166,7 @@ const NewTrackingEditor = () => {
             annotationBallTracks,
             setAnnotationBallTracks,
         );
-        setSelectedTrailsBall(new Array());
+        setSelectedTrailsBall([]);
     };
 
     const handleMultiBallTrailsDelete = () => {
@@ -182,20 +177,8 @@ const NewTrackingEditor = () => {
             annotationBallTracks,
             setAnnotationBallTracks,
         );
-        setSelectedTrailsBall(new Array());
+        setSelectedTrailsBall([]);
     };
-  useInitializeTrackingData(
-    video,
-    processedPlayers,
-    processedBallTracks,
-    setVideoUrl,
-    setAnnotations,
-    setColorSet,
-    setPlayerNameMap,
-    setAnnotationBallTracks,
-    setColorSetBall,
-    setBallNameMap,
-  );
 
   const addTeam = (color) => {
     const newTeamId = teams.length + 1;
@@ -276,6 +259,7 @@ const NewTrackingEditor = () => {
             const response = await api.get("/video/get_video_file/" + videoId, {
                 responseType: "blob"
             });
+
             const videoBlob = new Blob([response.data], {type: "video/mp4"});
             const videoURL = URL.createObjectURL(videoBlob); // Create an object URL
             setVideoUrl(videoURL);
@@ -322,8 +306,6 @@ const NewTrackingEditor = () => {
       colorSet,
       colorSetBall,
       getCurrentTimestampFrame,
-      playerNameMap,
-      ballNameMap,
       changeSelection,
       handleSetName,
       handleSetNameBall,
@@ -336,6 +318,16 @@ const NewTrackingEditor = () => {
       setBallList,
     });
   };
+
+    const handleDeletePlayer = (playerBox) => {
+        deletePlayer(
+            canvas,
+            playerBox,
+            setAnnotations,
+            setCanvasBoxes,
+            refreshSidebar,
+        );
+    };
 
   const handleBlink = (playerBox) => {
     blink(canvas, playerBox, setActiveObject);
@@ -367,22 +359,10 @@ const NewTrackingEditor = () => {
         });
         debugger;
         setPlayerList(tempList);
-  const handleDeletePlayer = (playerBox) => {
-    deletePlayer(
-      canvas,
-      playerBox,
-      setAnnotations,
-      setCanvasBoxes,
-      playerNameMap,
-      setPlayerNameMap,
-      refreshSidebar,
-    );
-  };
-
         tempList = [];
         runningIndex = 0;
         let ballBoxes = canvasBoxesBall.filter(
-            (box) => box.my.frame == getCurrentTimestampFrame(),
+            (box) => box.my.frame === getCurrentTimestampFrame(),
         );
         ballBoxes.forEach((box) => {
             const boxColor = colorSetBall.get(box.displayName);
@@ -416,17 +396,6 @@ const NewTrackingEditor = () => {
         let time = 0;
         let interval = 400;
         let blinkColor = "rgb(255, 255, 255, 0.6)";
-  const handleDeleteBall = (ballBox) => {
-    deleteBall(
-      canvas,
-      ballBox,
-      setAnnotationBallTracks,
-      setCanvasBoxesBall,
-      ballNameMap,
-      setBallNameMap,
-      refreshSidebar,
-    );
-  };
 
         if (originalStrokeColor !== blinkColor) {
             // necessary because otherwise bBox could permanently be set to blinkColor
@@ -439,11 +408,6 @@ const NewTrackingEditor = () => {
                     playerBox.setCoords();
                     canvas.renderAll();
                 }, time);
-  const handleSetName = (playerBox, name) => {
-    setName(canvas, playerBox, name, playerNameMap);
-    drawBoundingBoxes(frameNumber);
-  };
-
                 time += interval;
                 setTimeout(() => {
                     playerBox.set({
@@ -464,11 +428,26 @@ const NewTrackingEditor = () => {
         canvas.discardActiveObject();
     }
 
+    const handleSetName = (playerBox, name) => {
+        setName(canvas, playerBox, name);
+        drawBoundingBoxes(frameNumber);
+    };
+
+    const handleDeleteBall = (ballBox) => {
+        deleteBall(
+            canvas,
+            ballBox,
+            setAnnotationBallTracks,
+            setCanvasBoxesBall,
+            refreshSidebar,
+        );
+    };
+
     function deletePlayer(playerBox) {
         canvas.setActiveObject(playerBox);
         setActiveObject(playerBox);
-        setAnnotations(annotations.filter((a) => a.displayName != playerBox.displayName));
-        setCanvasBoxes(canvasBoxes.filter((a) => a.displayName != playerBox.displayName));
+        setAnnotations(annotations.filter((a) => a.displayName !== playerBox.displayName));
+        setCanvasBoxes(canvasBoxes.filter((a) => a.displayName !== playerBox.displayName));
 
         updateSidebar();
         canvas.discardActiveObject();
@@ -482,10 +461,10 @@ const NewTrackingEditor = () => {
         canvas.setActiveObject(ballBox);
         setActiveObject(ballBox);
         setAnnotationBallTracks(
-            annotationBallTracks.filter((a) => a.displayName != ballBox.displayName),
+            annotationBallTracks.filter((a) => a.displayName !== ballBox.displayName),
         );
         setCanvasBoxesBall(
-            canvasBoxesBall.filter((a) => a.displayName != ballBox.displayName),
+            canvasBoxesBall.filter((a) => a.displayName !== ballBox.displayName),
         );
 
         updateSidebar();
@@ -516,18 +495,18 @@ const NewTrackingEditor = () => {
         // the modified data is stored in canvasBoxes array
     }
   const handleSetNameBall = (ballBox, name) => {
-    setNameBall(canvas, ballBox, name, ballNameMap);
+    setNameBall(canvas, ballBox, name);
   };
 
     function boxInCanvas(boxToCheck) {
         //check if the box is in the canvas
         canvasBoxes.forEach((box) => {
-            if (box == boxToCheck) {
+            if (box === boxToCheck) {
                 return true;
             }
         });
         canvasBoxesBall.forEach((box) => {
-            if (box == boxToCheck) {
+            if (box === boxToCheck) {
                 return true;
             }
         });
@@ -616,9 +595,9 @@ const NewTrackingEditor = () => {
                     );
                     console.log(modifiedAnnotation);
                     const annotationToReplace = annotations.findIndex(
-                        (a) => a.frame_number == box.my.frame && a.displayName == box.my.key,
+                        (a) => a.frame_number === box.my.frame && a.displayName === box.my.key,
                     );
-                    if (annotationToReplace == -1) {
+                    if (annotationToReplace === -1) {
                         console.error(
                             "the modified bounding box doesn't exist in annotations.",
                         );
@@ -651,9 +630,9 @@ const NewTrackingEditor = () => {
                     );
                     console.log(modifiedAnnotation);
                     const annotationToReplace = annotationBallTracks.findIndex(
-                        (a) => a.frame_number == box.my.frame && a.displayName == box.my.key,
+                        (a) => a.frame_number === box.my.frame && a.displayName === box.my.key,
                     );
-                    if (annotationToReplace == -1) {
+                    if (annotationToReplace === -1) {
                         console.error(
                             "the modified bounding box doesn't exist in annotationBallTracks.",
                         );
@@ -677,7 +656,7 @@ const NewTrackingEditor = () => {
             let tempList = [];
 
             playerList.forEach((item) => {
-                if (item.props.playerBox.displayName == activeObject.displayName) {
+                if (item.props.playerBox.displayName === activeObject.displayName) {
                     const boxColor = colorSet.get(activeObject.displayName); //used in 'stroke' property of playerBox
 
                     tempList = tempList.concat([
@@ -718,7 +697,7 @@ const NewTrackingEditor = () => {
 
             tempList = [];
             ballList.forEach((item) => {
-                if (item.props.ballBox.my.key == activeObject.my.key) {
+                if (item.props.ballBox.my.key === activeObject.my.key) {
                     const boxColor = colorSetBall.get(activeObject.displayName);
                     tempList = tempList.concat([
                         <TrackListItemBall
@@ -807,7 +786,7 @@ const NewTrackingEditor = () => {
 
     function generatePoster(videoElement) {
         //if video cannot be played, simply return
-        if (videoElement.readyState == 0) return;
+        if (videoElement.readyState === 0) return;
         //get video content of first frame
         videoElement.currentTime = frameDuration;
         const poster = new fabric.Image(videoElement, {
@@ -936,13 +915,13 @@ const NewTrackingEditor = () => {
             }
         }
 
-        var boundingBoxesToDraw = drawInField
+        let boundingBoxesToDraw = drawInField
             ? canvasBoxes.filter(
                 (a) => a.my.frame === frameNumber && isInField(a.my.in_field),
             )
             : canvasBoxes.filter((a) => a.my.frame === frameNumber);
 
-        var tempList = [];
+        let tempList = [];
         let runningIndex = 0;
 
         if (boundingBoxesToDraw.length > 0) {
@@ -1129,7 +1108,7 @@ const NewTrackingEditor = () => {
             }
 
             const currentFrameNumber = getCurrentTimestampFrame();
-            if (currentFrameNumber != previousFrameNumber) {
+            if (currentFrameNumber !== previousFrameNumber) {
                 setFrameNumber(currentFrameNumber);
                 setTimestamp(videoElement.currentTime);
 
@@ -1355,8 +1334,6 @@ const NewTrackingEditor = () => {
     }, [
         annotations,
         annotationBallTracks,
-        playerNameMap,
-        ballNameMap,
         trailsEnabled,
         isShowingBallTrails,
         isShowingPlayerTrails,
@@ -1419,7 +1396,6 @@ const NewTrackingEditor = () => {
     if (bindingAction) {
       e.stopPropagation();
       setBindingAction(null);
-      return;
     }
   };
 
@@ -1563,7 +1539,7 @@ const NewTrackingEditor = () => {
   };
 
     const handlePlayPause = () => {
-        if (videoElement && videoElement.readyState != 0 && !videoElement.ended) {
+        if (videoElement && videoElement.readyState !== 0 && !videoElement.ended) {
             if (editField) {
                 setShowApplyHomographyModal(true);
                 return;
@@ -1587,7 +1563,7 @@ const NewTrackingEditor = () => {
     const incrementBy = 0.25;
 
     if (videoElement) {
-      if (videoSpeed == 2) {
+      if (videoSpeed === 2) {
         setVideoSpeed(0.25);
         videoElement.playbackRate = videoSpeed;
       } else {
@@ -1673,6 +1649,7 @@ const NewTrackingEditor = () => {
     }
 
     function handleAddPlayer() {
+        debugger;
         const displayName = "new Player ";
         const boxColor = generateColor();
         setColorSet(colorSet.set(displayName, boxColor));
@@ -1834,12 +1811,12 @@ const NewTrackingEditor = () => {
         setTrailSize(event.target.value);
     };
 
-  const handleApplyHomography = (frameNumber) => {
+  const handleApplyHomography = (frameNumber, trackPoints) => {
     const path = window.location.pathname;
     const videoId = path.substring(path.lastIndexOf("/") + 1);
     frameNumber = parseInt(frameNumber);
-    var currentFrame = parseInt(getCurrentTimestampFrame());
-    var fieldPoints = canvas
+    let currentFrame = parseInt(getCurrentTimestampFrame());
+    let fieldPoints = canvas
       .getObjects()
       .filter((obj) =>obj.properties?.type === "fieldPoint")
       .map((obj) => ({
@@ -2019,8 +1996,6 @@ const NewTrackingEditor = () => {
                 selectedTrails,
                 annotations,
                 setAnnotations,
-                playerNameMap,
-                setPlayerNameMap,
                 setSelectedTrails,
               )
             }
@@ -2039,8 +2014,6 @@ const NewTrackingEditor = () => {
                 selectedTrailsBall,
                 annotationBallTracks,
                 setAnnotationBallTracks,
-                ballNameMap,
-                setBallNameMap,
                 setSelectedTrailsBall,
               )
             }
@@ -2059,8 +2032,6 @@ const NewTrackingEditor = () => {
                 selectedTrailsBall,
                 annotationBallTracks,
                 setAnnotationBallTracks,
-                ballNameMap,
-                setBallNameMap,
                 setSelectedTrailsBall,
               )
             }
@@ -2212,7 +2183,7 @@ const NewTrackingEditor = () => {
                     onClick={() => startBindingKey(action)}
                   >
                     {action}:{" "}
-                    {keyBindings[action] == " " ? "Space" : keyBindings[action]}
+                    {keyBindings[action] === " " ? "Space" : keyBindings[action]}
                   </div>
                 ))}
               </div>

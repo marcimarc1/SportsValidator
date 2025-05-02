@@ -8,6 +8,7 @@ import AddVideoModal from "./Modals/AddVideoModal";
 import VideoListItem from "./ListItem/VideoListItem";
 import LoadingOverlay from "react-loading-overlay-ts";
 import toast, {Toaster} from "react-hot-toast";
+import axios from "axios";
 
 
 /***TODO:
@@ -26,6 +27,12 @@ const VideoOverview = () => {
     const[loading, setLoading] = useState(false);
     const[loaderText, setLoaderText] = useState("Loading...");
     const [videos, setVideos] = useState([])
+    const[searchRequest, setSearchRequest] = useState({
+        skip: 0,
+        take: 10,
+        desc: false,
+        game_id:gameId
+    })
 
     useEffect(async () => {
         await fetchVideos()
@@ -36,7 +43,13 @@ const VideoOverview = () => {
             setLoaderText("Loading Videos...");
             setLoading(true);
             console.log("Fetching videos for Game:", gameId,);
-            const response = await api.get(`/video/list/` + gameId);
+            const response = await axios.post("http://localhost:8000/video/list",
+                searchRequest,
+                {headers: {
+                        'Access-Control-Allow-Origin': '*',
+                        'Content-Type': 'application/json',
+                    },
+                    withCredentials: true})
             setVideos(response.data.videos);
             toast.success("Videos loaded successfully.");
         } catch (error) {

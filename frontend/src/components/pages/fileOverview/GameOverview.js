@@ -17,17 +17,26 @@ import axios from "axios";
 
 const GameOverview =() => {
 
+    //Loading
     const[loading, setLoading] = useState(false);
     const[loaderText, setLoaderText] = useState("Loading...");
-    const[games, setGames] = useState([])
-    const[filter, setFilter] = useState({
-        filter: '',
+
+    //Filter
+    const[filterText, setFilterText] = useState("");
+    const[sportFilter, setSportFilter] = useState("");
+    const[teamFilter1, setTeamFilter] = useState("");
+    const[teamsFilter2, setTeamsFilter] = useState("");
+    const[dateRange, setDateRange] = useState(null);
+    const[searchRequest, setSearchRequest] = useState({
         skip: 0,
         take: 10,
         desc: false,
-        hasFilter: false,
-
+        filter:""
     })
+
+    //Data
+    const[games, setGames] = useState([])
+
 
     useEffect(async () =>{
         await fetchGames()
@@ -38,7 +47,7 @@ const GameOverview =() => {
             setLoaderText("Loading Games...");
             setLoading(true);
             const response = await axios.post("http://localhost:8000/game/list",
-                filter,
+                searchRequest,
                 {headers: {
                         'Access-Control-Allow-Origin': '*',
                         'Content-Type': 'application/json',
@@ -81,11 +90,10 @@ const GameOverview =() => {
         await fetchGames();
     }
 
-    const handleFilterChange = (e) => {
-        let newFilter = filter;
-        newFilter.filter = e.target.value;
-        newFilter.hasFilter = true;
-        setFilter(newFilter); // Update the state with textarea value
+    //Filter handler
+    const handleFilterTextChange = (e) => {
+
+        setSearchRequest()
     };
 
     return (
@@ -98,6 +106,8 @@ const GameOverview =() => {
                 <div className="FileOverviewList">
                     <div className="FileOverviewHeadingContainer">
                         <h1 className={"FileOverviewHeading"}>Game Overview</h1>
+
+                        {/** Dialog Buttons**/}
                         <div className="file-upload-container" style={{display: 'flex', justifyContent: 'space-between'}}>
                             <div style={{ display: 'flex', gap: '10px' }}>
                                 <AddGameModal modalTitle={"Add Game"} onSave={triggerReload}/>
@@ -106,11 +116,12 @@ const GameOverview =() => {
                             <input
                                 className="FileButton"
                                 type="text"
-                                value={filter.filter}
-                                onChange={handleFilterChange}
+                                value={filterText}
+                                onChange={handleFilterTextChange}
                                 placeholder={"Search for Game..."}
                             />
                         </div>
+                        {/** Game List**/}
                         <div>
                             {games.map((game) => (
                                 <GameListItem key ={game.id} game={{game}} reload_data={triggerReload} handleDelete={deleteGame}/>
