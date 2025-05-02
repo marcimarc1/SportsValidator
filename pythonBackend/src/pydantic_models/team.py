@@ -2,6 +2,8 @@ from pydantic import BaseModel, ConfigDict
 from typing import Optional, List
 import uuid
 
+from pydantic_models.Search.SearchDto import BaseSearchDto
+
 
 class TeamBase(BaseModel):
     team_name: str
@@ -14,8 +16,11 @@ class TeamDto(TeamBase):
 
     model_config = ConfigDict(from_attributes=True)
 
-class TeamUpdate(TeamBase):
+class UpdateTeamDto(TeamBase):
     team_name: Optional[str]=None
 
 class TeamsDto(BaseModel):
     teams: List[TeamDto]
+
+class SearchTeamDto(BaseSearchDto):
+    ...

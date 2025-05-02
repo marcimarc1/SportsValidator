@@ -5,9 +5,9 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from pydantic_csv import BasemodelCSVReader
 
-from ..db.db_models.annotations import Annotation
-from ..db.db_models.homography import HomographyModelSoccerORM
-from ..pydantic_models.homography import HomographyModelSoccerAsList, FieldSectionSoccer, Point, HomographyModelSoccer, HomographyModelTennisAsList
+from db.db_models.annotations import Annotation
+from db.db_models.homography import HomographyModelSoccerORM
+from pydantic_models.homography import HomographyModelSoccerAsList, FieldSectionSoccer, Point, HomographyModelSoccer, HomographyModelTennisAsList
 
 from db.db_models.annotations import Annotation, AnnotationType
 from pydantic_models.annotation import AnnotationsDto, AnnotationDto

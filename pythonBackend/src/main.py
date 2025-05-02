@@ -3,10 +3,10 @@ import os
 import uvicorn
 import logging
 from fastapi import FastAPI, UploadFile
-from fastapi.middleware.cors import CORSMiddleware
-from .routers import annotation, user
 from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
+
+from config import settings
 from routers import annotation, user, game, sport, team, video
 from alembic.config import Config
 from alembic import command
@@ -15,9 +15,8 @@ log = logging.getLogger('uvicorn')
 
 def run_migrations():
     alembic_cfg = Config("alembic.ini")
-    alembic_cfg.set_main_option('script_location', "src/alembic")
-    alembic_cfg.set_main_option('sqlalchemy.url',
-                                os.getenv('DATABASE_URL', 'postgresql://user:pass@localhost:5432/db'))
+    alembic_cfg.set_main_option('script_location', "migrations")
+    alembic_cfg.set_main_option('sqlalchemy.url', settings.DATABASE_URL)
     alembic_cfg.set_main_option('prepend_sys_path', '.')
     command.upgrade(alembic_cfg, 'head')
 
@@ -25,7 +24,7 @@ def run_migrations():
 async def lifespan(app_: FastAPI):
     log.info("Starting up...")
     log.info("run migration")
-    # run_migrations()
+    run_migrations()
     yield
     log.info("Shutting down...")
 
@@ -62,5 +61,4 @@ async def check_app():
     return {"status": "App Running!"}
 
 if __name__ == "__main__":
-    # TODO(Marco): Lifespan/Config
-    uvicorn.run(app, host="localhost", port=8000)
+    uvicorn.run(app, host=settings.HOSTNAME, port=settings.PORT)

@@ -2,7 +2,7 @@ import collections
 import json
 from typing import Union
 
-from ..pydantic_models.homography import (HomographyModelSoccer, HomographyModelSoccerAsList, FieldSectionSoccer,
+from pydantic_models.homography import (HomographyModelSoccer, HomographyModelSoccerAsList, FieldSectionSoccer,
                                           HomographyModelTennis, FieldSectionTennis, HomographyModelTennisAsList)
 
 registered_tests = collections.defaultdict(dict)

@@ -3,6 +3,8 @@ from typing import List, Optional, Dict
 
 from pydantic import BaseModel, ConfigDict
 
+from pydantic_models.Search.SearchDto import BaseSearchDto
+
 
 class BaseVideoDto(BaseModel):
     name: str
@@ -16,7 +18,7 @@ class VideoDto(BaseVideoDto):
     ...
 
 
-class VideoUploadDto(BaseVideoDto):
+class CreateVideoDto(BaseVideoDto):
     ...
 
 class UpdateVideoDto(BaseVideoDto):
@@ -28,3 +30,6 @@ class UpdateVideoSequencesDto(BaseModel):
 
 class VideosDto(BaseModel):
     videos: List[VideoDto]
+
+class SearchVideoDto(BaseSearchDto):
+    game_id: uuid.UUID

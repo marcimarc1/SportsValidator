@@ -1,5 +1,4 @@
 import uuid
-
 import fastapi
 from fastapi import HTTPException, Depends
 from sqlalchemy.orm import Session
@@ -7,18 +6,13 @@ from logic.annotation_logic import *
 from db.database import get_db
 from pydantic_models.point_update_dto import PointUpdate
 from logic.tracking.tracking_logic import track_points_logic
-from ..logic.annotation_logic import get_annotations_by_video_id, save_annotation_by_csv_path, \
-    save_homography_model_soccer
-from ..db.database import get_db
-from ..pydantic_models.point_update_dto import PointUpdate
-from ..logic.tracking.tracking_logic import track_points_logic
-from ..logic.active_learning import filter_annotation_data_by_score, quality_function
-from ..pydantic_models.homography import HomographyModelSoccer, HomographyModelSoccerAsList, HomographyModelTennis, \
+from logic.active_learning import filter_annotation_data_by_score, quality_function
+from pydantic_models.homography import HomographyModelSoccer, HomographyModelSoccerAsList, HomographyModelTennis, \
     HomographyModelTennisAsList
 
 # These imports must be kept here, to allow the annotation to work
-from ..logic.tennis_module import *  # noqa # pylint: disable=unused-import
-from ..logic.soccer_module import *  # noqa # pylint: disable=unused-import
+from logic.tennis_module import *  # noqa # pylint: disable=unused-import
+from logic.soccer_module import *  # noqa # pylint: disable=unused-import
 
 router = fastapi.APIRouter(
     prefix="/annotation"

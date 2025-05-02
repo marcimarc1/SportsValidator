@@ -28,9 +28,6 @@ class Annotation(Base):
     y1 = Column(Float, nullable=False)
     x_trans = Column(Float, nullable=False)
     y_trans = Column(Float, nullable=False)
-    type = Column(Enum(AnnotationType), nullable=False)
+    type = Column(Enum(AnnotationType), nullable=False, index=True)
     in_field = Column(Boolean, nullable=False)
-
-    #Todo Add Key, name + key-import from csv + migration, update functions
-    #player id
 

@@ -1,4 +1,5 @@
 import csv
+import gzip
 import os
 import shutil
 import uuid
@@ -6,14 +7,17 @@ import uuid
 from fastapi import UploadFile, File
 from sqlalchemy.orm import Session
 
+from config import settings
 from db.db_models.annotations import Annotation
+from db.db_models.videos import Video
 from db.util.enums.annotationType import AnnotationType
-from logic.video_logic import add_video, delete_video
-from pydantic_models.video import VideoUploadDto
+from logic.data_logic.video_logic import VideoLogic
+from pydantic_models.video import *
 
+logic = VideoLogic(Video, VideoDto, VideosDto)
 
 async def importVideo(
-        dto: VideoUploadDto,
+        dto: CreateVideoDto,
         db: Session,
         videoFile: UploadFile = File(...),
         playerAnnotationFile: UploadFile = File(...),
@@ -26,11 +30,11 @@ async def importVideo(
     #assert not ballAnnotationFile or ballAnnotationFile.content_type == "text/csv", "Invalid ball file type"
 
     #Add Video To DB
-    videoId = add_video(dto, db)
-    print("Created video with id: {}".format(videoId))
-    basePath = os.environ.get('APP_DATA_PATH', 'C:/SportsValidator')
+    video = await logic.create(dto, db)
+    print("Created video with id: {}".format(video.id))
+    basePath = settings.APP_DATA_PATH
     gamePath = os.path.join(basePath, str(dto.game_id))
-    videoPath = os.path.join(gamePath, str(videoId))
+    videoPath = os.path.join(gamePath, str(video.id))
     vp,pp,bp= "","",""
     #Save Files
     try:
@@ -39,13 +43,15 @@ async def importVideo(
 
         # process Files
         if os.path.exists(pp):
-            process_player_csv(videoId, dto.game_id, pp, db)
+            process_player_csv(video.id, dto.game_id, pp, db)
         if os.path.exists(bp):
-            process_ball_csv(videoId, dto.game_id, bp, db)
+            process_ball_csv(video.id, dto.game_id, bp, db)
+
+    # TODO: Delete csv/JSON Files after import to database to save memory
 
     except Exception as error:
         print(error)
-        delete_video(videoId, db)
+        await logic.delete(video.id, db)
         return{"message": error}
 
     return {"message": "Success"}
@@ -62,8 +68,8 @@ async def saveFilesForVideo(
     print("Saving files in {}".format(path))
 
     #Write VideoFile
-    videoFilePath = os.path.join(path,"video.mp4")
-    with open(videoFilePath, "wb") as f:
+    videoFilePath = os.path.join(path,"video.mp4.gz")
+    with gzip.open(videoFilePath, "wb") as f:
         while content := videoFile.file.read(1024):
             f.write(content)
     print("Saving Video file in {}".format(videoFilePath))

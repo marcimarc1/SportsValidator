@@ -1,6 +1,6 @@
-from .active_learning import add_test
-from .utils import distance_of_points, scaled_difference, angle_at_z
-from ..pydantic_models.homography import FieldSectionSoccer
+from logic.active_learning import add_test
+from logic.utils import distance_of_points, scaled_difference, angle_at_z
+from pydantic_models.homography import FieldSectionSoccer
 
 
 @add_test("length_test", "Soccer")

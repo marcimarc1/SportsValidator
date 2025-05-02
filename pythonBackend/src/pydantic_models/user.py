@@ -3,6 +3,8 @@ from typing import Optional, List
 
 from pydantic import BaseModel, ConfigDict
 
+from pydantic_models.Search.SearchDto import BaseSearchDto
+
 
 class BaseUserDto(BaseModel):
     username: str
@@ -25,3 +27,6 @@ class UpdateUserDto(BaseUserDto):
 class UsersDto(BaseModel):
     users: List[UserDto]
     model_config = ConfigDict(from_attributes=True)
+
+class SearchUserDto(BaseSearchDto):
+    ...
