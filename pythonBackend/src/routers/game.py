@@ -30,8 +30,8 @@ async def create(dto: CreateGameDto, db: Session = Depends(get_db)):
     return await logic.create(dto, db)
 
 # Update
-@router.put("/{game_id}", response_model=GameDto, tags=["game"])
-async def update_points(game_id: uuid.UUID, dto: GameDto, db: Session = Depends(get_db)):
+@router.post("/{game_id}", response_model=GameDto, tags=["game"])
+async def update_points(game_id: uuid.UUID, dto: UpdateGameDto, db: Session = Depends(get_db)):
     game = await logic.update(game_id, dto, db)
     return game
 

@@ -3,6 +3,7 @@ import uuid
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy import delete
 from pydantic_csv import BasemodelCSVReader
 
 from db.db_models.annotations import Annotation
@@ -228,3 +229,65 @@ def get_homography_model(session: Session, video_id: str) -> HomographyModelSocc
 
     # Return as HomographyModelSoccerAsList
     return HomographyModelSoccerAsList.parse_obj(frame_data)
+
+
+async def bulk_save_annotations(
+    db: Session,
+    newPlayer: list[Annotation],
+    newBall: list[Annotation],
+    updated: list[Annotation],
+    deleted: list[uuid.UUID],
+
+):
+    if newPlayer:
+        # Create new annotations
+        for ann in newPlayer:
+            db_obj = Annotation(
+                video_id=ann.video_id,
+                game_id=ann.game_id,
+                frame_number=ann.frame_number,
+                displayName=ann.displayName,
+                x= ann.x,
+                y= ann.y,
+                w= ann.w,
+                h= ann.h,
+                x2= ann.x2,
+                y2= ann.y2,
+                x1= ann.x1,
+                y1= ann.y1,
+                x_trans=ann.x_trans,
+                y_trans=ann.y_trans,
+                type=AnnotationType.Player,
+                in_field=ann.in_field,
+            )
+            db.add(db_obj)
+
+    if newBall:
+        for ann in newBall:
+            db_obj = Annotation(
+                video_id=ann.video_id,
+                game_id=ann.game_id,
+                frame_number=ann.frame_number,
+                displayName=ann.displayName,
+                x2= ann.x2,
+                y2= ann.y2,
+                x1= ann.x1,
+                y1= ann.y1,
+                x_trans=ann.x_trans,
+                y_trans=ann.y_trans,
+                type=AnnotationType.Ball,
+                in_field=ann.in_field,
+            )
+            db.add(db_obj)
+
+    if updated:
+        # Update existing annotations
+        for ann in updated:
+            db_obj = db.query(Annotation).filter(Annotation.id == ann.id).first()
+            if db_obj:
+                for key, value in ann.dict().items():
+                    setattr(db_obj, key, value)
+    if deleted:
+        qry = delete(Annotation).where(Annotation.id.in_(deleted))
+        db.execute(qry)
+    db.commit()

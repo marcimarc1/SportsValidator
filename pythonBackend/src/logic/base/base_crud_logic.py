@@ -67,7 +67,8 @@ class BaseCrudLogic(Generic[CreateDtoType, ModelDtoType,UpdateDtoType, ListDtoTy
     async def get_many(self, search_dto: SearchDtoType, db: Session) -> ListDtoType:
         # No SearchDto = no filer => full list
         if search_dto is None:
-            results = db.query(self.model_dto).all()
+            print("search_dto is None")
+            results = db.query(self.db_model).all()
             models = [self.model_dto.model_validate(obj) for obj in results]
             list_field_name = next(iter(self.list_dto.model_fields))
             return self.list_dto(**{list_field_name: models})

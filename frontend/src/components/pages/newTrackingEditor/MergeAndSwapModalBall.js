@@ -12,7 +12,7 @@ import Radio from "@material-ui/core/Radio";
 import FormControlLabel from "@material-ui/core/FormControlLabel";
 
 import { useState } from "react";
-import { mergeBallData, swapBallData } from "../../../utils/validation";
+import { mergeData, swapData } from "../../../utils/validation";
 import { useMemo } from "react";
 
 const style = {
@@ -31,6 +31,8 @@ export default function MergeAndSwapModalBall({
   ballChosenInList,
   annotationBallTracks,
   setAnnotationBallTracks,
+  setUpdateAnnotations,
+  setDeleteAnnotations,
   frameNumber,
   mergeModalBallState,
   handleClose,
@@ -58,19 +60,23 @@ export default function MergeAndSwapModalBall({
 
   const handleClick = () => {
     if (operation === "swap")
-      swapBallData(
-        selectedBall,
-        ballChosenInList,
-        annotationBallTracks,
-        setAnnotationBallTracks,
-        frameNumber,
+      swapData(
+          selectedBall,
+          ballChosenInList,
+          annotationBallTracks,
+          setAnnotationBallTracks,
+          setUpdateAnnotations,
+          setDeleteAnnotations,
+          frameNumber,
       );
     else
-      mergeBallData(
-        selectedBall,
-        ballChosenInList,
-        annotationBallTracks,
-        setAnnotationBallTracks,
+      mergeData(
+          selectedBall,
+          ballChosenInList,
+          annotationBallTracks,
+          setAnnotationBallTracks,
+          setUpdateAnnotations,
+          setDeleteAnnotations,
       );
     handleClose();
   };

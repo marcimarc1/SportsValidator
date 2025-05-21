@@ -7,7 +7,7 @@ from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
 
 from config import settings
-from routers import annotation, user, game, sport, team, video
+from routers import annotation, user, game, sport, team, video, imexport
 from alembic.config import Config
 from alembic import command
 
@@ -30,7 +30,7 @@ async def lifespan(app_: FastAPI):
 
 origins = [
     "http://localhost",
-    "http://localhost:8080",
+    "http://localhost:80",
     "http://localhost:3000",
 ]
 
@@ -53,6 +53,7 @@ app.include_router(game.router)
 app.include_router(sport.router)
 app.include_router(team.router)
 app.include_router(video.router)
+app.include_router(imexport.router)
 
 
 

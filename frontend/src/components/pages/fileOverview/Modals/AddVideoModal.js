@@ -64,7 +64,7 @@ const AddVideoModal = ({modalTitle, titles, gameId, setLoading, setLoaderText}) 
 
         console.log("Saving Video");
         try {
-            await axios.post("http://localhost:8000/video/addVideo",
+            await axios.post("http://localhost:8080/video/addVideo",
                 formDto,
                 {
                     headers: {

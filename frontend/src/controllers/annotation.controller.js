@@ -1,7 +1,14 @@
-import api from './api'
+import api from "../api/api";
 
-api.baseURL = api.baseURL+"annotation/"
+class AnnotationController {
+    static prefix = 'annotation';
 
-export function getAnnotations(id) {
-    return api.get(`${id}`)
+    static async saveChanges(annotationData) {
+        return api.post(`/${this.prefix}/SaveChanges`, annotationData, {
+            headers: {
+                "Content-Type": "application/json"
+            }
+    });}
 }
+
+export default AnnotationController;

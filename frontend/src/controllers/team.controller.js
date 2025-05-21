@@ -1,19 +1,16 @@
-import api from './api'
+import api from "../api/api";
 
-api.baseURL = api.baseURL+"team/"
+class TeamController {
+    static prefix = '/team';
 
-export function getTeam(id) {
-    return api.get(`${id}`)
+    static async getTeamList() {
+        return api.get(`${this.prefix}/list/`,
+            {headers: {
+                    'Access-Control-Allow-Origin': '*',
+                    'Content-Type': 'application/json',
+                }}
+        )}
 }
+export default TeamController;
 
-export function addTeam(team) {
-    return api.post(``, JSON.stringify(team));
-}
 
-export function updateTeam(id, team) {
-    return api.update(`${id}`, JSON.stringify(team))
-}
-
-export function deleteTeam(id) {
-    return api.delete(`${id}`)
-}

@@ -1,46 +1,45 @@
 // multiSelectHandlers.js
 import {
-  multiPlayerMerge,
-  multiBallMerge,
+  multiMerge,
   multiBallTrailsDelete,
 } from "../../../utils/validation";
 
 export const handleMultiSelectMerge = (
   selectedTrails,
+  setSelectedTrails,
   annotations,
   setAnnotations,
-  playerNameMap,
-  setPlayerNameMap,
-  setSelectedTrails,
+  alteredAnnotations,
+  setAlteredAnnotations
 ) => {
   console.log("Multiplayer merge");
   console.log(Array.from(selectedTrails));
-  multiPlayerMerge(
-    Array.from(selectedTrails),
-    annotations,
-    setAnnotations,
-    playerNameMap,
-    setPlayerNameMap,
+  multiMerge(
+      Array.from(selectedTrails),
+      annotations,
+      setAnnotations,
+      alteredAnnotations,
+      setAlteredAnnotations,
   );
   setSelectedTrails([]);
 };
 
 export const handleMultiSelectMergeBall = (
   selectedTrailsBall,
+  setSelectedTrailsBall,
   annotationBallTracks,
   setAnnotationBallTracks,
-  ballNameMap,
-  setBallNameMap,
-  setSelectedTrailsBall,
+  alteredAnnotations,
+  setAlteredAnnotations,
 ) => {
   console.log("Multiplayer merge ball");
   console.log(Array.from(selectedTrailsBall));
-  multiBallMerge(
+  multiMerge(
     Array.from(selectedTrailsBall),
     annotationBallTracks,
     setAnnotationBallTracks,
-    ballNameMap,
-    setBallNameMap,
+      alteredAnnotations,
+      setAlteredAnnotations,
   );
   setSelectedTrailsBall([]);
 };
@@ -49,8 +48,6 @@ export const handleMultiBallTrailsDelete = (
   selectedTrailsBall,
   annotationBallTracks,
   setAnnotationBallTracks,
-  ballNameMap,
-  setBallNameMap,
   setSelectedTrailsBall,
 ) => {
   console.log("Multiplayer delete ball trails");
@@ -59,8 +56,6 @@ export const handleMultiBallTrailsDelete = (
     Array.from(selectedTrailsBall),
     annotationBallTracks,
     setAnnotationBallTracks,
-    ballNameMap,
-    setBallNameMap,
   );
   setSelectedTrailsBall([]);
 };

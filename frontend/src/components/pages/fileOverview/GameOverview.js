@@ -46,7 +46,7 @@ const GameOverview =() => {
         try {
             setLoaderText("Loading Games...");
             setLoading(true);
-            const response = await axios.post("http://localhost:8000/game/list",
+            const response = await axios.post("http://localhost:8080/game/list",
                 searchRequest,
                 {headers: {
                         'Access-Control-Allow-Origin': '*',
@@ -124,7 +124,7 @@ const GameOverview =() => {
                         {/** Game List**/}
                         <div>
                             {games.map((game) => (
-                                <GameListItem key ={game.id} game={{game}} reload_data={triggerReload} handleDelete={deleteGame}/>
+                                <GameListItem key ={game.id} game={{game}} reload_data={triggerReload} handleDelete={deleteGame} triggerReload={triggerReload}/>
                             ))}
                         </div>
                     </div>

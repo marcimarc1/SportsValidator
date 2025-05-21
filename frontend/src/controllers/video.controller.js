@@ -1,15 +1,27 @@
-import api from './api'
+import api from "../api/api";
 
-api.baseURL = api.baseURL+"video/"
+class VideoController {
+    static prefix = '/video';
 
-export async function upload(importRequestDto){
-    return api.post(`addVideo`, JSON.stringify(importRequestDto));
+    static async getVideoFileById(videoId) {
+        return api.get(`${this.prefix}/get_video_file/${videoId}`,{
+            responseType: "blob"
+        });
+    }
+
+    static async getById(videoId) {
+        return api.get(`${this.prefix}/${videoId}`);
+    }
+
+    static async getVideoList(request) {
+        return api.post(`${this.prefix}/list/`,
+            request,
+            {headers: {
+                    'Access-Control-Allow-Origin': '*',
+                    'Content-Type': 'application/json',
+                }}
+        )}
+
+
 }
-
-export function deleteVideo(id) {
-    return api.delete(`${id}`)
-}
-
-export function getVideoByGameId(id) {
-    return api.get(`list/${id}`)
-}
+export default VideoController;

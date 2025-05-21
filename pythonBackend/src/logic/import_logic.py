@@ -1,5 +1,6 @@
 import csv
 import gzip
+import io
 import os
 import shutil
 import uuid
@@ -44,10 +45,10 @@ async def importVideo(
         # process Files
         if os.path.exists(pp):
             process_player_csv(video.id, dto.game_id, pp, db)
+            os.remove(pp)
         if os.path.exists(bp):
             process_ball_csv(video.id, dto.game_id, bp, db)
-
-    # TODO: Delete csv/JSON Files after import to database to save memory
+            os.remove(bp)
 
     except Exception as error:
         print(error)
@@ -68,8 +69,8 @@ async def saveFilesForVideo(
     print("Saving files in {}".format(path))
 
     #Write VideoFile
-    videoFilePath = os.path.join(path,"video.mp4.gz")
-    with gzip.open(videoFilePath, "wb") as f:
+    videoFilePath = os.path.join(path,"video.mp4")
+    with open(videoFilePath, "wb") as f:
         while content := videoFile.file.read(1024):
             f.write(content)
     print("Saving Video file in {}".format(videoFilePath))
@@ -143,3 +144,49 @@ def process_ball_csv(video_id: uuid.UUID, game_id: uuid.UUID, csv_path: str, db:
             db.add(annotation)
 
         db.commit()
+
+
+def generate_csv_rows(annotations, is_player: bool):
+    output = io.StringIO()
+    if is_player:
+        fieldnames = ['index', 'FrameNo', 'PlayerKey', 'x', 'y', 'w', 'h', 'x2', 'y2', 'x1', 'y1', 'x_trans', 'y_trans', 'in_field']
+    else:
+        fieldnames = ['index', 'FrameNo', 'trackNo', 'x1', 'y1', 'x2', 'y2', 'x_trans', 'y_trans', 'in_field']
+
+    writer = csv.DictWriter(output, fieldnames=fieldnames)
+    writer.writeheader()
+
+    for idx, ann in enumerate(annotations):
+        if is_player:
+            writer.writerow({
+                'index': idx,
+                'FrameNo': ann.frame_number,
+                'PlayerKey': ann.displayName,
+                'x': ann.x,
+                'y': ann.y,
+                'w': ann.w,
+                'h': ann.h,
+                'x2': ann.x2,
+                'y2': ann.y2,
+                'x1': ann.x1,
+                'y1': ann.y1,
+                'x_trans': ann.x_trans,
+                'y_trans': ann.y_trans,
+                'in_field': ann.in_field
+            })
+        else:
+            writer.writerow({
+                'index': idx,
+                'FrameNo': ann.frame_number,
+                'trackNo': ann.displayName,
+                'x1': ann.x1,
+                'y1': ann.y1,
+                'x2': ann.x2,
+                'y2': ann.y2,
+                'x_trans': ann.x_trans,
+                'y_trans': ann.y_trans,
+                'in_field': ann.in_field
+            })
+
+    output.seek(0)
+    return output

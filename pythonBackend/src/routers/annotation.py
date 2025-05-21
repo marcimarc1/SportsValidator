@@ -1,9 +1,12 @@
 import uuid
 import fastapi
 from fastapi import HTTPException, Depends
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from logic.annotation_logic import *
 from db.database import get_db
+from logic.import_logic import generate_csv_rows
+from pydantic_models.annotation import BulkAnnotationUpdate
 from pydantic_models.point_update_dto import PointUpdate
 from logic.tracking.tracking_logic import track_points_logic
 from logic.active_learning import filter_annotation_data_by_score, quality_function
@@ -15,7 +18,8 @@ from logic.tennis_module import *  # noqa # pylint: disable=unused-import
 from logic.soccer_module import *  # noqa # pylint: disable=unused-import
 
 router = fastapi.APIRouter(
-    prefix="/annotation"
+    prefix="/annotation",
+    tags=["annotations"]
 )
 
 @router.post("/track")
@@ -83,3 +87,17 @@ async def save_refine_tennis(video_id: str, data: HomographyModelTennisAsList, d
         print(f"Got refinement data for id: {video_id}")
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+@router.post("/SaveChanges")
+async def bulk_update_annotations(
+    data: BulkAnnotationUpdate,
+    db: Session = Depends(get_db)
+)->dict[str, str]:
+    await bulk_save_annotations(
+        newPlayer = data.newAnnotations,
+        newBall= data.newBallAnnotations,
+        updated = data.updatedAnnotations,
+        deleted = data.deletedAnnotations,
+        db=db
+    )
+    return {"message": "Annotations saved successfully"}

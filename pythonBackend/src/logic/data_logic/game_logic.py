@@ -29,16 +29,15 @@ class GameLogic(
     def generate_db_obj(self, dto: CreateDtoType, db: Session) -> DBModelType:
         team1 = db.query(Team).filter(Team.id == dto.team1_id).first()
         team2 = db.query(Team).filter(Team.id == dto.team2_id).first()
-        game = Game(
-            name=dto.name,
-            team1_id=dto.team1_id,
-            team1_name=team1.team_name,
-            team2_name=team2.team_name,
-            team2_id=dto.team2_id,
-            sportType=dto.sportType,
-            date_played=dto.date_played,
-        )
-        return game
+        return {
+            "name": dto.name,
+            "team1_id": dto.team1_id,
+            "team1_name": team1.team_name if team1 else None,
+            "team2_id": dto.team2_id,
+            "team2_name": team2.team_name if team2 else None,
+            "sportType": dto.sportType,
+            "date_played": dto.date_played,
+        }
 
     def post_create(self, db_obj, db: Session):
         path = os.environ.get('APP_DATA_PATH', 'C:/SportsValidator')

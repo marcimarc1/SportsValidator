@@ -1,4 +1,4 @@
-import React, {useRef, useState, useEffect} from "react";
+import React, {useRef, useState, useEffect, useCallback} from "react";
 import {useParams} from "react-router";
 import {ReactComponent as PlayIcon} from "../../../icons/play.svg";
 import {ReactComponent as PauseIcon} from "../../../icons/pause.svg";
@@ -7,7 +7,7 @@ import {ReactComponent as BackwardStepIcon} from "../../../icons/backward-step.s
 import { ReactComponent as AdjustSpeedIcon } from "../../../icons/adjust-speed.svg";
 import { ReactComponent as QuestionIcon } from "../../../icons/question.svg";
 import { ReactComponent as KeyboardIcon } from "../../../icons/keyboard.svg";
-import {useLocation} from "react-router-dom";
+import {useLocation, useBlocker} from "react-router-dom";
 import {
     convertBoxToAnnotation,
     convertAnnotationToBox,
@@ -44,8 +44,7 @@ import {
     updateHomography,
 } from "../../../utils/canvasUtils";
 import {
-    multiPlayerMerge,
-    multiBallMerge,
+    multiMerge,
     multiBallTrailsDelete,
 } from "../../../utils/validation";
 import { DownloadButton } from "./DownloadButton";
@@ -60,10 +59,8 @@ import { getPointsToTrack } from "../../../utils/templates";
 import { modalBallOpen, modalOpen, modalsClose } from "./modalHandler";
 import {
   blink,
-  deleteBall,
-  deletePlayer,
+  deleteEntity,
   setName,
-  setNameBall,
 } from "./canvasUtils";
 import { generatePoster } from "./postGenerator";
 import { updateSidebar } from "./sidebarUpdater";
@@ -73,14 +70,24 @@ import {
   handleMultiSelectMerge,
   handleMultiSelectMergeBall,
 } from "./multiSelectHandlers";
+import axios from "axios";
+import toast from "react-hot-toast";
+import AnnotationController from "../../../controllers/annotation.controller";
+import VideoController from "../../../controllers/video.controller";
 
 const NewTrackingEditor = () => {
     const location = useLocation();
+    const [videoId, setVideoId] = useState("");
+    const [gameId, setGameId] = useState("");
     const [video, setVideo] = useState(null);
     const [videoMetadata, setVideoMetadata] = useState(null);
     const [homographies, setHomographies] = useState(null);
     const [fieldSize, setFieldSize] = useState(null);
     const [annotations, setAnnotations] = useState([]);
+    const [newAnnotations, setNewAnnotations] = useState([]);
+    const [alteredAnnotations, setAlteredAnnotations] = useState([]);
+    const [deleteAnnotations, setDeleteAnnotations] = useState([]);
+    const [newBallAnnotations, setNewBallAnnotations] = useState([]);
     const [canvas, setCanvas] = useState(new fabric.Canvas());
     const [videoUrl, setVideoUrl] = useState("");
     const [frameNumber, setFrameNumber] = useState(0);
@@ -137,6 +144,25 @@ const NewTrackingEditor = () => {
       ZoomModeEnabled: config.general.keyBindings.ZoomModeEnabled,
     });
 
+    const checkIsDirty = useCallback(()=>{
+        return alteredAnnotations.length !== 0
+            || newBallAnnotations.length !== 0
+            || newAnnotations.length !== 0
+            || deleteAnnotations.length !== 0;
+
+        },[alteredAnnotations, newBallAnnotations, newAnnotations, deleteAnnotations]);
+
+    useEffect(() => {
+        const handleBeforeUnload = (e) => {
+            if (checkIsDirty) return;
+            e.preventDefault();
+            e.returnValue = '';
+        };
+
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    }, [checkIsDirty]);
+
   const handleModalOpen = modalOpen(setPlayerChosenInList, setMergeModalState);
   const handleModalBallOpen = modalBallOpen(
       setBallChosenInList,
@@ -150,10 +176,12 @@ const NewTrackingEditor = () => {
     const handleMultiSelectMerge = () => {
         console.log("Multiplayer merge");
         console.log(Array.from(selectedTrails));
-        multiPlayerMerge(
+        multiMerge(
             Array.from(selectedTrails),
             annotations,
-            setAnnotations
+            setAnnotations,
+            alteredAnnotations,
+            setAlteredAnnotations,
         );
         setSelectedTrails([]);
     };
@@ -161,10 +189,12 @@ const NewTrackingEditor = () => {
     const handleMultiSelectMergeBall = () => {
         console.log("Multiplayer merge ball");
         console.log(Array.from(selectedTrailsBall));
-        multiBallMerge(
+        multiMerge(
             Array.from(selectedTrailsBall),
             annotationBallTracks,
             setAnnotationBallTracks,
+            alteredAnnotations,
+            setAlteredAnnotations,
         );
         setSelectedTrailsBall([]);
     };
@@ -241,6 +271,10 @@ const NewTrackingEditor = () => {
         // Load Video File:
         const path = window.location.pathname;
         const videoId = path.substring(path.lastIndexOf("/") + 1);
+        setVideoId(videoId)
+
+        const video = await VideoController.getById(videoId);
+        setGameId(video.data.game_id);
 
         try {
             await fetchVideo(videoId)
@@ -299,6 +333,48 @@ const NewTrackingEditor = () => {
             setLoading(false);
         }
     }
+
+    const handleSave = () => {
+        saveChanges()
+    };
+
+    const resetTrackedChanges = () => {
+        setAlteredAnnotations([])
+        setNewAnnotations([])
+        setNewBallAnnotations([])
+        setDeleteAnnotations([])
+    }
+
+    async function saveChanges(){
+        if( newAnnotations.length===0 && newBallAnnotations.length===0 && alteredAnnotations.length===0 && deleteAnnotations.length===0){
+            toast.error("No pending changes");
+            return;
+        }
+        debugger;
+        try {
+            setLoaderText("Saving Changes...");
+            setLoading(true);
+            const data ={
+                newAnnotations: newAnnotations.length>0 ? newAnnotations : null,
+                newBallAnnotations: newBallAnnotations.length>0 ? newBallAnnotations : null,
+                updatedAnnotations: alteredAnnotations.length>0 ? alteredAnnotations : null,
+                deletedAnnotations: deleteAnnotations.length>0 ? deleteAnnotations : null,
+            }
+            const json_data = JSON.stringify(data);
+            const response = await AnnotationController.saveChanges(json_data);
+
+            resetTrackedChanges()
+
+            toast.success("Saved changes.");
+        } catch (error) {
+            toast.error(error.message);
+            console.log("Error while saving changes", error);
+        }
+        finally {
+            setLoading(false);
+        }
+    }
+
   const refreshSidebar = () => {
     updateSidebar({
       canvasBoxes,
@@ -319,20 +395,6 @@ const NewTrackingEditor = () => {
     });
   };
 
-    const handleDeletePlayer = (playerBox) => {
-        deletePlayer(
-            canvas,
-            playerBox,
-            setAnnotations,
-            setCanvasBoxes,
-            refreshSidebar,
-        );
-    };
-
-  const handleBlink = (playerBox) => {
-    blink(canvas, playerBox, setActiveObject);
-  };
-
     function updateSidebar() {
         let tempList = [];
         let runningIndex = 0;
@@ -348,16 +410,15 @@ const NewTrackingEditor = () => {
                     playerBox={box}
                     name={box.displayName}
                     changeSelection={changeSelection}
-                    setName={setName}
+                    setName={handleSetName}
                     blink={blink}
-                    delete={deletePlayer}
+                    delete={handleDeletePlayer}
                     color={boxColor}
                     handleModalOpen={handleModalOpen}
                 />,
             ]);
             runningIndex++;
         });
-        debugger;
         setPlayerList(tempList);
         tempList = [];
         runningIndex = 0;
@@ -373,9 +434,9 @@ const NewTrackingEditor = () => {
                     ballBox={box}
                     name={box.displayName}
                     changeSelection={changeSelection}
-                    setName={setNameBall}
+                    setName={handleSetNameBall}
                     blink={blink}
-                    delete={deleteBall}
+                    delete={handleDeleteBall}
                     color={boxColor}
                     handleModalOpen={handleModalBallOpen}
                 />,
@@ -385,117 +446,60 @@ const NewTrackingEditor = () => {
         setBallList(tempList);
     }
 
-    function blink(playerBox) {
-        canvas.discardActiveObject();
-        canvas.setActiveObject(playerBox);
-        setActiveObject(playerBox);
-        playerBox.my.selected = true;
-        let originalStrokeColor = playerBox.stroke;
-        let originalFillColor = playerBox.fill;
-        let repeats = 3;
-        let time = 0;
-        let interval = 400;
-        let blinkColor = "rgb(255, 255, 255, 0.6)";
-
-        if (originalStrokeColor !== blinkColor) {
-            // necessary because otherwise bBox could permanently be set to blinkColor
-            for (let i = repeats; i > 0; i--) {
-                setTimeout(() => {
-                    playerBox.set({
-                        fill: blinkColor,
-                        stroke: blinkColor,
-                    });
-                    playerBox.setCoords();
-                    canvas.renderAll();
-                }, time);
-                time += interval;
-                setTimeout(() => {
-                    playerBox.set({
-                        fill: originalFillColor,
-                        stroke: originalStrokeColor,
-                    });
-                    playerBox.setCoords();
-                    canvas.renderAll();
-                }, time);
-                time += interval;
-            }
-        }
-        playerBox.set({
-            fill: originalFillColor,
-            stroke: originalStrokeColor,
-        });
-        playerBox.setCoords();
-        canvas.discardActiveObject();
-    }
+    const handleBlink = (playerBox) => {
+        blink(canvas, playerBox, setActiveObject);
+    };
 
     const handleSetName = (playerBox, name) => {
-        setName(canvas, playerBox, name);
+        setName(
+            canvas,
+            playerBox,
+            name,
+            annotations,
+            setAnnotations,
+            alteredAnnotations,
+            setAlteredAnnotations
+        );
         drawBoundingBoxes(frameNumber);
     };
 
+    const handleDeletePlayer = (playerBox) => {
+        deleteEntity(
+            canvas,
+            playerBox,
+            annotations,
+            setAnnotations,
+            setNewAnnotations,
+            setAlteredAnnotations,
+            setDeleteAnnotations,
+            setCanvasBoxes,
+            refreshSidebar,
+        );
+    };
     const handleDeleteBall = (ballBox) => {
-        deleteBall(
+        deleteEntity(
             canvas,
             ballBox,
+            annotationBallTracks,
             setAnnotationBallTracks,
-            setCanvasBoxesBall,
+            setNewBallAnnotations,
+            setAlteredAnnotations,
+            setDeleteAnnotations,
+            setCanvasBoxes,
             refreshSidebar,
         );
     };
 
-    function deletePlayer(playerBox) {
-        canvas.setActiveObject(playerBox);
-        setActiveObject(playerBox);
-        setAnnotations(annotations.filter((a) => a.displayName !== playerBox.displayName));
-        setCanvasBoxes(canvasBoxes.filter((a) => a.displayName !== playerBox.displayName));
-
-        updateSidebar();
-        canvas.discardActiveObject();
-        canvas.remove(playerBox);
-        canvas.requestRenderAll();
-
-        //Todo: Integrate Backend
-    }
-
-    function deleteBall(ballBox) {
-        canvas.setActiveObject(ballBox);
-        setActiveObject(ballBox);
-        setAnnotationBallTracks(
-            annotationBallTracks.filter((a) => a.displayName !== ballBox.displayName),
-        );
-        setCanvasBoxesBall(
-            canvasBoxesBall.filter((a) => a.displayName !== ballBox.displayName),
-        );
-
-        updateSidebar();
-        canvas.discardActiveObject();
-        canvas.remove(ballBox);
-        canvas.requestRenderAll();
-
-        //Todo: Integrate Backend
-    }
-
-    function setName(playerBox, name) {
-        fabric.Object.prototype.objectCaching = false;
-        let playerIndex = playerBox.displayName;
-        // Todo: Marco
-        canvas.requestRenderAll();
-        // TODO BACKEND
-        // update data when leaving the page
-        // the modified data is stored in canvasBoxes array
-    }
-
-    function setNameBall(ballBox, name) {
-        fabric.Object.prototype.objectCaching = false;
-        let ballIndex = ballBox.my.key;
-        // TODO: Marco
-        canvas.requestRenderAll();
-        // TODO BACKEND
-        // update data when leaving the page
-        // the modified data is stored in canvasBoxes array
-    }
   const handleSetNameBall = (ballBox, name) => {
-    setNameBall(canvas, ballBox, name);
+      setName(
+          canvas,
+          ballBox,
+          name,
+          annotationBallTracks,
+          setAnnotationBallTracks,
+          alteredAnnotations,
+          setAlteredAnnotations,
+      );
   };
 
     function boxInCanvas(boxToCheck) {
@@ -594,14 +598,17 @@ const NewTrackingEditor = () => {
                         verticalScalingFactor,
                     );
                     console.log(modifiedAnnotation);
+
                     const annotationToReplace = annotations.findIndex(
-                        (a) => a.frame_number === box.my.frame && a.displayName === box.my.key,
+                        (a) => a.id === box.my.id,
+
                     );
                     if (annotationToReplace === -1) {
                         console.error(
                             "the modified bounding box doesn't exist in annotations.",
                         );
                     }
+                    setAlteredAnnotations(upsertAnnotation(alteredAnnotations, modifiedAnnotation))
                     annotations.splice(annotationToReplace, 1, modifiedAnnotation);
                     canvas.renderAll();
                 },
@@ -637,6 +644,7 @@ const NewTrackingEditor = () => {
                             "the modified bounding box doesn't exist in annotationBallTracks.",
                         );
                     }
+                    setAlteredAnnotations(upsertAnnotation(alteredAnnotations, modifiedAnnotation))
                     annotationBallTracks.splice(
                         annotationToReplace,
                         1,
@@ -649,6 +657,19 @@ const NewTrackingEditor = () => {
         return box;
     }
 
+    const upsertAnnotation = (list, newItem) => {
+        const exists = list.some(item => item.id === newItem.id);
+
+        if (exists) {
+            // Overwrite existing item
+            return list.map(item =>
+                item.id === newItem.id ? { ...item, ...newItem } : item
+            );
+        } else {
+            // Add new item
+            return [...list, newItem];
+        }
+    };
 
     useEffect(() => {
         //rerender the sidebar when another item is selected
@@ -656,14 +677,13 @@ const NewTrackingEditor = () => {
             let tempList = [];
 
             playerList.forEach((item) => {
-                if (item.props.playerBox.displayName === activeObject.displayName) {
-                    const boxColor = colorSet.get(activeObject.displayName); //used in 'stroke' property of playerBox
-
+                if (item.props.playerBox.my.key === activeObject.my.key) {
+                    const boxColor = colorSet.get(activeObject.my.key); //used in 'stroke' property of playerBox
                     tempList = tempList.concat([
                         <TrackListItemPlayer
                             key={item.key}
                             playerBox={activeObject}
-                            name={activeObject.displayName}
+                            name={activeObject.my.key}
                             changeSelection={changeSelection}
                             setName={handleSetName}
                             blink={handleBlink}
@@ -692,7 +712,6 @@ const NewTrackingEditor = () => {
                     ]);
                 }
             });
-            debugger
             setPlayerList(tempList);
 
             tempList = [];
@@ -705,10 +724,10 @@ const NewTrackingEditor = () => {
                             ballBox={activeObject}
                             name={activeObject.displayName}
                             changeSelection={changeSelection}
-                            setName={setNameBall}
+                            setName={handleSetNameBall}
                             blink={blink}
                             color={boxColor}
-                            delete={deleteBall}
+                            delete={handleDeleteBall}
                             handleModalOpen={handleModalBallOpen}
                         />,
                     ]);
@@ -722,10 +741,10 @@ const NewTrackingEditor = () => {
                             ballBox={tempBox}
                             name={tempBox.displayName}
                             changeSelection={changeSelection}
-                            setName={setNameBall}
+                            setName={handleSetNameBall}
                             blink={blink}
                             color={boxColor}
-                            delete={deleteBall}
+                            delete={handleDeleteBall}
                             handleModalOpen={handleModalBallOpen}
                         />,
                     ]);
@@ -1321,10 +1340,10 @@ const NewTrackingEditor = () => {
                             color={boxColor}
                             name={boundingBox.displayName}
                             changeSelection={changeSelection}
-                            setName={setNameBall}
+                            setName={handleSetNameBall}
                             blink={handleBlink}
                             handleModalOpen={handleModalBallOpen}
-                            delete={deleteBall}
+                            delete={handleDeleteBall}
                         />,
                     ]);
                 });
@@ -1649,28 +1668,30 @@ const NewTrackingEditor = () => {
     }
 
     function handleAddPlayer() {
-        debugger;
-        const displayName = "new Player ";
+        const displayName = "new Player";
         const boxColor = generateColor();
+        const newAnnotation = {
+            video_id: videoId,
+            game_id: gameId,
+            frame_number: frameNumber,
+            displayName: displayName,
+            h: 100,
+            w: 100,
+            x: 500,
+            x1: 0,
+            x2: 0,
+            x_trans: 0,
+            y: 100,
+            y1: 0,
+            y2: 0,
+            y_trans: 0,
+            in_field: true,
+            type: 0,
+        }
         setColorSet(colorSet.set(displayName, boxColor));
-        setAnnotations(
-            annotations.concat({
-                FrameNo: frameNumber,
-                displayName: displayName,
-                h: 100,
-                w: 100,
-                x: 500,
-                x1: 0,
-                x2: 0,
-                x_trans: 0,
-                y: 100,
-                y1: 0,
-                y2: 0,
-                y_trans: 0,
-                in_field: true,
-            }),
-        );
-        //TODO: Backend
+        setAnnotations(annotations => [...annotations, newAnnotation]);
+        setNewAnnotations(newAnnotations => [...newAnnotations, newAnnotation]);
+        const x = newAnnotation;
     }
 
     function addBoundingBoxBallAtMousePosition(event) {
@@ -1685,7 +1706,9 @@ const NewTrackingEditor = () => {
         setColorSetBall(colorSetBall.set(newBallDisplayName, boxColor));
         setAnnotationBallTracks(
             annotationBallTracks.concat({
-                FrameNo: frameNumber,
+                video_id: videoId,
+                game_id: gameId,
+                frame_number: frameNumber,
                 displayName: newBallDisplayName,
                 x1: x,
                 x2: x + 30,
@@ -1694,6 +1717,7 @@ const NewTrackingEditor = () => {
                 detection: 1,
                 x: 0,
                 y: 0,
+                type: 1,
             }),
         );
 
@@ -1942,6 +1966,8 @@ const NewTrackingEditor = () => {
                 frameNumber={frameNumber}
                 mergeModalState={mergeModalState}
                 handleClose={handleModalsClose}
+                setUpdateAnnotations={setAlteredAnnotations}
+                setDeleteAnnotations={setDeleteAnnotations}
             />
             <MergeAndSwapModalBall
                 ballChosenInList={ballChosenInList}
@@ -1950,9 +1976,11 @@ const NewTrackingEditor = () => {
                 frameNumber={frameNumber}
                 mergeModalBallState={mergeModalBallState}
                 handleClose={handleModalsClose}
+                setUpdateAnnotations={setAlteredAnnotations}
+                setDeleteAnnotations={setDeleteAnnotations}
             />
             <div className="controls">
-                <Box id="tools-container" sx={{display: "flex", gap: "10px"}}>
+                <Box id="tools-container" sx={{display: "flex", gap: "8px"}}>
                     <div>Show Annotation:</div>
 
                     <Switch
@@ -1993,10 +2021,12 @@ const NewTrackingEditor = () => {
             variant="contained"
             onClick={() =>
               handleMultiSelectMerge(
-                selectedTrails,
-                annotations,
-                setAnnotations,
-                setSelectedTrails,
+                  selectedTrails,
+                  setSelectedTrails,
+                  annotations,
+                  setAnnotations,
+                  alteredAnnotations,
+                  setAlteredAnnotations
               )
             }
             sx={{
@@ -2018,8 +2048,8 @@ const NewTrackingEditor = () => {
               )
             }
             sx={{
-              backgroundColor: `${config.general.buttons.mergeBall.backgroundColor} !important`,
-              color: `${config.general.buttons.mergeBall.backgroundColor} !important`,
+                backgroundColor: "#BBC3C9 !important",
+                color: "#1b1f22 !important",
             }}
           >
             Merge Ball
@@ -2036,8 +2066,8 @@ const NewTrackingEditor = () => {
               )
             }
             sx={{
-              backgroundColor: `${config.general.buttons.deleteBallTrails.backgroundColor} !important`,
-              color: `${config.general.buttons.deleteBallTrails.backgroundColor} !important`,
+                backgroundColor: "#BBC3C9 !important",
+                color: "#1b1f22 !important",
             }}
           >
             Del selected Balltrails
@@ -2079,11 +2109,19 @@ const NewTrackingEditor = () => {
             </Button>
           </div>
           <DownloadButton
-            players={annotations}
-            video={video}
-            homographies={homographies}
-            balls={annotationBallTracks}
+            videoId={videoId}
           />
+          <Button
+                        data-testid="save-button"
+                        variant="contained"
+                        onClick={handleSave}
+                        sx={{
+                            backgroundColor: "#BBC3C9 !important",
+                            color: "#1b1f22 !important",
+                        }}
+                    >
+                        Save Changes
+          </Button>
         </Box>
       </div>
 

@@ -18,7 +18,7 @@ router = fastapi.APIRouter(
 
 @router.get("/list", response_model=TeamsDto, tags=["team"])
 async def get_list(db: Session = Depends(get_db)):
-    return logic.get_many(search_dto=None, db=db)
+    return await logic.get_many(search_dto=None, db=db)
 
 
 @router.get("/{team_id}", response_model=TeamDto, tags=["team"])
@@ -30,14 +30,14 @@ async def get(team_id: uuid.UUID, db: Session = Depends(get_db)):
 # Create
 @router.post("/", response_model= TeamDto, tags=["team"])
 async def create(dto: CreateTeamDto, db: Session = Depends(get_db)):
-    return logic.create(dto, db)
+    return await logic.create(dto, db)
 
 
 # Update
 @router.put("/{team_id}", response_model=TeamDto, tags=["team"])
 async def update_points(team_id: uuid.UUID, dto: TeamDto, db: Session = Depends(get_db)):
     team = await logic.update(team_id, dto, db)
-    return team
+    return await team
 
 
 @router.delete("/{team_id}", response_model=dict, tags=["team"])

@@ -2,6 +2,7 @@ import uuid
 
 from typing import Optional, List
 from pydantic import BaseModel, ConfigDict
+from pydantic.v1 import Field
 
 from db.util.enums.annotationType import AnnotationType
 
@@ -46,3 +47,9 @@ class UpdateAnnotationDto(AnnotationDto):
 
 class AnnotationsDto(BaseModel):
     annotations: List[AnnotationDto]
+
+class BulkAnnotationUpdate(BaseModel):
+    newAnnotations: Optional[List[AnnotationBase]] = None
+    newBallAnnotations: Optional[List[AnnotationBase]] = None
+    updatedAnnotations: Optional[List[AnnotationDto]] = None
+    deletedAnnotations: Optional[List[uuid.UUID]] = None

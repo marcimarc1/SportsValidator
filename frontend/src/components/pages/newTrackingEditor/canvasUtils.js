@@ -46,27 +46,39 @@ export const blink = (canvas, playerBox, setActiveObject) => {
   canvas.discardActiveObject();
 };
 
-export const deletePlayer = (
+export const deleteEntity = (
   canvas,
   playerBox,
+  annotations,
   setAnnotations,
+  setNewAnnotations,
+  setUpdateAnnotations,
+  setDeleteAnnotations,
   setCanvasBoxes,
-  playerNameMap,
-  setPlayerNameMap,
   refreshSidebar,
 ) => {
   canvas.setActiveObject(playerBox);
-  playerBox.my.selected = false; // Reset the selection
-  setAnnotations((prevAnnotations) =>
-    prevAnnotations.filter((a) => a.PlayerKey !== playerBox.my.key),
-  );
+  playerBox.my.selected = false;
+  // Reset the selection
+  let ids = annotations.filter(a => a.displayName === playerBox.my.key).map(a => a.id??null);
+
+  if(ids.length > 0){
+    setDeleteAnnotations((prevDeleteAnnotations) => [...prevDeleteAnnotations, ...ids]);
+    setAnnotations((prevAnnotations) =>
+        prevAnnotations.filter((a) => a.displayName !== playerBox.my.key),
+    );
+    setNewAnnotations((prevAnnotations) =>
+        prevAnnotations.filter((a) => a.displayName !== playerBox.my.key),
+    );
+    setUpdateAnnotations((prevAnnotations) =>
+        prevAnnotations.filter((a) => a.displayName !== playerBox.my.key),
+    );
+  }
+
   setCanvasBoxes((prevBoxes) =>
     prevBoxes.filter((a) => a.my.key !== playerBox.my.key),
   );
 
-  let newPlayerNameMap = new Map(playerNameMap);
-  newPlayerNameMap.delete(playerBox.my.key);
-  setPlayerNameMap(newPlayerNameMap);
 
   refreshSidebar();
   canvas.discardActiveObject();
@@ -74,44 +86,37 @@ export const deletePlayer = (
   canvas.requestRenderAll();
 };
 
-export const deleteBall = (
-  canvas,
-  ballBox,
-  setAnnotationBallTracks,
-  setCanvasBoxesBall,
-  ballNameMap,
-  setBallNameMap,
-  refreshSidebar,
-) => {
-  canvas.setActiveObject(ballBox);
-  ballBox.my.selected = false; // Reset the selection
-  setAnnotationBallTracks((prevTracks) =>
-    prevTracks.filter((a) => a.trackNo !== ballBox.my.key),
-  );
-  setCanvasBoxesBall((prevBoxes) =>
-    prevBoxes.filter((a) => a.my.key !== ballBox.my.key),
-  );
 
-  let newBallNameMap = new Map(ballNameMap);
-  newBallNameMap.delete(ballBox.my.key);
-  setBallNameMap(newBallNameMap);
-
-  refreshSidebar();
-  canvas.discardActiveObject();
-  canvas.remove(ballBox);
-  canvas.requestRenderAll();
-};
-
-export const setName = (canvas, playerBox, name, playerNameMap) => {
+export const setName = (
+    canvas,
+    playerBox,
+    newName,
+    annotations,
+    setAnnotations,
+    alteredAnnotations,
+    setAlteredAnnotations) => {
   fabric.Object.prototype.objectCaching = false;
-  let playerIndex = playerBox.my.key;
-  playerNameMap.set(playerIndex, name);
-  canvas.requestRenderAll();
-};
-
-export const setNameBall = (canvas, ballBox, name, ballNameMap) => {
-  fabric.Object.prototype.objectCaching = false;
-  let ballIndex = ballBox.my.key;
-  ballNameMap.set(ballIndex, name);
+  let oldName = playerBox.my.key;
+  debugger;
+  //update Annotations
+  const updates= []
+  annotations.map((a) => {
+    if (a.displayName === oldName) {
+      a = {...a, displayName: newName};
+      updates.push(a);
+      return a;
+    }
+    return a;
+  })
+  //update Updates
+  alteredAnnotations.map((a) => {
+    if (a.displayName === oldName) {
+      a = {...a, displayName: newName};
+      return a;
+    }
+    return a;
+  })
+  setAnnotations(annotations);
+  setAlteredAnnotations([...alteredAnnotations, ...updates]);
   canvas.requestRenderAll();
 };

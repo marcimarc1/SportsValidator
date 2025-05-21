@@ -7,9 +7,11 @@ import React from "react";
 import { useHistory } from 'react-router-dom';
 import toast from "react-hot-toast"
 import api from "../../../../api/api";
+import AddGameModal from "../Modals/AddGameModal";
+import AddTeamModal from "../Modals/AddTeamModal";
 
 
-const GameListItem = ({game, handleDelete}) => {
+const GameListItem = ({game, handleDelete, triggerReload}) => {
     const history = useHistory();
     const date= new Date(game.game.date_played).toLocaleDateString();
 
@@ -32,6 +34,7 @@ const GameListItem = ({game, handleDelete}) => {
         history.push(`videos/${game.game.id}`);
     }
     const handleEditGame = () => {
+
 
     }
     const handleDeleteGame = async () => {
@@ -79,14 +82,7 @@ const GameListItem = ({game, handleDelete}) => {
                         onClick={handleClickOpenVideo}
                     ><FontAwesomeIcon icon={faBars}/>
                 </IconButton>
-                <IconButton
-                        size="medium"
-                        variant="contained"
-                        className={"FileOverviewListItemButton"}
-                        aria-label="show analysis"
-                        onClick={handleEditGame}  >
-                    <FontAwesomeIcon icon={faEdit}/>
-                </IconButton>
+                <AddGameModal modalTitle={"Edit Game"} onSave={triggerReload} game={game.game}/>
                 <IconButton
                     size="medium"
                     variant="contained"

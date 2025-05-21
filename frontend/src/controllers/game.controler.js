@@ -1,23 +1,33 @@
-import api from './api'
+import api from "../api/api";
 
-api.baseURL = api.baseURL+"game/"
+class GameController {
+    static prefix = '/team';
 
-export function getGame(id) {
-    return api.get(`${id}`)
+    static async addGame(data) {
+        return api.post(
+            'http://localhost:8080/game/',
+            data,
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                withCredentials: true,
+            }
+            );
+    }
+
+    static async updateGame(data, id) {
+        return api.post(
+            `http://localhost:8080/game/${id}`,
+            data,
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                withCredentials: true,
+            }
+        );
+    }
+
 }
-
-export function addGame(game) {
-    return api.post(``, JSON.stringify(game));
-}
-
-export function updateGame(id, game) {
-    return api.update(`${id}`, JSON.stringify(game))
-}
-
-export function deleteGame(id) {
-    return api.delete(`${id}`)
-}
-
-export function getGames(){
-    return api.get('')
-}
+export default GameController;

@@ -5,7 +5,7 @@ import gzip
 
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
-from fastapi.responses import StreamingResponse
+from fastapi.responses import FileResponse
 
 from config import settings
 from db.db_models.annotations import Annotation
@@ -54,23 +54,16 @@ class VideoLogic(
         basePath = settings.APP_DATA_PATH
         gamePath = os.path.join(basePath, str(db_video.game_id))
         videoPath = os.path.join(gamePath, str(video_id))
-        filePath = os.path.join(videoPath, "video.mp4.gz")
+        filePath = os.path.join(videoPath, "video.mp4")
 
         if not os.path.exists(filePath):
             return {"message": "Video-File not found"}
 
-        try:
-            # Open and decompress the .gz file in memory
-            with gzip.open(filePath, 'rb') as f:
-                video_data = f.read()
-
-            return StreamingResponse(
-                io.BytesIO(video_data),
-                media_type="video/mp4",
-                headers={"Content-Disposition": "inline; filename=video.mp4"}
-            )
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Failed to read gzipped video: {str(e)}")
+        return FileResponse(
+            path=filePath,
+            media_type="video/mp4",
+            filename="video.mp4"
+        )
 
 
 

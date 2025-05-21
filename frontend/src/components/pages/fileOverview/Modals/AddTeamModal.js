@@ -52,7 +52,7 @@ const AddTeamModal = () => {
 
         event.preventDefault();
         try {
-            await axios.post("http://localhost:8000/team/",
+            await axios.post("http://localhost:8080/team/",
                 formData,
                 {headers: {
                 'Access-Control-Allow-Origin': '*',
