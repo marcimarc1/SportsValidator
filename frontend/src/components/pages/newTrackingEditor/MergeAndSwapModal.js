@@ -12,7 +12,7 @@ import Radio from "@material-ui/core/Radio";
 import FormControlLabel from "@material-ui/core/FormControlLabel";
 
 import { useState } from "react";
-import { mergePlayerData, swapPlayerData } from "../../../utils/validation";
+import { mergeData, swapData } from "../../../utils/validation";
 import { useMemo } from "react";
 
 const style = {
@@ -29,30 +29,49 @@ const style = {
 
 export default function MergeAndSwapModal({
   playerChosenInList,
-  playerNameMap,
-  setPlayerNameMap,
   annotations,
   setAnnotations,
+  setUpdateAnnotations,
+  setDeleteAnnotations,
   frameNumber,
   mergeModalState,
   handleClose,
 }) {
   const [selectedPlayer, setSelectedPlayer] = useState("");
   const [operation, setOperation] = useState("swap");
-  const menuItems = useMemo(
-    () =>
-      Array.from(playerNameMap.values()).map((name) => {
-        if (name !== playerChosenInList) {
-          const testid = "menuitem" + name;
-          return (
-            <MenuItem key={name} data-testid={testid} value={name}>
-              {name}
-            </MenuItem>
-          );
-        }
-      }),
-    [playerNameMap, playerChosenInList],
-  );
+  const menuItems = useMemo(() => {
+    const uniqueNames = Array.from(
+      new Set(
+        annotations
+          .map((a) => a.displayName)
+          .filter((name) => name !== playerChosenInList),
+      ),
+    );
+    //debugger;
+    const isGenericPlayer = (name) => /^Player \d+$/.test(name);
+    const getPlayerNumber = (name) => parseInt(name.replace("Player ", ""), 10);
+
+    uniqueNames.sort((a, b) => {
+      const aIsGeneric = isGenericPlayer(a);
+      const bIsGeneric = isGenericPlayer(b);
+
+      if (!aIsGeneric && !bIsGeneric) {
+        return a.localeCompare(b);
+      } else if (!aIsGeneric && bIsGeneric) {
+        return -1;
+      } else if (aIsGeneric && !bIsGeneric) {
+        return 1;
+      } else {
+        return getPlayerNumber(a) - getPlayerNumber(b);
+      }
+    });
+
+    return uniqueNames.map((name) => (
+      <MenuItem key={name} data-testid={`menuitem${name}`} value={name}>
+        {name}
+      </MenuItem>
+    ));
+  }, [annotations, playerChosenInList]);
 
   const handleChange = (event) => {
     setSelectedPlayer(event.target.value);
@@ -60,22 +79,23 @@ export default function MergeAndSwapModal({
 
   const handleClick = () => {
     if (operation === "swap")
-      swapPlayerData(
+      swapData(
         selectedPlayer,
-        playerNameMap,
         playerChosenInList,
         annotations,
         setAnnotations,
+        setUpdateAnnotations,
+        setDeleteAnnotations,
         frameNumber,
       );
     else
-      mergePlayerData(
+      mergeData(
         selectedPlayer,
-        playerNameMap,
-        setPlayerNameMap,
         playerChosenInList,
         annotations,
         setAnnotations,
+        setUpdateAnnotations,
+        setDeleteAnnotations,
       );
     handleClose();
   };

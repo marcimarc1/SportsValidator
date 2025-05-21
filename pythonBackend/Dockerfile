@@ -7,5 +7,4 @@ RUN pip install --upgrade -r requirements.txt
 COPY /pythonBackend/src /backend/src
 WORKDIR /backend/src
 RUN pip install .
-WORKDIR /backend
-CMD ["fastapi", "dev", "/backend/src/main.py","--host", "0.0.0.0", "--port", "80"]
+CMD ["python", "main.py"]

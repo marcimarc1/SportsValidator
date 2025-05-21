@@ -27,9 +27,12 @@ export const convertAnnotationToBox = (
     });
     boundingBox.my = {
       selected: false,
-      key: annotation.PlayerKey,
-      frame: annotation.FrameNo,
+      key: annotation.displayName,
+      frame: annotation.frame_number,
       in_field: annotation.in_field,
+      id: annotation.id,
+      video_id: annotation.video_id,
+      game_id: annotation.game_id,
       // also connect it to corresponding annotation
     };
     return boundingBox;
@@ -45,8 +48,11 @@ export const convertBoxToAnnotation = (
 ) => {
   try {
     return {
-      FrameNo: boundingBox.my.frame,
-      PlayerKey: boundingBox.my.key,
+      id: boundingBox.my.id,
+      video_id: boundingBox.my.video_id,
+      game_id: boundingBox.my.game_id,
+      frame_number: boundingBox.my.frame,
+      displayName: boundingBox.my.key,
       h: (boundingBox.height * boundingBox.scaleY) / verticalScalingFactor,
       w: (boundingBox.width * boundingBox.scaleX) / horizontalScalingFactor,
       //x,x2,x_trans and other data should be retrieved in future
@@ -60,6 +66,7 @@ export const convertBoxToAnnotation = (
       y2: 0,
       y_trans: 0,
       in_field: boundingBox.my.in_field,
+      type: 0,
     };
   } catch {
     console.error("the data format of bounding box and annotation doesn't fit");
@@ -96,8 +103,11 @@ export const convertAnnotationBallToBallbox = (
     });
     boundingBox.my = {
       selected: false,
-      key: annotationBall.trackNo,
-      frame: annotationBall.FrameNo,
+      key: annotationBall.displayName,
+      frame: annotationBall.frame_number,
+      id: annotationBall.id,
+      video_id: annotationBall.video_id,
+      game_id: annotationBall.game_id,
     };
     return boundingBox;
   } catch {
@@ -114,8 +124,11 @@ export const convertBallboxToAnnotationBall = (
     const x1 = boundingBox.left / horizontalScalingFactor;
     const y1 = boundingBox.top / verticalScalingFactor;
     return {
-      FrameNo: boundingBox.my.frame,
-      trackNo: boundingBox.my.key,
+      id: boundingBox.id,
+      video_id: boundingBox.my.video_id,
+      game_id: boundingBox.my.game_id,
+      frame_number: boundingBox.my.frame,
+      displayName: boundingBox.my.key,
       x1: x1,
       y1: y1,
       x2:
@@ -125,6 +138,7 @@ export const convertBallboxToAnnotationBall = (
       detection: 1,
       x: 0,
       y: 0,
+      type: 1,
     };
   } catch {
     console.error(

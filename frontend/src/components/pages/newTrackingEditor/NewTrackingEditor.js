@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, useCallback } from "react";
 import { useParams } from "react-router";
 import { ReactComponent as PlayIcon } from "../../../icons/play.svg";
 import { ReactComponent as PauseIcon } from "../../../icons/pause.svg";
@@ -7,8 +7,7 @@ import { ReactComponent as BackwardStepIcon } from "../../../icons/backward-step
 import { ReactComponent as AdjustSpeedIcon } from "../../../icons/adjust-speed.svg";
 import { ReactComponent as QuestionIcon } from "../../../icons/question.svg";
 import { ReactComponent as KeyboardIcon } from "../../../icons/keyboard.svg";
-import { useLocation } from "react-router-dom";
-
+import { useLocation, useBlocker } from "react-router-dom";
 import {
   convertBoxToAnnotation,
   convertAnnotationToBox,
@@ -20,7 +19,15 @@ import {
 import { fabric } from "fabric";
 import "./NewTrackingEditor.css";
 import SeekBar from "./SeekBar";
-import { Switch, Button, Box } from "@mui/material";
+import {
+  FormGroup,
+  Switch,
+  FormControlLabel,
+  Button,
+  Box,
+  Typography,
+} from "@mui/material";
+import TextField from "@mui/material/TextField";
 import config from "../../../config.json";
 
 import TrackList from "../newTrackingEditor/TrackList";
@@ -36,24 +43,19 @@ import {
   defineTrailBehaviourBall,
   updateHomography,
 } from "../../../utils/canvasUtils";
-
+import { multiMerge, multiBallTrailsDelete } from "../../../utils/validation";
 import { DownloadButton } from "./DownloadButton";
 import { parseLogFile } from "../../../utils/logFileParser";
+import Slider from "@mui/material/Slider";
 import { FieldDetailsButton } from "./field/FieldDetailsButton";
 import api from "../../../api/api";
 import { SettingsBallButton } from "./SettingsBallButton";
 import { SettingsTrailsButton } from "./SettingsTrailsButton";
+import LoadingOverlay from "react-loading-overlay-ts";
 import { getPointsToTrack } from "../../../utils/templates";
 import { modalBallOpen, modalOpen, modalsClose } from "./modalHandler";
-import {
-  blink,
-  deleteBall,
-  deletePlayer,
-  setName,
-  setNameBall,
-} from "./canvasUtils";
+import { blink, deleteEntity, setName } from "./canvasUtils";
 import { generatePoster } from "./postGenerator";
-import useInitializeTrackingData from "./useInitializeTrackingData";
 import { updateSidebar } from "./sidebarUpdater";
 import { generateColor } from "../../../utils/colorGenerator";
 import {
@@ -61,20 +63,24 @@ import {
   handleMultiSelectMerge,
   handleMultiSelectMergeBall,
 } from "./multiSelectHandlers";
+import axios from "axios";
+import toast from "react-hot-toast";
+import AnnotationController from "../../../controllers/annotation.controller";
+import VideoController from "../../../controllers/video.controller";
 
-// TODO Take a video_id instead and have an endpoint on the server where we supply a video_id and get the corresponding video
 const NewTrackingEditor = () => {
   const location = useLocation();
-  const {
-    processedPlayers,
-    video,
-    processedBallTracks,
-    homographies,
-    log,
-    fieldSize,
-  } = location.state || {};
-  // homographies and log are not being used. Logic will be implemented in the future.
+  const [videoId, setVideoId] = useState("");
+  const [gameId, setGameId] = useState("");
+  const [video, setVideo] = useState(null);
+  const [videoMetadata, setVideoMetadata] = useState(null);
+  const [homographies, setHomographies] = useState(null);
+  const [fieldSize, setFieldSize] = useState(null);
   const [annotations, setAnnotations] = useState([]);
+  const [newAnnotations, setNewAnnotations] = useState([]);
+  const [alteredAnnotations, setAlteredAnnotations] = useState([]);
+  const [deleteAnnotations, setDeleteAnnotations] = useState([]);
+  const [newBallAnnotations, setNewBallAnnotations] = useState([]);
   const [canvas, setCanvas] = useState(new fabric.Canvas());
   const [videoUrl, setVideoUrl] = useState("");
   const [frameNumber, setFrameNumber] = useState(0);
@@ -89,7 +95,6 @@ const NewTrackingEditor = () => {
   const [teams, setTeams] = useState([]);
   const [teamColors, setTeamColors] = useState({});
   const [canvasBoxes, setCanvasBoxes] = useState([]); //list of canvas boxes for player
-  const [playerNameMap, setPlayerNameMap] = useState(new Map()); //map of playerkey to playername
   const [activeObject, setActiveObject] = useState(null);
   const [colorSet, setColorSet] = useState(new Map()); //map of playerkey to color
   const [trailsEnabled, setTrailsEnabled] = useState(true);
@@ -99,7 +104,7 @@ const NewTrackingEditor = () => {
   const [showField, setShowField] = useState(false);
   const [editField, setEditField] = useState(false);
   let [wasVideoPlaying, setWasVideoPlaying] = useState(false);
-  const logFile = parseLogFile(log);
+  const [logFile, setLogFile] = useState(null);
   const [selectedTrails, setSelectedTrails] = useState(new Set());
   const [trailSize, setTrailSize] = useState(50);
   const [drawInField, setDrawInField] = useState(false);
@@ -110,13 +115,14 @@ const NewTrackingEditor = () => {
   const [annotationBallTracks, setAnnotationBallTracks] = useState([]);
   const [ballList, setBallList] = useState([]); //list of ball TrackListItemBall
   const [canvasBoxesBall, setCanvasBoxesBall] = useState([]); //list of canvas boxes for ball
-  const [ballNameMap, setBallNameMap] = useState(new Map()); //map of ballkey to ballname
   const [colorSetBall, setColorSetBall] = useState(new Map()); //map of ballkey to color
   const [ballChosenInList, setBallChosenInList] = useState(""); //ball which is selected in sidebar
   const [mergeModalBallState, setMergeModalBallState] = useState(false);
   const [isShowingBallBox, setIsShowingBallBox] = useState(true);
   const [isShowingBallTrails, setIsShowingBallTrails] = useState(true);
   const [selectedTrailsBall, setSelectedTrailsBall] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [loaderText, setLoaderText] = useState("Loading...");
   const [videoSpeed, setVideoSpeed] = useState(1);
   const [isZoomModeEnabled, setIsZoomModeEnabled] = useState(false);
   const [zoomStatus, setZoomStatus] = useState("Enable Zoom Mode");
@@ -131,6 +137,31 @@ const NewTrackingEditor = () => {
     ZoomModeEnabled: config.general.keyBindings.ZoomModeEnabled,
   });
 
+  const checkIsDirty = useCallback(() => {
+    return (
+      alteredAnnotations.length !== 0 ||
+      newBallAnnotations.length !== 0 ||
+      newAnnotations.length !== 0 ||
+      deleteAnnotations.length !== 0
+    );
+  }, [
+    alteredAnnotations,
+    newBallAnnotations,
+    newAnnotations,
+    deleteAnnotations,
+  ]);
+
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (checkIsDirty) return;
+      e.preventDefault();
+      e.returnValue = "";
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [checkIsDirty]);
+
   const handleModalOpen = modalOpen(setPlayerChosenInList, setMergeModalState);
   const handleModalBallOpen = modalBallOpen(
     setBallChosenInList,
@@ -141,18 +172,42 @@ const NewTrackingEditor = () => {
     setMergeModalBallState,
   );
 
-  useInitializeTrackingData(
-    video,
-    processedPlayers,
-    processedBallTracks,
-    setVideoUrl,
-    setAnnotations,
-    setColorSet,
-    setPlayerNameMap,
-    setAnnotationBallTracks,
-    setColorSetBall,
-    setBallNameMap,
-  );
+  const handleMultiSelectMerge = () => {
+    console.log("Multiplayer merge");
+    console.log(Array.from(selectedTrails));
+    multiMerge(
+      Array.from(selectedTrails),
+      annotations,
+      setAnnotations,
+      alteredAnnotations,
+      setAlteredAnnotations,
+    );
+    setSelectedTrails([]);
+  };
+
+  const handleMultiSelectMergeBall = () => {
+    console.log("Multiplayer merge ball");
+    console.log(Array.from(selectedTrailsBall));
+    multiMerge(
+      Array.from(selectedTrailsBall),
+      annotationBallTracks,
+      setAnnotationBallTracks,
+      alteredAnnotations,
+      setAlteredAnnotations,
+    );
+    setSelectedTrailsBall([]);
+  };
+
+  const handleMultiBallTrailsDelete = () => {
+    console.log("Multiplayer delete ball trails");
+    console.log(Array.from(selectedTrailsBall));
+    multiBallTrailsDelete(
+      Array.from(selectedTrailsBall),
+      annotationBallTracks,
+      setAnnotationBallTracks,
+    );
+    setSelectedTrailsBall([]);
+  };
 
   const addTeam = (color) => {
     const newTeamId = teams.length + 1;
@@ -207,11 +262,127 @@ const NewTrackingEditor = () => {
     drawBoundingBoxes(frameNumber);
   };
 
-  let { videoName } = useParams();
-
   const canvasRef = useRef(null);
   const frameDuration = 1001 / 24000; // TODO Get this information from the backend
   // could be used to display annotations in canvas
+
+  useEffect(async () => {
+    // Load Video File:
+    const path = window.location.pathname;
+    const videoId = path.substring(path.lastIndexOf("/") + 1);
+    setVideoId(videoId);
+
+    const video = await VideoController.getById(videoId);
+    setGameId(video.data.game_id);
+
+    try {
+      await fetchVideo(videoId);
+      await fetchPlayerAnnotations(videoId);
+      await fetchBallAnnotations(videoId);
+    } catch (error) {
+      console.error(error);
+    }
+  }, []);
+
+  async function fetchVideo(videoId) {
+    setLoaderText("Loading Video...");
+    setLoading(true);
+    try {
+      console.log("Loading Video File");
+      const response = await api.get("/video/get_video_file/" + videoId, {
+        responseType: "blob",
+      });
+
+      const videoBlob = new Blob([response.data], { type: "video/mp4" });
+      const videoURL = URL.createObjectURL(videoBlob); // Create an object URL
+      setVideoUrl(videoURL);
+      console.log("Setting the video URL");
+      return videoURL;
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function fetchPlayerAnnotations(videoId) {
+    setLoaderText("Loading Player Annotations...");
+    setLoading(true);
+    try {
+      console.log("Loading Annotations");
+      const playerAnnotationsResponse = await api.get(
+        "/annotation/getPlayers/" + videoId,
+      );
+      const playerAnnotations = playerAnnotationsResponse.data.annotations;
+      const set = new Map(boundingBoxColorSet(playerAnnotations));
+      setColorSet(set);
+      setAnnotations(playerAnnotations);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function fetchBallAnnotations(videoId) {
+    setLoaderText("Loading Ball Annotations...");
+    setLoading(true);
+    try {
+      const ballAnnotationResponse = await api.get(
+        "/annotation/getBalls/" + videoId,
+      );
+      const ballAnnotations = ballAnnotationResponse.data.annotations;
+      const set = new Map(boundingBoxColorSet(ballAnnotations));
+      setColorSetBall(set);
+      setAnnotationBallTracks(ballAnnotations);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const handleSave = () => {
+    saveChanges();
+  };
+
+  const resetTrackedChanges = () => {
+    setAlteredAnnotations([]);
+    setNewAnnotations([]);
+    setNewBallAnnotations([]);
+    setDeleteAnnotations([]);
+  };
+
+  async function saveChanges() {
+    if (
+      newAnnotations.length === 0 &&
+      newBallAnnotations.length === 0 &&
+      alteredAnnotations.length === 0 &&
+      deleteAnnotations.length === 0
+    ) {
+      toast.error("No pending changes");
+      return;
+    }
+    debugger;
+    try {
+      setLoaderText("Saving Changes...");
+      setLoading(true);
+      const data = {
+        newAnnotations: newAnnotations.length > 0 ? newAnnotations : null,
+        newBallAnnotations:
+          newBallAnnotations.length > 0 ? newBallAnnotations : null,
+        updatedAnnotations:
+          alteredAnnotations.length > 0 ? alteredAnnotations : null,
+        deletedAnnotations:
+          deleteAnnotations.length > 0 ? deleteAnnotations : null,
+      };
+      const json_data = JSON.stringify(data);
+      const response = await AnnotationController.saveChanges(json_data);
+
+      resetTrackedChanges();
+
+      toast.success("Saved changes.");
+    } catch (error) {
+      toast.error(error.message);
+      console.log("Error while saving changes", error);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   const refreshSidebar = () => {
     updateSidebar({
@@ -220,8 +391,6 @@ const NewTrackingEditor = () => {
       colorSet,
       colorSetBall,
       getCurrentTimestampFrame,
-      playerNameMap,
-      ballNameMap,
       changeSelection,
       handleSetName,
       handleSetNameBall,
@@ -235,52 +404,122 @@ const NewTrackingEditor = () => {
     });
   };
 
+  function updateSidebar() {
+    let tempList = [];
+    let runningIndex = 0;
+    let boxes = canvasBoxes.filter(
+      (box) => box.my.frame == getCurrentTimestampFrame(),
+    );
+    boxes.forEach((box) => {
+      const boxColor = colorSet.get(box.displayName);
+
+      tempList = tempList.concat([
+        <TrackListItemPlayer
+          key={runningIndex++}
+          playerBox={box}
+          name={box.displayName}
+          changeSelection={changeSelection}
+          setName={handleSetName}
+          blink={blink}
+          delete={handleDeletePlayer}
+          color={boxColor}
+          handleModalOpen={handleModalOpen}
+        />,
+      ]);
+      runningIndex++;
+    });
+    setPlayerList(tempList);
+    tempList = [];
+    runningIndex = 0;
+    let ballBoxes = canvasBoxesBall.filter(
+      (box) => box.my.frame === getCurrentTimestampFrame(),
+    );
+    ballBoxes.forEach((box) => {
+      const boxColor = colorSetBall.get(box.displayName);
+
+      tempList = tempList.concat([
+        <TrackListItemBall
+          key={runningIndex++}
+          ballBox={box}
+          name={box.displayName}
+          changeSelection={changeSelection}
+          setName={handleSetNameBall}
+          blink={blink}
+          delete={handleDeleteBall}
+          color={boxColor}
+          handleModalOpen={handleModalBallOpen}
+        />,
+      ]);
+      runningIndex++;
+    });
+    setBallList(tempList);
+  }
+
   const handleBlink = (playerBox) => {
     blink(canvas, playerBox, setActiveObject);
   };
 
-  const handleDeletePlayer = (playerBox) => {
-    deletePlayer(
+  const handleSetName = (playerBox, name) => {
+    setName(
       canvas,
       playerBox,
+      name,
+      annotations,
       setAnnotations,
-      setCanvasBoxes,
-      playerNameMap,
-      setPlayerNameMap,
-      refreshSidebar,
+      alteredAnnotations,
+      setAlteredAnnotations,
     );
-  };
-
-  const handleDeleteBall = (ballBox) => {
-    deleteBall(
-      canvas,
-      ballBox,
-      setAnnotationBallTracks,
-      setCanvasBoxesBall,
-      ballNameMap,
-      setBallNameMap,
-      refreshSidebar,
-    );
-  };
-
-  const handleSetName = (playerBox, name) => {
-    setName(canvas, playerBox, name, playerNameMap);
     drawBoundingBoxes(frameNumber);
   };
 
+  const handleDeletePlayer = (playerBox) => {
+    deleteEntity(
+      canvas,
+      playerBox,
+      annotations,
+      setAnnotations,
+      setNewAnnotations,
+      setAlteredAnnotations,
+      setDeleteAnnotations,
+      setCanvasBoxes,
+      refreshSidebar,
+    );
+  };
+  const handleDeleteBall = (ballBox) => {
+    deleteEntity(
+      canvas,
+      ballBox,
+      annotationBallTracks,
+      setAnnotationBallTracks,
+      setNewBallAnnotations,
+      setAlteredAnnotations,
+      setDeleteAnnotations,
+      setCanvasBoxes,
+      refreshSidebar,
+    );
+  };
+
   const handleSetNameBall = (ballBox, name) => {
-    setNameBall(canvas, ballBox, name, ballNameMap);
+    setName(
+      canvas,
+      ballBox,
+      name,
+      annotationBallTracks,
+      setAnnotationBallTracks,
+      alteredAnnotations,
+      setAlteredAnnotations,
+    );
   };
 
   function boxInCanvas(boxToCheck) {
     //check if the box is in the canvas
     canvasBoxes.forEach((box) => {
-      if (box == boxToCheck) {
+      if (box === boxToCheck) {
         return true;
       }
     });
     canvasBoxesBall.forEach((box) => {
-      if (box == boxToCheck) {
+      if (box === boxToCheck) {
         return true;
       }
     });
@@ -368,14 +607,18 @@ const NewTrackingEditor = () => {
             verticalScalingFactor,
           );
           console.log(modifiedAnnotation);
+
           const annotationToReplace = annotations.findIndex(
-            (a) => a.FrameNo == box.my.frame && a.PlayerKey == box.my.key,
+            (a) => a.id === box.my.id,
           );
-          if (annotationToReplace == -1) {
+          if (annotationToReplace === -1) {
             console.error(
               "the modified bounding box doesn't exist in annotations.",
             );
           }
+          setAlteredAnnotations(
+            upsertAnnotation(alteredAnnotations, modifiedAnnotation),
+          );
           annotations.splice(annotationToReplace, 1, modifiedAnnotation);
           canvas.renderAll();
         },
@@ -404,13 +647,17 @@ const NewTrackingEditor = () => {
           );
           console.log(modifiedAnnotation);
           const annotationToReplace = annotationBallTracks.findIndex(
-            (a) => a.FrameNo == box.my.frame && a.trackNo == box.my.key,
+            (a) =>
+              a.frame_number === box.my.frame && a.displayName === box.my.key,
           );
-          if (annotationToReplace == -1) {
+          if (annotationToReplace === -1) {
             console.error(
               "the modified bounding box doesn't exist in annotationBallTracks.",
             );
           }
+          setAlteredAnnotations(
+            upsertAnnotation(alteredAnnotations, modifiedAnnotation),
+          );
           annotationBallTracks.splice(
             annotationToReplace,
             1,
@@ -423,31 +670,17 @@ const NewTrackingEditor = () => {
     return box;
   }
 
-  // For changing video source file
-  const handleBrowse = async (event) => {
-    try {
-      // Get the uploaded file
-      const file = event.target.files[0];
+  const upsertAnnotation = (list, newItem) => {
+    const exists = list.some((item) => item.id === newItem.id);
 
-      const annotationsResponse = await fetch("/api/annotations/199");
-      if (!annotationsResponse.ok) {
-        throw new Error("Failed to fetch annotations for video");
-      }
-      const annotationsJson = await annotationsResponse.json();
-      console.log("Retrieved annotations : ", annotationsJson);
-      // get rid of duplicates in case database has duplicate values
-      const uniqueAnnotations = Array.from(
-        new Set(annotationsJson.map((obj) => JSON.stringify(obj))),
-        JSON.parse,
+    if (exists) {
+      // Overwrite existing item
+      return list.map((item) =>
+        item.id === newItem.id ? { ...item, ...newItem } : item,
       );
-      console.log("Unique annotations : ", uniqueAnnotations);
-      // setAnnotations(uniqueAnnotations);
-      // Transform file into blob URL
-      // setAnnotations(tracking);
-      setVideoUrl(URL.createObjectURL(file));
-      console.log("Finished setting video url");
-    } catch (error) {
-      console.error(error);
+    } else {
+      // Add new item
+      return [...list, newItem];
     }
   };
 
@@ -457,14 +690,13 @@ const NewTrackingEditor = () => {
       let tempList = [];
 
       playerList.forEach((item) => {
-        if (item.props.playerBox.my.key == activeObject.my.key) {
+        if (item.props.playerBox.my.key === activeObject.my.key) {
           const boxColor = colorSet.get(activeObject.my.key); //used in 'stroke' property of playerBox
-
           tempList = tempList.concat([
             <TrackListItemPlayer
               key={item.key}
               playerBox={activeObject}
-              name={playerNameMap.get(activeObject.my.key)}
+              name={activeObject.my.key}
               changeSelection={changeSelection}
               setName={handleSetName}
               blink={handleBlink}
@@ -482,7 +714,7 @@ const NewTrackingEditor = () => {
             <TrackListItemPlayer
               key={item.key}
               playerBox={tempBox}
-              name={playerNameMap.get(tempBox.my.key)}
+              name={tempBox.displayName}
               changeSelection={changeSelection}
               setName={handleSetName}
               blink={handleBlink}
@@ -497,35 +729,35 @@ const NewTrackingEditor = () => {
 
       tempList = [];
       ballList.forEach((item) => {
-        if (item.props.ballBox.my.key == activeObject.my.key) {
-          const boxColor = colorSetBall.get(activeObject.my.key);
+        if (item.props.ballBox.my.key === activeObject.my.key) {
+          const boxColor = colorSetBall.get(activeObject.displayName);
           tempList = tempList.concat([
             <TrackListItemBall
               key={item.key}
               ballBox={activeObject}
-              name={ballNameMap.get(activeObject.my.key)}
+              name={activeObject.displayName}
               changeSelection={changeSelection}
-              setName={setNameBall}
-              blink={handleBlink}
+              setName={handleSetNameBall}
+              blink={blink}
               color={boxColor}
-              delete={deleteBall}
+              delete={handleDeleteBall}
               handleModalOpen={handleModalBallOpen}
             />,
           ]);
         } else {
           let tempBox = item.props.ballBox;
           tempBox.my.selected = false;
-          const boxColor = colorSetBall.get(tempBox.my.key);
+          const boxColor = colorSetBall.get(tempBox.displayName);
           tempList = tempList.concat([
             <TrackListItemBall
               key={item.key}
               ballBox={tempBox}
-              name={ballNameMap.get(tempBox.my.key)}
+              name={tempBox.displayName}
               changeSelection={changeSelection}
-              setName={setNameBall}
-              blink={handleBlink}
+              setName={handleSetNameBall}
+              blink={blink}
               color={boxColor}
-              delete={deleteBall}
+              delete={handleDeleteBall}
               handleModalOpen={handleModalBallOpen}
             />,
           ]);
@@ -558,6 +790,45 @@ const NewTrackingEditor = () => {
 
     setVideoElement(localVideoElement);
   }, [videoUrl]);
+
+  function seededRandom(seed) {
+    var x = Math.sin(seed++) * 10000;
+    return x - Math.floor(x);
+  }
+
+  function generateColor() {
+    var r = Math.floor(Math.random() * 256);
+    var g = Math.floor(Math.random() * 256);
+    var b = Math.floor(Math.random() * 256);
+    return { r, g, b };
+  }
+
+  function boundingBoxColorSet(annotationList) {
+    let uniquePlayers = new Set(annotationList.map((item) => item.displayName));
+    let colorSet = new Map();
+
+    uniquePlayers.forEach((key) => {
+      let color = generateColor();
+      colorSet.set(key, color);
+    });
+    return colorSet;
+  }
+
+  function generatePoster(videoElement) {
+    //if video cannot be played, simply return
+    if (videoElement.readyState === 0) return;
+    //get video content of first frame
+    videoElement.currentTime = frameDuration;
+    const poster = new fabric.Image(videoElement, {
+      left: 0,
+      top: 0,
+      width: videoElement.width,
+      height: videoElement.height,
+      selectable: true,
+    });
+    videoElement.currentTime = 0;
+    return poster;
+  }
 
   const isInField = (inField) => {
     return inField === true || inField === null;
@@ -611,9 +882,9 @@ const NewTrackingEditor = () => {
       if (isShowingPlayerTrails) {
         const currentTrailsToDraw = drawInField
           ? annotations.filter(
-              (a) => a.FrameNo === frameNumber && isInField(a.in_field),
+              (a) => a.frame_number === frameNumber && isInField(a.in_field),
             )
-          : annotations.filter((a) => a.FrameNo === frameNumber);
+          : annotations.filter((a) => a.frame_number === frameNumber);
 
         currentTrailsToDraw.forEach((a) => {
           const scaledX = a.x1 * horizontalScalingFactor;
@@ -622,7 +893,7 @@ const NewTrackingEditor = () => {
           const scaledHeight = a.h * verticalScalingFactor;
           const radius =
             scaledWidth < scaledHeight ? scaledWidth / 4 : scaledHeight / 4;
-          const trailColor = colorSet.get(a.PlayerKey);
+          const trailColor = colorSet.get(a.displayName);
           let trail = new fabric.Circle({
             left: scaledX,
             top: scaledY,
@@ -634,7 +905,7 @@ const NewTrackingEditor = () => {
           });
           trail.properties = {
             frame: frameNumber,
-            playerKey: a.PlayerKey,
+            displayName: a.displayName,
           };
           trail.hasRotatingPoint = false;
           defineTrailBehaviour(trail, setSelectedTrails);
@@ -643,7 +914,7 @@ const NewTrackingEditor = () => {
       }
       if (isShowingBallTrails) {
         const currentBallTrailsToDraw = annotationBallTracks.filter(
-          (a) => a.FrameNo === frameNumber,
+          (a) => a.frame_number === frameNumber,
         );
 
         currentBallTrailsToDraw.forEach((a) => {
@@ -653,7 +924,7 @@ const NewTrackingEditor = () => {
           const scaledHeight = (a.y2 - a.y1) * verticalScalingFactor;
           const radius =
             scaledWidth < scaledHeight ? scaledWidth / 4 : scaledHeight / 4;
-          const trailColor = colorSetBall.get(a.trackNo);
+          const trailColor = colorSetBall.get(a.displayName);
           let trail = new fabric.Circle({
             left: scaledX,
             top: scaledY,
@@ -665,7 +936,7 @@ const NewTrackingEditor = () => {
           });
           trail.properties = {
             frame: frameNumber,
-            ballKey: a.trackNo,
+            ballKey: a.displayName,
           };
           trail.hasRotatingPoint = false;
           defineTrailBehaviourBall(trail, setSelectedTrailsBall);
@@ -674,25 +945,25 @@ const NewTrackingEditor = () => {
       }
     }
 
-    var boundingBoxesToDraw = drawInField
+    let boundingBoxesToDraw = drawInField
       ? canvasBoxes.filter(
           (a) => a.my.frame === frameNumber && isInField(a.my.in_field),
         )
       : canvasBoxes.filter((a) => a.my.frame === frameNumber);
 
-    var tempList = [];
+    let tempList = [];
     let runningIndex = 0;
 
     if (boundingBoxesToDraw.length > 0) {
       boundingBoxesToDraw.forEach((boundingBox) => {
         canvas.add(boundingBox);
-        const boxColor = colorSet.get(boundingBox.my.key); //used in 'stroke' property of playerBox
+        const boxColor = colorSet.get(boundingBox.displayName); //used in 'stroke' property of playerBox
 
         tempList = tempList.concat([
           <TrackListItemPlayer
             key={runningIndex++}
             playerBox={boundingBox}
-            name={playerNameMap.get(boundingBox.my.key)}
+            name={boundingBox.displayName}
             changeSelection={changeSelection}
             setName={handleSetName}
             blink={handleBlink}
@@ -705,13 +976,13 @@ const NewTrackingEditor = () => {
     } else {
       boundingBoxesToDraw = drawInField
         ? annotations.filter(
-            (a) => a.FrameNo === frameNumber && isInField(a.in_field),
+            (a) => a.frame_number === frameNumber && isInField(a.in_field),
           )
-        : annotations.filter((a) => a.FrameNo === frameNumber);
+        : annotations.filter((a) => a.frame_number === frameNumber);
 
       if (boundingBoxesToDraw.length > 0) {
-        boundingBoxesToDraw.forEach((boundingBox) => {
-          const boxColor = colorSet.get(boundingBox.PlayerKey); //used in 'stroke' property of playerBox
+        boundingBoxesToDraw.forEach((boundingBox, i) => {
+          const boxColor = colorSet.get(boundingBox.displayName); //used in 'stroke' property of playerBox
           let playerBox = convertAnnotationToBox(
             boundingBox,
             horizontalScalingFactor,
@@ -728,7 +999,7 @@ const NewTrackingEditor = () => {
               key={runningIndex++}
               playerBox={playerBox}
               color={boxColor}
-              name={playerNameMap.get(boundingBox.PlayerKey)}
+              name={playerBox.my.key}
               changeSelection={changeSelection}
               setName={handleSetName}
               blink={handleBlink}
@@ -749,12 +1020,12 @@ const NewTrackingEditor = () => {
     if (boundingBoxesToDrawBall.length > 0) {
       boundingBoxesToDrawBall.forEach((boundingBox) => {
         canvas.add(boundingBox);
-        const boxColor = colorSetBall.get(boundingBox.my.key);
+        const boxColor = colorSetBall.get(boundingBox.displayName);
         tempList = tempList.concat([
           <TrackListItemBall
             key={runningIndex++}
             ballBox={boundingBox}
-            name={ballNameMap.get(boundingBox.my.key)}
+            name={boundingBox.displayName}
             changeSelection={changeSelection}
             setName={handleSetNameBall}
             blink={handleBlink}
@@ -766,12 +1037,12 @@ const NewTrackingEditor = () => {
       });
     } else {
       boundingBoxesToDrawBall = annotationBallTracks.filter(
-        (a) => a.FrameNo === frameNumber,
+        (a) => a.frame_number === frameNumber,
       );
       if (boundingBoxesToDrawBall.length > 0) {
         //draw boxes
         boundingBoxesToDrawBall.forEach((boundingBox) => {
-          const boxColor = colorSetBall.get(boundingBox.trackNo);
+          const boxColor = colorSetBall.get(boundingBox.displayName);
           let ballBox = convertAnnotationBallToBallbox(
             boundingBox,
             horizontalScalingFactor,
@@ -788,7 +1059,7 @@ const NewTrackingEditor = () => {
               key={runningIndex++}
               ballBox={ballBox}
               color={boxColor}
-              name={ballNameMap.get(boundingBox.trackNo)}
+              name={boundingBox.displayName}
               changeSelection={changeSelection}
               setName={handleSetNameBall}
               blink={handleBlink}
@@ -820,9 +1091,8 @@ const NewTrackingEditor = () => {
         const fontSize = 12;
         const scaledX = a.x1 * horizontalScalingFactor;
         const scaledY = a.y1 * verticalScalingFactor - fontSize;
-        const playerKey =
-          playerNameMap.get(a.PlayerKey) || a.PlayerKey.toString();
-        let boxKey = new fabric.Text(playerKey, {
+        const displayName = a.displayName.toString();
+        let boxKey = new fabric.Text(displayName, {
           left: scaledX,
           top: scaledY,
           fontSize: fontSize,
@@ -868,7 +1138,7 @@ const NewTrackingEditor = () => {
       }
 
       const currentFrameNumber = getCurrentTimestampFrame();
-      if (currentFrameNumber != previousFrameNumber) {
+      if (currentFrameNumber !== previousFrameNumber) {
         setFrameNumber(currentFrameNumber);
         setTimestamp(videoElement.currentTime);
 
@@ -919,6 +1189,7 @@ const NewTrackingEditor = () => {
     videoElement.addEventListener("seeked", onSeek);
     videoElement.addEventListener("seeking", onSeeking);
     videoElement.addEventListener("stalled", onStalled);
+
     videoElement.addEventListener("loadeddata", onLoadedData);
     videoElement.addEventListener("waiting", onWaiting);
 
@@ -939,8 +1210,6 @@ const NewTrackingEditor = () => {
     isShowingBallBox,
     isShowingBallTrails,
     isShowingPlayerTrails,
-    playerNameMap,
-    ballNameMap,
     trailFrameNumber,
     trailsEnabled,
     showField,
@@ -1012,18 +1281,19 @@ const NewTrackingEditor = () => {
       );
     }
 
-    //same thing we do in drawBoundingBoxes..
+    //same thing we do in drawBoundingBoxes.
     if (annotations.length > 0) {
       var boundingBoxesToDraw = drawInField
         ? annotations.filter(
-            (a) => a.FrameNo === frameNumber && isInField(a.in_field),
+            (a) => a.frame_number === frameNumber && isInField(a.in_field),
           )
-        : annotations.filter((a) => a.FrameNo === frameNumber);
+        : annotations.filter((a) => a.frame_number === frameNumber);
 
       if (boundingBoxesToDraw.length > 0) {
         //draw boxes
         boundingBoxesToDraw.forEach((boundingBox) => {
-          const boxColor = colorSet.get(boundingBox.PlayerKey); //used in 'stroke' property of playerBox
+          const boxColor = colorSet.get(boundingBox.displayName);
+          const playerName = boundingBox.displayName;
           let playerBox = convertAnnotationToBox(
             boundingBox,
             horizontalScalingFactor,
@@ -1039,7 +1309,7 @@ const NewTrackingEditor = () => {
             <TrackListItemPlayer
               key={runningIndex++}
               playerBox={playerBox}
-              name={playerNameMap.get(boundingBox.PlayerKey)}
+              name={playerName}
               changeSelection={changeSelection}
               setName={handleSetName}
               blink={handleBlink}
@@ -1055,14 +1325,14 @@ const NewTrackingEditor = () => {
 
     if (annotationBallTracks.length > 0) {
       var boundingBoxesToDrawBall = annotationBallTracks.filter(
-        (a) => a.FrameNo === frameNumber,
+        (a) => a.frame_number === frameNumber,
       );
       tempList = [];
       runningIndex = 0;
       if (boundingBoxesToDrawBall.length > 0) {
         //draw boxes
         boundingBoxesToDrawBall.forEach((boundingBox) => {
-          const boxColor = colorSetBall.get(boundingBox.trackNo);
+          const boxColor = colorSetBall.get(boundingBox.displayName);
           let ballBox = convertAnnotationBallToBallbox(
             boundingBox,
             horizontalScalingFactor,
@@ -1079,12 +1349,12 @@ const NewTrackingEditor = () => {
               key={runningIndex++}
               ballBox={ballBox}
               color={boxColor}
-              name={ballNameMap.get(boundingBox.trackNo)}
+              name={boundingBox.displayName}
               changeSelection={changeSelection}
-              setName={setNameBall}
+              setName={handleSetNameBall}
               blink={handleBlink}
               handleModalOpen={handleModalBallOpen}
-              delete={deleteBall}
+              delete={handleDeleteBall}
             />,
           ]);
         });
@@ -1094,8 +1364,6 @@ const NewTrackingEditor = () => {
   }, [
     annotations,
     annotationBallTracks,
-    playerNameMap,
-    ballNameMap,
     trailsEnabled,
     isShowingBallTrails,
     isShowingPlayerTrails,
@@ -1158,7 +1426,6 @@ const NewTrackingEditor = () => {
     if (bindingAction) {
       e.stopPropagation();
       setBindingAction(null);
-      return;
     }
   };
 
@@ -1302,7 +1569,7 @@ const NewTrackingEditor = () => {
   };
 
   const handlePlayPause = () => {
-    if (videoElement && videoElement.readyState != 0 && !videoElement.ended) {
+    if (videoElement && videoElement.readyState !== 0 && !videoElement.ended) {
       if (editField) {
         setShowApplyHomographyModal(true);
         return;
@@ -1326,7 +1593,7 @@ const NewTrackingEditor = () => {
     const incrementBy = 0.25;
 
     if (videoElement) {
-      if (videoSpeed == 2) {
+      if (videoSpeed === 2) {
         setVideoSpeed(0.25);
         videoElement.playbackRate = videoSpeed;
       } else {
@@ -1412,30 +1679,32 @@ const NewTrackingEditor = () => {
   }
 
   function handleAddPlayer() {
-    const newPlayerKey = playerNameMap.size;
-    const boxColor = generateColor(newPlayerKey);
-    setColorSet(colorSet.set(newPlayerKey, boxColor));
-    setAnnotations(
-      annotations.concat({
-        FrameNo: frameNumber,
-        PlayerKey: newPlayerKey,
-        h: 100,
-        w: 100,
-        x: 500,
-        x1: 0,
-        x2: 0,
-        x_trans: 0,
-        y: 100,
-        y1: 0,
-        y2: 0,
-        y_trans: 0,
-        in_field: true,
-      }),
-    );
-    setPlayerNameMap(
-      new Map(playerNameMap.set(newPlayerKey, "player" + newPlayerKey)),
-    );
+    const displayName = "new Player";
+    const boxColor = generateColor();
+    const newAnnotation = {
+      video_id: videoId,
+      game_id: gameId,
+      frame_number: frameNumber,
+      displayName: displayName,
+      h: 100,
+      w: 100,
+      x: 500,
+      x1: 0,
+      x2: 0,
+      x_trans: 0,
+      y: 100,
+      y1: 0,
+      y2: 0,
+      y_trans: 0,
+      in_field: true,
+      type: 0,
+    };
+    setColorSet(colorSet.set(displayName, boxColor));
+    setAnnotations((annotations) => [...annotations, newAnnotation]);
+    setNewAnnotations((newAnnotations) => [...newAnnotations, newAnnotation]);
+    const x = newAnnotation;
   }
+
   function addBoundingBoxBallAtMousePosition(event) {
     const pointer = canvas.getPointer(event.e);
     const horizontalScalingFactor = canvas.width / 3840;
@@ -1443,13 +1712,15 @@ const NewTrackingEditor = () => {
     const x = pointer.x / horizontalScalingFactor;
     const y = pointer.y / verticalScalingFactor;
     //console.log(`Mouse clicked at: (${x}, ${y})`);
-    const newBallKey = ballNameMap.size + 1; //ball keys start from 1
-    const boxColor = generateColor(newBallKey);
-    setColorSetBall(colorSetBall.set(newBallKey, boxColor));
+    const newBallDisplayName = "new ball"; //ball keys start from 1
+    const boxColor = generateColor();
+    setColorSetBall(colorSetBall.set(newBallDisplayName, boxColor));
     setAnnotationBallTracks(
       annotationBallTracks.concat({
-        FrameNo: frameNumber,
-        trackNo: newBallKey,
+        video_id: videoId,
+        game_id: gameId,
+        frame_number: frameNumber,
+        displayName: newBallDisplayName,
         x1: x,
         x2: x + 30,
         y1: y,
@@ -1457,9 +1728,11 @@ const NewTrackingEditor = () => {
         detection: 1,
         x: 0,
         y: 0,
+        type: 1,
       }),
     );
-    setBallNameMap(new Map(ballNameMap.set(newBallKey, "ball" + newBallKey)));
+
+    //Todo Backend
 
     canvas.off("mouse:down");
   }
@@ -1574,15 +1847,13 @@ const NewTrackingEditor = () => {
   };
 
   const handleApplyHomography = (frameNumber, trackPoints) => {
+    const path = window.location.pathname;
+    const videoId = path.substring(path.lastIndexOf("/") + 1);
     frameNumber = parseInt(frameNumber);
-    var currentFrame = parseInt(getCurrentTimestampFrame());
-    var fieldPoints = canvas
+    let currentFrame = parseInt(getCurrentTimestampFrame());
+    let fieldPoints = canvas
       .getObjects()
-      .filter(
-        (obj) =>
-          obj.properties?.type === "fieldPoint" &&
-          getPointsToTrack(logFile.Sport).includes(obj.id),
-      )
+      .filter((obj) => obj.properties?.type === "fieldPoint")
       .map((obj) => ({
         id: obj.id,
         x: obj.left,
@@ -1616,7 +1887,7 @@ const NewTrackingEditor = () => {
 
     api
       .post("/annotation/track", {
-        video_id: video.name,
+        video_id: videoId,
         start_frame: currentFrame,
         end_frame: currentFrame + frameNumber,
         points: fieldPoints.map((point) => ({
@@ -1627,11 +1898,11 @@ const NewTrackingEditor = () => {
         player_boxes: annotations
           .filter(
             (a) =>
-              a.FrameNo >= currentFrame &&
-              a.FrameNo <= currentFrame + frameNumber,
+              a.frame_number >= currentFrame &&
+              a.frame_number <= currentFrame + frameNumber,
           )
           .map((a) => ({
-            frame_no: a.FrameNo,
+            frame_no: a.frame_number,
             x_1: a.x1,
             y_1: a.y1,
             x_2: a.x2,
@@ -1680,7 +1951,18 @@ const NewTrackingEditor = () => {
   };
 
   return (
-    <div>
+    <LoadingOverlay
+      className="FileOverview"
+      active={loading}
+      spinner
+      text={loaderText}
+      styles={{
+        overlay: (base) => ({
+          ...base,
+          zIndex: 9999, // make sure it's high enough
+        }),
+      }}
+    >
       <ApplyHomographyModal
         showApplyHomographyModal={showApplyHomographyModal}
         handleClose={() => setShowApplyHomographyModal(false)}
@@ -1691,26 +1973,26 @@ const NewTrackingEditor = () => {
       />
       <MergeAndSwapModal
         playerChosenInList={playerChosenInList}
-        playerNameMap={playerNameMap}
-        setPlayerNameMap={setPlayerNameMap}
         annotations={annotations}
         setAnnotations={setAnnotations}
         frameNumber={frameNumber}
         mergeModalState={mergeModalState}
         handleClose={handleModalsClose}
+        setUpdateAnnotations={setAlteredAnnotations}
+        setDeleteAnnotations={setDeleteAnnotations}
       />
       <MergeAndSwapModalBall
         ballChosenInList={ballChosenInList}
-        ballNameMap={ballNameMap}
-        setBallNameMap={setBallNameMap}
         annotationBallTracks={annotationBallTracks}
         setAnnotationBallTracks={setAnnotationBallTracks}
         frameNumber={frameNumber}
         mergeModalBallState={mergeModalBallState}
         handleClose={handleModalsClose}
+        setUpdateAnnotations={setAlteredAnnotations}
+        setDeleteAnnotations={setDeleteAnnotations}
       />
       <div className="controls">
-        <Box id="tools-container" sx={{ display: "flex", gap: "10px" }}>
+        <Box id="tools-container" sx={{ display: "flex", gap: "8px" }}>
           <div>Show Annotation:</div>
 
           <Switch
@@ -1752,11 +2034,11 @@ const NewTrackingEditor = () => {
             onClick={() =>
               handleMultiSelectMerge(
                 selectedTrails,
+                setSelectedTrails,
                 annotations,
                 setAnnotations,
-                playerNameMap,
-                setPlayerNameMap,
-                setSelectedTrails,
+                alteredAnnotations,
+                setAlteredAnnotations,
               )
             }
             sx={{
@@ -1774,14 +2056,12 @@ const NewTrackingEditor = () => {
                 selectedTrailsBall,
                 annotationBallTracks,
                 setAnnotationBallTracks,
-                ballNameMap,
-                setBallNameMap,
                 setSelectedTrailsBall,
               )
             }
             sx={{
-              backgroundColor: `${config.general.buttons.mergeBall.backgroundColor} !important`,
-              color: `${config.general.buttons.mergeBall.backgroundColor} !important`,
+              backgroundColor: "#BBC3C9 !important",
+              color: "#1b1f22 !important",
             }}
           >
             Merge Ball
@@ -1794,14 +2074,12 @@ const NewTrackingEditor = () => {
                 selectedTrailsBall,
                 annotationBallTracks,
                 setAnnotationBallTracks,
-                ballNameMap,
-                setBallNameMap,
                 setSelectedTrailsBall,
               )
             }
             sx={{
-              backgroundColor: `${config.general.buttons.deleteBallTrails.backgroundColor} !important`,
-              color: `${config.general.buttons.deleteBallTrails.backgroundColor} !important`,
+              backgroundColor: "#BBC3C9 !important",
+              color: "#1b1f22 !important",
             }}
           >
             Del selected Balltrails
@@ -1842,12 +2120,18 @@ const NewTrackingEditor = () => {
               draw players from annotation and Ball tracks
             </Button>
           </div>
-          <DownloadButton
-            players={annotations}
-            video={video}
-            homographies={homographies}
-            balls={annotationBallTracks}
-          />
+          <DownloadButton videoId={videoId} />
+          <Button
+            data-testid="save-button"
+            variant="contained"
+            onClick={handleSave}
+            sx={{
+              backgroundColor: "#BBC3C9 !important",
+              color: "#1b1f22 !important",
+            }}
+          >
+            Save Changes
+          </Button>
         </Box>
       </div>
 
@@ -1947,7 +2231,9 @@ const NewTrackingEditor = () => {
                     onClick={() => startBindingKey(action)}
                   >
                     {action}:{" "}
-                    {keyBindings[action] == " " ? "Space" : keyBindings[action]}
+                    {keyBindings[action] === " "
+                      ? "Space"
+                      : keyBindings[action]}
                   </div>
                 ))}
               </div>
@@ -1955,7 +2241,7 @@ const NewTrackingEditor = () => {
           </button>
         </div>
       </div>
-    </div>
+    </LoadingOverlay>
   );
 };
 

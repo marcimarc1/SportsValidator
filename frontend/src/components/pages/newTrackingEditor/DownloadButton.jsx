@@ -1,9 +1,14 @@
 import { Box, Button, Menu, MenuItem, Paper } from "@mui/material";
 import React from "react";
+import toast, { Toaster } from "react-hot-toast";
+import ImExport from "../../../controllers/imexport.controller";
+import VideoController from "../../../controllers/video.controller";
 
-export const DownloadButton = ({ players, video, homographies , balls}) => {
+export const DownloadButton = ({ videoId }) => {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const open = Boolean(anchorEl);
+  const [loading, setLoading] = React.useState(false);
+  const [loaderText, setLoaderText] = React.useState("");
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
   };
@@ -11,103 +16,91 @@ export const DownloadButton = ({ players, video, homographies , balls}) => {
     setAnchorEl(null);
   };
 
-  const handleVideoDownload = async () => {
-    if (video) {
-      const element = document.createElement("a");
-      const url = URL.createObjectURL(video);
-      element.href = url;
-      element.download = video.name || "downloadedVideo.mp4";
+  function downloadFile(blob, filename) {
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.style.display = "none";
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  }
 
-      document.body.appendChild(element);
-      element.click();
-      document.body.removeChild(element);
-      URL.revokeObjectURL(url);
-    } else {
-      console.log("No video to download");
+  const handleVideoDownload = async () => {
+    try {
+      setLoaderText("Downloading Video...");
+      setLoading(true);
+
+      const response = await VideoController.getVideoFileById(videoId);
+      const videoBlob = new Blob([response.data], { type: "video/mp4" });
+      downloadFile(videoBlob, `video_${videoId}.mp4`);
+      toast.success("Video downloaded.");
+    } catch (error) {
+      toast.error(error.message);
+      console.error("Error downloading video", error);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handlePlayersDownload = async () => {
-    if (players && players.length > 0) {
-      const csvRows = [];
-      const headers = Object.keys(players[0]);
-      csvRows.push(headers.join(","));
+    try {
+      setLoaderText("Downloading Player CSV...");
+      setLoading(true);
 
-      for (const row of players) {
-        const values = headers.map((header) => {
-          const escaped = ("" + row[header]).replace(/"/g, '\\"');
-          return `"${escaped}"`;
-        });
-        csvRows.push(values.join(","));
-      }
-
-      const csvData = csvRows.join("\n");
-      const blob = new Blob([csvData], { type: "text/csv" });
-      const url = URL.createObjectURL(blob);
-
-      const element = document.createElement("a");
-      element.href = url;
-      element.download = "players.csv";
-      document.body.appendChild(element);
-      element.click();
-      document.body.removeChild(element);
-      URL.revokeObjectURL(url);
-    } else {
-      console.log("No players to download");
+      const response = await ImExport.GetPlayerCSV(videoId);
+      const blob = new Blob([response.data], { type: "blob" });
+      downloadFile(blob, `player_annotations.csv`);
+      toast.success("Player CSV downloaded.");
+    } catch (error) {
+      toast.error(error.message);
+      console.error("Error downloading Player CSV", error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleBallDownload = async()=>{
-    if(balls && balls.length > 0){
-      const csvRows = [];
-      const headers = Object.keys(balls[0]);
-      csvRows.push(headers.join(","));
+  const handleBallDownload = async () => {
+    try {
+      setLoaderText("Downloading Ball CSV...");
+      setLoading(true);
 
-      for (const row of balls){
-        const values = headers.map((header) => {
-          const escaped = (""+row[header]).replace(/"/g, '\\"');
-          return `"${escaped}"`;
-        });
-        csvRows.push(values.join(","));
-      }
-
-      const csvData = csvRows.join("\n");
-      const blob = new Blob([csvData], {type: "text/csv"});
-      const url = URL.createObjectURL(blob);
-
-      const element = document.createElement("a");
-      element.href = url;
-      element.download = "ball.csv";
-      document.body.appendChild(element);
-      element.click();
-      document.body.appendChild(element);
-      URL.revokeObjectURL(url);
-    } else{
-      console.log("No balls to download");
+      const response = await ImExport.GetBallCSV(videoId);
+      const blob = new Blob([response.data], { type: "blob" });
+      downloadFile(blob, `ball_annotations.csv`);
+      toast.success("Ball CSV downloaded.");
+    } catch (error) {
+      toast.error(error.message);
+      console.error("Error downloading Ball CSV", error);
+    } finally {
+      setLoading(false);
     }
-  }
+  };
 
   const handleHomographyDownload = async () => {
+    try {
+      setLoaderText("Downloading Homographie JSON...");
+      setLoading(true);
 
-    const homographiesData = JSON.stringify(homographies, null, 2);
+      const response = await ImExport.GetHomographieJSON(videoId);
 
-    const blob = new Blob([homographiesData], { type: "application/json" });
-
-    const url = URL.createObjectURL(blob);
-
-    const element = document.createElement("a");
-
-    element.href = url;
-    element.download = "homographies2.json";
-
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
-    URL.revokeObjectURL(url);
+      const blob = new Blob([JSON.stringify(response.data, null, 2)], {
+        type: "application/json",
+      });
+      downloadFile(blob, `homographie_${videoId}.json`);
+      toast.success("Homographie JSON downloaded.");
+    } catch (error) {
+      toast.error(error.message);
+      console.error("Error downloading JSON", error);
+    } finally {
+      setLoading(false);
+    }
   };
-
   return (
     <div>
+      <Toaster position="top-right" reverseOrder={false} />
       <Button
         variant="contained"
         id="basic-button"

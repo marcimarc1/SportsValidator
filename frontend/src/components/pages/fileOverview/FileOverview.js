@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import FileListItem from "./FileListItem";
-import "./FileOverview.css";
+import "./GameOverview.css";
 import IconButton from "@material-ui/core/IconButton";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { fabric } from "fabric";
@@ -16,6 +16,8 @@ class FileOverview extends Component {
   constructor(props) {
     super(props);
     this.fileInput = React.createRef();
+    this.isGameSelected = false;
+    this.isVideoSelected = false;
   }
 
   state = {
@@ -339,6 +341,7 @@ class FileOverview extends Component {
         <div className="FileOverviewList">
           <div className="FileOverviewHeadingContainer">
             <h1 className={"FileOverviewHeading"}>File Overview</h1>
+
             <div className="file-upload-container">
               <label className="file-upload" for="file-upload">
                 Upload Files

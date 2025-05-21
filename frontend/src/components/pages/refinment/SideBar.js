@@ -9,8 +9,18 @@ import {
 } from "@material-ui/core";
 
 import config from "../../../config.json";
+import { saveHomographyAsJsonFile } from "./util";
 
-const SideBar = ({ watchedFrames, onClickFrame, onSendUpdates, maxHeight }) => {
+const SideBar = ({
+  watchedFrames,
+  onClickFrame,
+  onSendUpdates,
+  maxHeight,
+  homography,
+  logFile,
+  canvas,
+  fieldSize,
+}) => {
   return (
     <div className="TrackList" style={{ padding: 15 }}>
       <div>
@@ -26,6 +36,27 @@ const SideBar = ({ watchedFrames, onClickFrame, onSendUpdates, maxHeight }) => {
             fullWidth
           >
             Send Updates
+          </Button>
+
+          <Button
+            variant="contained"
+            onClick={() =>
+              saveHomographyAsJsonFile(
+                homography,
+                watchedFrames,
+                logFile,
+                canvas,
+                fieldSize,
+              )
+            }
+            style={{
+              marginTop: "15px",
+              backgroundColor: config.general.trackingEditor.color.accent,
+              color: config.general.trackingEditor.color.mainText,
+            }}
+            fullWidth
+          >
+            Download
           </Button>
         </div>
         {/* Scrollable container */}

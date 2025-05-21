@@ -12,7 +12,7 @@ import Radio from "@material-ui/core/Radio";
 import FormControlLabel from "@material-ui/core/FormControlLabel";
 
 import { useState } from "react";
-import { mergeBallData, swapBallData } from "../../../utils/validation";
+import { mergeData, swapData } from "../../../utils/validation";
 import { useMemo } from "react";
 
 const style = {
@@ -29,10 +29,10 @@ const style = {
 
 export default function MergeAndSwapModalBall({
   ballChosenInList,
-  ballNameMap,
-  setBallNameMap,
   annotationBallTracks,
   setAnnotationBallTracks,
+  setUpdateAnnotations,
+  setDeleteAnnotations,
   frameNumber,
   mergeModalBallState,
   handleClose,
@@ -41,17 +41,23 @@ export default function MergeAndSwapModalBall({
   const [operation, setOperation] = useState("swap");
   const menuItems = useMemo(
     () =>
-      Array.from(ballNameMap.values()).map((name) => {
-        if (name !== ballChosenInList) {
-          const testid = "menuitem" + name;
-          return (
-            <MenuItem key={name} data-testid={testid} value={name}>
-              {name}
-            </MenuItem>
-          );
-        }
-      }),
-    [ballNameMap, ballChosenInList],
+      Array.from(
+        annotationBallTracks.map((a) => {
+          if (a.displayName !== ballChosenInList) {
+            const testid = "menuitem" + a.displayName;
+            return (
+              <MenuItem
+                key={a.displayName}
+                data-testid={testid}
+                value={a.displayName}
+              >
+                {a.displayName}
+              </MenuItem>
+            );
+          }
+        }),
+      ),
+    [annotationBallTracks, ballChosenInList],
   );
 
   const handleChange = (event) => {
@@ -60,22 +66,23 @@ export default function MergeAndSwapModalBall({
 
   const handleClick = () => {
     if (operation === "swap")
-      swapBallData(
+      swapData(
         selectedBall,
-        ballNameMap,
         ballChosenInList,
         annotationBallTracks,
         setAnnotationBallTracks,
+        setUpdateAnnotations,
+        setDeleteAnnotations,
         frameNumber,
       );
     else
-      mergeBallData(
+      mergeData(
         selectedBall,
-        ballNameMap,
-        setBallNameMap,
         ballChosenInList,
         annotationBallTracks,
         setAnnotationBallTracks,
+        setUpdateAnnotations,
+        setDeleteAnnotations,
       );
     handleClose();
   };

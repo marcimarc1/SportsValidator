@@ -1,3 +1,7 @@
+import { getTemplate } from "../../../utils/templates";
+import { invertNoCV } from "../../../utils/mathUtils";
+import { transformPoint } from "../../../utils/homographyUtils";
+
 export function convertFieldPointsFormat(fieldPoints) {
   return {
     outerArea: [
@@ -43,4 +47,83 @@ export function convertFieldPointsFormat(fieldPoints) {
 
 function getObjectWithId(id, array) {
   return array.find((obj) => obj.id === id);
+}
+
+export function saveHomographyAsJsonFile(
+  homography,
+  watchedFrames,
+  logFile,
+  canvas,
+  fieldSize,
+  filename = "refined_homography.json",
+) {
+  const dict = homographyToFieldData(homography, logFile, canvas, fieldSize);
+  const filteredDict = {};
+
+  Object.entries(dict).forEach(([key, value]) => {
+    const index = Number(key); // convert string key to number if needed
+    if (watchedFrames.some((sublist) => sublist[0] === index)) {
+      filteredDict[index] = value;
+    }
+  });
+
+  const jsonString = JSON.stringify(filteredDict, null, 2); // pretty-printed
+
+  const blob = new Blob([jsonString], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+
+  URL.revokeObjectURL(url); // Clean up
+}
+
+export function homographyToFieldData(
+  homographies,
+  logFile,
+  canvas,
+  fieldSize,
+) {
+  const { points, lines } = getTemplate(
+    logFile.Sport,
+    fieldSize?.length ?? 103,
+    fieldSize?.height ?? 68,
+  );
+
+  const res = {};
+
+  for (let i = 0; i < Object.entries(homographies).length; i++) {
+    // Fill out the entire refinement object for this frame
+    let homography = homographies[i];
+    // Using normal invert causes issue window.cv.Mat is not a constructor, this is a workaround
+    let invHomography = invertNoCV(homography);
+
+    const innerRes = {};
+
+    for (const [key, value] of Object.entries(points)) {
+      if (Array.isArray(value) && key !== "middleCircle") {
+        innerRes[key] = [];
+        // invert
+        value.forEach((elem) => {
+          innerRes[key].push(
+            transformPoint(
+              elem,
+              invHomography,
+              canvas.height / 3840,
+              canvas.width / 2460,
+            ),
+          );
+        });
+      } else {
+        innerRes[key] = value;
+      }
+    }
+    innerRes["frame"] = i;
+    // Enable once filterBoxes data is correct
+    // innerRes["filterBoxes"] = filterBoxes[i]
+    res[i] = innerRes;
+  }
+  return res;
 }

@@ -1,6 +1,6 @@
 import math
 
-from ..pydantic_models.homography import Point
+from pydantic_models.homography import Point
 
 
 def scaled_difference(a: float, b: float, x: float) -> float:

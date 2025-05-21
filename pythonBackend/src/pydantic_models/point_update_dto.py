@@ -1,5 +1,6 @@
 from typing import List, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
+
 
 class Point(BaseModel):
     label: Optional[str] = None
@@ -13,6 +14,8 @@ class PlayerBox(BaseModel):
     y_1: float
     x_2: float
     y_2: float
+
+    model_config = ConfigDict(from_attributes=True)
 
 class PointUpdate(BaseModel):
     video_id: str

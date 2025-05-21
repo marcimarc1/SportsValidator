@@ -1,4 +1,12 @@
-import { Box, Button, Menu, Typography, FormGroup, FormControlLabel, Switch } from "@mui/material";
+import {
+  Box,
+  Button,
+  Menu,
+  Typography,
+  FormGroup,
+  FormControlLabel,
+  Switch,
+} from "@mui/material";
 import React from "react";
 
 export const FieldDetailsButton = ({
@@ -53,7 +61,15 @@ export const FieldDetailsButton = ({
             flexDirection: "column",
           }}
         >
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 16px" }} onClick={handleEnablingField}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              padding: "8px 16px",
+            }}
+            onClick={handleEnablingField}
+          >
             <Typography>Show Field </Typography>
             <FormGroup sx={{ width: "115px" }}>
               <FormControlLabel
@@ -68,7 +84,15 @@ export const FieldDetailsButton = ({
               />
             </FormGroup>
           </div>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 16px" }} onClick={handleEnablingEditField}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              padding: "8px 16px",
+            }}
+            onClick={handleEnablingEditField}
+          >
             <Typography>Edit Field </Typography>
             <FormGroup sx={{ width: "130px" }}>
               <FormControlLabel
@@ -85,15 +109,35 @@ export const FieldDetailsButton = ({
           </div>
           {fieldSize && (
             <>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 16px" }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  padding: "8px 16px",
+                }}
+              >
                 <Typography>Field Width: </Typography>
-                <Typography data-testid="field-menu-width" sx={{ width: "100px", marginLeft: "10px" }}>
+                <Typography
+                  data-testid="field-menu-width"
+                  sx={{ width: "100px", marginLeft: "10px" }}
+                >
                   {fieldSize.width.toFixed(2)}
                 </Typography>
               </div>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 16px" }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  padding: "8px 16px",
+                }}
+              >
                 <Typography>Field Length: </Typography>
-                <Typography data-testid="field-menu-length" sx={{ width: "100px", marginLeft: "10px" }}>
+                <Typography
+                  data-testid="field-menu-length"
+                  sx={{ width: "100px", marginLeft: "10px" }}
+                >
                   {fieldSize.length.toFixed(2)}
                 </Typography>
               </div>

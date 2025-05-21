@@ -1,34 +1,38 @@
+import uuid
+
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy import delete
 from pydantic_csv import BasemodelCSVReader
 
-from ..db.db_models.annotations import Annotation
-from ..db.db_models.homography import HomographyModelSoccerORM
-from ..pydantic_models.homography import HomographyModelSoccerAsList, FieldSectionSoccer, Point, HomographyModelSoccer, HomographyModelTennisAsList
+from db.db_models.annotations import Annotation
+from db.db_models.homography import HomographyModelSoccerORM
+from pydantic_models.homography import HomographyModelSoccerAsList, FieldSectionSoccer, Point, HomographyModelSoccer, HomographyModelTennisAsList
+
+from db.db_models.annotations import Annotation, AnnotationType
+from pydantic_models.annotation import AnnotationsDto, AnnotationDto
 
 
-async def save_annotation_by_csv_path(db: Session, path: str):
-    with open(path) as csv:
-        reader = BasemodelCSVReader(csv, Annotation)
-        try:
-            for annotation in reader:
-                db.add(annotation)
-        except HTTPException as e:
-            return HTTPException(status_code=500, detail="Upload Failed")
-        finally:
-            db.commit()
+async def get_annotations_by_video_id(db: Session, video_id: uuid.UUID, annotationType: AnnotationType):
+    res = (
+        db.query(Annotation)
+           .filter(Annotation.video_id == video_id)
+           .filter(Annotation.type == annotationType)
+           .order_by(Annotation.frame_number)
+           .all()
+    )
+
+    return AnnotationsDto(annotations=[AnnotationDto.model_validate(annotation) for annotation in res])
 
 
-async def get_annotations_by_video_id(db: Session, video_id: int):
-    res = (db.query(Annotation)
-           .where(Annotation.video_id == video_id)
-           .order_by(Annotation.frame_numer))
+async def delete_annotations_by_video_id(db: Session, video_id: uuid.UUID):
+    annotations = db.query(Annotation).filter_by(video_id=video_id).all()
+    for annotation in annotations:
+        db.delete(annotation)
 
-    return res
-
-
-from sqlalchemy.orm import Session
+    db.commit()
+    return {"message": "annotations deleted"}
 
 
 async def save_homo_simple(
@@ -216,7 +220,8 @@ def get_homography_model(session: Session, video_id: str) -> HomographyModelSocc
             goalAreaLeft=deserialize_points(result.goal_area_left),
             goalAreaRight=deserialize_points(result.goal_area_right),
             middleLine=deserialize_points(result.middle_line),
-            penaltySpot=deserialize_points(result.penalty_spot)
+            penaltySpot=deserialize_points(result.penalty_spot),
+            middleCircle=deserialize_points(result.middle_circle)
         )
 
         # Add to the list as a tuple (frame, field_section)
@@ -224,3 +229,65 @@ def get_homography_model(session: Session, video_id: str) -> HomographyModelSocc
 
     # Return as HomographyModelSoccerAsList
     return HomographyModelSoccerAsList.parse_obj(frame_data)
+
+
+async def bulk_save_annotations(
+    db: Session,
+    newPlayer: list[Annotation],
+    newBall: list[Annotation],
+    updated: list[Annotation],
+    deleted: list[uuid.UUID],
+
+):
+    if newPlayer:
+        # Create new annotations
+        for ann in newPlayer:
+            db_obj = Annotation(
+                video_id=ann.video_id,
+                game_id=ann.game_id,
+                frame_number=ann.frame_number,
+                displayName=ann.displayName,
+                x= ann.x,
+                y= ann.y,
+                w= ann.w,
+                h= ann.h,
+                x2= ann.x2,
+                y2= ann.y2,
+                x1= ann.x1,
+                y1= ann.y1,
+                x_trans=ann.x_trans,
+                y_trans=ann.y_trans,
+                type=AnnotationType.Player,
+                in_field=ann.in_field,
+            )
+            db.add(db_obj)
+
+    if newBall:
+        for ann in newBall:
+            db_obj = Annotation(
+                video_id=ann.video_id,
+                game_id=ann.game_id,
+                frame_number=ann.frame_number,
+                displayName=ann.displayName,
+                x2= ann.x2,
+                y2= ann.y2,
+                x1= ann.x1,
+                y1= ann.y1,
+                x_trans=ann.x_trans,
+                y_trans=ann.y_trans,
+                type=AnnotationType.Ball,
+                in_field=ann.in_field,
+            )
+            db.add(db_obj)
+
+    if updated:
+        # Update existing annotations
+        for ann in updated:
+            db_obj = db.query(Annotation).filter(Annotation.id == ann.id).first()
+            if db_obj:
+                for key, value in ann.dict().items():
+                    setattr(db_obj, key, value)
+    if deleted:
+        qry = delete(Annotation).where(Annotation.id.in_(deleted))
+        db.execute(qry)
+    db.commit()

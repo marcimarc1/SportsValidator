@@ -13,7 +13,7 @@ import { EditText, EditTextarea } from "react-edit-text";
 import "react-edit-text/dist/index.css";
 
 import Thumbnail1 from "../../../data/thumbnail_1.jpg"; //"../../../data/Thumbnail_1.jpg"
-import "./FileOverview.css";
+import "./GameOverview.css";
 
 class FileListItem extends Component {
   // image dimensions of original image, need to be changed when changing resolution of thumbnail!
@@ -58,23 +58,6 @@ class FileListItem extends Component {
     let borderStyle = {
       borderRadius: `5px ${thumbnailHeight / 2}px ${thumbnailHeight / 2}px 5px`,
     };
-
-    // // Playing around with custom button styles, not used.
-    // const CustomButton = withStyles({
-    //     root: {
-    //         background: "#2c3a17",
-    //         secondary: "#F00",
-    //         borderRadius: 3,
-    //         border: 0,
-    //         color: "#BBB",
-    //         height: 48,
-    //         padding: "0 30px",
-    //         // boxShadow: "0 3px 5px 2px rgba(255, 105, 135, .3)"
-    //     },
-    //     label: {
-    //         textTransform: "capitalize"
-    //     }
-    // })(props => <Button {...props} />);
 
     return (
       <div

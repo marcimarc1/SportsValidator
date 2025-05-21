@@ -2,7 +2,7 @@ import collections
 import json
 from typing import Union
 
-from ..pydantic_models.homography import (HomographyModelSoccer, HomographyModelSoccerAsList, FieldSectionSoccer,
+from pydantic_models.homography import (HomographyModelSoccer, HomographyModelSoccerAsList, FieldSectionSoccer,
                                           HomographyModelTennis, FieldSectionTennis, HomographyModelTennisAsList)
 
 registered_tests = collections.defaultdict(dict)
@@ -30,6 +30,24 @@ def add_test(test_id: str, module_name: str):
     return decorator
 
 
+def quality_function(data: Union[FieldSectionSoccer, FieldSectionTennis], sport: str) -> dict[str, float]:
+    with open("./active_learning_config.json", "r") as file:
+        config = json.load(file)
+
+    res = {}
+    for test_config in config.get("tests", {}).get(sport.lower(), []):
+        test_id = test_config.get("id")
+        if not test_id:
+            raise KeyError(f"Test with id: {test_id} not found")
+        threshold = test_config.get("threshold")
+        if not threshold:
+            raise KeyError(f"threshold missing for test with id {test_id}")
+        if test_id in registered_tests[sport.lower()] and test_config.get("enabled", True):
+            res[test_id] = registered_tests[sport.lower()][test_id](data, threshold)
+        elif test_id not in registered_tests:
+            print(f"Warning: Test '{test_id}' not found for sport: {sport}")
+    return res
+
 def filter_annotation_data_by_score(data: Union[HomographyModelSoccer, HomographyModelTennis], sport: str) -> Union[
     HomographyModelSoccerAsList, HomographyModelTennisAsList]:
     with open("./active_learning_config.json", "r") as file:
@@ -43,7 +61,7 @@ def filter_annotation_data_by_score(data: Union[HomographyModelSoccer, Homograph
 
     # get 10 lowest
     scored_points.sort()
-    lowest_points = [point for score, point in scored_points[:10]]
+    lowest_points = [point for score, point in scored_points[:config.get("returned_frames", 10)]]
     lowest_points.sort()
     if sport.lower() == "soccer":
         return HomographyModelSoccerAsList.parse_obj(lowest_points)

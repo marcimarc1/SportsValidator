@@ -1,4 +1,20 @@
-{"files": [
-  {"id": 1, "name": "2022-08-01: Team 1 vs. Team 2 - outputx264_fhd_24.mp4", "duration": 94, "videoName" : "outputx264_fhd_24.mp4", "notes": "Result: 3:2, want to look at this again to improve free kicks", "thumbnail": "../../../data/thumbnail_1.jpg" },
-  {"id": 2, "name": "2021-07-15: Team 1 vs. Team 3 - video2", "duration": 96, "videoName" : "video2.mov", "notes": null, "thumbnail": "../../../data/thumbnail_1.jpg" }
-]}
+{
+  "files": [
+    {
+      "id": 1,
+      "name": "2022-08-01: Team 1 vs. Team 2 - outputx264_fhd_24.mp4",
+      "duration": 94,
+      "videoName": "outputx264_fhd_24.mp4",
+      "notes": "Result: 3:2, want to look at this again to improve free kicks",
+      "thumbnail": "../../../data/thumbnail_1.jpg"
+    },
+    {
+      "id": 2,
+      "name": "2021-07-15: Team 1 vs. Team 3 - video2",
+      "duration": 96,
+      "videoName": "video2.mov",
+      "notes": null,
+      "thumbnail": "../../../data/thumbnail_1.jpg"
+    }
+  ]
+}

@@ -1,9 +1,11 @@
-from typing import List
 import cv2
 import os
-from ...pydantic_models.point_update_dto import PlayerBox, PointUpdate, Point, TrackingResult
-from ...util import is_valid_path
-from .tracking_helper_functions import get_part_of_image, is_point_near_player_box, smooth_points
+
+from logic.helper.util import is_valid_path
+from logic.tracking.tracking_helper_functions import get_part_of_image
+
+from pydantic_models.point_update_dto import PlayerBox, PointUpdate, Point, TrackingResult
+from pydantic_models.point_update_dto import PointUpdate, Point, TrackingResult
 
 #OPTIONS
 BOUNDING_BOX_SIZE = 25
@@ -24,6 +26,7 @@ async def track_points_logic(dto: PointUpdate):
         raise ValueError(f"Could not open video file {video_path}")
 
     ret, old_frame = cap.read()
+
     trackers = []
     initial_points = dto.points if isinstance(dto.points, list) else [dto.points]
     for point in initial_points:
@@ -41,6 +44,7 @@ async def track_points_logic(dto: PointUpdate):
     tracked_points = [initial_points]
 
     frame_count = 0
+    frame_skip = 1
 
     cap.set(
         cv2.CAP_PROP_POS_FRAMES, dto.start_frame
