@@ -9,8 +9,6 @@ export const modalBallOpen =
     setBallChosenInList(ballInList);
     setMergeModalBallState(true);
     console.log("test2");
-
-
   };
 
 export const modalsClose =

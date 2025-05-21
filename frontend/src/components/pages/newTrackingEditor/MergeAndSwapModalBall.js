@@ -41,16 +41,22 @@ export default function MergeAndSwapModalBall({
   const [operation, setOperation] = useState("swap");
   const menuItems = useMemo(
     () =>
-      Array.from(annotationBallTracks.map(a => {
-        if (a.displayName !== ballChosenInList) {
-          const testid = "menuitem" + a.displayName;
-          return (
-            <MenuItem key={a.displayName} data-testid={testid} value={a.displayName}>
-              {a.displayName}
-            </MenuItem>
-          );
-        }
-      })),
+      Array.from(
+        annotationBallTracks.map((a) => {
+          if (a.displayName !== ballChosenInList) {
+            const testid = "menuitem" + a.displayName;
+            return (
+              <MenuItem
+                key={a.displayName}
+                data-testid={testid}
+                value={a.displayName}
+              >
+                {a.displayName}
+              </MenuItem>
+            );
+          }
+        }),
+      ),
     [annotationBallTracks, ballChosenInList],
   );
 
@@ -61,22 +67,22 @@ export default function MergeAndSwapModalBall({
   const handleClick = () => {
     if (operation === "swap")
       swapData(
-          selectedBall,
-          ballChosenInList,
-          annotationBallTracks,
-          setAnnotationBallTracks,
-          setUpdateAnnotations,
-          setDeleteAnnotations,
-          frameNumber,
+        selectedBall,
+        ballChosenInList,
+        annotationBallTracks,
+        setAnnotationBallTracks,
+        setUpdateAnnotations,
+        setDeleteAnnotations,
+        frameNumber,
       );
     else
       mergeData(
-          selectedBall,
-          ballChosenInList,
-          annotationBallTracks,
-          setAnnotationBallTracks,
-          setUpdateAnnotations,
-          setDeleteAnnotations,
+        selectedBall,
+        ballChosenInList,
+        annotationBallTracks,
+        setAnnotationBallTracks,
+        setUpdateAnnotations,
+        setDeleteAnnotations,
       );
     handleClose();
   };

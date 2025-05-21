@@ -1,8 +1,5 @@
 // multiSelectHandlers.js
-import {
-  multiMerge,
-  multiBallTrailsDelete,
-} from "../../../utils/validation";
+import { multiMerge, multiBallTrailsDelete } from "../../../utils/validation";
 
 export const handleMultiSelectMerge = (
   selectedTrails,
@@ -10,16 +7,16 @@ export const handleMultiSelectMerge = (
   annotations,
   setAnnotations,
   alteredAnnotations,
-  setAlteredAnnotations
+  setAlteredAnnotations,
 ) => {
   console.log("Multiplayer merge");
   console.log(Array.from(selectedTrails));
   multiMerge(
-      Array.from(selectedTrails),
-      annotations,
-      setAnnotations,
-      alteredAnnotations,
-      setAlteredAnnotations,
+    Array.from(selectedTrails),
+    annotations,
+    setAnnotations,
+    alteredAnnotations,
+    setAlteredAnnotations,
   );
   setSelectedTrails([]);
 };
@@ -38,8 +35,8 @@ export const handleMultiSelectMergeBall = (
     Array.from(selectedTrailsBall),
     annotationBallTracks,
     setAnnotationBallTracks,
-      alteredAnnotations,
-      setAlteredAnnotations,
+    alteredAnnotations,
+    setAlteredAnnotations,
   );
   setSelectedTrailsBall([]);
 };

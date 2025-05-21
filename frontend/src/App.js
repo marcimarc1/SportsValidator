@@ -71,10 +71,10 @@ class App extends Component {
           </Route>
 
           <Route exact path="/videos/:id">
-            <VideoOverview/>
+            <VideoOverview />
           </Route>
 
-	  <Route exact path="/refinment/:id">
+          <Route exact path="/refinment/:id">
             <Header />
             <RefinmentEditor />
           </Route>

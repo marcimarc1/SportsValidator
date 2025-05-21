@@ -60,18 +60,23 @@ export const deleteEntity = (
   canvas.setActiveObject(playerBox);
   playerBox.my.selected = false;
   // Reset the selection
-  let ids = annotations.filter(a => a.displayName === playerBox.my.key).map(a => a.id??null);
+  let ids = annotations
+    .filter((a) => a.displayName === playerBox.my.key)
+    .map((a) => a.id ?? null);
 
-  if(ids.length > 0){
-    setDeleteAnnotations((prevDeleteAnnotations) => [...prevDeleteAnnotations, ...ids]);
+  if (ids.length > 0) {
+    setDeleteAnnotations((prevDeleteAnnotations) => [
+      ...prevDeleteAnnotations,
+      ...ids,
+    ]);
     setAnnotations((prevAnnotations) =>
-        prevAnnotations.filter((a) => a.displayName !== playerBox.my.key),
+      prevAnnotations.filter((a) => a.displayName !== playerBox.my.key),
     );
     setNewAnnotations((prevAnnotations) =>
-        prevAnnotations.filter((a) => a.displayName !== playerBox.my.key),
+      prevAnnotations.filter((a) => a.displayName !== playerBox.my.key),
     );
     setUpdateAnnotations((prevAnnotations) =>
-        prevAnnotations.filter((a) => a.displayName !== playerBox.my.key),
+      prevAnnotations.filter((a) => a.displayName !== playerBox.my.key),
     );
   }
 
@@ -79,43 +84,42 @@ export const deleteEntity = (
     prevBoxes.filter((a) => a.my.key !== playerBox.my.key),
   );
 
-
   refreshSidebar();
   canvas.discardActiveObject();
   canvas.remove(playerBox);
   canvas.requestRenderAll();
 };
 
-
 export const setName = (
-    canvas,
-    playerBox,
-    newName,
-    annotations,
-    setAnnotations,
-    alteredAnnotations,
-    setAlteredAnnotations) => {
+  canvas,
+  playerBox,
+  newName,
+  annotations,
+  setAnnotations,
+  alteredAnnotations,
+  setAlteredAnnotations,
+) => {
   fabric.Object.prototype.objectCaching = false;
   let oldName = playerBox.my.key;
   debugger;
   //update Annotations
-  const updates= []
+  const updates = [];
   annotations.map((a) => {
     if (a.displayName === oldName) {
-      a = {...a, displayName: newName};
+      a = { ...a, displayName: newName };
       updates.push(a);
       return a;
     }
     return a;
-  })
+  });
   //update Updates
   alteredAnnotations.map((a) => {
     if (a.displayName === oldName) {
-      a = {...a, displayName: newName};
+      a = { ...a, displayName: newName };
       return a;
     }
     return a;
-  })
+  });
   setAnnotations(annotations);
   setAlteredAnnotations([...alteredAnnotations, ...updates]);
   canvas.requestRenderAll();

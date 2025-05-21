@@ -211,7 +211,7 @@ input[type="file"] {
   display: none;
 }
 
-.FileButton{
+.FileButton {
   background-color: var(--main-text-color);
   margin-left: 1em;
   border: 3px solid #ccc;
@@ -262,9 +262,9 @@ input[type="file"] {
   justify-content: space-between;
 }
 
-.FormRow{
+.FormRow {
   margin-bottom: 5px;
-  margin-top:  5px;
+  margin-top: 5px;
 }
 
 .selected-files-list > ul > li > button {

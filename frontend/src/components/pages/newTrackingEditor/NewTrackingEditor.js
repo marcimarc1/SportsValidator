@@ -1,31 +1,31 @@
-import React, {useRef, useState, useEffect, useCallback} from "react";
-import {useParams} from "react-router";
-import {ReactComponent as PlayIcon} from "../../../icons/play.svg";
-import {ReactComponent as PauseIcon} from "../../../icons/pause.svg";
-import {ReactComponent as ForwardStepIcon} from "../../../icons/forward-step.svg";
-import {ReactComponent as BackwardStepIcon} from "../../../icons/backward-step.svg";
+import React, { useRef, useState, useEffect, useCallback } from "react";
+import { useParams } from "react-router";
+import { ReactComponent as PlayIcon } from "../../../icons/play.svg";
+import { ReactComponent as PauseIcon } from "../../../icons/pause.svg";
+import { ReactComponent as ForwardStepIcon } from "../../../icons/forward-step.svg";
+import { ReactComponent as BackwardStepIcon } from "../../../icons/backward-step.svg";
 import { ReactComponent as AdjustSpeedIcon } from "../../../icons/adjust-speed.svg";
 import { ReactComponent as QuestionIcon } from "../../../icons/question.svg";
 import { ReactComponent as KeyboardIcon } from "../../../icons/keyboard.svg";
-import {useLocation, useBlocker} from "react-router-dom";
+import { useLocation, useBlocker } from "react-router-dom";
 import {
-    convertBoxToAnnotation,
-    convertAnnotationToBox,
-    convertAnnotationBallToBallbox,
-    convertBallboxToAnnotationBall,
+  convertBoxToAnnotation,
+  convertAnnotationToBox,
+  convertAnnotationBallToBallbox,
+  convertBallboxToAnnotationBall,
 } from "../../../utils/AnnotationBoxConverter";
 // import tracking from "../../../data/tracking_data.json";
 // import tracking from "../../../data/tracking-data-for-tests.json";
-import {fabric} from "fabric";
+import { fabric } from "fabric";
 import "./NewTrackingEditor.css";
 import SeekBar from "./SeekBar";
 import {
-    FormGroup,
-    Switch,
-    FormControlLabel,
-    Button,
-    Box,
-    Typography,
+  FormGroup,
+  Switch,
+  FormControlLabel,
+  Button,
+  Box,
+  Typography,
 } from "@mui/material";
 import TextField from "@mui/material/TextField";
 import config from "../../../config.json";
@@ -37,16 +37,13 @@ import MergeAndSwapModal from "./MergeAndSwapModal";
 import MergeAndSwapModalBall from "./MergeAndSwapModalBall";
 import ApplyHomographyModal from "./ApplyHomographyModal";
 import {
-    trailsFullRedraw,
-    drawFieldPoints,
-    defineTrailBehaviour,
-    defineTrailBehaviourBall,
-    updateHomography,
+  trailsFullRedraw,
+  drawFieldPoints,
+  defineTrailBehaviour,
+  defineTrailBehaviourBall,
+  updateHomography,
 } from "../../../utils/canvasUtils";
-import {
-    multiMerge,
-    multiBallTrailsDelete,
-} from "../../../utils/validation";
+import { multiMerge, multiBallTrailsDelete } from "../../../utils/validation";
 import { DownloadButton } from "./DownloadButton";
 import { parseLogFile } from "../../../utils/logFileParser";
 import Slider from "@mui/material/Slider";
@@ -57,11 +54,7 @@ import { SettingsTrailsButton } from "./SettingsTrailsButton";
 import LoadingOverlay from "react-loading-overlay-ts";
 import { getPointsToTrack } from "../../../utils/templates";
 import { modalBallOpen, modalOpen, modalsClose } from "./modalHandler";
-import {
-  blink,
-  deleteEntity,
-  setName,
-} from "./canvasUtils";
+import { blink, deleteEntity, setName } from "./canvasUtils";
 import { generatePoster } from "./postGenerator";
 import { updateSidebar } from "./sidebarUpdater";
 import { generateColor } from "../../../utils/colorGenerator";
@@ -76,139 +69,145 @@ import AnnotationController from "../../../controllers/annotation.controller";
 import VideoController from "../../../controllers/video.controller";
 
 const NewTrackingEditor = () => {
-    const location = useLocation();
-    const [videoId, setVideoId] = useState("");
-    const [gameId, setGameId] = useState("");
-    const [video, setVideo] = useState(null);
-    const [videoMetadata, setVideoMetadata] = useState(null);
-    const [homographies, setHomographies] = useState(null);
-    const [fieldSize, setFieldSize] = useState(null);
-    const [annotations, setAnnotations] = useState([]);
-    const [newAnnotations, setNewAnnotations] = useState([]);
-    const [alteredAnnotations, setAlteredAnnotations] = useState([]);
-    const [deleteAnnotations, setDeleteAnnotations] = useState([]);
-    const [newBallAnnotations, setNewBallAnnotations] = useState([]);
-    const [canvas, setCanvas] = useState(new fabric.Canvas());
-    const [videoUrl, setVideoUrl] = useState("");
-    const [frameNumber, setFrameNumber] = useState(0);
-    const [timestamp, setTimestamp] = useState(0);
-    const [videoElement, setVideoElement] = useState(null);
-    const [isPlaying, setIsPlaying] = useState(false);
-    const [progress, setProgress] = useState(0);
-    const [isDownloadingVideo, setIsDownloadingVideo] = useState(false);
-    const [isShowingBox, setIsShowingBox] = useState(true);
-    const [isShowingAnnotation, setIsShowingAnnotation] = useState(true);
-    const [playerList, setPlayerList] = useState([]); //list of player TrackListItemPlayers
-    const [teams, setTeams] = useState([]);
-    const [teamColors, setTeamColors] = useState({});
-    const [canvasBoxes, setCanvasBoxes] = useState([]); //list of canvas boxes for player
-    const [activeObject, setActiveObject] = useState(null);
-    const [colorSet, setColorSet] = useState(new Map()); //map of playerkey to color
-    const [trailsEnabled, setTrailsEnabled] = useState(true);
-    const [trailFrameNumber, setTrailFrameNumber] = useState(50);
-    const [mergeModalState, setMergeModalState] = useState(false);
-    const [playerChosenInList, setPlayerChosenInList] = useState("");
-    const [showField, setShowField] = useState(false);
-    const [editField, setEditField] = useState(false);
-    let [wasVideoPlaying, setWasVideoPlaying] = useState(false);
-    const [logFile, setLogFile] = useState(null);
-    const [selectedTrails, setSelectedTrails] = useState(new Set());
-    const [trailSize, setTrailSize] = useState(50);
-    const [drawInField, setDrawInField] = useState(false);
-    const [showApplyHomographyModal, setShowApplyHomographyModal] =
-        useState(false);
-    const [fieldPoints, setFieldPoints] = useState([]);
-    const [isShowingPlayerTrails, setIsShowingPlayerTrails] = useState(true);
-    const [annotationBallTracks, setAnnotationBallTracks] = useState([]);
-    const [ballList, setBallList] = useState([]); //list of ball TrackListItemBall
-    const [canvasBoxesBall, setCanvasBoxesBall] = useState([]); //list of canvas boxes for ball
-    const [colorSetBall, setColorSetBall] = useState(new Map()); //map of ballkey to color
-    const [ballChosenInList, setBallChosenInList] = useState(""); //ball which is selected in sidebar
-    const [mergeModalBallState, setMergeModalBallState] = useState(false);
-    const [isShowingBallBox, setIsShowingBallBox] = useState(true);
-    const [isShowingBallTrails, setIsShowingBallTrails] = useState(true);
-    const [selectedTrailsBall, setSelectedTrailsBall] = useState([]);
-    const [loading, setLoading] = useState(false);
-    const [loaderText, setLoaderText] = useState("Loading...");
-    const [videoSpeed, setVideoSpeed] = useState(1);
-    const [isZoomModeEnabled, setIsZoomModeEnabled] = useState(false);
-    const [zoomStatus, setZoomStatus] = useState("Enable Zoom Mode");
-    const [isTooltipVisible, setTooltipVisible] = useState(false);
-    const [bindingAction, setBindingAction] = useState(null);
-    const [keyBindings, setKeyBindings] = useState({
-      playPause: config.general.keyBindings.playPause,
-      nextFrame: config.general.keyBindings.nextFrame,
-      previousFrame: config.general.keyBindings.previousFrame,
-      jumpForward: config.general.keyBindings.jumpForward,
-      jumpBackward: config.general.keyBindings.jumpBackward,
-      ZoomModeEnabled: config.general.keyBindings.ZoomModeEnabled,
-    });
+  const location = useLocation();
+  const [videoId, setVideoId] = useState("");
+  const [gameId, setGameId] = useState("");
+  const [video, setVideo] = useState(null);
+  const [videoMetadata, setVideoMetadata] = useState(null);
+  const [homographies, setHomographies] = useState(null);
+  const [fieldSize, setFieldSize] = useState(null);
+  const [annotations, setAnnotations] = useState([]);
+  const [newAnnotations, setNewAnnotations] = useState([]);
+  const [alteredAnnotations, setAlteredAnnotations] = useState([]);
+  const [deleteAnnotations, setDeleteAnnotations] = useState([]);
+  const [newBallAnnotations, setNewBallAnnotations] = useState([]);
+  const [canvas, setCanvas] = useState(new fabric.Canvas());
+  const [videoUrl, setVideoUrl] = useState("");
+  const [frameNumber, setFrameNumber] = useState(0);
+  const [timestamp, setTimestamp] = useState(0);
+  const [videoElement, setVideoElement] = useState(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [isDownloadingVideo, setIsDownloadingVideo] = useState(false);
+  const [isShowingBox, setIsShowingBox] = useState(true);
+  const [isShowingAnnotation, setIsShowingAnnotation] = useState(true);
+  const [playerList, setPlayerList] = useState([]); //list of player TrackListItemPlayers
+  const [teams, setTeams] = useState([]);
+  const [teamColors, setTeamColors] = useState({});
+  const [canvasBoxes, setCanvasBoxes] = useState([]); //list of canvas boxes for player
+  const [activeObject, setActiveObject] = useState(null);
+  const [colorSet, setColorSet] = useState(new Map()); //map of playerkey to color
+  const [trailsEnabled, setTrailsEnabled] = useState(true);
+  const [trailFrameNumber, setTrailFrameNumber] = useState(50);
+  const [mergeModalState, setMergeModalState] = useState(false);
+  const [playerChosenInList, setPlayerChosenInList] = useState("");
+  const [showField, setShowField] = useState(false);
+  const [editField, setEditField] = useState(false);
+  let [wasVideoPlaying, setWasVideoPlaying] = useState(false);
+  const [logFile, setLogFile] = useState(null);
+  const [selectedTrails, setSelectedTrails] = useState(new Set());
+  const [trailSize, setTrailSize] = useState(50);
+  const [drawInField, setDrawInField] = useState(false);
+  const [showApplyHomographyModal, setShowApplyHomographyModal] =
+    useState(false);
+  const [fieldPoints, setFieldPoints] = useState([]);
+  const [isShowingPlayerTrails, setIsShowingPlayerTrails] = useState(true);
+  const [annotationBallTracks, setAnnotationBallTracks] = useState([]);
+  const [ballList, setBallList] = useState([]); //list of ball TrackListItemBall
+  const [canvasBoxesBall, setCanvasBoxesBall] = useState([]); //list of canvas boxes for ball
+  const [colorSetBall, setColorSetBall] = useState(new Map()); //map of ballkey to color
+  const [ballChosenInList, setBallChosenInList] = useState(""); //ball which is selected in sidebar
+  const [mergeModalBallState, setMergeModalBallState] = useState(false);
+  const [isShowingBallBox, setIsShowingBallBox] = useState(true);
+  const [isShowingBallTrails, setIsShowingBallTrails] = useState(true);
+  const [selectedTrailsBall, setSelectedTrailsBall] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [loaderText, setLoaderText] = useState("Loading...");
+  const [videoSpeed, setVideoSpeed] = useState(1);
+  const [isZoomModeEnabled, setIsZoomModeEnabled] = useState(false);
+  const [zoomStatus, setZoomStatus] = useState("Enable Zoom Mode");
+  const [isTooltipVisible, setTooltipVisible] = useState(false);
+  const [bindingAction, setBindingAction] = useState(null);
+  const [keyBindings, setKeyBindings] = useState({
+    playPause: config.general.keyBindings.playPause,
+    nextFrame: config.general.keyBindings.nextFrame,
+    previousFrame: config.general.keyBindings.previousFrame,
+    jumpForward: config.general.keyBindings.jumpForward,
+    jumpBackward: config.general.keyBindings.jumpBackward,
+    ZoomModeEnabled: config.general.keyBindings.ZoomModeEnabled,
+  });
 
-    const checkIsDirty = useCallback(()=>{
-        return alteredAnnotations.length !== 0
-            || newBallAnnotations.length !== 0
-            || newAnnotations.length !== 0
-            || deleteAnnotations.length !== 0;
+  const checkIsDirty = useCallback(() => {
+    return (
+      alteredAnnotations.length !== 0 ||
+      newBallAnnotations.length !== 0 ||
+      newAnnotations.length !== 0 ||
+      deleteAnnotations.length !== 0
+    );
+  }, [
+    alteredAnnotations,
+    newBallAnnotations,
+    newAnnotations,
+    deleteAnnotations,
+  ]);
 
-        },[alteredAnnotations, newBallAnnotations, newAnnotations, deleteAnnotations]);
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (checkIsDirty) return;
+      e.preventDefault();
+      e.returnValue = "";
+    };
 
-    useEffect(() => {
-        const handleBeforeUnload = (e) => {
-            if (checkIsDirty) return;
-            e.preventDefault();
-            e.returnValue = '';
-        };
-
-        window.addEventListener('beforeunload', handleBeforeUnload);
-        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-    }, [checkIsDirty]);
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [checkIsDirty]);
 
   const handleModalOpen = modalOpen(setPlayerChosenInList, setMergeModalState);
   const handleModalBallOpen = modalBallOpen(
-      setBallChosenInList,
-      setMergeModalBallState,
+    setBallChosenInList,
+    setMergeModalBallState,
   );
   const handleModalsClose = modalsClose(
-      setMergeModalState,
-      setMergeModalBallState,
+    setMergeModalState,
+    setMergeModalBallState,
   );
 
-    const handleMultiSelectMerge = () => {
-        console.log("Multiplayer merge");
-        console.log(Array.from(selectedTrails));
-        multiMerge(
-            Array.from(selectedTrails),
-            annotations,
-            setAnnotations,
-            alteredAnnotations,
-            setAlteredAnnotations,
-        );
-        setSelectedTrails([]);
-    };
+  const handleMultiSelectMerge = () => {
+    console.log("Multiplayer merge");
+    console.log(Array.from(selectedTrails));
+    multiMerge(
+      Array.from(selectedTrails),
+      annotations,
+      setAnnotations,
+      alteredAnnotations,
+      setAlteredAnnotations,
+    );
+    setSelectedTrails([]);
+  };
 
-    const handleMultiSelectMergeBall = () => {
-        console.log("Multiplayer merge ball");
-        console.log(Array.from(selectedTrailsBall));
-        multiMerge(
-            Array.from(selectedTrailsBall),
-            annotationBallTracks,
-            setAnnotationBallTracks,
-            alteredAnnotations,
-            setAlteredAnnotations,
-        );
-        setSelectedTrailsBall([]);
-    };
+  const handleMultiSelectMergeBall = () => {
+    console.log("Multiplayer merge ball");
+    console.log(Array.from(selectedTrailsBall));
+    multiMerge(
+      Array.from(selectedTrailsBall),
+      annotationBallTracks,
+      setAnnotationBallTracks,
+      alteredAnnotations,
+      setAlteredAnnotations,
+    );
+    setSelectedTrailsBall([]);
+  };
 
-    const handleMultiBallTrailsDelete = () => {
-        console.log("Multiplayer delete ball trails");
-        console.log(Array.from(selectedTrailsBall));
-        multiBallTrailsDelete(
-            Array.from(selectedTrailsBall),
-            annotationBallTracks,
-            setAnnotationBallTracks,
-        );
-        setSelectedTrailsBall([]);
-    };
+  const handleMultiBallTrailsDelete = () => {
+    console.log("Multiplayer delete ball trails");
+    console.log(Array.from(selectedTrailsBall));
+    multiBallTrailsDelete(
+      Array.from(selectedTrailsBall),
+      annotationBallTracks,
+      setAnnotationBallTracks,
+    );
+    setSelectedTrailsBall([]);
+  };
 
   const addTeam = (color) => {
     const newTeamId = teams.length + 1;
@@ -263,117 +262,127 @@ const NewTrackingEditor = () => {
     drawBoundingBoxes(frameNumber);
   };
 
-    const canvasRef = useRef(null);
-    const frameDuration = 1001 / 24000; // TODO Get this information from the backend
-    // could be used to display annotations in canvas
+  const canvasRef = useRef(null);
+  const frameDuration = 1001 / 24000; // TODO Get this information from the backend
+  // could be used to display annotations in canvas
 
-    useEffect(async () => {
-        // Load Video File:
-        const path = window.location.pathname;
-        const videoId = path.substring(path.lastIndexOf("/") + 1);
-        setVideoId(videoId)
+  useEffect(async () => {
+    // Load Video File:
+    const path = window.location.pathname;
+    const videoId = path.substring(path.lastIndexOf("/") + 1);
+    setVideoId(videoId);
 
-        const video = await VideoController.getById(videoId);
-        setGameId(video.data.game_id);
+    const video = await VideoController.getById(videoId);
+    setGameId(video.data.game_id);
 
-        try {
-            await fetchVideo(videoId)
-            await fetchPlayerAnnotations(videoId);
-            await fetchBallAnnotations(videoId);
-        } catch (error) {
-            console.error(error)
-        }
-    }, []);
-
-    async function fetchVideo(videoId) {
-        setLoaderText("Loading Video...")
-        setLoading(true);
-        try {
-            console.log("Loading Video File")
-            const response = await api.get("/video/get_video_file/" + videoId, {
-                responseType: "blob"
-            });
-
-            const videoBlob = new Blob([response.data], {type: "video/mp4"});
-            const videoURL = URL.createObjectURL(videoBlob); // Create an object URL
-            setVideoUrl(videoURL);
-            console.log("Setting the video URL")
-            return videoURL
-        } finally {
-            setLoading(false);
-        }
-
+    try {
+      await fetchVideo(videoId);
+      await fetchPlayerAnnotations(videoId);
+      await fetchBallAnnotations(videoId);
+    } catch (error) {
+      console.error(error);
     }
+  }, []);
 
-    async function fetchPlayerAnnotations(videoId) {
-        setLoaderText("Loading Player Annotations...")
-        setLoading(true);
-        try {
-            console.log("Loading Annotations")
-            const playerAnnotationsResponse = await api.get("/annotation/getPlayers/" + videoId);
-            const playerAnnotations = playerAnnotationsResponse.data.annotations;
-            const set = new Map(boundingBoxColorSet(playerAnnotations));
-            setColorSet(set);
-            setAnnotations(playerAnnotations);
-        } finally {
-            setLoading(false);
-        }
+  async function fetchVideo(videoId) {
+    setLoaderText("Loading Video...");
+    setLoading(true);
+    try {
+      console.log("Loading Video File");
+      const response = await api.get("/video/get_video_file/" + videoId, {
+        responseType: "blob",
+      });
+
+      const videoBlob = new Blob([response.data], { type: "video/mp4" });
+      const videoURL = URL.createObjectURL(videoBlob); // Create an object URL
+      setVideoUrl(videoURL);
+      console.log("Setting the video URL");
+      return videoURL;
+    } finally {
+      setLoading(false);
     }
+  }
 
-    async function fetchBallAnnotations(videoId) {
-        setLoaderText("Loading Ball Annotations...")
-        setLoading(true);
-        try {
-            const ballAnnotationResponse = await api.get("/annotation/getBalls/" + videoId);
-            const ballAnnotations = ballAnnotationResponse.data.annotations;
-            const set = new Map(boundingBoxColorSet(ballAnnotations));
-            setColorSetBall(set);
-            setAnnotationBallTracks(ballAnnotations)
-        } finally {
-            setLoading(false);
-        }
+  async function fetchPlayerAnnotations(videoId) {
+    setLoaderText("Loading Player Annotations...");
+    setLoading(true);
+    try {
+      console.log("Loading Annotations");
+      const playerAnnotationsResponse = await api.get(
+        "/annotation/getPlayers/" + videoId,
+      );
+      const playerAnnotations = playerAnnotationsResponse.data.annotations;
+      const set = new Map(boundingBoxColorSet(playerAnnotations));
+      setColorSet(set);
+      setAnnotations(playerAnnotations);
+    } finally {
+      setLoading(false);
     }
+  }
 
-    const handleSave = () => {
-        saveChanges()
-    };
-
-    const resetTrackedChanges = () => {
-        setAlteredAnnotations([])
-        setNewAnnotations([])
-        setNewBallAnnotations([])
-        setDeleteAnnotations([])
+  async function fetchBallAnnotations(videoId) {
+    setLoaderText("Loading Ball Annotations...");
+    setLoading(true);
+    try {
+      const ballAnnotationResponse = await api.get(
+        "/annotation/getBalls/" + videoId,
+      );
+      const ballAnnotations = ballAnnotationResponse.data.annotations;
+      const set = new Map(boundingBoxColorSet(ballAnnotations));
+      setColorSetBall(set);
+      setAnnotationBallTracks(ballAnnotations);
+    } finally {
+      setLoading(false);
     }
+  }
 
-    async function saveChanges(){
-        if( newAnnotations.length===0 && newBallAnnotations.length===0 && alteredAnnotations.length===0 && deleteAnnotations.length===0){
-            toast.error("No pending changes");
-            return;
-        }
-        debugger;
-        try {
-            setLoaderText("Saving Changes...");
-            setLoading(true);
-            const data ={
-                newAnnotations: newAnnotations.length>0 ? newAnnotations : null,
-                newBallAnnotations: newBallAnnotations.length>0 ? newBallAnnotations : null,
-                updatedAnnotations: alteredAnnotations.length>0 ? alteredAnnotations : null,
-                deletedAnnotations: deleteAnnotations.length>0 ? deleteAnnotations : null,
-            }
-            const json_data = JSON.stringify(data);
-            const response = await AnnotationController.saveChanges(json_data);
+  const handleSave = () => {
+    saveChanges();
+  };
 
-            resetTrackedChanges()
+  const resetTrackedChanges = () => {
+    setAlteredAnnotations([]);
+    setNewAnnotations([]);
+    setNewBallAnnotations([]);
+    setDeleteAnnotations([]);
+  };
 
-            toast.success("Saved changes.");
-        } catch (error) {
-            toast.error(error.message);
-            console.log("Error while saving changes", error);
-        }
-        finally {
-            setLoading(false);
-        }
+  async function saveChanges() {
+    if (
+      newAnnotations.length === 0 &&
+      newBallAnnotations.length === 0 &&
+      alteredAnnotations.length === 0 &&
+      deleteAnnotations.length === 0
+    ) {
+      toast.error("No pending changes");
+      return;
     }
+    debugger;
+    try {
+      setLoaderText("Saving Changes...");
+      setLoading(true);
+      const data = {
+        newAnnotations: newAnnotations.length > 0 ? newAnnotations : null,
+        newBallAnnotations:
+          newBallAnnotations.length > 0 ? newBallAnnotations : null,
+        updatedAnnotations:
+          alteredAnnotations.length > 0 ? alteredAnnotations : null,
+        deletedAnnotations:
+          deleteAnnotations.length > 0 ? deleteAnnotations : null,
+      };
+      const json_data = JSON.stringify(data);
+      const response = await AnnotationController.saveChanges(json_data);
+
+      resetTrackedChanges();
+
+      toast.success("Saved changes.");
+    } catch (error) {
+      toast.error(error.message);
+      console.log("Error while saving changes", error);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   const refreshSidebar = () => {
     updateSidebar({
@@ -395,154 +404,154 @@ const NewTrackingEditor = () => {
     });
   };
 
-    function updateSidebar() {
-        let tempList = [];
-        let runningIndex = 0;
-        let boxes = canvasBoxes.filter(
-            (box) => box.my.frame == getCurrentTimestampFrame(),
-        );
-        boxes.forEach((box) => {
-            const boxColor = colorSet.get(box.displayName);
+  function updateSidebar() {
+    let tempList = [];
+    let runningIndex = 0;
+    let boxes = canvasBoxes.filter(
+      (box) => box.my.frame == getCurrentTimestampFrame(),
+    );
+    boxes.forEach((box) => {
+      const boxColor = colorSet.get(box.displayName);
 
-            tempList = tempList.concat([
-                <TrackListItemPlayer
-                    key={runningIndex++}
-                    playerBox={box}
-                    name={box.displayName}
-                    changeSelection={changeSelection}
-                    setName={handleSetName}
-                    blink={blink}
-                    delete={handleDeletePlayer}
-                    color={boxColor}
-                    handleModalOpen={handleModalOpen}
-                />,
-            ]);
-            runningIndex++;
-        });
-        setPlayerList(tempList);
-        tempList = [];
-        runningIndex = 0;
-        let ballBoxes = canvasBoxesBall.filter(
-            (box) => box.my.frame === getCurrentTimestampFrame(),
-        );
-        ballBoxes.forEach((box) => {
-            const boxColor = colorSetBall.get(box.displayName);
+      tempList = tempList.concat([
+        <TrackListItemPlayer
+          key={runningIndex++}
+          playerBox={box}
+          name={box.displayName}
+          changeSelection={changeSelection}
+          setName={handleSetName}
+          blink={blink}
+          delete={handleDeletePlayer}
+          color={boxColor}
+          handleModalOpen={handleModalOpen}
+        />,
+      ]);
+      runningIndex++;
+    });
+    setPlayerList(tempList);
+    tempList = [];
+    runningIndex = 0;
+    let ballBoxes = canvasBoxesBall.filter(
+      (box) => box.my.frame === getCurrentTimestampFrame(),
+    );
+    ballBoxes.forEach((box) => {
+      const boxColor = colorSetBall.get(box.displayName);
 
-            tempList = tempList.concat([
-                <TrackListItemBall
-                    key={runningIndex++}
-                    ballBox={box}
-                    name={box.displayName}
-                    changeSelection={changeSelection}
-                    setName={handleSetNameBall}
-                    blink={blink}
-                    delete={handleDeleteBall}
-                    color={boxColor}
-                    handleModalOpen={handleModalBallOpen}
-                />,
-            ]);
-            runningIndex++;
-        });
-        setBallList(tempList);
-    }
+      tempList = tempList.concat([
+        <TrackListItemBall
+          key={runningIndex++}
+          ballBox={box}
+          name={box.displayName}
+          changeSelection={changeSelection}
+          setName={handleSetNameBall}
+          blink={blink}
+          delete={handleDeleteBall}
+          color={boxColor}
+          handleModalOpen={handleModalBallOpen}
+        />,
+      ]);
+      runningIndex++;
+    });
+    setBallList(tempList);
+  }
 
-    const handleBlink = (playerBox) => {
-        blink(canvas, playerBox, setActiveObject);
-    };
-
-    const handleSetName = (playerBox, name) => {
-        setName(
-            canvas,
-            playerBox,
-            name,
-            annotations,
-            setAnnotations,
-            alteredAnnotations,
-            setAlteredAnnotations
-        );
-        drawBoundingBoxes(frameNumber);
-    };
-
-    const handleDeletePlayer = (playerBox) => {
-        deleteEntity(
-            canvas,
-            playerBox,
-            annotations,
-            setAnnotations,
-            setNewAnnotations,
-            setAlteredAnnotations,
-            setDeleteAnnotations,
-            setCanvasBoxes,
-            refreshSidebar,
-        );
-    };
-    const handleDeleteBall = (ballBox) => {
-        deleteEntity(
-            canvas,
-            ballBox,
-            annotationBallTracks,
-            setAnnotationBallTracks,
-            setNewBallAnnotations,
-            setAlteredAnnotations,
-            setDeleteAnnotations,
-            setCanvasBoxes,
-            refreshSidebar,
-        );
-    };
-
-  const handleSetNameBall = (ballBox, name) => {
-      setName(
-          canvas,
-          ballBox,
-          name,
-          annotationBallTracks,
-          setAnnotationBallTracks,
-          alteredAnnotations,
-          setAlteredAnnotations,
-      );
+  const handleBlink = (playerBox) => {
+    blink(canvas, playerBox, setActiveObject);
   };
 
-    function boxInCanvas(boxToCheck) {
-        //check if the box is in the canvas
-        canvasBoxes.forEach((box) => {
-            if (box === boxToCheck) {
-                return true;
-            }
-        });
-        canvasBoxesBall.forEach((box) => {
-            if (box === boxToCheck) {
-                return true;
-            }
-        });
-        return false;
-    }
+  const handleSetName = (playerBox, name) => {
+    setName(
+      canvas,
+      playerBox,
+      name,
+      annotations,
+      setAnnotations,
+      alteredAnnotations,
+      setAlteredAnnotations,
+    );
+    drawBoundingBoxes(frameNumber);
+  };
 
-    function deselectAllBox() {
-        canvas.discardActiveObject();
-        canvasBoxes.forEach((box) => {
-            //comments from selectBBox about deep clone also apply here!
-            box.my.selected = false;
-            //this.setState({dummy: !this.state.dummy});
-        });
-        canvasBoxesBall.forEach((box) => {
-            box.my.selected = false;
-        });
-    }
+  const handleDeletePlayer = (playerBox) => {
+    deleteEntity(
+      canvas,
+      playerBox,
+      annotations,
+      setAnnotations,
+      setNewAnnotations,
+      setAlteredAnnotations,
+      setDeleteAnnotations,
+      setCanvasBoxes,
+      refreshSidebar,
+    );
+  };
+  const handleDeleteBall = (ballBox) => {
+    deleteEntity(
+      canvas,
+      ballBox,
+      annotationBallTracks,
+      setAnnotationBallTracks,
+      setNewBallAnnotations,
+      setAlteredAnnotations,
+      setDeleteAnnotations,
+      setCanvasBoxes,
+      refreshSidebar,
+    );
+  };
 
-    function selectBBox(box) {
-        canvas.setActiveObject(box);
-        setActiveObject(box);
-        box.my.selected = true;
-    }
+  const handleSetNameBall = (ballBox, name) => {
+    setName(
+      canvas,
+      ballBox,
+      name,
+      annotationBallTracks,
+      setAnnotationBallTracks,
+      alteredAnnotations,
+      setAlteredAnnotations,
+    );
+  };
 
-    function changeSelection(box) {
-        if (boxInCanvas(box)) {
-            //deselect all active boxes
-            deselectAllBox();
-            //set the new active box
-            selectBBox(box);
-        }
+  function boxInCanvas(boxToCheck) {
+    //check if the box is in the canvas
+    canvasBoxes.forEach((box) => {
+      if (box === boxToCheck) {
+        return true;
+      }
+    });
+    canvasBoxesBall.forEach((box) => {
+      if (box === boxToCheck) {
+        return true;
+      }
+    });
+    return false;
+  }
+
+  function deselectAllBox() {
+    canvas.discardActiveObject();
+    canvasBoxes.forEach((box) => {
+      //comments from selectBBox about deep clone also apply here!
+      box.my.selected = false;
+      //this.setState({dummy: !this.state.dummy});
+    });
+    canvasBoxesBall.forEach((box) => {
+      box.my.selected = false;
+    });
+  }
+
+  function selectBBox(box) {
+    canvas.setActiveObject(box);
+    setActiveObject(box);
+    box.my.selected = true;
+  }
+
+  function changeSelection(box) {
+    if (boxInCanvas(box)) {
+      //deselect all active boxes
+      deselectAllBox();
+      //set the new active box
+      selectBBox(box);
     }
+  }
 
   const Tooltip = ({ isVisible, children }) => {
     return (
@@ -575,591 +584,593 @@ const NewTrackingEditor = () => {
       mouseout: () => {},
     });
 
-        if (is_playerBox) {
-            box.on({
-                modified: () => {
-                    var boundingRect = box.getBoundingRect();
-                    var scaleX = box.scaleX; // Save current scale factors
-                    var scaleY = box.scaleY;
-                    // Calculate actual width and height based on scale factors
-                    //when scaling the box, only scaleX and scaleY change, while width and height not
-                    var actualWidth = (boundingRect.width - box.strokeWidth) / scaleX;
-                    var actualHeight = (boundingRect.height - box.strokeWidth) / scaleY;
-                    box.left = boundingRect.left;
-                    box.top = boundingRect.top;
-                    box.width = actualWidth;
-                    box.height = actualHeight;
+    if (is_playerBox) {
+      box.on({
+        modified: () => {
+          var boundingRect = box.getBoundingRect();
+          var scaleX = box.scaleX; // Save current scale factors
+          var scaleY = box.scaleY;
+          // Calculate actual width and height based on scale factors
+          //when scaling the box, only scaleX and scaleY change, while width and height not
+          var actualWidth = (boundingRect.width - box.strokeWidth) / scaleX;
+          var actualHeight = (boundingRect.height - box.strokeWidth) / scaleY;
+          box.left = boundingRect.left;
+          box.top = boundingRect.top;
+          box.width = actualWidth;
+          box.height = actualHeight;
 
-                    const horizontalScalingFactor = canvas.width / 3840;
-                    const verticalScalingFactor = canvas.height / 2160;
-                    const modifiedAnnotation = convertBoxToAnnotation(
-                        box,
-                        horizontalScalingFactor,
-                        verticalScalingFactor,
-                    );
-                    console.log(modifiedAnnotation);
+          const horizontalScalingFactor = canvas.width / 3840;
+          const verticalScalingFactor = canvas.height / 2160;
+          const modifiedAnnotation = convertBoxToAnnotation(
+            box,
+            horizontalScalingFactor,
+            verticalScalingFactor,
+          );
+          console.log(modifiedAnnotation);
 
-                    const annotationToReplace = annotations.findIndex(
-                        (a) => a.id === box.my.id,
-
-                    );
-                    if (annotationToReplace === -1) {
-                        console.error(
-                            "the modified bounding box doesn't exist in annotations.",
-                        );
-                    }
-                    setAlteredAnnotations(upsertAnnotation(alteredAnnotations, modifiedAnnotation))
-                    annotations.splice(annotationToReplace, 1, modifiedAnnotation);
-                    canvas.renderAll();
-                },
-            });
-        } else {
-            box.on({
-                modified: () => {
-                    var boundingRect = box.getBoundingRect();
-                    var scaleX = box.scaleX; // Save current scale factors
-                    var scaleY = box.scaleY;
-                    // Calculate actual width and height based on scale factors
-                    //when scaling the box, only scaleX and scaleY change, while width and height not
-                    var actualWidth = (boundingRect.width - box.strokeWidth) / scaleX;
-                    var actualHeight = (boundingRect.height - box.strokeWidth) / scaleY;
-                    box.left = boundingRect.left;
-                    box.top = boundingRect.top;
-                    box.width = actualWidth;
-                    box.height = actualHeight;
-
-                    const horizontalScalingFactor = canvas.width / 3840;
-                    const verticalScalingFactor = canvas.height / 2160;
-                    const modifiedAnnotation = convertBallboxToAnnotationBall(
-                        box,
-                        horizontalScalingFactor,
-                        verticalScalingFactor,
-                    );
-                    console.log(modifiedAnnotation);
-                    const annotationToReplace = annotationBallTracks.findIndex(
-                        (a) => a.frame_number === box.my.frame && a.displayName === box.my.key,
-                    );
-                    if (annotationToReplace === -1) {
-                        console.error(
-                            "the modified bounding box doesn't exist in annotationBallTracks.",
-                        );
-                    }
-                    setAlteredAnnotations(upsertAnnotation(alteredAnnotations, modifiedAnnotation))
-                    annotationBallTracks.splice(
-                        annotationToReplace,
-                        1,
-                        modifiedAnnotation,
-                    );
-                    canvas.renderAll();
-                },
-            });
-        }
-        return box;
-    }
-
-    const upsertAnnotation = (list, newItem) => {
-        const exists = list.some(item => item.id === newItem.id);
-
-        if (exists) {
-            // Overwrite existing item
-            return list.map(item =>
-                item.id === newItem.id ? { ...item, ...newItem } : item
+          const annotationToReplace = annotations.findIndex(
+            (a) => a.id === box.my.id,
+          );
+          if (annotationToReplace === -1) {
+            console.error(
+              "the modified bounding box doesn't exist in annotations.",
             );
+          }
+          setAlteredAnnotations(
+            upsertAnnotation(alteredAnnotations, modifiedAnnotation),
+          );
+          annotations.splice(annotationToReplace, 1, modifiedAnnotation);
+          canvas.renderAll();
+        },
+      });
+    } else {
+      box.on({
+        modified: () => {
+          var boundingRect = box.getBoundingRect();
+          var scaleX = box.scaleX; // Save current scale factors
+          var scaleY = box.scaleY;
+          // Calculate actual width and height based on scale factors
+          //when scaling the box, only scaleX and scaleY change, while width and height not
+          var actualWidth = (boundingRect.width - box.strokeWidth) / scaleX;
+          var actualHeight = (boundingRect.height - box.strokeWidth) / scaleY;
+          box.left = boundingRect.left;
+          box.top = boundingRect.top;
+          box.width = actualWidth;
+          box.height = actualHeight;
+
+          const horizontalScalingFactor = canvas.width / 3840;
+          const verticalScalingFactor = canvas.height / 2160;
+          const modifiedAnnotation = convertBallboxToAnnotationBall(
+            box,
+            horizontalScalingFactor,
+            verticalScalingFactor,
+          );
+          console.log(modifiedAnnotation);
+          const annotationToReplace = annotationBallTracks.findIndex(
+            (a) =>
+              a.frame_number === box.my.frame && a.displayName === box.my.key,
+          );
+          if (annotationToReplace === -1) {
+            console.error(
+              "the modified bounding box doesn't exist in annotationBallTracks.",
+            );
+          }
+          setAlteredAnnotations(
+            upsertAnnotation(alteredAnnotations, modifiedAnnotation),
+          );
+          annotationBallTracks.splice(
+            annotationToReplace,
+            1,
+            modifiedAnnotation,
+          );
+          canvas.renderAll();
+        },
+      });
+    }
+    return box;
+  }
+
+  const upsertAnnotation = (list, newItem) => {
+    const exists = list.some((item) => item.id === newItem.id);
+
+    if (exists) {
+      // Overwrite existing item
+      return list.map((item) =>
+        item.id === newItem.id ? { ...item, ...newItem } : item,
+      );
+    } else {
+      // Add new item
+      return [...list, newItem];
+    }
+  };
+
+  useEffect(() => {
+    //rerender the sidebar when another item is selected
+    if (activeObject) {
+      let tempList = [];
+
+      playerList.forEach((item) => {
+        if (item.props.playerBox.my.key === activeObject.my.key) {
+          const boxColor = colorSet.get(activeObject.my.key); //used in 'stroke' property of playerBox
+          tempList = tempList.concat([
+            <TrackListItemPlayer
+              key={item.key}
+              playerBox={activeObject}
+              name={activeObject.my.key}
+              changeSelection={changeSelection}
+              setName={handleSetName}
+              blink={handleBlink}
+              color={boxColor}
+              delete={handleDeletePlayer}
+              handleModalOpen={handleModalOpen}
+            />,
+          ]);
         } else {
-            // Add new item
-            return [...list, newItem];
+          let tempBox = item.props.playerBox;
+          tempBox.my.selected = false;
+          const boxColor = colorSet.get(tempBox.my.key);
+
+          tempList = tempList.concat([
+            <TrackListItemPlayer
+              key={item.key}
+              playerBox={tempBox}
+              name={tempBox.displayName}
+              changeSelection={changeSelection}
+              setName={handleSetName}
+              blink={handleBlink}
+              color={boxColor}
+              delete={handleDeletePlayer}
+              handleModalOpen={handleModalOpen}
+            />,
+          ]);
         }
-    };
+      });
+      setPlayerList(tempList);
 
-    useEffect(() => {
-        //rerender the sidebar when another item is selected
-        if (activeObject) {
-            let tempList = [];
-
-            playerList.forEach((item) => {
-                if (item.props.playerBox.my.key === activeObject.my.key) {
-                    const boxColor = colorSet.get(activeObject.my.key); //used in 'stroke' property of playerBox
-                    tempList = tempList.concat([
-                        <TrackListItemPlayer
-                            key={item.key}
-                            playerBox={activeObject}
-                            name={activeObject.my.key}
-                            changeSelection={changeSelection}
-                            setName={handleSetName}
-                            blink={handleBlink}
-                            color={boxColor}
-                            delete={handleDeletePlayer}
-                            handleModalOpen={handleModalOpen}
-                        />,
-                    ]);
-                } else {
-                    let tempBox = item.props.playerBox;
-                    tempBox.my.selected = false;
-                    const boxColor = colorSet.get(tempBox.my.key);
-
-                    tempList = tempList.concat([
-                        <TrackListItemPlayer
-                            key={item.key}
-                            playerBox={tempBox}
-                            name={tempBox.displayName}
-                            changeSelection={changeSelection}
-                            setName={handleSetName}
-                            blink={handleBlink}
-                            color={boxColor}
-                            delete={handleDeletePlayer}
-                            handleModalOpen={handleModalOpen}
-                        />,
-                    ]);
-                }
-            });
-            setPlayerList(tempList);
-
-            tempList = [];
-            ballList.forEach((item) => {
-                if (item.props.ballBox.my.key === activeObject.my.key) {
-                    const boxColor = colorSetBall.get(activeObject.displayName);
-                    tempList = tempList.concat([
-                        <TrackListItemBall
-                            key={item.key}
-                            ballBox={activeObject}
-                            name={activeObject.displayName}
-                            changeSelection={changeSelection}
-                            setName={handleSetNameBall}
-                            blink={blink}
-                            color={boxColor}
-                            delete={handleDeleteBall}
-                            handleModalOpen={handleModalBallOpen}
-                        />,
-                    ]);
-                } else {
-                    let tempBox = item.props.ballBox;
-                    tempBox.my.selected = false;
-                    const boxColor = colorSetBall.get(tempBox.displayName);
-                    tempList = tempList.concat([
-                        <TrackListItemBall
-                            key={item.key}
-                            ballBox={tempBox}
-                            name={tempBox.displayName}
-                            changeSelection={changeSelection}
-                            setName={handleSetNameBall}
-                            blink={blink}
-                            color={boxColor}
-                            delete={handleDeleteBall}
-                            handleModalOpen={handleModalBallOpen}
-                        />,
-                    ]);
-                }
-            });
-            setBallList(tempList);
+      tempList = [];
+      ballList.forEach((item) => {
+        if (item.props.ballBox.my.key === activeObject.my.key) {
+          const boxColor = colorSetBall.get(activeObject.displayName);
+          tempList = tempList.concat([
+            <TrackListItemBall
+              key={item.key}
+              ballBox={activeObject}
+              name={activeObject.displayName}
+              changeSelection={changeSelection}
+              setName={handleSetNameBall}
+              blink={blink}
+              color={boxColor}
+              delete={handleDeleteBall}
+              handleModalOpen={handleModalBallOpen}
+            />,
+          ]);
+        } else {
+          let tempBox = item.props.ballBox;
+          tempBox.my.selected = false;
+          const boxColor = colorSetBall.get(tempBox.displayName);
+          tempList = tempList.concat([
+            <TrackListItemBall
+              key={item.key}
+              ballBox={tempBox}
+              name={tempBox.displayName}
+              changeSelection={changeSelection}
+              setName={handleSetNameBall}
+              blink={blink}
+              color={boxColor}
+              delete={handleDeleteBall}
+              handleModalOpen={handleModalBallOpen}
+            />,
+          ]);
         }
-    }, [activeObject]);
-
-    useEffect(() => {
-        let canvasWidth = document.body.clientWidth - 300;
-        var canvasHeight = 800;
-        if (videoElement) {
-            canvasHeight = (videoElement.height / videoElement.width) * canvasWidth;
-        }
-        let initCanvas = new fabric.Canvas("tracking-editor-canvas");
-        initCanvas.setHeight(canvasHeight);
-        initCanvas.setWidth(canvasWidth);
-        setCanvas(initCanvas);
-    }, []);
-
-    useEffect(() => {
-        const localVideoElement = document.createElement("video");
-        localVideoElement.src = videoUrl
-        localVideoElement.muted = true;
-
-        //video size has to be anually set
-        localVideoElement.width = 3840;
-        localVideoElement.height = 2160;
-
-        setVideoElement(localVideoElement);
-    }, [videoUrl]);
-
-    function seededRandom(seed) {
-        var x = Math.sin(seed++) * 10000;
-        return x - Math.floor(x);
+      });
+      setBallList(tempList);
     }
+  }, [activeObject]);
 
-    function generateColor() {
-        var r = Math.floor(Math.random() * 256);
-        var g = Math.floor(Math.random() * 256);
-        var b = Math.floor(Math.random() * 256);
-        return {r, g, b};
+  useEffect(() => {
+    let canvasWidth = document.body.clientWidth - 300;
+    var canvasHeight = 800;
+    if (videoElement) {
+      canvasHeight = (videoElement.height / videoElement.width) * canvasWidth;
     }
+    let initCanvas = new fabric.Canvas("tracking-editor-canvas");
+    initCanvas.setHeight(canvasHeight);
+    initCanvas.setWidth(canvasWidth);
+    setCanvas(initCanvas);
+  }, []);
 
-    function boundingBoxColorSet(annotationList) {
-        let uniquePlayers = new Set(
-            annotationList.map((item) => item.displayName),
-        );
-        let colorSet = new Map();
+  useEffect(() => {
+    const localVideoElement = document.createElement("video");
+    localVideoElement.src = videoUrl;
+    localVideoElement.muted = true;
 
-        uniquePlayers.forEach((key) => {
-            let color = generateColor();
-            colorSet.set(key, color);
-        });
-        return colorSet;
-    }
+    //video size has to be anually set
+    localVideoElement.width = 3840;
+    localVideoElement.height = 2160;
 
-    function generatePoster(videoElement) {
-        //if video cannot be played, simply return
-        if (videoElement.readyState === 0) return;
-        //get video content of first frame
-        videoElement.currentTime = frameDuration;
-        const poster = new fabric.Image(videoElement, {
-            left: 0,
-            top: 0,
-            width: videoElement.width,
-            height: videoElement.height,
-            selectable: true,
-        });
-        videoElement.currentTime = 0;
-        return poster;
-    }
+    setVideoElement(localVideoElement);
+  }, [videoUrl]);
+
+  function seededRandom(seed) {
+    var x = Math.sin(seed++) * 10000;
+    return x - Math.floor(x);
+  }
+
+  function generateColor() {
+    var r = Math.floor(Math.random() * 256);
+    var g = Math.floor(Math.random() * 256);
+    var b = Math.floor(Math.random() * 256);
+    return { r, g, b };
+  }
+
+  function boundingBoxColorSet(annotationList) {
+    let uniquePlayers = new Set(annotationList.map((item) => item.displayName));
+    let colorSet = new Map();
+
+    uniquePlayers.forEach((key) => {
+      let color = generateColor();
+      colorSet.set(key, color);
+    });
+    return colorSet;
+  }
+
+  function generatePoster(videoElement) {
+    //if video cannot be played, simply return
+    if (videoElement.readyState === 0) return;
+    //get video content of first frame
+    videoElement.currentTime = frameDuration;
+    const poster = new fabric.Image(videoElement, {
+      left: 0,
+      top: 0,
+      width: videoElement.width,
+      height: videoElement.height,
+      selectable: true,
+    });
+    videoElement.currentTime = 0;
+    return poster;
+  }
 
   const isInField = (inField) => {
     return inField === true || inField === null;
   };
 
-    // https://stackoverflow.com/questions/33834724/draw-video-on-canvas-html5
-    const drawVideo = () => {
-        // Clear canvas
-        // context.clearRect(0, 0, canvasElement.width, canvasElement.height);
+  // https://stackoverflow.com/questions/33834724/draw-video-on-canvas-html5
+  const drawVideo = () => {
+    // Clear canvas
+    // context.clearRect(0, 0, canvasElement.width, canvasElement.height);
 
-        // Drawing video
-        // context.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
-        const horizontalScalingFactor = canvas.width / 3840;
-        const verticalScalingFactor = canvas.height / 2160;
-        var fabricVideo = new fabric.Image(videoElement, {
-            left: 0,
-            top: 0,
-            width: videoElement.width,
-            height: videoElement.height,
-            selectable: true,
-        });
+    // Drawing video
+    // context.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
+    const horizontalScalingFactor = canvas.width / 3840;
+    const verticalScalingFactor = canvas.height / 2160;
+    var fabricVideo = new fabric.Image(videoElement, {
+      left: 0,
+      top: 0,
+      width: videoElement.width,
+      height: videoElement.height,
+      selectable: true,
+    });
 
-        canvas.setBackgroundImage(fabricVideo, canvas.renderAll.bind(canvas), {
-            scaleX: horizontalScalingFactor,
-            scaleY: verticalScalingFactor,
-        });
-    };
+    canvas.setBackgroundImage(fabricVideo, canvas.renderAll.bind(canvas), {
+      scaleX: horizontalScalingFactor,
+      scaleY: verticalScalingFactor,
+    });
+  };
 
-    const drawBoundingBoxes = (frameNumber) => {
-        const horizontalScalingFactor = canvas.width / 3840;
-        const verticalScalingFactor = canvas.height / 2160;
-        deselectAllBox();
+  const drawBoundingBoxes = (frameNumber) => {
+    const horizontalScalingFactor = canvas.width / 3840;
+    const verticalScalingFactor = canvas.height / 2160;
+    deselectAllBox();
 
-        if (!trailsEnabled) {
-            canvas.remove(...canvas.getObjects());
-        } else {
-            //remove everything except the past trails
-            canvas.remove(
-                ...canvas.getObjects().filter((obj) => obj.type !== "circle"),
-            );
-            //remove trails that are too old
-            canvas.remove(
-                ...canvas
-                    .getObjects()
-                    .filter(
-                        (obj) =>
-                            frameNumber - obj.properties.frame >= trailFrameNumber ||
-                            frameNumber - obj.properties.frame < 0,
-                    ),
-            );
-            if (isShowingPlayerTrails) {
-                const currentTrailsToDraw = drawInField
-                    ? annotations.filter(
-                        (a) => a.frame_number === frameNumber && isInField(a.in_field),
-                    )
-                    : annotations.filter((a) => a.frame_number === frameNumber);
-
-                currentTrailsToDraw.forEach((a) => {
-                    const scaledX = a.x1 * horizontalScalingFactor;
-                    const scaledY = a.y1 * verticalScalingFactor;
-                    const scaledWidth = a.w * horizontalScalingFactor;
-                    const scaledHeight = a.h * verticalScalingFactor;
-                    const radius =
-                        scaledWidth < scaledHeight ? scaledWidth / 4 : scaledHeight / 4;
-                    const trailColor = colorSet.get(a.displayName);
-                    let trail = new fabric.Circle({
-                        left: scaledX,
-                        top: scaledY,
-                        stroke: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
-                        strokeWidth: 3,
-                        fill: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
-                        radius: (radius * trailSize) / 50,
-                        visible: isShowingAnnotation,
-                    });
-                    trail.properties = {
-                        frame: frameNumber,
-                        displayName: a.displayName,
-                    };
-                    trail.hasRotatingPoint = false;
-                    defineTrailBehaviour(trail, setSelectedTrails);
-                    canvas.add(trail);
-                });
-            }
-            if (isShowingBallTrails) {
-                const currentBallTrailsToDraw = annotationBallTracks.filter(
-                    (a) => a.frame_number === frameNumber,
-                );
-
-                currentBallTrailsToDraw.forEach((a) => {
-                    const scaledX = a.x1 * horizontalScalingFactor;
-                    const scaledY = a.y1 * verticalScalingFactor;
-                    const scaledWidth = (a.x2 - a.x1) * horizontalScalingFactor;
-                    const scaledHeight = (a.y2 - a.y1) * verticalScalingFactor;
-                    const radius =
-                        scaledWidth < scaledHeight ? scaledWidth / 4 : scaledHeight / 4;
-                    const trailColor = colorSetBall.get(a.displayName);
-                    let trail = new fabric.Circle({
-                        left: scaledX,
-                        top: scaledY,
-                        stroke: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
-                        strokeWidth: 3,
-                        fill: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
-                        radius: (radius * trailSize) / 50,
-                        visible: isShowingAnnotation,
-                    });
-                    trail.properties = {
-                        frame: frameNumber,
-                        ballKey: a.displayName,
-                    };
-                    trail.hasRotatingPoint = false;
-                    defineTrailBehaviourBall(trail, setSelectedTrailsBall);
-                    canvas.add(trail);
-                });
-            }
-        }
-
-        let boundingBoxesToDraw = drawInField
-            ? canvasBoxes.filter(
-                (a) => a.my.frame === frameNumber && isInField(a.my.in_field),
+    if (!trailsEnabled) {
+      canvas.remove(...canvas.getObjects());
+    } else {
+      //remove everything except the past trails
+      canvas.remove(
+        ...canvas.getObjects().filter((obj) => obj.type !== "circle"),
+      );
+      //remove trails that are too old
+      canvas.remove(
+        ...canvas
+          .getObjects()
+          .filter(
+            (obj) =>
+              frameNumber - obj.properties.frame >= trailFrameNumber ||
+              frameNumber - obj.properties.frame < 0,
+          ),
+      );
+      if (isShowingPlayerTrails) {
+        const currentTrailsToDraw = drawInField
+          ? annotations.filter(
+              (a) => a.frame_number === frameNumber && isInField(a.in_field),
             )
-            : canvasBoxes.filter((a) => a.my.frame === frameNumber);
+          : annotations.filter((a) => a.frame_number === frameNumber);
 
-        let tempList = [];
-        let runningIndex = 0;
-
-        if (boundingBoxesToDraw.length > 0) {
-            boundingBoxesToDraw.forEach((boundingBox) => {
-                canvas.add(boundingBox);
-                const boxColor = colorSet.get(boundingBox.displayName); //used in 'stroke' property of playerBox
-
-                tempList = tempList.concat([
-                    <TrackListItemPlayer
-                        key={runningIndex++}
-                        playerBox={boundingBox}
-                        name={boundingBox.displayName}
-                        changeSelection={changeSelection}
-                        setName={handleSetName}
-                        blink={handleBlink}
-                        color={boxColor}
-                        delete={handleDeletePlayer}
-                        handleModalOpen={handleModalOpen}
-                    />,
-                ]);
-            });
-        } else {
-            boundingBoxesToDraw = drawInField
-                ? annotations.filter(
-                    (a) => a.frame_number === frameNumber && isInField(a.in_field),
-                )
-                : annotations.filter((a) => a.frame_number === frameNumber);
-
-            if (boundingBoxesToDraw.length > 0) {
-                boundingBoxesToDraw.forEach((boundingBox, i) => {
-                    const boxColor = colorSet.get(boundingBox.displayName); //used in 'stroke' property of playerBox
-                    let playerBox = convertAnnotationToBox(
-                        boundingBox,
-                        horizontalScalingFactor,
-                        verticalScalingFactor,
-                    );
-                    playerBox.visible = isShowingBox;
-                    playerBox.stroke = `rgb(${boxColor.r}, ${boxColor.g}, ${boxColor.b})`;
-                    playerBox.setControlVisible("mtr", false);
-                    playerBox = defineBoxBehavior(playerBox);
-                    canvas.add(playerBox);
-
-                    tempList = tempList.concat([
-                        <TrackListItemPlayer
-                            key={runningIndex++}
-                            playerBox={playerBox}
-                            color={boxColor}
-                            name={playerBox.my.key}
-                            changeSelection={changeSelection}
-                            setName={handleSetName}
-                            blink={handleBlink}
-                            delete={handleDeletePlayer}
-                            handleModalOpen={handleModalOpen}
-                        />,
-                    ]);
-                });
-            }
-        }
-        setPlayerList(tempList);
-
-        var boundingBoxesToDrawBall = canvasBoxesBall.filter(
-            (a) => a.my.frame === frameNumber,
-        );
-        tempList = [];
-        runningIndex = 0;
-        if (boundingBoxesToDrawBall.length > 0) {
-            boundingBoxesToDrawBall.forEach((boundingBox) => {
-                canvas.add(boundingBox);
-                const boxColor = colorSetBall.get(boundingBox.displayName);
-                tempList = tempList.concat([
-                    <TrackListItemBall
-                        key={runningIndex++}
-                        ballBox={boundingBox}
-                        name={boundingBox.displayName}
-                        changeSelection={changeSelection}
-                        setName={handleSetNameBall}
-                        blink={handleBlink}
-                        color={boxColor}
-                        handleModalOpen={handleModalBallOpen}
-                        delete={handleDeleteBall}
-                    />,
-                ]);
-            });
-        } else {
-            boundingBoxesToDrawBall = annotationBallTracks.filter(
-                (a) => a.frame_number === frameNumber,
-            );
-            if (boundingBoxesToDrawBall.length > 0) {
-                //draw boxes
-                boundingBoxesToDrawBall.forEach((boundingBox) => {
-                    const boxColor = colorSetBall.get(boundingBox.displayName);
-                    let ballBox = convertAnnotationBallToBallbox(
-                        boundingBox,
-                        horizontalScalingFactor,
-                        verticalScalingFactor,
-                    );
-                    ballBox.visible = isShowingBallBox;
-                    ballBox.stroke = `rgb(${boxColor.r}, ${boxColor.g}, ${boxColor.b})`;
-                    ballBox.setControlVisible("mtr", false);
-                    ballBox = defineBoxBehavior(ballBox, false); //false indicates that this is a ball box
-                    if (isShowingBallBox) canvas.add(ballBox);
-
-                    tempList = tempList.concat([
-                        <TrackListItemBall
-                            key={runningIndex++}
-                            ballBox={ballBox}
-                            color={boxColor}
-                            name={boundingBox.displayName}
-                            changeSelection={changeSelection}
-                            setName={handleSetNameBall}
-                            blink={handleBlink}
-                            handleModalOpen={handleModalBallOpen}
-                            delete={handleDeleteBall}
-                        />,
-                    ]);
-                });
-            }
-        }
-        setBallList(tempList);
-
-        canvas.remove(
-            ...canvas
-                .getObjects()
-                .filter(
-                    (obj) =>
-                        obj.properties?.type === "field" ||
-                        obj.properties?.type === "fieldPoint",
-                ),
+        currentTrailsToDraw.forEach((a) => {
+          const scaledX = a.x1 * horizontalScalingFactor;
+          const scaledY = a.y1 * verticalScalingFactor;
+          const scaledWidth = a.w * horizontalScalingFactor;
+          const scaledHeight = a.h * verticalScalingFactor;
+          const radius =
+            scaledWidth < scaledHeight ? scaledWidth / 4 : scaledHeight / 4;
+          const trailColor = colorSet.get(a.displayName);
+          let trail = new fabric.Circle({
+            left: scaledX,
+            top: scaledY,
+            stroke: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
+            strokeWidth: 3,
+            fill: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
+            radius: (radius * trailSize) / 50,
+            visible: isShowingAnnotation,
+          });
+          trail.properties = {
+            frame: frameNumber,
+            displayName: a.displayName,
+          };
+          trail.hasRotatingPoint = false;
+          defineTrailBehaviour(trail, setSelectedTrails);
+          canvas.add(trail);
+        });
+      }
+      if (isShowingBallTrails) {
+        const currentBallTrailsToDraw = annotationBallTracks.filter(
+          (a) => a.frame_number === frameNumber,
         );
 
-        if (showField) {
-            drawField();
-        }
+        currentBallTrailsToDraw.forEach((a) => {
+          const scaledX = a.x1 * horizontalScalingFactor;
+          const scaledY = a.y1 * verticalScalingFactor;
+          const scaledWidth = (a.x2 - a.x1) * horizontalScalingFactor;
+          const scaledHeight = (a.y2 - a.y1) * verticalScalingFactor;
+          const radius =
+            scaledWidth < scaledHeight ? scaledWidth / 4 : scaledHeight / 4;
+          const trailColor = colorSetBall.get(a.displayName);
+          let trail = new fabric.Circle({
+            left: scaledX,
+            top: scaledY,
+            stroke: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
+            strokeWidth: 3,
+            fill: `rgb(${trailColor.r}, ${trailColor.g}, ${trailColor.b})`,
+            radius: (radius * trailSize) / 50,
+            visible: isShowingAnnotation,
+          });
+          trail.properties = {
+            frame: frameNumber,
+            ballKey: a.displayName,
+          };
+          trail.hasRotatingPoint = false;
+          defineTrailBehaviourBall(trail, setSelectedTrailsBall);
+          canvas.add(trail);
+        });
+      }
+    }
 
-        if (isShowingBox) {
-            boundingBoxesToDraw.forEach((a) => {
-                const fontSize = 12;
-                const scaledX = a.x1 * horizontalScalingFactor;
-                const scaledY = a.y1 * verticalScalingFactor - fontSize;
-                const displayName = a.displayName.toString();
-                let boxKey = new fabric.Text(displayName, {
-                    left: scaledX,
-                    top: scaledY,
-                    fontSize: fontSize,
-                });
-                canvas.add(boxKey);
-            });
-        }
-    };
+    let boundingBoxesToDraw = drawInField
+      ? canvasBoxes.filter(
+          (a) => a.my.frame === frameNumber && isInField(a.my.in_field),
+        )
+      : canvasBoxes.filter((a) => a.my.frame === frameNumber);
+
+    let tempList = [];
+    let runningIndex = 0;
+
+    if (boundingBoxesToDraw.length > 0) {
+      boundingBoxesToDraw.forEach((boundingBox) => {
+        canvas.add(boundingBox);
+        const boxColor = colorSet.get(boundingBox.displayName); //used in 'stroke' property of playerBox
+
+        tempList = tempList.concat([
+          <TrackListItemPlayer
+            key={runningIndex++}
+            playerBox={boundingBox}
+            name={boundingBox.displayName}
+            changeSelection={changeSelection}
+            setName={handleSetName}
+            blink={handleBlink}
+            color={boxColor}
+            delete={handleDeletePlayer}
+            handleModalOpen={handleModalOpen}
+          />,
+        ]);
+      });
+    } else {
+      boundingBoxesToDraw = drawInField
+        ? annotations.filter(
+            (a) => a.frame_number === frameNumber && isInField(a.in_field),
+          )
+        : annotations.filter((a) => a.frame_number === frameNumber);
+
+      if (boundingBoxesToDraw.length > 0) {
+        boundingBoxesToDraw.forEach((boundingBox, i) => {
+          const boxColor = colorSet.get(boundingBox.displayName); //used in 'stroke' property of playerBox
+          let playerBox = convertAnnotationToBox(
+            boundingBox,
+            horizontalScalingFactor,
+            verticalScalingFactor,
+          );
+          playerBox.visible = isShowingBox;
+          playerBox.stroke = `rgb(${boxColor.r}, ${boxColor.g}, ${boxColor.b})`;
+          playerBox.setControlVisible("mtr", false);
+          playerBox = defineBoxBehavior(playerBox);
+          canvas.add(playerBox);
+
+          tempList = tempList.concat([
+            <TrackListItemPlayer
+              key={runningIndex++}
+              playerBox={playerBox}
+              color={boxColor}
+              name={playerBox.my.key}
+              changeSelection={changeSelection}
+              setName={handleSetName}
+              blink={handleBlink}
+              delete={handleDeletePlayer}
+              handleModalOpen={handleModalOpen}
+            />,
+          ]);
+        });
+      }
+    }
+    setPlayerList(tempList);
+
+    var boundingBoxesToDrawBall = canvasBoxesBall.filter(
+      (a) => a.my.frame === frameNumber,
+    );
+    tempList = [];
+    runningIndex = 0;
+    if (boundingBoxesToDrawBall.length > 0) {
+      boundingBoxesToDrawBall.forEach((boundingBox) => {
+        canvas.add(boundingBox);
+        const boxColor = colorSetBall.get(boundingBox.displayName);
+        tempList = tempList.concat([
+          <TrackListItemBall
+            key={runningIndex++}
+            ballBox={boundingBox}
+            name={boundingBox.displayName}
+            changeSelection={changeSelection}
+            setName={handleSetNameBall}
+            blink={handleBlink}
+            color={boxColor}
+            handleModalOpen={handleModalBallOpen}
+            delete={handleDeleteBall}
+          />,
+        ]);
+      });
+    } else {
+      boundingBoxesToDrawBall = annotationBallTracks.filter(
+        (a) => a.frame_number === frameNumber,
+      );
+      if (boundingBoxesToDrawBall.length > 0) {
+        //draw boxes
+        boundingBoxesToDrawBall.forEach((boundingBox) => {
+          const boxColor = colorSetBall.get(boundingBox.displayName);
+          let ballBox = convertAnnotationBallToBallbox(
+            boundingBox,
+            horizontalScalingFactor,
+            verticalScalingFactor,
+          );
+          ballBox.visible = isShowingBallBox;
+          ballBox.stroke = `rgb(${boxColor.r}, ${boxColor.g}, ${boxColor.b})`;
+          ballBox.setControlVisible("mtr", false);
+          ballBox = defineBoxBehavior(ballBox, false); //false indicates that this is a ball box
+          if (isShowingBallBox) canvas.add(ballBox);
+
+          tempList = tempList.concat([
+            <TrackListItemBall
+              key={runningIndex++}
+              ballBox={ballBox}
+              color={boxColor}
+              name={boundingBox.displayName}
+              changeSelection={changeSelection}
+              setName={handleSetNameBall}
+              blink={handleBlink}
+              handleModalOpen={handleModalBallOpen}
+              delete={handleDeleteBall}
+            />,
+          ]);
+        });
+      }
+    }
+    setBallList(tempList);
+
+    canvas.remove(
+      ...canvas
+        .getObjects()
+        .filter(
+          (obj) =>
+            obj.properties?.type === "field" ||
+            obj.properties?.type === "fieldPoint",
+        ),
+    );
+
+    if (showField) {
+      drawField();
+    }
+
+    if (isShowingBox) {
+      boundingBoxesToDraw.forEach((a) => {
+        const fontSize = 12;
+        const scaledX = a.x1 * horizontalScalingFactor;
+        const scaledY = a.y1 * verticalScalingFactor - fontSize;
+        const displayName = a.displayName.toString();
+        let boxKey = new fabric.Text(displayName, {
+          left: scaledX,
+          top: scaledY,
+          fontSize: fontSize,
+        });
+        canvas.add(boxKey);
+      });
+    }
+  };
 
   function handleUpdateTimeStamp(newTimestamp) {
     updateTimestamp(newTimestamp, frameDuration, setTimestamp, setFrameNumber);
   }
 
-    useEffect(() => {
-        if (!videoElement) return;
-        // const canvasElement = canvasRef.current;
-        // const context = canvasElement.getContext('2d');
+  useEffect(() => {
+    if (!videoElement) return;
+    // const canvasElement = canvasRef.current;
+    // const context = canvasElement.getContext('2d');
 
-        //retrieve screen width without scrollbar
-        // let canvasWidth = document.body.clientWidth;
-        // let canvasHeight = videoElement.height / videoElement.width * canvasWidth;
-        // let canvas = new fabric.Canvas('tracking-editor-canvas');
-        // canvas.setHeight(canvasHeight);
-        // canvas.setWidth(canvasWidth);
-        let previousFrameNumber = 0;
+    //retrieve screen width without scrollbar
+    // let canvasWidth = document.body.clientWidth;
+    // let canvasHeight = videoElement.height / videoElement.width * canvasWidth;
+    // let canvas = new fabric.Canvas('tracking-editor-canvas');
+    // canvas.setHeight(canvasHeight);
+    // canvas.setWidth(canvasWidth);
+    let previousFrameNumber = 0;
 
-        const updateCanvas = () => {
-            const currentFrameNumber = getCurrentTimestampFrame();
-            drawVideo();
-            drawBoundingBoxes(currentFrameNumber);
-        };
+    const updateCanvas = () => {
+      const currentFrameNumber = getCurrentTimestampFrame();
+      drawVideo();
+      drawBoundingBoxes(currentFrameNumber);
+    };
 
-        const handleAnimationFrame = () => {
-            if (!videoElement || videoElement.paused || videoElement.ended) {
-                console.log(
-                    "Video element either null, paused : ",
-                    videoElement.paused,
-                    " or ended : ",
-                    videoElement.ended,
-                );
-                //problematic, empty playerlist when video paused
-                return;
-            }
+    const handleAnimationFrame = () => {
+      if (!videoElement || videoElement.paused || videoElement.ended) {
+        console.log(
+          "Video element either null, paused : ",
+          videoElement.paused,
+          " or ended : ",
+          videoElement.ended,
+        );
+        //problematic, empty playerlist when video paused
+        return;
+      }
 
-            const currentFrameNumber = getCurrentTimestampFrame();
-            if (currentFrameNumber !== previousFrameNumber) {
-                setFrameNumber(currentFrameNumber);
-                setTimestamp(videoElement.currentTime);
+      const currentFrameNumber = getCurrentTimestampFrame();
+      if (currentFrameNumber !== previousFrameNumber) {
+        setFrameNumber(currentFrameNumber);
+        setTimestamp(videoElement.currentTime);
 
-                const currentProgress =
-                    (videoElement.currentTime / videoElement.duration) * 100;
-                setProgress(currentProgress);
-                previousFrameNumber = currentFrameNumber;
-                updateCanvas();
-            }
+        const currentProgress =
+          (videoElement.currentTime / videoElement.duration) * 100;
+        setProgress(currentProgress);
+        previousFrameNumber = currentFrameNumber;
+        updateCanvas();
+      }
 
-            requestAnimationFrame(handleAnimationFrame);
-        };
+      requestAnimationFrame(handleAnimationFrame);
+    };
 
-        const onPlay = () => {
-            requestAnimationFrame(handleAnimationFrame);
-        };
+    const onPlay = () => {
+      requestAnimationFrame(handleAnimationFrame);
+    };
 
-        const onCanPlay = () => {
-            updateCanvas();
-        };
+    const onCanPlay = () => {
+      updateCanvas();
+    };
 
-        const onSeek = () => {
-            console.log("Seeked");
-        };
+    const onSeek = () => {
+      console.log("Seeked");
+    };
 
-        const onSeeking = () => {
-            console.log("Seeking");
-        };
+    const onSeeking = () => {
+      console.log("Seeking");
+    };
 
-        const onStalled = () => {
-            console.log("Stalled");
-        };
+    const onStalled = () => {
+      console.log("Stalled");
+    };
 
     const onLoadedData = () => {
       console.log("Loaded data");
@@ -1169,198 +1180,198 @@ const NewTrackingEditor = () => {
       }
     };
 
-        const onWaiting = () => {
-            console.log("Waiting");
-        };
+    const onWaiting = () => {
+      console.log("Waiting");
+    };
 
-        videoElement.addEventListener("play", onPlay);
-        videoElement.addEventListener("canplay", onCanPlay);
-        videoElement.addEventListener("seeked", onSeek);
-        videoElement.addEventListener("seeking", onSeeking);
-        videoElement.addEventListener("stalled", onStalled);
+    videoElement.addEventListener("play", onPlay);
+    videoElement.addEventListener("canplay", onCanPlay);
+    videoElement.addEventListener("seeked", onSeek);
+    videoElement.addEventListener("seeking", onSeeking);
+    videoElement.addEventListener("stalled", onStalled);
 
-        videoElement.addEventListener("loadeddata", onLoadedData);
-        videoElement.addEventListener("waiting", onWaiting);
+    videoElement.addEventListener("loadeddata", onLoadedData);
+    videoElement.addEventListener("waiting", onWaiting);
 
-        return () => {
-            videoElement.removeEventListener("play", onPlay);
-            videoElement.removeEventListener("canplay", onCanPlay);
-            videoElement.removeEventListener("seeked", onSeek);
-            videoElement.removeEventListener("seeking", onSeeking);
-            videoElement.removeEventListener("stalled", onStalled);
-            videoElement.removeEventListener("loadeddata", onLoadedData);
-            videoElement.removeEventListener("waiting", onWaiting);
-        };
-    }, [
+    return () => {
+      videoElement.removeEventListener("play", onPlay);
+      videoElement.removeEventListener("canplay", onCanPlay);
+      videoElement.removeEventListener("seeked", onSeek);
+      videoElement.removeEventListener("seeking", onSeeking);
+      videoElement.removeEventListener("stalled", onStalled);
+      videoElement.removeEventListener("loadeddata", onLoadedData);
+      videoElement.removeEventListener("waiting", onWaiting);
+    };
+  }, [
+    annotations,
+    annotationBallTracks,
+    videoElement,
+    isShowingBox,
+    isShowingBallBox,
+    isShowingBallTrails,
+    isShowingPlayerTrails,
+    trailFrameNumber,
+    trailsEnabled,
+    showField,
+    trailSize,
+    drawInField,
+  ]);
+
+  //triggered when user clicks on the video progress bar to change the video time
+  useEffect(() => {
+    if (!videoElement) return;
+
+    if (videoElement.seeking && trailsEnabled) {
+      trailsFullRedraw(
+        canvas,
         annotations,
         annotationBallTracks,
-        videoElement,
-        isShowingBox,
-        isShowingBallBox,
+        colorSetBall,
+        frameNumber,
+        trailFrameNumber,
+        isShowingAnnotation,
+        colorSet,
+        canvas.width / 3840,
+        canvas.height / 2160,
+        setSelectedTrails,
+        setSelectedTrailsBall,
+        trailSize,
         isShowingBallTrails,
         isShowingPlayerTrails,
-        trailFrameNumber,
-        trailsEnabled,
-        showField,
-        trailSize,
-        drawInField,
-    ]);
+      );
+    }
+  }, [videoElement?.seeking]);
 
-    //triggered when user clicks on the video progress bar to change the video time
-    useEffect(() => {
-        if (!videoElement) return;
+  //triggered when new player is added, or when merge or swap happens
+  useEffect(() => {
+    //remove old canvas objects
+    canvas.remove(
+      ...canvas
+        .getObjects()
+        .filter(
+          (obj) =>
+            obj?.properties?.type !== "fieldPoint" &&
+            obj?.properties?.type !== "field",
+        ),
+    );
 
-        if (videoElement.seeking && trailsEnabled) {
-            trailsFullRedraw(
-                canvas,
-                annotations,
-                annotationBallTracks,
-                colorSetBall,
-                frameNumber,
-                trailFrameNumber,
-                isShowingAnnotation,
-                colorSet,
-                canvas.width / 3840,
-                canvas.height / 2160,
-                setSelectedTrails,
-                setSelectedTrailsBall,
-                trailSize,
-                isShowingBallTrails,
-                isShowingPlayerTrails,
-            );
-        }
-    }, [videoElement?.seeking]);
+    const horizontalScalingFactor = canvas.width / 3840;
+    const verticalScalingFactor = canvas.height / 2160;
+    var tempList = [];
+    let runningIndex = 0;
 
-    //triggered when new player is added, or when merge or swap happens
-    useEffect(() => {
-        //remove old canvas objects
-        canvas.remove(
-            ...canvas
-                .getObjects()
-                .filter(
-                    (obj) =>
-                        obj?.properties?.type !== "fieldPoint" &&
-                        obj?.properties?.type !== "field",
-                ),
-        );
-
-        const horizontalScalingFactor = canvas.width / 3840;
-        const verticalScalingFactor = canvas.height / 2160;
-        var tempList = [];
-        let runningIndex = 0;
-
-        if (trailsEnabled) {
-            //all trails have to be redrawn in this case
-            trailsFullRedraw(
-                canvas,
-                annotations,
-                annotationBallTracks,
-                colorSetBall,
-                frameNumber,
-                trailFrameNumber,
-                isShowingAnnotation,
-                colorSet,
-                horizontalScalingFactor,
-                verticalScalingFactor,
-                setSelectedTrails,
-                setSelectedTrailsBall,
-                trailSize,
-                isShowingBallTrails,
-                isShowingPlayerTrails,
-            );
-        }
-
-        //same thing we do in drawBoundingBoxes.
-        if (annotations.length > 0) {
-            var boundingBoxesToDraw = drawInField
-                ? annotations.filter(
-                    (a) => a.frame_number === frameNumber && isInField(a.in_field),
-                )
-                : annotations.filter((a) => a.frame_number === frameNumber);
-
-            if (boundingBoxesToDraw.length > 0) {
-                //draw boxes
-                boundingBoxesToDraw.forEach((boundingBox) => {
-                    const boxColor = colorSet.get(boundingBox.displayName);
-                    const playerName = boundingBox.displayName;
-                    let playerBox = convertAnnotationToBox(
-                        boundingBox,
-                        horizontalScalingFactor,
-                        verticalScalingFactor,
-                    );
-                    playerBox.visible = isShowingBox;
-                    playerBox.stroke = `rgb(${boxColor.r}, ${boxColor.g}, ${boxColor.b})`;
-                    playerBox.setControlVisible("mtr", false);
-                    playerBox = defineBoxBehavior(playerBox);
-                    canvas.add(playerBox);
-
-                    tempList = tempList.concat([
-                        <TrackListItemPlayer
-                            key={runningIndex++}
-                            playerBox={playerBox}
-                            name={playerName}
-                            changeSelection={changeSelection}
-                            setName={handleSetName}
-                            blink={handleBlink}
-                            delete={handleDeletePlayer}
-                            color={boxColor}
-                            handleModalOpen={handleModalOpen}
-                        />,
-                    ]);
-                });
-                setPlayerList(tempList);
-            }
-        }
-
-        if (annotationBallTracks.length > 0) {
-            var boundingBoxesToDrawBall = annotationBallTracks.filter(
-                (a) => a.frame_number === frameNumber,
-            );
-            tempList = [];
-            runningIndex = 0;
-            if (boundingBoxesToDrawBall.length > 0) {
-                //draw boxes
-                boundingBoxesToDrawBall.forEach((boundingBox) => {
-                    const boxColor = colorSetBall.get(boundingBox.displayName);
-                    let ballBox = convertAnnotationBallToBallbox(
-                        boundingBox,
-                        horizontalScalingFactor,
-                        verticalScalingFactor,
-                    );
-                    ballBox.visible = isShowingBallBox;
-                    ballBox.stroke = `rgb(${boxColor.r}, ${boxColor.g}, ${boxColor.b})`;
-                    ballBox.setControlVisible("mtr", false);
-                    ballBox = defineBoxBehavior(ballBox, false); //false indicates that this is a ball box
-                    canvas.add(ballBox);
-
-                    tempList = tempList.concat([
-                        <TrackListItemBall
-                            key={runningIndex++}
-                            ballBox={ballBox}
-                            color={boxColor}
-                            name={boundingBox.displayName}
-                            changeSelection={changeSelection}
-                            setName={handleSetNameBall}
-                            blink={handleBlink}
-                            handleModalOpen={handleModalBallOpen}
-                            delete={handleDeleteBall}
-                        />,
-                    ]);
-                });
-                setBallList(tempList);
-            }
-        }
-    }, [
+    if (trailsEnabled) {
+      //all trails have to be redrawn in this case
+      trailsFullRedraw(
+        canvas,
         annotations,
         annotationBallTracks,
-        trailsEnabled,
+        colorSetBall,
+        frameNumber,
+        trailFrameNumber,
+        isShowingAnnotation,
+        colorSet,
+        horizontalScalingFactor,
+        verticalScalingFactor,
+        setSelectedTrails,
+        setSelectedTrailsBall,
+        trailSize,
         isShowingBallTrails,
         isShowingPlayerTrails,
-        isShowingBallBox,
-        trailSize,
-        trailFrameNumber,
-        drawInField,
-    ]);
+      );
+    }
+
+    //same thing we do in drawBoundingBoxes.
+    if (annotations.length > 0) {
+      var boundingBoxesToDraw = drawInField
+        ? annotations.filter(
+            (a) => a.frame_number === frameNumber && isInField(a.in_field),
+          )
+        : annotations.filter((a) => a.frame_number === frameNumber);
+
+      if (boundingBoxesToDraw.length > 0) {
+        //draw boxes
+        boundingBoxesToDraw.forEach((boundingBox) => {
+          const boxColor = colorSet.get(boundingBox.displayName);
+          const playerName = boundingBox.displayName;
+          let playerBox = convertAnnotationToBox(
+            boundingBox,
+            horizontalScalingFactor,
+            verticalScalingFactor,
+          );
+          playerBox.visible = isShowingBox;
+          playerBox.stroke = `rgb(${boxColor.r}, ${boxColor.g}, ${boxColor.b})`;
+          playerBox.setControlVisible("mtr", false);
+          playerBox = defineBoxBehavior(playerBox);
+          canvas.add(playerBox);
+
+          tempList = tempList.concat([
+            <TrackListItemPlayer
+              key={runningIndex++}
+              playerBox={playerBox}
+              name={playerName}
+              changeSelection={changeSelection}
+              setName={handleSetName}
+              blink={handleBlink}
+              delete={handleDeletePlayer}
+              color={boxColor}
+              handleModalOpen={handleModalOpen}
+            />,
+          ]);
+        });
+        setPlayerList(tempList);
+      }
+    }
+
+    if (annotationBallTracks.length > 0) {
+      var boundingBoxesToDrawBall = annotationBallTracks.filter(
+        (a) => a.frame_number === frameNumber,
+      );
+      tempList = [];
+      runningIndex = 0;
+      if (boundingBoxesToDrawBall.length > 0) {
+        //draw boxes
+        boundingBoxesToDrawBall.forEach((boundingBox) => {
+          const boxColor = colorSetBall.get(boundingBox.displayName);
+          let ballBox = convertAnnotationBallToBallbox(
+            boundingBox,
+            horizontalScalingFactor,
+            verticalScalingFactor,
+          );
+          ballBox.visible = isShowingBallBox;
+          ballBox.stroke = `rgb(${boxColor.r}, ${boxColor.g}, ${boxColor.b})`;
+          ballBox.setControlVisible("mtr", false);
+          ballBox = defineBoxBehavior(ballBox, false); //false indicates that this is a ball box
+          canvas.add(ballBox);
+
+          tempList = tempList.concat([
+            <TrackListItemBall
+              key={runningIndex++}
+              ballBox={ballBox}
+              color={boxColor}
+              name={boundingBox.displayName}
+              changeSelection={changeSelection}
+              setName={handleSetNameBall}
+              blink={handleBlink}
+              handleModalOpen={handleModalBallOpen}
+              delete={handleDeleteBall}
+            />,
+          ]);
+        });
+        setBallList(tempList);
+      }
+    }
+  }, [
+    annotations,
+    annotationBallTracks,
+    trailsEnabled,
+    isShowingBallTrails,
+    isShowingPlayerTrails,
+    isShowingBallBox,
+    trailSize,
+    trailFrameNumber,
+    drawInField,
+  ]);
 
   const handleKeyPress = (event) => {
     if (!videoElement) return;
@@ -1493,20 +1504,20 @@ const NewTrackingEditor = () => {
     setBindingAction(action);
   };
 
-    const getCurrentTimestampFrame = () => {
-        // First frame is frame 0
-        return Math.floor(videoElement.currentTime / frameDuration);
-    };
+  const getCurrentTimestampFrame = () => {
+    // First frame is frame 0
+    return Math.floor(videoElement.currentTime / frameDuration);
+  };
 
-    const getReferenceTimestampForFrame = (n) => {
-        return n * frameDuration + frameDuration / 3;
-    };
+  const getReferenceTimestampForFrame = (n) => {
+    return n * frameDuration + frameDuration / 3;
+  };
 
-    const updateTimestamp = (newTimestamp) => {
-        const newFrameNumber = Math.floor(newTimestamp / frameDuration);
-        setTimestamp(newTimestamp);
-        setFrameNumber(newFrameNumber);
-    };
+  const updateTimestamp = (newTimestamp) => {
+    const newFrameNumber = Math.floor(newTimestamp / frameDuration);
+    setTimestamp(newTimestamp);
+    setFrameNumber(newFrameNumber);
+  };
 
   const handleNextFrame = () => {
     if (videoElement) {
@@ -1557,21 +1568,21 @@ const NewTrackingEditor = () => {
     updateTimestamp(newTimestamp);
   };
 
-    const handlePlayPause = () => {
-        if (videoElement && videoElement.readyState !== 0 && !videoElement.ended) {
-            if (editField) {
-                setShowApplyHomographyModal(true);
-                return;
-            }
-            if (videoElement.paused) {
-                setIsPlaying(true);
-                videoElement.play();
-            } else {
-                setIsPlaying(false);
-                videoElement.pause();
-            }
-        }
-    };
+  const handlePlayPause = () => {
+    if (videoElement && videoElement.readyState !== 0 && !videoElement.ended) {
+      if (editField) {
+        setShowApplyHomographyModal(true);
+        return;
+      }
+      if (videoElement.paused) {
+        setIsPlaying(true);
+        videoElement.play();
+      } else {
+        setIsPlaying(false);
+        videoElement.pause();
+      }
+    }
+  };
 
   const handleZoomModeEnabled = () => {
     setIsZoomModeEnabled(!isZoomModeEnabled);
@@ -1629,160 +1640,160 @@ const NewTrackingEditor = () => {
     setProgress(currentProgress);
   };
 
-    const handleSeekEnd = () => {
-        if (wasVideoPlaying) {
-            videoElement.play();
-        }
-    };
-
-    const formatTime = (time) => {
-        const minutes = Math.floor(time / 60);
-        const seconds = time % 60;
-        return `${minutes}:${seconds.toFixed(5).padStart(2, "0")}`;
-    };
-
-    function handleDisplayingBox() {
-        if (isShowingBox) {
-            setIsShowingBox(false);
-            // if the box is hidden, the annotation shall be hidden too.
-            setIsShowingAnnotation(false);
-            if (!videoElement.paused) {
-                videoElement.pause();
-                videoElement.play();
-            }
-        } else {
-            setIsShowingBox(true);
-            if (!videoElement.paused) {
-                videoElement.pause();
-                videoElement.play();
-            }
-        }
+  const handleSeekEnd = () => {
+    if (wasVideoPlaying) {
+      videoElement.play();
     }
+  };
 
-    function handleDisplayingAnnotation() {
-        if (isShowingAnnotation) {
-            setIsShowingAnnotation(false);
-        } else {
-            setIsShowingAnnotation(true);
-        }
+  const formatTime = (time) => {
+    const minutes = Math.floor(time / 60);
+    const seconds = time % 60;
+    return `${minutes}:${seconds.toFixed(5).padStart(2, "0")}`;
+  };
+
+  function handleDisplayingBox() {
+    if (isShowingBox) {
+      setIsShowingBox(false);
+      // if the box is hidden, the annotation shall be hidden too.
+      setIsShowingAnnotation(false);
+      if (!videoElement.paused) {
+        videoElement.pause();
+        videoElement.play();
+      }
+    } else {
+      setIsShowingBox(true);
+      if (!videoElement.paused) {
+        videoElement.pause();
+        videoElement.play();
+      }
     }
+  }
 
-    function handleAddPlayer() {
-        const displayName = "new Player";
-        const boxColor = generateColor();
-        const newAnnotation = {
-            video_id: videoId,
-            game_id: gameId,
-            frame_number: frameNumber,
-            displayName: displayName,
-            h: 100,
-            w: 100,
-            x: 500,
-            x1: 0,
-            x2: 0,
-            x_trans: 0,
-            y: 100,
-            y1: 0,
-            y2: 0,
-            y_trans: 0,
-            in_field: true,
-            type: 0,
-        }
-        setColorSet(colorSet.set(displayName, boxColor));
-        setAnnotations(annotations => [...annotations, newAnnotation]);
-        setNewAnnotations(newAnnotations => [...newAnnotations, newAnnotation]);
-        const x = newAnnotation;
+  function handleDisplayingAnnotation() {
+    if (isShowingAnnotation) {
+      setIsShowingAnnotation(false);
+    } else {
+      setIsShowingAnnotation(true);
     }
+  }
 
-    function addBoundingBoxBallAtMousePosition(event) {
-        const pointer = canvas.getPointer(event.e);
-        const horizontalScalingFactor = canvas.width / 3840;
-        const verticalScalingFactor = canvas.height / 2160;
-        const x = pointer.x / horizontalScalingFactor;
-        const y = pointer.y / verticalScalingFactor;
-        //console.log(`Mouse clicked at: (${x}, ${y})`);
-        const newBallDisplayName = "new ball" //ball keys start from 1
-        const boxColor = generateColor();
-        setColorSetBall(colorSetBall.set(newBallDisplayName, boxColor));
-        setAnnotationBallTracks(
-            annotationBallTracks.concat({
-                video_id: videoId,
-                game_id: gameId,
-                frame_number: frameNumber,
-                displayName: newBallDisplayName,
-                x1: x,
-                x2: x + 30,
-                y1: y,
-                y2: y + 30,
-                detection: 1,
-                x: 0,
-                y: 0,
-                type: 1,
-            }),
-        );
+  function handleAddPlayer() {
+    const displayName = "new Player";
+    const boxColor = generateColor();
+    const newAnnotation = {
+      video_id: videoId,
+      game_id: gameId,
+      frame_number: frameNumber,
+      displayName: displayName,
+      h: 100,
+      w: 100,
+      x: 500,
+      x1: 0,
+      x2: 0,
+      x_trans: 0,
+      y: 100,
+      y1: 0,
+      y2: 0,
+      y_trans: 0,
+      in_field: true,
+      type: 0,
+    };
+    setColorSet(colorSet.set(displayName, boxColor));
+    setAnnotations((annotations) => [...annotations, newAnnotation]);
+    setNewAnnotations((newAnnotations) => [...newAnnotations, newAnnotation]);
+    const x = newAnnotation;
+  }
 
-        //Todo Backend
+  function addBoundingBoxBallAtMousePosition(event) {
+    const pointer = canvas.getPointer(event.e);
+    const horizontalScalingFactor = canvas.width / 3840;
+    const verticalScalingFactor = canvas.height / 2160;
+    const x = pointer.x / horizontalScalingFactor;
+    const y = pointer.y / verticalScalingFactor;
+    //console.log(`Mouse clicked at: (${x}, ${y})`);
+    const newBallDisplayName = "new ball"; //ball keys start from 1
+    const boxColor = generateColor();
+    setColorSetBall(colorSetBall.set(newBallDisplayName, boxColor));
+    setAnnotationBallTracks(
+      annotationBallTracks.concat({
+        video_id: videoId,
+        game_id: gameId,
+        frame_number: frameNumber,
+        displayName: newBallDisplayName,
+        x1: x,
+        x2: x + 30,
+        y1: y,
+        y2: y + 30,
+        detection: 1,
+        x: 0,
+        y: 0,
+        type: 1,
+      }),
+    );
 
-        canvas.off("mouse:down");
+    //Todo Backend
+
+    canvas.off("mouse:down");
+  }
+
+  function handleAddBall() {
+    canvas.on("mouse:down", function (e) {
+      addBoundingBoxBallAtMousePosition(e);
+    });
+  }
+
+  const handleEnablingTrails = () => {
+    if (trailsEnabled) {
+      setTrailsEnabled(false);
+    } else {
+      setTrailsEnabled(true);
     }
+  };
 
-    function handleAddBall() {
-        canvas.on("mouse:down", function (e) {
-            addBoundingBoxBallAtMousePosition(e);
-        });
+  const handleEnablingField = () => {
+    if (showField) {
+      setShowField(false);
+      setEditField(false);
+      deleteFieldDrawing();
+    } else {
+      setShowField(true);
+      drawField(true);
     }
+  };
 
-    const handleEnablingTrails = () => {
-        if (trailsEnabled) {
-            setTrailsEnabled(false);
-        } else {
-            setTrailsEnabled(true);
-        }
-    };
+  const handleEnablingEditField = () => {
+    if (editField) {
+      setEditField(false);
+    } else {
+      setEditField(true);
+    }
+  };
 
-    const handleEnablingField = () => {
-        if (showField) {
-            setShowField(false);
-            setEditField(false);
-            deleteFieldDrawing();
-        } else {
-            setShowField(true);
-            drawField(true);
-        }
-    };
+  const handleShowBallBox = () => {
+    console.log("showing ball box", isShowingBallBox);
+    if (isShowingBallBox) {
+      setIsShowingBallBox(false);
+    } else {
+      setIsShowingBallBox(true);
+    }
+  };
 
-    const handleEnablingEditField = () => {
-        if (editField) {
-            setEditField(false);
-        } else {
-            setEditField(true);
-        }
-    };
+  const handleShowBallTrails = () => {
+    if (isShowingBallTrails) {
+      setIsShowingBallTrails(false);
+    } else {
+      setIsShowingBallTrails(true);
+    }
+  };
 
-    const handleShowBallBox = () => {
-        console.log("showing ball box", isShowingBallBox);
-        if (isShowingBallBox) {
-            setIsShowingBallBox(false);
-        } else {
-            setIsShowingBallBox(true);
-        }
-    };
-
-    const handleShowBallTrails = () => {
-        if (isShowingBallTrails) {
-            setIsShowingBallTrails(false);
-        } else {
-            setIsShowingBallTrails(true);
-        }
-    };
-
-    const handleShowPlayerTrails = () => {
-        if (isShowingPlayerTrails) {
-            setIsShowingPlayerTrails(false);
-        } else {
-            setIsShowingPlayerTrails(true);
-        }
-    };
+  const handleShowPlayerTrails = () => {
+    if (isShowingPlayerTrails) {
+      setIsShowingPlayerTrails(false);
+    } else {
+      setIsShowingPlayerTrails(true);
+    }
+  };
 
   const handleZoomReset = () => {
     canvas.viewportTransform = [1, 0, 0, 1, 0, 0];
@@ -1798,22 +1809,22 @@ const NewTrackingEditor = () => {
     });
   }, [editField, canvas]);
 
-    const deleteFieldDrawing = () => {
-        canvas.remove(
-            ...canvas
-                .getObjects()
-                .filter(
-                    (obj) =>
-                        obj.properties?.type === "field" ||
-                        obj.properties?.type === "fieldPoint",
-                ),
-        );
-    };
+  const deleteFieldDrawing = () => {
+    canvas.remove(
+      ...canvas
+        .getObjects()
+        .filter(
+          (obj) =>
+            obj.properties?.type === "field" ||
+            obj.properties?.type === "fieldPoint",
+        ),
+    );
+  };
 
-    const drawField = (forceDraw = false) => {
-        if (!homographies) {
-            return;
-        }
+  const drawField = (forceDraw = false) => {
+    if (!homographies) {
+      return;
+    }
 
     if (showField || forceDraw) {
       const newFieldPoints = drawFieldPoints(
@@ -1831,9 +1842,9 @@ const NewTrackingEditor = () => {
     }
   };
 
-    const handleSwitchingTrailSize = (event) => {
-        setTrailSize(event.target.value);
-    };
+  const handleSwitchingTrailSize = (event) => {
+    setTrailSize(event.target.value);
+  };
 
   const handleApplyHomography = (frameNumber, trackPoints) => {
     const path = window.location.pathname;
@@ -1842,7 +1853,7 @@ const NewTrackingEditor = () => {
     let currentFrame = parseInt(getCurrentTimestampFrame());
     let fieldPoints = canvas
       .getObjects()
-      .filter((obj) =>obj.properties?.type === "fieldPoint")
+      .filter((obj) => obj.properties?.type === "fieldPoint")
       .map((obj) => ({
         id: obj.id,
         x: obj.left,
@@ -1931,79 +1942,80 @@ const NewTrackingEditor = () => {
       });
   };
 
-    const handleContinueWithoutApplyingHomographies = async () => {
-        console.log("Continuing without applying homographies");
-        setShowApplyHomographyModal(false);
-        handleEnablingEditField();
-        videoElement.play();
-        setIsPlaying(true);
-    };
+  const handleContinueWithoutApplyingHomographies = async () => {
+    console.log("Continuing without applying homographies");
+    setShowApplyHomographyModal(false);
+    handleEnablingEditField();
+    videoElement.play();
+    setIsPlaying(true);
+  };
 
-    return (
-        <LoadingOverlay
-            className="FileOverview"
-            active={loading}
-            spinner text={loaderText}
-            styles={{
-                overlay: (base) => ({
-                    ...base,
-                    zIndex: 9999, // make sure it's high enough
-                }),
-            }}
-        >
-            <ApplyHomographyModal
-                showApplyHomographyModal={showApplyHomographyModal}
-                handleClose={() => setShowApplyHomographyModal(false)}
-                handleApply={handleApplyHomography}
-                handleContinueWithoutApplying={() =>
-                    handleContinueWithoutApplyingHomographies()
-                }
-            />
-            <MergeAndSwapModal
-                playerChosenInList={playerChosenInList}
-                annotations={annotations}
-                setAnnotations={setAnnotations}
-                frameNumber={frameNumber}
-                mergeModalState={mergeModalState}
-                handleClose={handleModalsClose}
-                setUpdateAnnotations={setAlteredAnnotations}
-                setDeleteAnnotations={setDeleteAnnotations}
-            />
-            <MergeAndSwapModalBall
-                ballChosenInList={ballChosenInList}
-                annotationBallTracks={annotationBallTracks}
-                setAnnotationBallTracks={setAnnotationBallTracks}
-                frameNumber={frameNumber}
-                mergeModalBallState={mergeModalBallState}
-                handleClose={handleModalsClose}
-                setUpdateAnnotations={setAlteredAnnotations}
-                setDeleteAnnotations={setDeleteAnnotations}
-            />
-            <div className="controls">
-                <Box id="tools-container" sx={{display: "flex", gap: "8px"}}>
-                    <div>Show Annotation:</div>
+  return (
+    <LoadingOverlay
+      className="FileOverview"
+      active={loading}
+      spinner
+      text={loaderText}
+      styles={{
+        overlay: (base) => ({
+          ...base,
+          zIndex: 9999, // make sure it's high enough
+        }),
+      }}
+    >
+      <ApplyHomographyModal
+        showApplyHomographyModal={showApplyHomographyModal}
+        handleClose={() => setShowApplyHomographyModal(false)}
+        handleApply={handleApplyHomography}
+        handleContinueWithoutApplying={() =>
+          handleContinueWithoutApplyingHomographies()
+        }
+      />
+      <MergeAndSwapModal
+        playerChosenInList={playerChosenInList}
+        annotations={annotations}
+        setAnnotations={setAnnotations}
+        frameNumber={frameNumber}
+        mergeModalState={mergeModalState}
+        handleClose={handleModalsClose}
+        setUpdateAnnotations={setAlteredAnnotations}
+        setDeleteAnnotations={setDeleteAnnotations}
+      />
+      <MergeAndSwapModalBall
+        ballChosenInList={ballChosenInList}
+        annotationBallTracks={annotationBallTracks}
+        setAnnotationBallTracks={setAnnotationBallTracks}
+        frameNumber={frameNumber}
+        mergeModalBallState={mergeModalBallState}
+        handleClose={handleModalsClose}
+        setUpdateAnnotations={setAlteredAnnotations}
+        setDeleteAnnotations={setDeleteAnnotations}
+      />
+      <div className="controls">
+        <Box id="tools-container" sx={{ display: "flex", gap: "8px" }}>
+          <div>Show Annotation:</div>
 
-                    <Switch
-                        color="default"
-                        checked={isShowingAnnotation}
-                        onChange={handleDisplayingAnnotation}
-                    />
+          <Switch
+            color="default"
+            checked={isShowingAnnotation}
+            onChange={handleDisplayingAnnotation}
+          />
 
-                    <div>Show Player Box:</div>
+          <div>Show Player Box:</div>
 
-                    <Switch
-                        color="default"
-                        checked={isShowingBox}
-                        onChange={handleDisplayingBox}
-                    />
-                    <div>Show In Field:</div>
+          <Switch
+            color="default"
+            checked={isShowingBox}
+            onChange={handleDisplayingBox}
+          />
+          <div>Show In Field:</div>
 
-                    <Switch
-                        color="default"
-                        checked={drawInField}
-                        disabled={!videoElement?.paused}
-                        onChange={() => setDrawInField(!drawInField)}
-                    />
+          <Switch
+            color="default"
+            checked={drawInField}
+            disabled={!videoElement?.paused}
+            onChange={() => setDrawInField(!drawInField)}
+          />
 
           <Button
             data-testid="add-player-button"
@@ -2021,12 +2033,12 @@ const NewTrackingEditor = () => {
             variant="contained"
             onClick={() =>
               handleMultiSelectMerge(
-                  selectedTrails,
-                  setSelectedTrails,
-                  annotations,
-                  setAnnotations,
-                  alteredAnnotations,
-                  setAlteredAnnotations
+                selectedTrails,
+                setSelectedTrails,
+                annotations,
+                setAnnotations,
+                alteredAnnotations,
+                setAlteredAnnotations,
               )
             }
             sx={{
@@ -2048,8 +2060,8 @@ const NewTrackingEditor = () => {
               )
             }
             sx={{
-                backgroundColor: "#BBC3C9 !important",
-                color: "#1b1f22 !important",
+              backgroundColor: "#BBC3C9 !important",
+              color: "#1b1f22 !important",
             }}
           >
             Merge Ball
@@ -2066,8 +2078,8 @@ const NewTrackingEditor = () => {
               )
             }
             sx={{
-                backgroundColor: "#BBC3C9 !important",
-                color: "#1b1f22 !important",
+              backgroundColor: "#BBC3C9 !important",
+              color: "#1b1f22 !important",
             }}
           >
             Del selected Balltrails
@@ -2108,19 +2120,17 @@ const NewTrackingEditor = () => {
               draw players from annotation and Ball tracks
             </Button>
           </div>
-          <DownloadButton
-            videoId={videoId}
-          />
+          <DownloadButton videoId={videoId} />
           <Button
-                        data-testid="save-button"
-                        variant="contained"
-                        onClick={handleSave}
-                        sx={{
-                            backgroundColor: "#BBC3C9 !important",
-                            color: "#1b1f22 !important",
-                        }}
-                    >
-                        Save Changes
+            data-testid="save-button"
+            variant="contained"
+            onClick={handleSave}
+            sx={{
+              backgroundColor: "#BBC3C9 !important",
+              color: "#1b1f22 !important",
+            }}
+          >
+            Save Changes
           </Button>
         </Box>
       </div>
@@ -2221,7 +2231,9 @@ const NewTrackingEditor = () => {
                     onClick={() => startBindingKey(action)}
                   >
                     {action}:{" "}
-                    {keyBindings[action] === " " ? "Space" : keyBindings[action]}
+                    {keyBindings[action] === " "
+                      ? "Space"
+                      : keyBindings[action]}
                   </div>
                 ))}
               </div>

@@ -31,8 +31,8 @@ export default function MergeAndSwapModal({
   playerChosenInList,
   annotations,
   setAnnotations,
-    setUpdateAnnotations,
-    setDeleteAnnotations,
+  setUpdateAnnotations,
+  setDeleteAnnotations,
   frameNumber,
   mergeModalState,
   handleClose,
@@ -41,15 +41,15 @@ export default function MergeAndSwapModal({
   const [operation, setOperation] = useState("swap");
   const menuItems = useMemo(() => {
     const uniqueNames = Array.from(
-        new Set(
-            annotations
-                .map(a => a.displayName)
-                .filter(name => name !== playerChosenInList)
-        )
+      new Set(
+        annotations
+          .map((a) => a.displayName)
+          .filter((name) => name !== playerChosenInList),
+      ),
     );
     //debugger;
     const isGenericPlayer = (name) => /^Player \d+$/.test(name);
-    const getPlayerNumber = (name) => parseInt(name.replace('Player ', ''), 10);
+    const getPlayerNumber = (name) => parseInt(name.replace("Player ", ""), 10);
 
     uniqueNames.sort((a, b) => {
       const aIsGeneric = isGenericPlayer(a);
@@ -66,10 +66,10 @@ export default function MergeAndSwapModal({
       }
     });
 
-    return uniqueNames.map(name => (
-        <MenuItem key={name} data-testid={`menuitem${name}`} value={name}>
-          {name}
-        </MenuItem>
+    return uniqueNames.map((name) => (
+      <MenuItem key={name} data-testid={`menuitem${name}`} value={name}>
+        {name}
+      </MenuItem>
     ));
   }, [annotations, playerChosenInList]);
 
@@ -84,8 +84,8 @@ export default function MergeAndSwapModal({
         playerChosenInList,
         annotations,
         setAnnotations,
-          setUpdateAnnotations,
-          setDeleteAnnotations,
+        setUpdateAnnotations,
+        setDeleteAnnotations,
         frameNumber,
       );
     else
@@ -94,8 +94,8 @@ export default function MergeAndSwapModal({
         playerChosenInList,
         annotations,
         setAnnotations,
-          setUpdateAnnotations,
-          setDeleteAnnotations,
+        setUpdateAnnotations,
+        setDeleteAnnotations,
       );
     handleClose();
   };

@@ -1,64 +1,64 @@
 :root {
-    --main-text-color: #F5EDF0;
-    --main-bg: #1B1F22;
-    --secondary-bg: #424B54;
-    --accent: #83B692;
+  --main-text-color: #f5edf0;
+  --main-bg: #1b1f22;
+  --secondary-bg: #424b54;
+  --accent: #83b692;
 }
 
 canvas {
-    /*background-size: 100% 100%;*/
+  /*background-size: 100% 100%;*/
 }
 
 .TrackingEditor {
-    /*margin-left: 30px;*/
-    /*margin-top: 30px;*/
-    display: grid;
-    grid-template-columns: min-content auto;
-    grid-template-areas:
-            "NavBar TrackList"
-            "canvas TrackList"
-    ;
+  /*margin-left: 30px;*/
+  /*margin-top: 30px;*/
+  display: grid;
+  grid-template-columns: min-content auto;
+  grid-template-areas:
+    "NavBar TrackList"
+    "canvas TrackList";
 }
 
 .TrackList {
-    grid-area: TrackList;
-    width: 100%;
+  grid-area: TrackList;
+  width: 100%;
 }
 
 .TrackListTabs {
-    border-width: 0px 0px 3px 8px;
-    border-style: solid;
-    height: 73px;
-    background-color: #BBB;
+  border-width: 0px 0px 3px 8px;
+  border-style: solid;
+  height: 73px;
+  background-color: #bbb;
 }
 
-.TrackListTabs Button {     /*selects all elements of type Button inside element with class TrackListTabs*/
-    height: 100%;
-    width: 33.33%;
-    /*border-radius: 40px 40px 0 0;*/
-    border-radius: 0;
+.TrackListTabs Button {
+  /*selects all elements of type Button inside element with class TrackListTabs*/
+  height: 100%;
+  width: 33.33%;
+  /*border-radius: 40px 40px 0 0;*/
+  border-radius: 0;
 }
 
 .TrackListTabs .active {
-    background-color: #727272;
+  background-color: #727272;
 }
 
 /* so that active button appears not clickable, also otherwise it only turns dark grey (~ looks active) after mouse is gone */
 .TrackListTabs .active:hover {
-    background-color: #727272;
+  background-color: #727272;
 }
 
 .TrackListList {
-    height: 810px;      /* if adding TrackListControls, subtract TrackListControls.height from this height */
-    overflow: auto;     /* Scrollbar appears when content is too big for div */
+  height: 810px; /* if adding TrackListControls, subtract TrackListControls.height from this height */
+  overflow: auto; /* Scrollbar appears when content is too big for div */
 }
 
 .TrackListList > .inactive {
-    display: none;
+  display: none;
 }
 
 .TrackListList p {
-    margin: 0px;
+  margin: 0px;
 }
 
 /*.TrackListControls {*/
@@ -67,55 +67,55 @@ canvas {
 /*}*/
 
 .TrackListItem {
-    border-style: none none solid solid;
-    border-width: 0px 0px 3px 8px;
-    border-color: var(--main-bg) !important;
-    background-color: #727272;
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-    position: relative;
+  border-style: none none solid solid;
+  border-width: 0px 0px 3px 8px;
+  border-color: var(--main-bg) !important;
+  background-color: #727272;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  position: relative;
 }
 
 .TrackListItemSwapOverlay {
-    position: absolute;
-    width: 0%;
-    height: 100%;
-    background-color: #BBB;
-    z-index: 1;
-    transition: width 0.3s ease-out;
+  position: absolute;
+  width: 0%;
+  height: 100%;
+  background-color: #bbb;
+  z-index: 1;
+  transition: width 0.3s ease-out;
 }
 
 .TrackListItemSwapOverlay.expanded {
-    width: 100%;
+  width: 100%;
 }
 
 .TrackListItemSwapOverlayContent {
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-    width: 100%;
-    height: 100%;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  width: 100%;
+  height: 100%;
 
-    /* so that nothing wraps during slide out animation: */
-    overflow: hidden;
-    flex-wrap: nowrap;
-    white-space: nowrap;
+  /* so that nothing wraps during slide out animation: */
+  overflow: hidden;
+  flex-wrap: nowrap;
+  white-space: nowrap;
 }
 
 .TrackListItemSwapOverlayContentText {
-    font-size: large;
-    margin-left: 0.5em;
-    margin-right: 0.5em;
+  font-size: large;
+  margin-left: 0.5em;
+  margin-right: 0.5em;
 }
 
 .TrackListItemSwapOverlayContentDropdown {
-    width: 8em;
-    margin-right: 1.5em;
+  width: 8em;
+  margin-right: 1.5em;
 }
 
 .TrackListItemSwapOverlayContentButton {
-    margin-left: 0.5em !important;
+  margin-left: 0.5em !important;
 }
 
 /*.TrackListItemSwapOverlay.unexpanded {*/
@@ -123,47 +123,47 @@ canvas {
 /*}*/
 
 .hide {
-    display: none;
+  display: none;
 }
-
 
 /* Font weight is working but not the rest? not even display: none ?? probably has something to do with react-edit-text package,
 for now just using style property of EditText component in JS code*/
 .TrackListItemName {
-    /*font-weight: lighter;*/
-    margin-top: 0;
-    margin-bottom: 0;
+  /*font-weight: lighter;*/
+  margin-top: 0;
+  margin-bottom: 0;
 }
 
 .TrackListItemBlink {
-    height: 75%;
-    background-color: inherit;
-    border-width: 3px;
-    margin-right: 10px;
-    border-radius: 5px;
+  height: 75%;
+  background-color: inherit;
+  border-width: 3px;
+  margin-right: 10px;
+  border-radius: 5px;
 }
 
 .TrackListItemBlink:focus {
-    outline: none;
+  outline: none;
 }
 
 .TrackListItemTeamDropdown {
-    width: 200px;
+  width: 200px;
 }
 
 NavBar {
-    grid-area: NavBar;
+  grid-area: NavBar;
 }
 
 canvas {
-    grid-area: canvas;
+  grid-area: canvas;
 }
 
 .selected {
-    background-color: #BBBBBB;
-    /*color: white !important;  this would change the color (effects for example ID and border) */
+  background-color: #bbbbbb;
+  /*color: white !important;  this would change the color (effects for example ID and border) */
 }
 
-.selected.expanded {    /* prevents selected item to change color so that only changes color by sliding animation of SwapOverlay */
-    background-color: #727272;
+.selected.expanded {
+  /* prevents selected item to change color so that only changes color by sliding animation of SwapOverlay */
+  background-color: #727272;
 }
