@@ -12,6 +12,8 @@ import {
   faUpload,
 } from "@fortawesome/free-solid-svg-icons";
 
+const VIDEO_FILE_REGEX = /\.(mp4|m4v|mov|avi|wmv|mkv|webm|mpeg|mpg)$/i;
+
 class FileOverview extends Component {
   constructor(props) {
     super(props);
@@ -66,7 +68,7 @@ class FileOverview extends Component {
       (file) => file.name === "processed_ball.csv",
     );
     const tempVideo = selectedFiles.find((file) =>
-      file.name.match(/\.(mp4|avi|mov|wmv)$/i),
+      VIDEO_FILE_REGEX.test(file.name),
     );
 
     const requiredFilesUploaded = tempProcessedPlayers && tempVideo;
@@ -195,7 +197,7 @@ class FileOverview extends Component {
     );
     let tempLog = selectedFiles.find((file) => file.name === "log.txt");
     let tempVideo = selectedFiles.find((file) =>
-      file.name.match(/\.(mp4|avi|mov|wmv)$/i),
+      VIDEO_FILE_REGEX.test(file.name),
     );
     let tempFieldSize = selectedFiles.find(
       (file) => file.name === "homographiesoptimized_field_size.json",

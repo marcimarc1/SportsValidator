@@ -64,6 +64,8 @@ import {
 
 const DEFAULT_FRAME_DURATION = 1 / 30;
 const MAX_REASONABLE_FRAME_RATE = 1000;
+const DEFAULT_VIDEO_WIDTH = 3840;
+const DEFAULT_VIDEO_HEIGHT = 2160;
 
 const toPositiveFiniteNumber = (value) => {
   const parsed = Number(value);
@@ -91,13 +93,9 @@ const estimateFrameDurationFromTracking = (
   annotationBallTracks,
   videoDuration,
 ) => {
-  const frameRateFromLog = getFrameRateFromLog(logFile);
-  if (frameRateFromLog) {
-    return 1 / frameRateFromLog;
-  }
-
   if (!Number.isFinite(videoDuration) || videoDuration <= 0) {
-    return null;
+    const frameRateFromLog = getFrameRateFromLog(logFile);
+    return frameRateFromLog ? 1 / frameRateFromLog : null;
   }
 
   const allFrames = [
@@ -123,7 +121,8 @@ const estimateFrameDurationFromTracking = (
     estimatedFps <= 0 ||
     estimatedFps > MAX_REASONABLE_FRAME_RATE
   ) {
-    return null;
+    const frameRateFromLog = getFrameRateFromLog(logFile);
+    return frameRateFromLog ? 1 / frameRateFromLog : null;
   }
 
   return 1 / estimatedFps;
@@ -147,6 +146,11 @@ const NewTrackingEditor = () => {
   const [frameNumber, setFrameNumber] = useState(0);
   const [timestamp, setTimestamp] = useState(0);
   const [videoElement, setVideoElement] = useState(null);
+  const [videoDuration, setVideoDuration] = useState(null);
+  const [videoDimensions, setVideoDimensions] = useState({
+    width: DEFAULT_VIDEO_WIDTH,
+    height: DEFAULT_VIDEO_HEIGHT,
+  });
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [isDownloadingVideo, setIsDownloadingVideo] = useState(false);
@@ -278,6 +282,10 @@ const NewTrackingEditor = () => {
   let { videoName } = useParams();
 
   const canvasRef = useRef(null);
+  const getHorizontalScalingFactor = () =>
+    canvas.width / Math.max(videoDimensions.width, 1);
+  const getVerticalScalingFactor = () =>
+    canvas.height / Math.max(videoDimensions.height, 1);
   // could be used to display annotations in canvas
 
   useEffect(() => {
@@ -285,7 +293,7 @@ const NewTrackingEditor = () => {
       logFile,
       annotations,
       annotationBallTracks,
-      videoElement?.duration,
+      videoDuration,
     );
 
     if (
@@ -295,7 +303,7 @@ const NewTrackingEditor = () => {
     ) {
       setFrameDuration(estimatedFrameDuration);
     }
-  }, [annotations, annotationBallTracks, videoElement?.duration, frameDuration]);
+  }, [annotations, annotationBallTracks, videoDuration, frameDuration, logFile]);
 
   const refreshSidebar = () => {
     updateSidebar({
@@ -444,8 +452,8 @@ const NewTrackingEditor = () => {
           box.width = actualWidth;
           box.height = actualHeight;
 
-          const horizontalScalingFactor = canvas.width / 3840;
-          const verticalScalingFactor = canvas.height / 2160;
+          const horizontalScalingFactor = getHorizontalScalingFactor();
+          const verticalScalingFactor = getVerticalScalingFactor();
           const modifiedAnnotation = convertBoxToAnnotation(
             box,
             horizontalScalingFactor,
@@ -479,8 +487,8 @@ const NewTrackingEditor = () => {
           box.width = actualWidth;
           box.height = actualHeight;
 
-          const horizontalScalingFactor = canvas.width / 3840;
-          const verticalScalingFactor = canvas.height / 2160;
+          const horizontalScalingFactor = getHorizontalScalingFactor();
+          const verticalScalingFactor = getVerticalScalingFactor();
           const modifiedAnnotation = convertBallboxToAnnotationBall(
             box,
             horizontalScalingFactor,
@@ -620,27 +628,75 @@ const NewTrackingEditor = () => {
   }, [activeObject]);
 
   useEffect(() => {
-    let canvasWidth = document.body.clientWidth - 300;
-    var canvasHeight = 800;
-    if (videoElement) {
-      canvasHeight = (videoElement.height / videoElement.width) * canvasWidth;
-    }
     let initCanvas = new fabric.Canvas("tracking-editor-canvas");
-    initCanvas.setHeight(canvasHeight);
-    initCanvas.setWidth(canvasWidth);
     setCanvas(initCanvas);
   }, []);
+
+  useEffect(() => {
+    if (!canvas) return;
+
+    const resizeCanvasToViewport = () => {
+      const sidebarWidth = 300;
+      const horizontalPadding = 32;
+      const controlsReservedHeight = 230;
+      const minCanvasWidth = 640;
+      const minCanvasHeight = 360;
+      const aspectRatio = videoDimensions.width / videoDimensions.height;
+
+      const availableWidth = Math.max(
+        minCanvasWidth,
+        window.innerWidth - sidebarWidth - horizontalPadding,
+      );
+      const availableHeight = Math.max(
+        minCanvasHeight,
+        window.innerHeight - controlsReservedHeight,
+      );
+
+      let canvasWidth = availableWidth;
+      let canvasHeight = canvasWidth / aspectRatio;
+
+      if (canvasHeight > availableHeight) {
+        canvasHeight = availableHeight;
+        canvasWidth = canvasHeight * aspectRatio;
+      }
+
+      canvas.setWidth(canvasWidth);
+      canvas.setHeight(canvasHeight);
+      canvas.renderAll();
+    };
+
+    resizeCanvasToViewport();
+    window.addEventListener("resize", resizeCanvasToViewport);
+    return () => window.removeEventListener("resize", resizeCanvasToViewport);
+  }, [canvas, videoDimensions]);
 
   useEffect(() => {
     const localVideoElement = document.createElement("video");
     localVideoElement.src = videoUrl;
     localVideoElement.muted = true;
-
-    //video size has to be anually set
-    localVideoElement.width = 3840;
-    localVideoElement.height = 2160;
+    localVideoElement.preload = "metadata";
+    localVideoElement.width = DEFAULT_VIDEO_WIDTH;
+    localVideoElement.height = DEFAULT_VIDEO_HEIGHT;
+    const handleLoadedMetadata = () => {
+      const width = localVideoElement.videoWidth || DEFAULT_VIDEO_WIDTH;
+      const height = localVideoElement.videoHeight || DEFAULT_VIDEO_HEIGHT;
+      localVideoElement.width = width;
+      localVideoElement.height = height;
+      setVideoDimensions({ width, height });
+      if (Number.isFinite(localVideoElement.duration)) {
+        setVideoDuration(localVideoElement.duration);
+      }
+    };
+    localVideoElement.addEventListener("loadedmetadata", handleLoadedMetadata);
 
     setVideoElement(localVideoElement);
+
+    return () => {
+      localVideoElement.removeEventListener(
+        "loadedmetadata",
+        handleLoadedMetadata,
+      );
+    };
   }, [videoUrl]);
 
   const isInField = (inField) => {
@@ -654,8 +710,8 @@ const NewTrackingEditor = () => {
 
     // Drawing video
     // context.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
-    const horizontalScalingFactor = canvas.width / 3840;
-    const verticalScalingFactor = canvas.height / 2160;
+    const horizontalScalingFactor = getHorizontalScalingFactor();
+    const verticalScalingFactor = getVerticalScalingFactor();
     var fabricVideo = new fabric.Image(videoElement, {
       left: 0,
       top: 0,
@@ -671,8 +727,8 @@ const NewTrackingEditor = () => {
   };
 
   const drawBoundingBoxes = (frameNumber) => {
-    const horizontalScalingFactor = canvas.width / 3840;
-    const verticalScalingFactor = canvas.height / 2160;
+    const horizontalScalingFactor = getHorizontalScalingFactor();
+    const verticalScalingFactor = getVerticalScalingFactor();
     deselectAllBox();
 
     if (!trailsEnabled) {
@@ -1046,8 +1102,8 @@ const NewTrackingEditor = () => {
         trailFrameNumber,
         isShowingAnnotation,
         colorSet,
-        canvas.width / 3840,
-        canvas.height / 2160,
+        getHorizontalScalingFactor(),
+        getVerticalScalingFactor(),
         setSelectedTrails,
         setSelectedTrailsBall,
         trailSize,
@@ -1070,8 +1126,8 @@ const NewTrackingEditor = () => {
         ),
     );
 
-    const horizontalScalingFactor = canvas.width / 3840;
-    const verticalScalingFactor = canvas.height / 2160;
+    const horizontalScalingFactor = getHorizontalScalingFactor();
+    const verticalScalingFactor = getVerticalScalingFactor();
     var tempList = [];
     let runningIndex = 0;
 
@@ -1522,8 +1578,8 @@ const NewTrackingEditor = () => {
   }
   function addBoundingBoxBallAtMousePosition(event) {
     const pointer = canvas.getPointer(event.e);
-    const horizontalScalingFactor = canvas.width / 3840;
-    const verticalScalingFactor = canvas.height / 2160;
+    const horizontalScalingFactor = getHorizontalScalingFactor();
+    const verticalScalingFactor = getVerticalScalingFactor();
     const x = pointer.x / horizontalScalingFactor;
     const y = pointer.y / verticalScalingFactor;
     //console.log(`Mouse clicked at: (${x}, ${y})`);
@@ -1642,8 +1698,8 @@ const NewTrackingEditor = () => {
         canvas,
         getCurrentTimestampFrame(),
         homographies,
-        canvas.width / 3840,
-        canvas.height / 2160,
+        getHorizontalScalingFactor(),
+        getVerticalScalingFactor(),
         logFile.Sport,
         fieldSize?.length,
         fieldSize?.width,
@@ -1678,8 +1734,8 @@ const NewTrackingEditor = () => {
         fieldPoints,
         homographies,
         currentFrame,
-        canvas.width / 3840,
-        canvas.height / 2160,
+        getHorizontalScalingFactor(),
+        getVerticalScalingFactor(),
         logFile.Sport,
         fieldSize?.length,
         fieldSize?.width,
@@ -1705,8 +1761,8 @@ const NewTrackingEditor = () => {
         end_frame: currentFrame + frameNumber,
         points: fieldPoints.map((point) => ({
           ...point,
-          x: point.x / (canvas.width / 3840),
-          y: point.y / (canvas.height / 2160),
+          x: point.x / getHorizontalScalingFactor(),
+          y: point.y / getVerticalScalingFactor(),
         })),
         player_boxes: annotations
           .filter(
@@ -1726,8 +1782,8 @@ const NewTrackingEditor = () => {
         const trackedPoints = response.data.tracked_points.map((points) =>
           points.map((point) => ({
             ...point,
-            x: point.x * (canvas.width / 3840),
-            y: point.y * (canvas.height / 2160),
+            x: point.x * getHorizontalScalingFactor(),
+            y: point.y * getVerticalScalingFactor(),
           })),
         );
         const startFrame = response.data.start_frame;
@@ -1738,8 +1794,8 @@ const NewTrackingEditor = () => {
             framePoints,
             homographies,
             startFrame + i,
-            canvas.width / 3840,
-            canvas.height / 2160,
+            getHorizontalScalingFactor(),
+            getVerticalScalingFactor(),
             logFile.Sport,
             fieldSize?.length,
             fieldSize?.width,
