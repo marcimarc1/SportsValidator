@@ -62,6 +62,73 @@ import {
   handleMultiSelectMergeBall,
 } from "./multiSelectHandlers";
 
+const DEFAULT_FRAME_DURATION = 1 / 30;
+const MAX_REASONABLE_FRAME_RATE = 1000;
+
+const toPositiveFiniteNumber = (value) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+};
+
+const getFrameRateFromLog = (logFile) => {
+  if (!logFile) return null;
+
+  return (
+    toPositiveFiniteNumber(logFile.FPS) ||
+    toPositiveFiniteNumber(logFile.fps) ||
+    toPositiveFiniteNumber(logFile.FrameRate) ||
+    toPositiveFiniteNumber(logFile.frameRate) ||
+    toPositiveFiniteNumber(logFile["Frame Rate"]) ||
+    toPositiveFiniteNumber(logFile["Acquisition Frequency"]) ||
+    toPositiveFiniteNumber(logFile["AcquisitionFrequency"]) ||
+    toPositiveFiniteNumber(logFile.Frequency)
+  );
+};
+
+const estimateFrameDurationFromTracking = (
+  logFile,
+  annotations,
+  annotationBallTracks,
+  videoDuration,
+) => {
+  const frameRateFromLog = getFrameRateFromLog(logFile);
+  if (frameRateFromLog) {
+    return 1 / frameRateFromLog;
+  }
+
+  if (!Number.isFinite(videoDuration) || videoDuration <= 0) {
+    return null;
+  }
+
+  const allFrames = [
+    ...annotations.map((item) => item?.FrameNo),
+    ...annotationBallTracks.map((item) => item?.FrameNo),
+  ].filter((frame) => Number.isFinite(frame));
+
+  if (allFrames.length === 0) {
+    return null;
+  }
+
+  const minFrame = Math.min(...allFrames);
+  const maxFrame = Math.max(...allFrames);
+  const frameCount = maxFrame - minFrame + 1;
+
+  if (frameCount <= 0) {
+    return null;
+  }
+
+  const estimatedFps = frameCount / videoDuration;
+  if (
+    !Number.isFinite(estimatedFps) ||
+    estimatedFps <= 0 ||
+    estimatedFps > MAX_REASONABLE_FRAME_RATE
+  ) {
+    return null;
+  }
+
+  return 1 / estimatedFps;
+};
+
 // TODO Take a video_id instead and have an endpoint on the server where we supply a video_id and get the corresponding video
 const NewTrackingEditor = () => {
   const location = useLocation();
@@ -121,6 +188,7 @@ const NewTrackingEditor = () => {
   const [isZoomModeEnabled, setIsZoomModeEnabled] = useState(false);
   const [zoomStatus, setZoomStatus] = useState("Enable Zoom Mode");
   const [isTooltipVisible, setTooltipVisible] = useState(false);
+  const [frameDuration, setFrameDuration] = useState(DEFAULT_FRAME_DURATION);
   const [bindingAction, setBindingAction] = useState(null);
   const [keyBindings, setKeyBindings] = useState({
     playPause: config.general.keyBindings.playPause,
@@ -210,8 +278,24 @@ const NewTrackingEditor = () => {
   let { videoName } = useParams();
 
   const canvasRef = useRef(null);
-  const frameDuration = 1001 / 24000; // TODO Get this information from the backend
   // could be used to display annotations in canvas
+
+  useEffect(() => {
+    const estimatedFrameDuration = estimateFrameDurationFromTracking(
+      logFile,
+      annotations,
+      annotationBallTracks,
+      videoElement?.duration,
+    );
+
+    if (
+      Number.isFinite(estimatedFrameDuration) &&
+      estimatedFrameDuration > 0 &&
+      Math.abs(estimatedFrameDuration - frameDuration) > 1e-9
+    ) {
+      setFrameDuration(estimatedFrameDuration);
+    }
+  }, [annotations, annotationBallTracks, videoElement?.duration, frameDuration]);
 
   const refreshSidebar = () => {
     updateSidebar({
