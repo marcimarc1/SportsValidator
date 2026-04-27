@@ -17,6 +17,7 @@ This file has dependencies needed for rust. The versions of the subsequent depen
 ### Main.rs
 
 This is the main file. Currently the structure of this file is in the order:
+
 1. Connection to Postgres
 2. Create Tables
 3. Insert Queries
@@ -35,7 +36,6 @@ The file contains demo inputs, but upon integration, inputs would be directly us
 #### Select and Update Queries
 
 Only limited queries are in the file, but more can be added as needed.
-
 
 #### Testing
 

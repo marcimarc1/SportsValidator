@@ -362,7 +362,7 @@
             HEAP32[ptr >> 2] = value;
             break;
           case "i64":
-            (tempI64 = [
+            ((tempI64 = [
               value >>> 0,
               ((tempDouble = value),
               +Math_abs(tempDouble) >= 1
@@ -379,7 +379,7 @@
                 : 0),
             ]),
               (HEAP32[ptr >> 2] = tempI64[0]),
-              (HEAP32[(ptr + 4) >> 2] = tempI64[1]);
+              (HEAP32[(ptr + 4) >> 2] = tempI64[1]));
             break;
           case "float":
             HEAPF32[ptr >> 2] = value;
@@ -5410,7 +5410,7 @@
           HEAP32[(buf + 24) >> 2] = stat.gid;
           HEAP32[(buf + 28) >> 2] = stat.rdev;
           HEAP32[(buf + 32) >> 2] = 0;
-          (tempI64 = [
+          ((tempI64 = [
             stat.size >>> 0,
             ((tempDouble = stat.size),
             +Math_abs(tempDouble) >= 1
@@ -5424,7 +5424,7 @@
               : 0),
           ]),
             (HEAP32[(buf + 40) >> 2] = tempI64[0]),
-            (HEAP32[(buf + 44) >> 2] = tempI64[1]);
+            (HEAP32[(buf + 44) >> 2] = tempI64[1]));
           HEAP32[(buf + 48) >> 2] = 4096;
           HEAP32[(buf + 52) >> 2] = stat.blocks;
           HEAP32[(buf + 56) >> 2] = (stat.atime.getTime() / 1e3) | 0;
@@ -5433,7 +5433,7 @@
           HEAP32[(buf + 68) >> 2] = 0;
           HEAP32[(buf + 72) >> 2] = (stat.ctime.getTime() / 1e3) | 0;
           HEAP32[(buf + 76) >> 2] = 0;
-          (tempI64 = [
+          ((tempI64 = [
             stat.ino >>> 0,
             ((tempDouble = stat.ino),
             +Math_abs(tempDouble) >= 1
@@ -5447,7 +5447,7 @@
               : 0),
           ]),
             (HEAP32[(buf + 80) >> 2] = tempI64[0]),
-            (HEAP32[(buf + 84) >> 2] = tempI64[1]);
+            (HEAP32[(buf + 84) >> 2] = tempI64[1]));
           return 0;
         },
         doMsync: function (addr, stream, len, flags) {
@@ -8195,7 +8195,7 @@
             return -61;
           }
           FS.llseek(stream, offset, whence);
-          (tempI64 = [
+          ((tempI64 = [
             stream.position >>> 0,
             ((tempDouble = stream.position),
             +Math_abs(tempDouble) >= 1
@@ -8209,7 +8209,7 @@
               : 0),
           ]),
             (HEAP32[newOffset >> 2] = tempI64[0]),
-            (HEAP32[(newOffset + 4) >> 2] = tempI64[1]);
+            (HEAP32[(newOffset + 4) >> 2] = tempI64[1]));
           if (stream.getdents && offset === 0 && whence === 0)
             stream.getdents = null;
           return 0;

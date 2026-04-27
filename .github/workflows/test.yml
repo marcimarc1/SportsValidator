@@ -1,33 +1,33 @@
 name: Test
 
-on: 
+on:
   pull_request:
 
-jobs:    
-    test:
-        name: unit tests
+jobs:
+  test:
+    name: unit tests
 
-        runs-on: ubuntu-latest
+    runs-on: ubuntu-latest
 
-        steps:
-            - name: Checkout
-              id: checkout
-              uses: actions/checkout@v5
-            
-            - name: Setup Node.js
-              id: setup-node
-              uses: actions/setup-node@v5
-              with:
-               node-version-file: .node_version
-               cache: npm
-               cache-dependency-path: './frontend'
-            
-            - name: Install dependencies
-              id: install
-              run: npm install
-              working-directory: ./frontend
+    steps:
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@v5
 
-            - name: Run tests
-              id: tests
-              run: npm test
-              working-directory: ./frontend
+      - name: Setup Node.js
+        id: setup-node
+        uses: actions/setup-node@v5
+        with:
+          node-version-file: .node_version
+          cache: npm
+          cache-dependency-path: "./frontend"
+
+      - name: Install dependencies
+        id: install
+        run: npm install
+        working-directory: ./frontend
+
+      - name: Run tests
+        id: tests
+        run: npm test
+        working-directory: ./frontend

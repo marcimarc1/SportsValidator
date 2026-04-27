@@ -12,7 +12,7 @@ services:
       context: .
       dockerfile: ./pythonBackend/Dockerfile
     environment:
-     - DATABASE_URL=postgresql://user:pass@db/db
+      - DATABASE_URL=postgresql://user:pass@db/db
     ports:
       - "8080:80"
     depends_on:

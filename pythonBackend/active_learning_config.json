@@ -1,4 +1,4 @@
- {
+{
   "tests": {
     "soccer": [
       {
@@ -19,7 +19,7 @@
         "enabled": true,
         "weight": 1.0
       },
-       {
+      {
         "id": "filter_boxes_test",
         "threshold": 1,
         "enabled": false,

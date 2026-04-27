@@ -28,7 +28,7 @@ image: "rust:latest"
 # Use cargo to tests the project
 test:cargo:
   script:
-    - rustc --version && cargo --version  # Print version info for debugging
+    - rustc --version && cargo --version # Print version info for debugging
     - cargo tests --workspace --verbose
 
 # Optional: Use a third party library to generate gitlab junit reports
@@ -46,7 +46,6 @@ deploy:
   stage: deploy
   script: echo "Define your deployment script!"
   environment: production
-
 
 # run unit tests in tests stage
 # https://about.gitlab.com/blog/2022/11/01/how-to-automate-testing-for-a-react-application-with-gitlab/

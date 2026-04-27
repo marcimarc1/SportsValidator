@@ -303,7 +303,13 @@ const NewTrackingEditor = () => {
     ) {
       setFrameDuration(estimatedFrameDuration);
     }
-  }, [annotations, annotationBallTracks, videoDuration, frameDuration, logFile]);
+  }, [
+    annotations,
+    annotationBallTracks,
+    videoDuration,
+    frameDuration,
+    logFile,
+  ]);
 
   const refreshSidebar = () => {
     updateSidebar({

@@ -1,35 +1,35 @@
 name: Lint Codebase
 
-on: 
+on:
   pull_request:
 
-jobs: 
-    lint:
-        name: Lint JS codebase
+jobs:
+  lint:
+    name: Lint JS codebase
 
-        runs-on: ubuntu-latest
+    runs-on: ubuntu-latest
 
-        steps:
-            - name: Checkout            
-              id: checkout
-              uses: actions/checkout@v5
-            
-            - name: Setup Node.js
-              id: setup-node
-              uses: actions/setup-node@v5
-              with:
-               node-version-file: .node_version
-               cache: npm
-               cache-dependency-path: './frontend'
-            
-            - name: Install dependencies
-              id: install
-              run: npm install
-              working-directory: ./frontend
+    steps:
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@v5
 
-            - name: Prettier linting
-              id: linting  
-              run: npm run check
-              working-directory: ./frontend
-              env:
-                GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Setup Node.js
+        id: setup-node
+        uses: actions/setup-node@v5
+        with:
+          node-version-file: .node_version
+          cache: npm
+          cache-dependency-path: "./frontend"
+
+      - name: Install dependencies
+        id: install
+        run: npm install
+        working-directory: ./frontend
+
+      - name: Prettier linting
+        id: linting
+        run: npm run check
+        working-directory: ./frontend
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
