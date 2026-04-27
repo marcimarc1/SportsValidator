@@ -449,8 +449,7 @@ const RefinementEditor = () => {
 
     return () => {
       document.removeEventListener("keydown", handleKeyPress);
-
-      document.addEventListener("click", handleClick);
+      document.removeEventListener("click", handleClick);
     };
   }, [handleKeyPress]);
 

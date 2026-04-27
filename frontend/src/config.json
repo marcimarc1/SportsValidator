@@ -2,10 +2,10 @@
   "general": {
     "keyBindings": {
       "playPause": " ",
-      "nextFrame": ".",
-      "previousFrame": ",",
-      "jumpForward": "ArrowRight",
-      "jumpBackward": "ArrowLeft",
+      "nextFrame": "ArrowRight",
+      "previousFrame": "ArrowLeft",
+      "jumpForward": "]",
+      "jumpBackward": "[",
       "ZoomModeEnabled": "x"
     },
     "seekbar": {
