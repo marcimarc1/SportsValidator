@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, useMemo } from "react";
 import { useParams } from "react-router";
 import { ReactComponent as PlayIcon } from "../../../icons/play.svg";
 import { ReactComponent as PauseIcon } from "../../../icons/pause.svg";
@@ -62,70 +62,57 @@ import {
   handleMultiSelectMergeBall,
 } from "./multiSelectHandlers";
 
-const DEFAULT_FRAME_DURATION = 1 / 30;
-const MAX_REASONABLE_FRAME_RATE = 1000;
-const DEFAULT_VIDEO_WIDTH = 3840;
-const DEFAULT_VIDEO_HEIGHT = 2160;
+const DEFAULT_FRAME_DURATION = 1001 / 24000;
 
-const toPositiveFiniteNumber = (value) => {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+const getTrackingFrameBounds = (annotations, annotationBallTracks) => {
+  let minFrame = Infinity;
+  let maxFrame = -Infinity;
+  let hasFrame = false;
+
+  const updateBounds = (items) => {
+    for (const item of items) {
+      const frame = Number(item?.FrameNo);
+
+      if (!Number.isFinite(frame)) continue;
+
+      if (frame < minFrame) minFrame = frame;
+      if (frame > maxFrame) maxFrame = frame;
+
+      hasFrame = true;
+    }
+  };
+
+  updateBounds(annotations);
+  updateBounds(annotationBallTracks);
+
+  if (!hasFrame) return null;
+
+  return {
+    minFrame,
+    maxFrame,
+  };
 };
 
-const getFrameRateFromLog = (logFile) => {
-  if (!logFile) return null;
-
-  return (
-    toPositiveFiniteNumber(logFile.FPS) ||
-    toPositiveFiniteNumber(logFile.fps) ||
-    toPositiveFiniteNumber(logFile.FrameRate) ||
-    toPositiveFiniteNumber(logFile.frameRate) ||
-    toPositiveFiniteNumber(logFile["Frame Rate"]) ||
-    toPositiveFiniteNumber(logFile["Acquisition Frequency"]) ||
-    toPositiveFiniteNumber(logFile["AcquisitionFrequency"]) ||
-    toPositiveFiniteNumber(logFile.Frequency)
-  );
-};
-
-const estimateFrameDurationFromTracking = (
-  logFile,
-  annotations,
-  annotationBallTracks,
+const estimateFrameDurationFromVideoAndTracking = (
+  trackingFrameBounds,
   videoDuration,
 ) => {
-  if (!Number.isFinite(videoDuration) || videoDuration <= 0) {
-    const frameRateFromLog = getFrameRateFromLog(logFile);
-    return frameRateFromLog ? 1 / frameRateFromLog : null;
-  }
-
-  const allFrames = [
-    ...annotations.map((item) => item?.FrameNo),
-    ...annotationBallTracks.map((item) => item?.FrameNo),
-  ].filter((frame) => Number.isFinite(frame));
-
-  if (allFrames.length === 0) {
-    return null;
-  }
-
-  const minFrame = Math.min(...allFrames);
-  const maxFrame = Math.max(...allFrames);
-  const frameCount = maxFrame - minFrame + 1;
-
-  if (frameCount <= 0) {
-    return null;
-  }
-
-  const estimatedFps = frameCount / videoDuration;
   if (
-    !Number.isFinite(estimatedFps) ||
-    estimatedFps <= 0 ||
-    estimatedFps > MAX_REASONABLE_FRAME_RATE
+    !trackingFrameBounds ||
+    !Number.isFinite(videoDuration) ||
+    videoDuration <= 0
   ) {
-    const frameRateFromLog = getFrameRateFromLog(logFile);
-    return frameRateFromLog ? 1 / frameRateFromLog : null;
+    return DEFAULT_FRAME_DURATION;
   }
 
-  return 1 / estimatedFps;
+  const trackingFrameCount =
+    trackingFrameBounds.maxFrame - trackingFrameBounds.minFrame + 1;
+
+  if (!Number.isFinite(trackingFrameCount) || trackingFrameCount <= 0) {
+    return DEFAULT_FRAME_DURATION;
+  }
+
+  return videoDuration / trackingFrameCount;
 };
 
 // TODO Take a video_id instead and have an endpoint on the server where we supply a video_id and get the corresponding video
@@ -143,14 +130,12 @@ const NewTrackingEditor = () => {
   const [annotations, setAnnotations] = useState([]);
   const [canvas, setCanvas] = useState(new fabric.Canvas());
   const [videoUrl, setVideoUrl] = useState("");
+  const [frameDuration, setFrameDuration] = useState(DEFAULT_FRAME_DURATION);
+  const [trackingFrameOffset, setTrackingFrameOffset] = useState(0);
+  const [videoDuration, setVideoDuration] = useState(null);
   const [frameNumber, setFrameNumber] = useState(0);
   const [timestamp, setTimestamp] = useState(0);
   const [videoElement, setVideoElement] = useState(null);
-  const [videoDuration, setVideoDuration] = useState(null);
-  const [videoDimensions, setVideoDimensions] = useState({
-    width: DEFAULT_VIDEO_WIDTH,
-    height: DEFAULT_VIDEO_HEIGHT,
-  });
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [isDownloadingVideo, setIsDownloadingVideo] = useState(false);
@@ -170,7 +155,7 @@ const NewTrackingEditor = () => {
   const [showField, setShowField] = useState(false);
   const [editField, setEditField] = useState(false);
   let [wasVideoPlaying, setWasVideoPlaying] = useState(false);
-  const logFile = parseLogFile(log);
+  const logFile = useMemo(() => parseLogFile(log), [log]);
   const [selectedTrails, setSelectedTrails] = useState(new Set());
   const [trailSize, setTrailSize] = useState(50);
   const [drawInField, setDrawInField] = useState(false);
@@ -192,7 +177,6 @@ const NewTrackingEditor = () => {
   const [isZoomModeEnabled, setIsZoomModeEnabled] = useState(false);
   const [zoomStatus, setZoomStatus] = useState("Enable Zoom Mode");
   const [isTooltipVisible, setTooltipVisible] = useState(false);
-  const [frameDuration, setFrameDuration] = useState(DEFAULT_FRAME_DURATION);
   const [bindingAction, setBindingAction] = useState(null);
   const [keyBindings, setKeyBindings] = useState({
     playPause: config.general.keyBindings.playPause,
@@ -225,6 +209,51 @@ const NewTrackingEditor = () => {
     setColorSetBall,
     setBallNameMap,
   );
+
+  const trackingFrameBounds = useMemo(
+    () => getTrackingFrameBounds(annotations, annotationBallTracks),
+    [annotations, annotationBallTracks],
+  );
+
+  useEffect(() => {
+    if (!trackingFrameBounds) return;
+
+    const estimatedFrameDuration = estimateFrameDurationFromVideoAndTracking(
+      trackingFrameBounds,
+      videoDuration,
+    );
+
+    if (
+      Number.isFinite(estimatedFrameDuration) &&
+      estimatedFrameDuration > 0 &&
+      Math.abs(estimatedFrameDuration - frameDuration) > 1e-9
+    ) {
+      setFrameDuration(estimatedFrameDuration);
+    }
+
+    const estimatedOffset = trackingFrameBounds.minFrame;
+
+    if (
+      Number.isFinite(estimatedOffset) &&
+      estimatedOffset !== trackingFrameOffset
+    ) {
+      setTrackingFrameOffset(estimatedOffset);
+    }
+
+    console.log("Automatic tracking sync:", {
+      frameDuration: estimatedFrameDuration,
+      fps: 1 / estimatedFrameDuration,
+      trackingFrameOffset: estimatedOffset,
+      videoDuration,
+      firstTrackingFrame: trackingFrameBounds.minFrame,
+      lastTrackingFrame: trackingFrameBounds.maxFrame,
+    });
+  }, [
+    trackingFrameBounds,
+    videoDuration,
+    frameDuration,
+    trackingFrameOffset,
+  ]);
 
   const addTeam = (color) => {
     const newTeamId = teams.length + 1;
@@ -282,34 +311,7 @@ const NewTrackingEditor = () => {
   let { videoName } = useParams();
 
   const canvasRef = useRef(null);
-  const getHorizontalScalingFactor = () =>
-    canvas.width / Math.max(videoDimensions.width, 1);
-  const getVerticalScalingFactor = () =>
-    canvas.height / Math.max(videoDimensions.height, 1);
   // could be used to display annotations in canvas
-
-  useEffect(() => {
-    const estimatedFrameDuration = estimateFrameDurationFromTracking(
-      logFile,
-      annotations,
-      annotationBallTracks,
-      videoDuration,
-    );
-
-    if (
-      Number.isFinite(estimatedFrameDuration) &&
-      estimatedFrameDuration > 0 &&
-      Math.abs(estimatedFrameDuration - frameDuration) > 1e-9
-    ) {
-      setFrameDuration(estimatedFrameDuration);
-    }
-  }, [
-    annotations,
-    annotationBallTracks,
-    videoDuration,
-    frameDuration,
-    logFile,
-  ]);
 
   const refreshSidebar = () => {
     updateSidebar({
@@ -458,8 +460,8 @@ const NewTrackingEditor = () => {
           box.width = actualWidth;
           box.height = actualHeight;
 
-          const horizontalScalingFactor = getHorizontalScalingFactor();
-          const verticalScalingFactor = getVerticalScalingFactor();
+          const horizontalScalingFactor = canvas.width / 3840;
+          const verticalScalingFactor = canvas.height / 2160;
           const modifiedAnnotation = convertBoxToAnnotation(
             box,
             horizontalScalingFactor,
@@ -493,8 +495,8 @@ const NewTrackingEditor = () => {
           box.width = actualWidth;
           box.height = actualHeight;
 
-          const horizontalScalingFactor = getHorizontalScalingFactor();
-          const verticalScalingFactor = getVerticalScalingFactor();
+          const horizontalScalingFactor = canvas.width / 3840;
+          const verticalScalingFactor = canvas.height / 2160;
           const modifiedAnnotation = convertBallboxToAnnotationBall(
             box,
             horizontalScalingFactor,
@@ -634,65 +636,32 @@ const NewTrackingEditor = () => {
   }, [activeObject]);
 
   useEffect(() => {
+    let canvasWidth = document.body.clientWidth - 300;
+    var canvasHeight = 800;
+    if (videoElement) {
+      canvasHeight = (videoElement.height / videoElement.width) * canvasWidth;
+    }
     let initCanvas = new fabric.Canvas("tracking-editor-canvas");
+    initCanvas.setHeight(canvasHeight);
+    initCanvas.setWidth(canvasWidth);
     setCanvas(initCanvas);
   }, []);
-
-  useEffect(() => {
-    if (!canvas) return;
-
-    const resizeCanvasToViewport = () => {
-      const sidebarWidth = 300;
-      const horizontalPadding = 32;
-      const controlsReservedHeight = 230;
-      const minCanvasWidth = 640;
-      const minCanvasHeight = 360;
-      const aspectRatio = videoDimensions.width / videoDimensions.height;
-
-      const availableWidth = Math.max(
-        minCanvasWidth,
-        window.innerWidth - sidebarWidth - horizontalPadding,
-      );
-      const availableHeight = Math.max(
-        minCanvasHeight,
-        window.innerHeight - controlsReservedHeight,
-      );
-
-      let canvasWidth = availableWidth;
-      let canvasHeight = canvasWidth / aspectRatio;
-
-      if (canvasHeight > availableHeight) {
-        canvasHeight = availableHeight;
-        canvasWidth = canvasHeight * aspectRatio;
-      }
-
-      canvas.setWidth(canvasWidth);
-      canvas.setHeight(canvasHeight);
-      canvas.renderAll();
-    };
-
-    resizeCanvasToViewport();
-    window.addEventListener("resize", resizeCanvasToViewport);
-    return () => window.removeEventListener("resize", resizeCanvasToViewport);
-  }, [canvas, videoDimensions]);
 
   useEffect(() => {
     const localVideoElement = document.createElement("video");
     localVideoElement.src = videoUrl;
     localVideoElement.muted = true;
-    localVideoElement.preload = "metadata";
-    localVideoElement.width = DEFAULT_VIDEO_WIDTH;
-    localVideoElement.height = DEFAULT_VIDEO_HEIGHT;
+
+    // video size has to be manually set
+    localVideoElement.width = 3840;
+    localVideoElement.height = 2160;
+
     const handleLoadedMetadata = () => {
-      const width = localVideoElement.videoWidth || DEFAULT_VIDEO_WIDTH;
-      const height = localVideoElement.videoHeight || DEFAULT_VIDEO_HEIGHT;
-      localVideoElement.width = width;
-      localVideoElement.height = height;
-      setVideoDimensions({ width, height });
       if (Number.isFinite(localVideoElement.duration)) {
         setVideoDuration(localVideoElement.duration);
       }
     };
+
     localVideoElement.addEventListener("loadedmetadata", handleLoadedMetadata);
 
     setVideoElement(localVideoElement);
@@ -716,8 +685,8 @@ const NewTrackingEditor = () => {
 
     // Drawing video
     // context.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
-    const horizontalScalingFactor = getHorizontalScalingFactor();
-    const verticalScalingFactor = getVerticalScalingFactor();
+    const horizontalScalingFactor = canvas.width / 3840;
+    const verticalScalingFactor = canvas.height / 2160;
     var fabricVideo = new fabric.Image(videoElement, {
       left: 0,
       top: 0,
@@ -733,8 +702,8 @@ const NewTrackingEditor = () => {
   };
 
   const drawBoundingBoxes = (frameNumber) => {
-    const horizontalScalingFactor = getHorizontalScalingFactor();
-    const verticalScalingFactor = getVerticalScalingFactor();
+    const horizontalScalingFactor = canvas.width / 3840;
+    const verticalScalingFactor = canvas.height / 2160;
     deselectAllBox();
 
     if (!trailsEnabled) {
@@ -979,7 +948,7 @@ const NewTrackingEditor = () => {
   };
 
   function handleUpdateTimeStamp(newTimestamp) {
-    updateTimestamp(newTimestamp, frameDuration, setTimestamp, setFrameNumber);
+    updateTimestamp(newTimestamp);
   }
 
   useEffect(() => {
@@ -1092,6 +1061,8 @@ const NewTrackingEditor = () => {
     showField,
     trailSize,
     drawInField,
+    frameDuration,
+    trackingFrameOffset,
   ]);
 
   //triggered when user clicks on the video progress bar to change the video time
@@ -1108,8 +1079,8 @@ const NewTrackingEditor = () => {
         trailFrameNumber,
         isShowingAnnotation,
         colorSet,
-        getHorizontalScalingFactor(),
-        getVerticalScalingFactor(),
+        canvas.width / 3840,
+        canvas.height / 2160,
         setSelectedTrails,
         setSelectedTrailsBall,
         trailSize,
@@ -1132,8 +1103,8 @@ const NewTrackingEditor = () => {
         ),
     );
 
-    const horizontalScalingFactor = getHorizontalScalingFactor();
-    const verticalScalingFactor = getVerticalScalingFactor();
+    const horizontalScalingFactor = canvas.width / 3840;
+    const verticalScalingFactor = canvas.height / 2160;
     var tempList = [];
     let runningIndex = 0;
 
@@ -1315,7 +1286,8 @@ const NewTrackingEditor = () => {
 
     return () => {
       document.removeEventListener("keydown", handleKeyPress);
-      document.removeEventListener("click", handleClick);
+
+      document.addEventListener("click", handleClick);
     };
   }, [handleKeyPress]);
 
@@ -1383,16 +1355,25 @@ const NewTrackingEditor = () => {
   };
 
   const getCurrentTimestampFrame = () => {
-    // First frame is frame 0
-    return Math.floor(videoElement.currentTime / frameDuration);
+    if (!videoElement) return trackingFrameOffset;
+
+    return (
+      Math.floor(videoElement.currentTime / frameDuration) +
+      trackingFrameOffset
+    );
   };
 
   const getReferenceTimestampForFrame = (n) => {
-    return n * frameDuration + frameDuration / 3;
+    const timestamp =
+      (n - trackingFrameOffset) * frameDuration + frameDuration / 3;
+
+    return Math.max(0, timestamp);
   };
 
   const updateTimestamp = (newTimestamp) => {
-    const newFrameNumber = Math.floor(newTimestamp / frameDuration);
+    const newFrameNumber =
+      Math.floor(newTimestamp / frameDuration) + trackingFrameOffset;
+
     setTimestamp(newTimestamp);
     setFrameNumber(newFrameNumber);
   };
@@ -1583,8 +1564,8 @@ const NewTrackingEditor = () => {
   }
   function addBoundingBoxBallAtMousePosition(event) {
     const pointer = canvas.getPointer(event.e);
-    const horizontalScalingFactor = getHorizontalScalingFactor();
-    const verticalScalingFactor = getVerticalScalingFactor();
+    const horizontalScalingFactor = canvas.width / 3840;
+    const verticalScalingFactor = canvas.height / 2160;
     const x = pointer.x / horizontalScalingFactor;
     const y = pointer.y / verticalScalingFactor;
     //console.log(`Mouse clicked at: (${x}, ${y})`);
@@ -1703,8 +1684,8 @@ const NewTrackingEditor = () => {
         canvas,
         getCurrentTimestampFrame(),
         homographies,
-        getHorizontalScalingFactor(),
-        getVerticalScalingFactor(),
+        canvas.width / 3840,
+        canvas.height / 2160,
         logFile.Sport,
         fieldSize?.length,
         fieldSize?.width,
@@ -1739,8 +1720,8 @@ const NewTrackingEditor = () => {
         fieldPoints,
         homographies,
         currentFrame,
-        getHorizontalScalingFactor(),
-        getVerticalScalingFactor(),
+        canvas.width / 3840,
+        canvas.height / 2160,
         logFile.Sport,
         fieldSize?.length,
         fieldSize?.width,
@@ -1766,8 +1747,8 @@ const NewTrackingEditor = () => {
         end_frame: currentFrame + frameNumber,
         points: fieldPoints.map((point) => ({
           ...point,
-          x: point.x / getHorizontalScalingFactor(),
-          y: point.y / getVerticalScalingFactor(),
+          x: point.x / (canvas.width / 3840),
+          y: point.y / (canvas.height / 2160),
         })),
         player_boxes: annotations
           .filter(
@@ -1787,8 +1768,8 @@ const NewTrackingEditor = () => {
         const trackedPoints = response.data.tracked_points.map((points) =>
           points.map((point) => ({
             ...point,
-            x: point.x * getHorizontalScalingFactor(),
-            y: point.y * getVerticalScalingFactor(),
+            x: point.x * (canvas.width / 3840),
+            y: point.y * (canvas.height / 2160),
           })),
         );
         const startFrame = response.data.start_frame;
@@ -1799,8 +1780,8 @@ const NewTrackingEditor = () => {
             framePoints,
             homographies,
             startFrame + i,
-            getHorizontalScalingFactor(),
-            getVerticalScalingFactor(),
+            canvas.width / 3840,
+            canvas.height / 2160,
             logFile.Sport,
             fieldSize?.length,
             fieldSize?.width,
